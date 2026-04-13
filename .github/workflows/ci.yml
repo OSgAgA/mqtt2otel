@@ -126,11 +126,12 @@ jobs:
           git fetch origin ${{ github.event.pull_request.base.ref }} --depth=100
           git log --pretty=format:"- %s" origin/${{ github.event.pull_request.base.ref }}..HEAD >> CHANGELOG.md
 
-          {
-            echo "changelog<<EOF"
-            cat CHANGELOG.md
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          # Safe multiline output using temp file
+          tmpfile=$(mktemp)
+          echo "changelog<<EOF" >> "$tmpfile"
+          cat CHANGELOG.md >> "$tmpfile"
+          echo "EOF" >> "$tmpfile"
+          cat "$tmpfile" >> "$GITHUB_OUTPUT"
 
       - name: Build & Push multi-arch image
         uses: docker/build-push-action@v6
