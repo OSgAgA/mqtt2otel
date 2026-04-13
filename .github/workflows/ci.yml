@@ -107,6 +107,10 @@ jobs:
           echo "minor=$MINOR" >> $GITHUB_OUTPUT
           echo "patch=$PATCH" >> $GITHUB_OUTPUT
 
+      - name: Fetch base branch
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }} --depth=50
+
       - name: Generate changelog
         id: changelog
         run: |
