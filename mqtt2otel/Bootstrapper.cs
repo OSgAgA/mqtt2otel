@@ -4,9 +4,6 @@ using mqtt2otel.InternalLogging;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace mqtt2otel
 {
