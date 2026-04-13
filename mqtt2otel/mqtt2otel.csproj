@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="grok.net" Version="2.0.0" />
+    <PackageReference Include="MQTTnet" Version="5.1.0.1559" />
+    <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="4.3.7.1207" />
+    <PackageReference Include="NCalcAsync" Version="5.12.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="OpenTelemetry" Version="1.15.1" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.15.1" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.1" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <PackageReference Include="ZLogger" Version="2.5.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Deployment\" />
+  </ItemGroup>
+
+</Project>

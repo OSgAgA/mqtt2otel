@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="mqtt2otel.Server/mqtt2otel.Server.csproj" Id="0fb1c3e7-be1f-49c8-9669-bf446c9f8fac" />
+  <Project Path="mqtt2otel.Tests/mqtt2otel.Tests.csproj" Id="9959d172-2537-4836-8f7f-305d0b364fab" />
+  <Project Path="mqtt2otel/mqtt2otel.csproj" />
+</Solution>
