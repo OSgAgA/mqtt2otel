@@ -148,4 +148,4 @@ jobs:
             org.opencontainers.image.description=Built from PR #${{ github.event.pull_request.number }}
             org.opencontainers.image.changelog=${{ steps.changelog.outputs.changelog }}
           cache-from: type=registry,ref=osgaga/mqtt2otel:cache
-          cache-to: type=registry,ref=osgaga/mqtt2otel:cache,mode=max
+          cache-to: type=registry,ref=ghcr.io/osgaga/mqtt2otel:cache,mode=max
