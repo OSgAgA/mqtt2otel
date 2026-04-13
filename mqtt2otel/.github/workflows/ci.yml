@@ -1,0 +1,149 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0'
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore --packages .nuget/packages
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Test
+        run: dotnet test --logger "junit;LogFilePath=TestResults.xml"
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.xml
+
+      - name: Publish
+        run: dotnet publish ./mqtt2otel.Server/mqtt2otel.Server.csproj -c Release --no-restore --output ./app
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: ./app
+
+  docker:
+    name: Build & Push Docker (multi-arch)
+    runs-on: ubuntu-latest
+    needs: build-test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app
+          path: mqtt2otel/Deployment/app
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract version from PR label (strict)
+        id: version
+        run: |
+          LABELS=$(echo '${{ toJson(github.event.pull_request.labels) }}' | jq -r '.[].name')
+
+          VERSION=""
+          for label in $LABELS; do
+            if [[ "$label" == version:* ]]; then
+              VERSION="${label#version:}"
+            fi
+          done
+
+          if [[ -z "$VERSION" ]]; then
+            echo "❌ ERROR: No version label found (expected: version:X.Y.Z)"
+            exit 1
+          fi
+
+          if [[ ! "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "❌ ERROR: Version label '$VERSION' is not valid semantic version (expected X.Y.Z)"
+            exit 1
+          fi
+
+          MAJOR="${BASH_REMATCH[1]}"
+          MINOR="${BASH_REMATCH[2]}"
+          PATCH="${BASH_REMATCH[3]}"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          echo "minor=$MINOR" >> $GITHUB_OUTPUT
+          echo "patch=$PATCH" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "### Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "**PR Title:** ${{ github.event.pull_request.title }}" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "**PR Description:**" >> CHANGELOG.md
+          echo "${{ github.event.pull_request.body }}" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "**Commits:**" >> CHANGELOG.md
+          git log --pretty=format:"- %s" origin/${{ github.event.pull_request.base.ref }}..HEAD >> CHANGELOG.md
+
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Build & Push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: mqtt2otel/Deployment
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            osgaga/mqtt2otel:${{ steps.version.outputs.version }}
+            osgaga/mqtt2otel:${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
+            osgaga/mqtt2otel:${{ steps.version.outputs.major }}
+            osgaga/mqtt2otel:latest
+          labels: |
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.description=Built from PR #${{ github.event.pull_request.number }}
+            org.opencontainers.image.changelog=${{ steps.changelog.outputs.changelog }}
+          cache-from: type=registry,ref=osgaga/mqtt2otel:cache
+          cache-to: type=registry,ref=osgaga/mqtt2otel:cache,mode=max
+
+      - name: Upload changelog artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog
+          path: CHANGELOG.md
