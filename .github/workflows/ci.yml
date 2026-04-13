@@ -38,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: TestResults.xml
+          path: ./TestResults.xml
 
       - name: Publish
         run: dotnet publish ./mqtt2otel.Server/mqtt2otel.Server.csproj -c Release --no-restore --output ./app
@@ -126,14 +126,11 @@ jobs:
           git fetch origin ${{ github.event.pull_request.base.ref }} --depth=100
           git log --pretty=format:"- %s" origin/${{ github.event.pull_request.base.ref }}..HEAD >> CHANGELOG.md
 
-          # Generate a random delimiter that cannot appear in the content
-          DELIM="EOF_$(uuidgen)"
-
-          {
-            echo "changelog<<$DELIM"
-            cat CHANGELOG.md
-            echo "$DELIM"
-          } >> "$GITHUB_OUTPUT"
+      - name: Upload changelog artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog
+          path: CHANGELOG.md
 
       - name: Build & Push multi-arch image
         uses: docker/build-push-action@v6
