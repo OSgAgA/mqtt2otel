@@ -32,21 +32,21 @@ jobs:
         run: dotnet build -c Release --no-restore
 
       - name: Test
-        run: dotnet test --logger "junit;LogFilePath=./TestResults.xml"
+        run: dotnet test --logger "trx;LogFileName=TestResults.trx"
 
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
         if: always()
         with:
           name: .NET Tests
-          path: mqtt2otel.Tests/TestResults.xml
-          reporter: junit
+          path: mqtt2otel.Tests/TestResults.trx
+          reporter: dotnet-trx
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: mqtt2otel.Tests/TestResults.xml
+          path: mqtt2otel.Tests/TestResults.trx
 
       - name: Publish
         run: dotnet publish ./mqtt2otel.Server/mqtt2otel.Server.csproj -c Release --no-restore --output ./app
