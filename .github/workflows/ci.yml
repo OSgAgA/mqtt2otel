@@ -107,6 +107,10 @@ jobs:
           echo "minor=$MINOR" >> $GITHUB_OUTPUT
           echo "patch=$PATCH" >> $GITHUB_OUTPUT
 
+      - name: Fetch base branch
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }} --depth=50
+
       - name: Generate changelog
         id: changelog
         run: |
@@ -118,11 +122,15 @@ jobs:
           echo "${{ github.event.pull_request.body }}" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
           echo "**Commits:**" >> CHANGELOG.md
+
+          git fetch origin ${{ github.event.pull_request.base.ref }} --depth=100
           git log --pretty=format:"- %s" origin/${{ github.event.pull_request.base.ref }}..HEAD >> CHANGELOG.md
 
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          cat CHANGELOG.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          {
+            echo "changelog<<EOF"
+            cat CHANGELOG.md
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Build & Push multi-arch image
         uses: docker/build-push-action@v6
