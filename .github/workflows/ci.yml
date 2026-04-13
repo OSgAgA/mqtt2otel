@@ -126,12 +126,14 @@ jobs:
           git fetch origin ${{ github.event.pull_request.base.ref }} --depth=100
           git log --pretty=format:"- %s" origin/${{ github.event.pull_request.base.ref }}..HEAD >> CHANGELOG.md
 
-          # Safe multiline output using temp file
-          tmpfile=$(mktemp)
-          echo "changelog<<EOF" >> "$tmpfile"
-          cat CHANGELOG.md >> "$tmpfile"
-          echo "EOF" >> "$tmpfile"
-          cat "$tmpfile" >> "$GITHUB_OUTPUT"
+          # Generate a random delimiter that cannot appear in the content
+          DELIM="EOF_$(uuidgen)"
+
+          {
+            echo "changelog<<$DELIM"
+            cat CHANGELOG.md
+            echo "$DELIM"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Build & Push multi-arch image
         uses: docker/build-push-action@v6
