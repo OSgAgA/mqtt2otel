@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Text;
 using YamlDotNet.Serialization;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
     /// Describes an endpoint used to connect to the <see cref="MqttCoordinator"/> or the <see cref="OtelCoordinator"/>.
     /// </summary>
-    public class EndpointSettings
+    public class Endpoint
     {
         /// <summary>
         /// Gets or sets the address of the endpoint without a protocoll or a port.

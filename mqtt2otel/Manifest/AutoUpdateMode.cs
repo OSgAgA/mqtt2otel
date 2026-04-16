@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
     /// Represents the available modes for automatically updating the application if the manifest file has changed.

@@ -33,9 +33,9 @@ namespace mqtt2otel.Transformation
         /// <param name="payload">The payload that should be processed.</param>
         /// <param name="expression">The expression that should be used for transforming the payload.</param>
         /// <returns>The transformed payload</returns>
-        public async Task<string> Apply(SubscriptionType category, string name, string payload, string expression)
+        public async Task<string> Apply(string name, string payload, string expression)
         {
-            return await this.ParseExpression<string>(category, name, payload, expression);
+            return await this.ParseExpression<string>(name, payload, expression);
         }
 
         /// <summary>

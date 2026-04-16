@@ -1,4 +1,4 @@
-﻿using mqtt2otel.Configuration;
+﻿using mqtt2otel.Manifest;
 using mqtt2otel.Helper;
 using System;
 using System.Collections.Generic;
@@ -55,9 +55,9 @@ namespace mqtt2otel.Stores
         /// <exception cref="Mqtt2OtelException">Thrown if the value cannot be cast to the given type.</exception>
         public OtelMetric<TPayload> GetValue<TPayload>(string key)
         {
-            if (!(this.ValueStore[key] is OtelMetric<TPayload>)) 
+            if (!(this.ValueStore[key] is OtelMetric<TPayload>))
                 throw new Mqtt2OtelException($"Cannot get value from {nameof(SignalStore)}. Key ({key}) returned an object of type {this.ValueStore[key].GetType().FullName}, but type {typeof(OtelMetric<TPayload>).FullName} was expected.");
-            
+
             return (OtelMetric<TPayload>)this.ValueStore[key];
         }
 
@@ -88,6 +88,15 @@ namespace mqtt2otel.Stores
             metric.Attributes = attributes;
 
             if (this.Callbacks.ContainsKey(key)) this.Callbacks[key](key);
+        }
+
+        /// <summary>
+        /// Deletes all entries from the store.
+        /// </summary>
+        public void DeleteStore()
+        {
+            this.ValueStore.Clear();
+            this.Callbacks.Clear();
         }
     }
 }

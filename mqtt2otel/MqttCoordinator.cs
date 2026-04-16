@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using mqtt2otel.Configuration;
+using mqtt2otel.Manifest;
 using mqtt2otel.Helper;
 using mqtt2otel.InternalLogging;
 using mqtt2otel.Parser;
@@ -41,19 +41,14 @@ namespace mqtt2otel
         private Dictionary<string, IMqttClient> mqttClient = new();
 
         /// <summary>
-        /// Maps a subscription id to a subscription to which a metric rule should be applied.
+        /// Maps a subscription id to a processor.
         /// </summary>
-        private Dictionary<uint, MqttSubscriptionContext<MetricsRuleSettings>> subscriptionMetricsMapping = new();
+        private Dictionary<uint, Processor> subscriptionIdProcessorMapping = new();
 
         /// <summary>
-        /// Maps a subscription id to a subscription to which a log rule should be applied.
+        /// Maps a subscription id to a subscription.
         /// </summary>
-        private Dictionary<uint, MqttSubscriptionContext<LoggingRuleSettings>> subscriptionLogsMapping = new();
-
-        /// <summary>
-        /// Maps a subscription id to a subscription type.
-        /// </summary>
-        private Dictionary<uint, SubscriptionType> subscriptionTypeMapping = new Dictionary<uint, SubscriptionType>();
+        private Dictionary<uint, MqttSubscription> subscriptionIdSubscriptionMapping = new();
 
         /// <summary>
         /// The signal store used for storing metric signals.
@@ -83,7 +78,7 @@ namespace mqtt2otel
         /// <summary>
         /// The settings for connecting to a broker as a map, that maps the broker settings name to the corresponding settings.
         /// </summary>
-        private Dictionary<string, MqttBrokerSettings> brokerSettings = new();
+        private Dictionary<string, MqttBroker> nameToBrokerMap = new();
 
         /// <summary>
         /// The name of the default broker. 
@@ -97,9 +92,9 @@ namespace mqtt2otel
         private Dictionary<string, string> clientId = new();
 
         /// <summary>
-        /// The main settings object.
+        /// The main manifest object.
         /// </summary>
-        private Manifest settings = new();
+        private Manifest.Manifest manifest = new();
 
         /// <summary>
         /// Indicates whether the coordiniator is currently disconnecting the brokers.
@@ -126,21 +121,18 @@ namespace mqtt2otel
         /// <summary>
         /// Connects to the server and subscribes to all topics as defined in the provided settings.
         /// </summary>
-        /// <param name="settings">The settings containing information about connection details and subscriptions.</param>
-        /// <exception cref="Exception">Thrown if client is unable to connect to server or if settings contain an error.</exception>
-        public async Task ConnectAndSubscribe(Manifest settings)
+        /// <param name="manifest">The manifest containing information about connection details and subscriptions.</param>
+        /// <exception cref="Exception">Thrown if client is unable to connect to server or if manifest contains an error.</exception>
+        public async Task ConnectAndSubscribe(Manifest.Manifest manifest)
         {
             this.isDiconnecting = false;
 
-            if (settings.MqttBroker.Count > 0) this.defaultBrokerName = settings.MqttBroker[0].Name;
+            if (manifest.MqttBroker.Count > 0) this.defaultBrokerName = manifest.MqttBroker[0].Name;
 
             subscriptionIdCounter = 1;
-            subscriptionMetricsMapping = new();
-            subscriptionLogsMapping = new();
-            subscriptionTypeMapping = new();
-            this.settings = settings;
+            this.manifest = manifest;
 
-            foreach (var broker in settings.MqttBroker)
+            foreach (var broker in manifest.MqttBroker)
             {
                 await this.ConnectAndSubscribe(broker);
             }
@@ -148,16 +140,12 @@ namespace mqtt2otel
             this.internalLogger.LogInformation($"Subscribing to mqtt events...");
             using (var activity = InternalLogFactory.MainActivitySource.StartActivity("Subscribing to mqtt events"))
             {
-                this.internalLogger.LogInformation($"Subscribing to metric events...");
                 using (var activityMetric = InternalLogFactory.MainActivitySource.StartActivity("Subscribing to metric events"))
                 {
-                    await this.AddMetricsSubscriptions(settings.Metrics);
-                }
-
-                this.internalLogger.LogInformation($"Subscribing to log events...");
-                using (var activityLogs = InternalLogFactory.MainActivitySource.StartActivity("Subscribing to log events"))
-                {
-                    await this.AddLoggingSubscriptions(settings.Logs);
+                    foreach (var processor in manifest.Processors)
+                    {
+                        await this.AddProcessorSubscriptions(processor);
+                    }
                 }
             }
             this.internalLogger.LogInformation("Successfully subscribed to all events.");
@@ -173,16 +161,16 @@ namespace mqtt2otel
 
             using (this.internalLogger.StartActivity("Disconnect from brokers"))
             {
-                foreach (var brokerSettings in settings.MqttBroker)
+                foreach (var broker in manifest.MqttBroker)
                 {
                     try
                     {
-                        await this.mqttClient[brokerSettings.Name].DisconnectAsync();
-                        this.internalLogger.LogInformation($"Disconnected from broker: {brokerSettings.Name}");
+                        await this.mqttClient[broker.Name].DisconnectAsync();
+                        this.internalLogger.LogInformation($"Disconnected from broker: {broker.Name}");
                     }
                     catch (Exception ex)
                     {
-                        this.internalLogger.LogError(ex, $"Could not disconnect from mqtt broker {brokerSettings.Name}.");
+                        this.internalLogger.LogError(ex, $"Could not disconnect from mqtt broker {broker.Name}.");
                     }
                 }
             }
@@ -191,43 +179,43 @@ namespace mqtt2otel
         /// <summary>
         /// Connects to a given server and subscribes to all topics as defined in the provided settings.
         /// </summary>
-        /// <param name="brokerSettings">The broker settings containing information about connection details.</param>
+        /// <param name="broker">The broker settings containing information about connection details.</param>
         /// <exception cref="Exception">Thrown if client is unable to connect to server or if settings contain an error.</exception>
-        private async Task ConnectAndSubscribe(MqttBrokerSettings brokerSettings)
+        private async Task ConnectAndSubscribe(MqttBroker broker)
         {
-            this.brokerSettings[brokerSettings.Name] = brokerSettings;
-            this.clientId[brokerSettings.Name] = brokerSettings.ClientPrefix + "-" + Guid.NewGuid().ToString();
-            this.mqttClient[brokerSettings.Name] = this.mqttFactory.CreateMqttClient();
+            this.nameToBrokerMap[broker.Name] = broker;
+            this.clientId[broker.Name] = broker.ClientPrefix + "-" + Guid.NewGuid().ToString();
+            this.mqttClient[broker.Name] = this.mqttFactory.CreateMqttClient();
 
 
-            this.internalLogger.LogInformation($"Connecting to mqtt broker at {brokerSettings.Endpoint.FullAddress}...");
+            this.internalLogger.LogInformation($"Connecting to mqtt broker at {broker.Endpoint.FullAddress}...");
             var mqttClientOptionsBuilder = new MqttClientOptionsBuilder();
 
-            if (brokerSettings.Endpoint.ConnectionType == MqttBrokerConnectionType.Tcp)
+            if (broker.Endpoint.ConnectionType == MqttBrokerConnectionType.Tcp)
             {
-                mqttClientOptionsBuilder.WithTcpServer(brokerSettings.Endpoint.Address, port: (int)brokerSettings.Endpoint.Port);
+                mqttClientOptionsBuilder.WithTcpServer(broker.Endpoint.Address, port: (int)broker.Endpoint.Port);
             }
             else
             {
-                mqttClientOptionsBuilder.WithWebSocketServer(o => o.WithUri(brokerSettings.Endpoint.FullAddress));
+                mqttClientOptionsBuilder.WithWebSocketServer(o => o.WithUri(broker.Endpoint.FullAddress));
             }
 
-            if (brokerSettings.Endpoint.MqttProtocollVersion != null)
+            if (broker.Endpoint.MqttProtocollVersion != null)
             {
-                mqttClientOptionsBuilder.WithProtocolVersion(brokerSettings.Endpoint.MqttProtocollVersion.Value);
+                mqttClientOptionsBuilder.WithProtocolVersion(broker.Endpoint.MqttProtocollVersion.Value);
             }
 
-            if (brokerSettings.Endpoint.EnableTls)
+            if (broker.Endpoint.EnableTls)
             {
                 mqttClientOptionsBuilder.WithTlsOptions(
                 o =>
                 {
-                    if (brokerSettings.Endpoint.TlsSslProtocol != null) o.WithSslProtocols(brokerSettings.Endpoint.TlsSslProtocol.Value);
+                    if (broker.Endpoint.TlsSslProtocol != null) o.WithSslProtocols(broker.Endpoint.TlsSslProtocol.Value);
 
-                    if (brokerSettings.Endpoint.TlsCaFilePath != null)
+                    if (broker.Endpoint.TlsCaFilePath != null)
                     {
                         var caChain = new X509Certificate2Collection();
-                        caChain.ImportFromPemFile(brokerSettings.Endpoint.TlsCaFilePath);
+                        caChain.ImportFromPemFile(broker.Endpoint.TlsCaFilePath);
                         o.WithTrustChain(caChain);
                     }
 
@@ -235,21 +223,21 @@ namespace mqtt2otel
                 });
             }
 
-            if (!brokerSettings.Endpoint.UsePacketFragmentation) mqttClientOptionsBuilder.WithoutPacketFragmentation();
+            if (!broker.Endpoint.UsePacketFragmentation) mqttClientOptionsBuilder.WithoutPacketFragmentation();
 
-            if (brokerSettings.Endpoint.Username != null) mqttClientOptionsBuilder.WithCredentials(brokerSettings.Endpoint.Username, brokerSettings.Endpoint.Password);
+            if (broker.Endpoint.Username != null) mqttClientOptionsBuilder.WithCredentials(broker.Endpoint.Username, broker.Endpoint.Password);
 
             var mqttClientOptions = mqttClientOptionsBuilder.Build();
-            mqttClientOptions.ClientId = this.clientId[brokerSettings.Name];
+            mqttClientOptions.ClientId = this.clientId[broker.Name];
 
             // Subscribe to server events.
-            this.mqttClient[brokerSettings.Name].ApplicationMessageReceivedAsync += OnMessageReceived;
-            this.mqttClient[brokerSettings.Name].DisconnectedAsync += args => OnBrokerDisconnect(args, brokerSettings.Name);
+            this.mqttClient[broker.Name].ApplicationMessageReceivedAsync += OnMessageReceived;
+            this.mqttClient[broker.Name].DisconnectedAsync += args => OnBrokerDisconnect(args, broker.Name);
 
             // This will throw an exception if the server is not available.
             // The result from this message returns additional data which was sent
             // from the server. Please refer to the MQTT protocol specification for details.
-            var response = await mqttClient[brokerSettings.Name].ConnectAsync(mqttClientOptions, CancellationToken.None);
+            var response = await mqttClient[broker.Name].ConnectAsync(mqttClientOptions, CancellationToken.None);
 
             if (response == null)
             {
@@ -288,7 +276,7 @@ namespace mqtt2otel
         /// <summary>
         /// Called when the connection to the mqtt broker is lost. Tries to reconnect to the broker.
         /// 
-        /// Between each reconnet there is a delay, that can be configured via <see cref="MqttBrokerSettings.ReconnectDelayInMs"/>.
+        /// Between each reconnet there is a delay, that can be configured via <see cref="MqttBroker.ReconnectDelayInMs"/>.
         /// </summary>
         /// <param name="args">The disonnect event args.</param>
         /// <param name="brokerName">The name of the broker that has been disconnected.</param>
@@ -305,7 +293,7 @@ namespace mqtt2otel
                 this.internalLogger.LogInformation("Trying to reconnect to mqtt broker.");
                 try
                 {
-                    await this.ConnectAndSubscribe(this.settings);
+                    await this.ConnectAndSubscribe(this.manifest);
                     connected = this.mqttClient[brokerName].IsConnected;
                 }
                 catch
@@ -315,8 +303,8 @@ namespace mqtt2otel
 
                 if (!connected)
                 {
-                    this.internalLogger.LogError($"Could not connect to mqtt broker. Waiting for ${this.brokerSettings[brokerName].ReconnectDelayInMs}ms.");
-                    await Task.Delay(this.brokerSettings[brokerName].ReconnectDelayInMs);
+                    this.internalLogger.LogError($"Could not connect to mqtt broker. Waiting for ${this.nameToBrokerMap[brokerName].ReconnectDelayInMs}ms.");
+                    await Task.Delay(this.nameToBrokerMap[brokerName].ReconnectDelayInMs);
                 }
                 else
                 {
@@ -326,52 +314,30 @@ namespace mqtt2otel
         }
 
         /// <summary>
-        /// Adds all metric subscription to the broker.
+        /// Adds all subscription of a given processor to the broker.
         /// </summary>
-        /// <param name="metricRules">The settings that define the metric subscriptions.</param>
-        private async Task AddMetricsSubscriptions(List<MetricsRuleSettings> metricRules)
+        /// <param name="processor">The processor containing the subscriptions.</param>
+        private async Task AddProcessorSubscriptions(Processor processor)
         {
-            foreach (var metricRule in metricRules)
+            foreach (var mqttSubscriptionSettings in processor.Mqtt.Subscriptions)
             {
-                foreach (var mqttSubscriptionSettings in metricRule.Mqtt.Subscriptions)
-                {
-                    await this.SubscribeToTopic(metricRule, mqttSubscriptionSettings, this.subscriptionMetricsMapping, SubscriptionType.Metric);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Adds all loging subscription to the broker.
-        /// </summary>
-        /// <param name="settings">The settings that define the logging subscriptions.</param>
-        /// <returns></returns>
-        private async Task AddLoggingSubscriptions(List<LoggingRuleSettings> logRules)
-        {
-            foreach (var logRule in logRules)
-            {
-                foreach (var mqttSubscriptionSettings in logRule.Mqtt.Subscriptions)
-                {
-                    await this.SubscribeToTopic(logRule, mqttSubscriptionSettings, this.subscriptionLogsMapping, SubscriptionType.Log);
-                }
+                await this.SubscribeToTopic(processor, mqttSubscriptionSettings);
             }
         }
 
         /// <summary>
         /// Subscribes to a topic.
         /// </summary>
-        /// <typeparam name="TSettings">The type of the provided settings.</typeparam>
-        /// <param name="settings">The settings defining the topic to subscribe and the rule that should be applied.</param>
+        /// <param name="processor">The processor settings defining the topic to subscribe and the rule that should be applied.</param>
         /// <param name="mqttSubscriptionSetting">The settings defining the subscription.</param>
-        /// <param name="subscriptionMapping">A dictionary that will map a subscription id to a <see cref="MqttSubscriptionContext{TSettings}"/>.</param>
-        /// <param name="type">The type of the subscription. See <see cref="SubscriptionType"/></param>
-        private async Task SubscribeToTopic<TSettings>(TSettings settings, MqttSubscriptionSettings mqttSubscriptionSetting, Dictionary<uint, MqttSubscriptionContext<TSettings>> subscriptionMapping, SubscriptionType type)
+        private async Task SubscribeToTopic(Processor processor, MqttSubscription mqttSubscriptionSetting)
         {
-            subscriptionMapping[this.subscriptionIdCounter] = new MqttSubscriptionContext<TSettings>(settings, mqttSubscriptionSetting);
-            this.subscriptionTypeMapping[this.subscriptionIdCounter] = type;
+            this.subscriptionIdProcessorMapping[this.subscriptionIdCounter] = processor;
+            this.subscriptionIdSubscriptionMapping[this.subscriptionIdCounter] = mqttSubscriptionSetting;
             var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(mqttSubscriptionSetting.Topic).WithSubscriptionIdentifier(this.subscriptionIdCounter++).Build();
             this.internalLogger.LogInformation($"Subscribed to topic {mqttSubscriptionSetting.Topic}.");
 
-            var result = await this.GetClient(mqttSubscriptionSetting.Broker).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+            await this.GetClient(mqttSubscriptionSetting.Broker).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
         }
 
         /// <summary>
@@ -430,170 +396,27 @@ namespace mqtt2otel
 
             var subscriptionId = e.ApplicationMessage.SubscriptionIdentifiers.First<uint>();
 
-            if (!this.subscriptionTypeMapping.ContainsKey(subscriptionId))
+            if (!this.subscriptionIdProcessorMapping.ContainsKey(subscriptionId))
             {
-                this.internalLogger.LogError($"Internal error: {nameof(subscriptionTypeMapping)} does not contain key {subscriptionId}. Skipping event.");
+                this.internalLogger.LogError($"Internal error while processing received mqtt message: {nameof(subscriptionIdProcessorMapping)} does not contain key {subscriptionId}. Skipping event.");
                 return false;
             }
+
+            if (!this.subscriptionIdSubscriptionMapping.ContainsKey(subscriptionId))
+            {
+                this.internalLogger.LogError($"Internal error while processing received mqtt message: {nameof(subscriptionIdSubscriptionMapping)} does not contain key {subscriptionId}. Skipping event.");
+                return false;
+            }
+
+            var processor = this.subscriptionIdProcessorMapping[subscriptionId];
+            var subscription = this.subscriptionIdSubscriptionMapping[subscriptionId];
 
             bool success = false;
 
-            switch (this.subscriptionTypeMapping[subscriptionId])
-            {
-                case SubscriptionType.Log:
-                    success = await this.ProcessLogsSubscription(payload, subscriptionId);
-                    break;
-                case SubscriptionType.Metric:
-                    success = await this.ProcessMetricsSubscription(payload, subscriptionId);
-                    break;
-            }
+            success = await processor.ProcessSubscriptionPayload(payload, subscription);
 
             if (!success) this.internalLogger.LogError($"Could not process message. See previous errors. Message skipped. Payload: {payload}");
             return true;
-        }
-
-        /// <summary>
-        /// Process a subscription message that has been identified as a metric rule.
-        /// </summary>
-        /// <param name="payload">The message payload.</param>
-        /// <param name="subscriptionId">The subscription id.</param>
-        /// <returns>A value indicating whether processing has been successful.</returns>
-        private async Task<bool> ProcessMetricsSubscription(string payload, uint subscriptionId)
-        {
-            if (!this.subscriptionMetricsMapping.ContainsKey(subscriptionId))
-            {
-                this.internalLogger.LogError($"Internal error: {nameof(subscriptionMetricsMapping)} does not contain key {subscriptionId}. Skipping event.");
-                return false;
-            }
-
-            var context = this.subscriptionMetricsMapping[subscriptionId];
-
-            if (context.MqttSubscriptionSettings.Transform != null)
-            {
-                payload = await this.payloadTransformation.Apply(SubscriptionType.Metric, context.MqttSubscriptionSettings.Name, payload, context.MqttSubscriptionSettings.Transform);
-            }
-
-            foreach (var ruleSettings in context.Settings.Otel.Rules)
-            {
-                if (ruleSettings.Name == null) continue;
-                var key = context.MqttSubscriptionSettings.Id + ":" + ruleSettings.Id;
-                var combinedVariables = context.Settings.Mqtt.Variables.Combine(context.MqttSubscriptionSettings.Variables);
-                await this.WriteValueToSignalStore(key, context.Settings.Otel, ruleSettings, payload, combinedVariables);
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Process a subscription message that has been identified as a logging rule.
-        /// </summary>
-        /// <param name="payload">The message payload.</param>
-        /// <param name="subscriptionId">The subscription id.</param>
-        /// <returns>A value indicating whether processing has been successful.</returns>
-        private async Task<bool> ProcessLogsSubscription(string payload, uint subscriptionId)
-        {
-            if (!this.subscriptionLogsMapping.ContainsKey(subscriptionId))
-            {
-                this.internalLogger.LogError($"Internal error: {nameof(subscriptionLogsMapping)} does not contain key {subscriptionId}. Skipping event.");
-                return false;
-            }
-
-            var context = this.subscriptionLogsMapping[subscriptionId];
-            var loggingSettings = context.Settings;
-            var mqttSettings = context.MqttSubscriptionSettings;
-
-            if (mqttSettings.Transform != null)
-            {
-                payload = await this.payloadTransformation.Apply(SubscriptionType.Log, loggingSettings.Name, payload, mqttSettings.Transform);
-            }
-
-            bool success = true;
-
-            foreach (var otelSettings in loggingSettings.Otel.Rules)
-            {
-                var key = otelSettings.Id;
-                if (!this.loggerStore.ContainsKey(key))
-                {
-                    this.internalLogger.LogError($"Internal error: Could not get logger with id: {key}. Skipping event.");
-                    return false;
-                }
-
-                var logger = this.loggerStore.GetLogger(key);
-
-                success = await logger.ProcessLogMessage(payload, loggingSettings, mqttSettings.Variables, this.internalLogger);
-            }
-
-            return success;
-        }
-
-        /// <summary>
-        /// Stores a metric signal in the signal store.
-        /// </summary>
-        /// <param name="key">The key under which the object should be stored.</param>
-        /// <param name="otelSettings">The otel settings that should be used to process this signal.</param>
-        /// <param name="ruleSettings">The otel metric rule settings that should be used to process this signal.</param>
-        /// <param name="payload">The payload that should be processed.</param>
-        /// <param name="variables">The variables that can be applied to the payload.</param>
-        /// <returns></returns>
-        private async Task WriteValueToSignalStore(string key, OtelMetricSettings otelSettings, OtelMetricRuleSettings ruleSettings, string payload, IEnumerable<Variable> variables)
-        {
-            if (ruleSettings.Name == null) return;
-
-            var combinedAttributes = otelSettings.Attributes.Combine(ruleSettings.Attributes);
-            IEnumerable<Variable> expandedAttributes = VariableParser.Expand(combinedAttributes, variables);
-
-            try
-            {
-                switch (ruleSettings.SignalDataType)
-                {
-                    case SignalDataType.Float:
-                        await UpdateSignalStoreValue<float>(key, ruleSettings, payload, expandedAttributes);
-                        break;
-                    case SignalDataType.Int:
-                        await UpdateSignalStoreValue<int>(key, ruleSettings, payload, expandedAttributes);
-                        break;
-                    case SignalDataType.Double:
-                        await UpdateSignalStoreValue<double>(key, ruleSettings, payload, expandedAttributes);
-                        break;
-                    case SignalDataType.Long:
-                        await UpdateSignalStoreValue<long>(key, ruleSettings, payload, expandedAttributes);
-                        break;
-                    case SignalDataType.Decimal:
-                        await UpdateSignalStoreValue<decimal>(key, ruleSettings, payload, expandedAttributes);
-                        break;
-                    case SignalDataType.String:
-                        await UpdateSignalStoreValue<string>(key, ruleSettings, payload, expandedAttributes);
-                        break;
-                    case SignalDataType.DateTime:
-                        await UpdateSignalStoreValue<DateTime>(key, ruleSettings, payload, expandedAttributes);
-                        break;
-                    default:
-                        throw new ExpressionParsingException(new Exception(), SubscriptionType.Metric, ruleSettings.Name, $"Signal type {ruleSettings.SignalDataType} not supported.");
-                }
-            }
-            catch (ExpressionParsingException ex)
-            {
-                this.internalLogger.LogError($"{ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                this.internalLogger.LogError(ex, $"Internal error. Could not write signal to metricsContainer.");
-            }
-        }
-
-        /// <summary>
-        /// Updates a value in the signal store.
-        /// </summary>
-        /// <typeparam name="T">The type of the value inside the store.</typeparam>
-        /// <param name="key">The key under which the value was stored.</param>
-        /// <param name="ruleSettings">The otel metric rule that should be applied.</param>
-        /// <param name="payload">The payload to be parsed.</param>
-        /// <param name="expandedAttributes">The attributes to be applied to the value.</param>
-        /// <returns></returns>
-        private async Task UpdateSignalStoreValue<T>(string key, OtelMetricRuleSettings ruleSettings, string payload, IEnumerable<Variable> expandedAttributes)
-        {
-            T value = await this.payloadParser.Parse<T>(SubscriptionType.Metric, ruleSettings.Name, payload, ruleSettings.Value);
-            this.signalStore.UpdateValue(key, value, expandedAttributes);
         }
     }
 }

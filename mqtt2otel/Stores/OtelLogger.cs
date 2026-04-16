@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using mqtt2otel.Configuration;
+using mqtt2otel.Manifest;
 using mqtt2otel.Helper;
 using mqtt2otel.Parser;
 using mqtt2otel.Transformation;
@@ -45,59 +45,55 @@ namespace mqtt2otel.Stores
         /// Processes a log message given as a string payload.
         /// </summary>
         /// <param name="payload">The payload representing the log message.</param>
-        /// <param name="loggingSettings">The log settings that define how to interpret the payload.</param>
+        /// <param name="rule">The log rule that define how to interpret the payload.</param>
         /// <param name="variables">Variables that can be applied to the payload.</param>
         /// <param name="internalLogger">The logger used for internal logging.</param>
+        /// <param name="combinedAttributes">All attributes that should be applied to the log message.</param>
         /// <returns>A value indicating whether the payload could be processed successfully.</returns>
-        public async Task<bool> ProcessLogMessage(string payload, LoggingRuleSettings loggingSettings, IEnumerable<Variable> variables, ILogger internalLogger)
+        public async Task<bool> ProcessLogMessage(string payload, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<Variable> combinedAttributes)
         {
-            foreach (var otelSettings in loggingSettings.Otel.Rules)
+            if (rule.Name == null) return false;
+
+            if (!string.IsNullOrWhiteSpace(rule.Transform))
             {
-                if (otelSettings.Name == null) return false;
-
-                if (!string.IsNullOrWhiteSpace(otelSettings.Transform))
-                {
-                    payload = await this.payloadTransformation.Apply(SubscriptionType.Log, otelSettings.Name, payload, otelSettings.Transform);
-                }
-
-                var combinedAttributes = otelSettings.Attributes.Combine(loggingSettings.Otel.Attributes);
-
-                List<KeyValuePair<string, object?>> attributes = combinedAttributes
-                    .Select(attribute => new KeyValuePair<string, object?>(attribute.Key, VariableParser.Expand(attribute.Value.ToString() ?? string.Empty, variables)))
-                    .ToList();
-
-                string? body = string.Empty;
-
-                switch (otelSettings.PayloadType)
-                {
-                    case OtelLoggingPayloadType.Text:
-                        body = await this.payloadParser.Parse<string>(SubscriptionType.Log, loggingSettings.Name, payload, otelSettings.Filter);
-                        break;
-                    case OtelLoggingPayloadType.Json:
-                        var obj = Newtonsoft.Json.Linq.JObject.Parse(payload).ToObject<Dictionary<string, object?>>();
-
-                        if (obj == null) return false;
-
-                        string messageKey = loggingSettings.MessageKey;
-                        if (obj.ContainsKey(messageKey))
-                        {
-                            body = obj[messageKey]?.ToString();
-                            obj.Remove(messageKey);
-                            var additionalAttributes = obj.Select(kvp => new KeyValuePair<string, object?>(kvp.Key, kvp.Value)).ToList();
-                            attributes.AddRange(additionalAttributes);
-                        }
-                        else
-                        {
-                            body = string.Format("{payload}", obj);
-                        }
-
-                        break;
-                    default:
-                        return false;
-                }
-
-                ApplyLoglevelAndLogToOtel(internalLogger, attributes, body, loggingSettings);
+                payload = await this.payloadTransformation.Apply(rule.Name, payload, rule.Transform);
             }
+
+            List<KeyValuePair<string, object?>> attributes = combinedAttributes
+                .Select(attribute => new KeyValuePair<string, object?>(attribute.Key, VariableParser.Expand(attribute.Value.ToString() ?? string.Empty, variables)))
+                .ToList();
+
+            string? body = string.Empty;
+
+            switch (rule.PayloadType)
+            {
+                case OtelLoggingPayloadType.Text:
+                    body = await this.payloadParser.Parse<string>(rule.Name, payload, rule.Filter);
+                    break;
+                case OtelLoggingPayloadType.Json:
+                    var obj = Newtonsoft.Json.Linq.JObject.Parse(payload).ToObject<Dictionary<string, object?>>();
+
+                    if (obj == null) return false;
+
+                    string messageKey = rule.MessageKey;
+                    if (obj.ContainsKey(messageKey))
+                    {
+                        body = obj[messageKey]?.ToString();
+                        obj.Remove(messageKey);
+                        var additionalAttributes = obj.Select(kvp => new KeyValuePair<string, object?>(kvp.Key, kvp.Value)).ToList();
+                        attributes.AddRange(additionalAttributes);
+                    }
+                    else
+                    {
+                        body = string.Format("{payload}", obj);
+                    }
+
+                    break;
+                default:
+                    return false;
+            }
+
+            ApplyLoglevelAndLogToOtel(internalLogger, attributes, body, rule);
 
             return true;
         }
@@ -108,10 +104,10 @@ namespace mqtt2otel.Stores
         /// <param name="internalLogger">The logger for internal logging.</param>
         /// <param name="attributes">The log attributes that should be added as a log scope.</param>
         /// <param name="body">The log message body.</param>
-        /// <param name="ruleSettings">The settings identifying the rule that should be applied for logging.</param>
-        private void ApplyLoglevelAndLogToOtel(ILogger internalLogger, List<KeyValuePair<string, object?>> attributes, string? body, LoggingRuleSettings ruleSettings)
+        /// <param name="rule">The rule that should be applied for logging.</param>
+        private void ApplyLoglevelAndLogToOtel(ILogger internalLogger, List<KeyValuePair<string, object?>> attributes, string? body, OtelLoggingRule rule)
         {
-            string loglevelKey = ruleSettings.LogLevelKey;
+            string loglevelKey = rule.LogLevelKey;
 
             if (body == null) return;
             using (logger.BeginScope(attributes))

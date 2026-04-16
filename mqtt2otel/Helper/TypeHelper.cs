@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using mqtt2otel.Configuration;
+using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 using System;
 using System.Collections.Generic;

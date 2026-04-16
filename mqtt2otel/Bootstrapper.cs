@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using mqtt2otel.Configuration;
+using mqtt2otel.Manifest;
 using mqtt2otel.InternalLogging;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
@@ -52,10 +52,16 @@ namespace mqtt2otel
         private static DateTime? LastManifestFileChange;
 
         /// <summary>
-        /// Bootstraps the applicatino.
+        /// The factory for creating the manifest via the yaml parser.
         /// </summary>
-        /// <returns>A return code.</returns>
-        public static async Task<int> Bootstrap()
+        private static ObjectFactory? objectFactory;
+
+        /// <summary>
+        /// Reads the application settings file.
+        /// </summary>
+        /// <returns>The application settings.</returns>
+        /// <exception cref="Exception">Thrown when application settings file could not be parsed.</exception>
+        public static ApplicationSettings ReadApplicationSettings()
         {
             // Default path for application settings.
             string applicationSettingsPath = "/config/ApplicationSettings.yaml";
@@ -75,26 +81,52 @@ namespace mqtt2otel
                     Console.WriteLine($"CRITICAL: Could not read {applicationSettingsPath}. The following error occured: {ex.ToString()}.");
                     Console.WriteLine("CRITICAL: Shutting down application.");
 
-                    return -1;
+                    throw new Exception();
                 }
             }
 
+            return Bootstrapper.applicationSettings;
+        }
+
+        /// <summary>
+        /// Initializes the log factory, used for internal logging.
+        /// </summary>
+        /// <param name="settings">The settings for creating the factory.</param>
+        /// <exception cref="Exception">Thrown when the log factory cannot be initialized.</exception>
+        public static ILoggerFactory InitializeLogFactory(InternalLoggingSettings settings)
+        {
             try
             {
-                Bootstrapper.internalLogFactory = InternalLogFactory.Create(Bootstrapper.applicationSettings.Logging);
+                Bootstrapper.internalLogFactory = InternalLogFactory.Create(settings);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"CRITICAL: Could not initialize the internal logging factory. The following error occured: {ex.ToString()}. Shutting down application.");
                 Console.WriteLine("CRITICAL: Shutting down application.");
 
-                return -2;
+                throw new Exception();
             }
 
+            return Bootstrapper.internalLogFactory;
+        }
+
+        /// <summary>
+        /// Bootstraps the applicatino.
+        /// </summary>
+        /// <<param name="objectFactory">The factory for creating the manifest via the yaml parser.</param>
+        /// <param name="signalStore">The store for otel signals.</param>
+        /// <param name="loggerStore">The store for otel loggers.</param>
+        /// <returns>A return code.</returns>
+        public static async Task<int> Bootstrap(ObjectFactory objectFactory, SignalStore signalStore, LoggerStore loggerStore)
+        {
             var internalLogger = Bootstrapper.internalLogFactory.CreateLogger<Bootstrapper>();
             internalLogger.LogInformation("ApplicationSettings.yaml read.");
 
-            (bool flowControl, int value) = await ProcessManifest(Bootstrapper.internalLogFactory);
+            Bootstrapper.signalStore = signalStore;
+            Bootstrapper.loggerStore = loggerStore;
+            Bootstrapper.objectFactory = objectFactory;
+
+            (bool flowControl, int value) = await ProcessManifest(Bootstrapper.internalLogFactory, objectFactory);
 
             if (!flowControl)
             {
@@ -163,13 +195,17 @@ namespace mqtt2otel
         /// Process the manifest file.
         /// </summary>
         /// <param name="internalLogFactory">The internal logger.</param>
+        /// <param name="objectFactory">The factory used for creating the manifest via the yaml parser.</param>
         /// <returns>A value indicating whether the operation has been successfull and an error code.</returns>
-        private static async Task<(bool flowControl, int value)> ProcessManifest(ILoggerFactory internalLogFactory)
+        private static async Task<(bool flowControl, int value)> ProcessManifest(ILoggerFactory internalLogFactory, ObjectFactory objectFactory)
         {
-            var manifest = new Manifest();
+            if (Bootstrapper.signalStore == null) throw new Exception("Signal store not set.");
+            if (Bootstrapper.loggerStore == null) throw new Exception("Logger store not set.");
+
+            var manifest = new Manifest.Manifest();
             try
             {
-                manifest = Configuration.Manifest.ReadFromYaml(internalLogFactory.CreateLogger<Manifest>(), Bootstrapper.applicationSettings.ManifestPath);
+                manifest = Manifest.Manifest.ReadFromYaml(objectFactory, internalLogFactory, Bootstrapper.applicationSettings.ManifestPath);
             }
             catch (Exception ex)
             {
@@ -180,7 +216,7 @@ namespace mqtt2otel
                     message = $"{message}: {ex.InnerException.Message}";
                 }
 
-                internalLogFactory.CreateLogger<Manifest>().LogCritical($"Error parsing settings file. {message}");
+                internalLogFactory.CreateLogger<Manifest.Manifest>().LogCritical($"Error parsing manifest file. {message}");
                 internalLogFactory.Dispose();
                 return (flowControl: false, value: -3);
             }
@@ -193,18 +229,18 @@ namespace mqtt2otel
 
             if (validationResult.Success == false)
             {
-                internalLogFactory.CreateLogger<Manifest>().LogCritical("Could not validate settings. Shutting down application.");
+                internalLogFactory.CreateLogger<Manifest.Manifest>().LogCritical("Could not validate manifest. Shutting down application.");
                 internalLogFactory.Dispose();
                 return (flowControl: false, value: -4);
             }
 
-            var payloadParser = new PayloadParser();
-            Bootstrapper.signalStore = new SignalStore();
-            Bootstrapper.loggerStore = new LoggerStore(payloadParser);
+            Bootstrapper.signalStore.DeleteStore();
+            Bootstrapper.loggerStore.DeleteStore();
 
             Bootstrapper.otelCoordinator = new OtelCoordinator(internalLogFactory.CreateLogger<OtelCoordinator>(), manifest, Bootstrapper.signalStore, Bootstrapper.loggerStore);
 
             var payloadTransformation = new PayloadTransformation();
+            var payloadParser = new PayloadParser();
 
             Bootstrapper.mqttCoordinator = new MqttCoordinator(internalLogFactory.CreateLogger<MqttCoordinator>(), Bootstrapper.signalStore, Bootstrapper.loggerStore, payloadParser, payloadTransformation);
 
@@ -219,11 +255,17 @@ namespace mqtt2otel
         {
             var internalLogger = Bootstrapper.internalLogFactory.CreateLogger<Bootstrapper>();
 
+            if (objectFactory == null)
+            {
+                internalLogger.LogError("Internal error: Cannot relaod manifest as the object factory is null.");
+                return;
+            }
+
             internalLogger.LogInformation("Reloading manifest file..");
             using (internalLogger.StartActivity("Reload manifest."))
             {
                 Bootstrapper.DisposeConnections();
-                await Bootstrapper.ProcessManifest(Bootstrapper.internalLogFactory);
+                await Bootstrapper.ProcessManifest(Bootstrapper.internalLogFactory, objectFactory);
             }
             internalLogger.LogInformation("Reloading manifest completed.");
         }

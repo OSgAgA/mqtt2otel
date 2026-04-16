@@ -5,12 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
-    /// Provides settings for configuring the open telemetry server.
+    /// Provides the open telemetry server.
     /// </summary>
-    public class OtelServerSettings : NamedSetting
+    public class OtelServer : NamedIdObject
     {
         /// <summary>
         /// Gets or sets the service name that will be used when connecting to the server.
@@ -30,7 +30,7 @@ namespace mqtt2otel.Configuration
         /// <summary>
         /// Gets or sets the open telemetry server endpoint.
         /// </summary>
-        public OtelServerEndpointSettings Endpoint { get; set; } = new ();
+        public OtelServerEndpoint Endpoint { get; set; } = new ();
 
         /// <summary>
         /// Gets or sets a prefix that will be prepended to the client id used to connect to the server. This helps in tracking down issues,
@@ -50,7 +50,7 @@ namespace mqtt2otel.Configuration
         public ExportProcessorType ExportProcessorType { get; set; } = ExportProcessorType.Batch;
 
         /// <summary>
-        /// Validates all settings.
+        /// Validates the object.
         /// </summary>
         /// <param name="result">The validation results.</param>
         public void Validate(ValidationResult result)

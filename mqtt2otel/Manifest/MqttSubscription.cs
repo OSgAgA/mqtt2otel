@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
-    /// Provides the settings for mqtt broker subscriptions.
+    /// Provides the mqtt broker subscriptions.
     /// </summary>
-    public class MqttSubscriptionSettings : NamedSetting
+    public class MqttSubscription : NamedIdObject
     {
         /// <summary>
         /// Gets or sets the topic to which the application should subscribe.
@@ -32,7 +32,7 @@ namespace mqtt2otel.Configuration
         public List<Variable> Variables { get; set; } = new();
 
         /// <summary>
-        /// Validates the settings.
+        /// Validates the object.
         /// </summary>
         /// <param name="context">The currently active context. This will be provided as a hint to the user, where a problem occured.</param>
         /// <param name="result">The validation result.</param>

@@ -47,13 +47,12 @@ namespace mqtt2otel
         /// Parses a payload by applying a NCalc expression.
         /// </summary>
         /// <typeparam name="TResult">The expected result type.</typeparam>
-        /// <param name="category">The subscription type from where the function is called.</param>
         /// <param name="name">The rule name to identify the settings in case of an error.</param>
         /// <param name="payload">The payload to be parsed.</param>
         /// <param name="expressionString">The NCalc expression that will be applied to the payload.</param>
         /// <returns>The parsed expression.</returns>
         /// <exception cref="ExpressionParsingException">Thrown if the expression could not be parsed.</exception>
-        public async Task<TResult> ParseExpression<TResult>(SubscriptionType category, string name, string payload, string expressionString)
+        public async Task<TResult> ParseExpression<TResult>(string name, string payload, string expressionString)
         {
             try
             {
@@ -72,7 +71,7 @@ namespace mqtt2otel
             }
             catch (Exception ex)
             {
-                throw new ExpressionParsingException(ex, category, name, expressionString);
+                throw new ExpressionParsingException(ex, name, expressionString);
             }
         }
 

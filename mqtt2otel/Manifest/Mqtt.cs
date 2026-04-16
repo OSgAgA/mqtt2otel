@@ -3,15 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
-    /// Provides all mqtt settings.
+    /// Provides all mqtt settings and subscriptions.
     /// </summary>
-    public class MqttSettings : NamedSetting
+    public class Mqtt : NamedIdObject
     {
         /// <summary>
-        /// Gets or sets all variables that are associated with these settings.
+        /// Gets or sets all variables.
         /// </summary>
         public List<Variable> Variables { get; set; } = new();
 
@@ -25,21 +25,21 @@ namespace mqtt2otel.Configuration
         /// <summary>
         /// Gets or sets a list of mqtt broker subscriptions.
         /// </summary>
-        public List<MqttSubscriptionSettings> Subscriptions { get; set; } = new();
+        public List<MqttSubscription> Subscriptions { get; set; } = new();
 
         /// <summary>
         /// Gets or sets a list of broker subscription groups.
         /// </summary>
-        public List<SubscriptionGroupSettings> SubscriptionGroups { get; set; } = new();
+        public List<SubscriptionGroup> SubscriptionGroups { get; set; } = new();
 
         /// <summary>
-        /// Validates all settings.
+        /// Validates the object.
         /// </summary>
         /// <param name="context">The currently active context. This will be provided as a hint to the user, where a problem occured.</param>
         /// <param name="result">The validation result.</param>
         public void Validate(string context, ValidationResult result)
         {
-            context = $"{context} / Mqtt settings ({this.Name})";
+            context = $"{context} / Mqtt ({this.Name})";
             this.Variables.ForEach(var => var.Validate(context, result));
             this.Subscriptions.ForEach(sub => sub.Validate(context, result));
 
