@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
-    /// Provides the settings available for open telemetry logging rules.
+    /// Provides an open telemetry logging rules.
     /// </summary>
-    public class OtelLoggingRuleSettings : NamedSetting
+    public class OtelLoggingRule : NamedIdObject
     {
         /// <summary>
         /// Gets or sets the category name, that should be used by the logger.
@@ -48,7 +48,17 @@ namespace mqtt2otel.Configuration
         public string? OtelServerName { get; set; } = null;
 
         /// <summary>
-        /// Validates the settings.
+        /// The key for structured payloads (e.g. json) to be used to identify the message body.
+        /// </summary>
+        public string MessageKey { get; set; } = "otel_message";
+
+        /// <summary>
+        /// The key for structured payloads (e.g. json) to be used to identify the log level.
+        /// </summary>
+        public string LogLevelKey { get; set; } = "otel_loglevel";
+
+        /// <summary>
+        /// Validates the object.
         /// </summary>
         /// <param name="context">The currently active context. This will be provided as a hint to the user, where a problem occured.</param>
         /// <param name="result">The validation result.</param>

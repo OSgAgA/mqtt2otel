@@ -3,17 +3,17 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
-    /// Provides the settings for an mqtt broker.
+    /// Provides the mqtt broker.
     /// </summary>
-    public class MqttBrokerSettings : NamedSetting
+    public class MqttBroker : NamedIdObject
     {
         /// <summary>
         /// Gets or sets the mqtt broker endpoint.
         /// </summary>
-        public MqttBrokerEndpointSettings Endpoint { get; set; } = new ();
+        public MqttBrokerEndpoint Endpoint { get; set; } = new ();
 
         /// <summary>
         /// Gets or sets the delay in ms, that will be waited, if a reconnect was not successful, before the next connect is attempted.
@@ -27,7 +27,7 @@ namespace mqtt2otel.Configuration
         public string ClientPrefix { get; set; } = ApplicationStringConstants.ApplicationName;
 
         /// <summary>
-        /// Validates all settings.
+        /// Validates the object.
         /// </summary>
         /// <param name="result">The validation result.</param>
         public void Validate(ValidationResult result)

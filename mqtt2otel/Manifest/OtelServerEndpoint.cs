@@ -4,17 +4,17 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
     /// Provides the default settings for the open telemetry server endpoint.
     /// </summary>
-    public class OtelServerEndpointSettings : EndpointSettings
+    public class OtelServerEndpoint : Endpoint
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="OtelServerEndpointSettings"/> class.
+        /// Initializes a new instance of the <see cref="OtelServerEndpoint"/> class.
         /// </summary>
-        public OtelServerEndpointSettings() : base()
+        public OtelServerEndpoint() : base()
         {
             this.Port = 4317;
             this.Protocol = "http";

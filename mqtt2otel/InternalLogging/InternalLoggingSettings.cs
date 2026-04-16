@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using mqtt2otel.Configuration;
+using mqtt2otel.Manifest;
 using OpenTelemetry.Exporter;
 using System;
 using System.Collections.Generic;
@@ -46,6 +46,6 @@ namespace mqtt2otel.InternalLogging
         /// <summary>
         /// Gets or sets the otel server settings. Will be ignored if <see cref="LogToOtel"/> is false.
         /// </summary>
-        public OtelServerSettings Otel { get; set; }  = new();
+        public OtelServer Otel { get; set; }  = new();
     }
 }

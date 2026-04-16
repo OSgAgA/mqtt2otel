@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
-    /// Provides the settings for subscription groups. Subscription groups bundle multiple subscriptions to make them available
+    /// Provides the subscription groups. Subscription groups bundle multiple subscriptions to make them available
     /// in different contexts.
     /// </summary>
-    public class SubscriptionGroupSettings
+    public class SubscriptionGroup
     {
         /// <summary>
         /// Gets or sets the name of the subscription group.

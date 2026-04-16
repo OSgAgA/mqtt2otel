@@ -9,27 +9,30 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using YamlDotNet.Serialization;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
-    /// Provides the main settings for mqtt2otel.
+    /// Provides the user provided rules for subscribing to a mqtt endpoint and for processing the received payloads..
     /// </summary>
     public class Manifest
     {
         /// <summary>
-        /// Reads the settings from a yaml file.
+        /// Reads the manifest from a yaml file.
         /// </summary>
-        /// <param name="internalLogger">The logger used for internal logging.</param>
+        /// <param name="objectFactory">The object factory for reading the yaml file.</param>
+        /// <param name="internalLoggerFactory">The factory for creating internal loggers..</param>
         /// <param name="path">The path to the yaml file.</param>
-        /// <returns></returns>
-        public static Manifest ReadFromYaml(ILogger<Manifest> internalLogger, string path = "Manifest.yaml")
+        /// <returns>The created manifest.</returns>
+        public static Manifest ReadFromYaml(ObjectFactory objectFactory, ILoggerFactory internalLoggerFactory, string path = "Manifest.yaml")
         {
+            var internalLogger = internalLoggerFactory.CreateLogger(nameof(Manifest));
+
             internalLogger.LogInformation($"Reading {Path.GetFullPath(path)}");
 
             var yaml = File.ReadAllText(path);
-            var deserializer = new DeserializerBuilder().Build();
+            var deserializer = new DeserializerBuilder().WithObjectFactory(objectFactory).Build();
 
-            var result = deserializer.Deserialize<Configuration.Manifest>(yaml);
+            var result = deserializer.Deserialize<Manifest>(yaml);
             result.internalLogger = internalLogger;
 
             return result;
@@ -38,7 +41,7 @@ namespace mqtt2otel.Configuration
         /// <summary>
         /// A reference to the logger used for internal log messages.
         /// </summary>
-        private ILogger<Manifest> internalLogger = new EmptyLogger<Manifest>();
+        private ILogger internalLogger = new EmptyLogger<Manifest>();
 
         /// <summary>
         /// Validates all settings.
@@ -55,37 +58,28 @@ namespace mqtt2otel.Configuration
             this.MqttBroker.ForEach( broker => broker.Validate(result));
             this.OtelServer.ForEach( server => server.Validate(result));
             this.SubscriptionGroups.ForEach(group => group.Validate("Subscription groups", result));
-            this.Metrics.ForEach(metric => metric.Validate(result));
-            this.Logs.ForEach(log => log.Validate(result));
+            this.Processors.ForEach(metric => metric.Validate(result));
 
-            foreach (var metricRuleSetting in this.Metrics)
+            foreach (var processor in this.Processors)
             {
-                if (!this.ServerNameExists(metricRuleSetting.OtelServerName))
+                if (!this.ServerNameExists(processor.OtelServerName))
                 {
-                    result.AddError($"Metric rule {metricRuleSetting.Name} refers to a non existing Otel server name: {metricRuleSetting.OtelServerName}");
+                    result.AddError($"Processors {processor.Name} refers to a non existing Otel server name: {processor.OtelServerName}");
                 }
 
-                foreach (var otelRuleSetting in metricRuleSetting.Otel.Rules)
+                foreach (var otelRuleSetting in processor.Otel.Metrics)
                 {
                     if (!this.ServerNameExists(otelRuleSetting.OtelServerName))
                     {
-                        result.AddError($"Metric rule {otelRuleSetting.Name} refers to a non existing Otel server name: {otelRuleSetting.OtelServerName}");
+                        result.AddError($"Processors {otelRuleSetting.Name} refers to a non existing Otel server name: {otelRuleSetting.OtelServerName}");
                     }
                 }
-            }
 
-            foreach (var logRuleSettings in this.Logs)
-            {
-                if (!this.ServerNameExists(logRuleSettings.Otel.OtelServerName))
-                {
-                    result.AddError($"Metric rule {logRuleSettings.Name} refers to a non existing Otel server name: {logRuleSettings.Otel.OtelServerName}");
-                }
-
-                foreach (var otelRuleSetting in logRuleSettings.Otel.Rules)
+                foreach (var otelRuleSetting in processor.Otel.Logs)
                 {
                     if (!this.ServerNameExists(otelRuleSetting.OtelServerName))
                     {
-                        result.AddError($"Metric rule {otelRuleSetting.Name} refers to a non existing Otel server name: {otelRuleSetting.OtelServerName}");
+                        result.AddError($"Processors {otelRuleSetting.Name} refers to a non existing Otel server name: {otelRuleSetting.OtelServerName}");
                     }
                 }
             }
@@ -94,61 +88,50 @@ namespace mqtt2otel.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the settings version.
+        /// Gets or sets the manifest version.
         /// </summary>
         public string Version { get; set; } = "";
 
         /// <summary>
-        /// Gets or sets all available subscription groups settings.
+        /// Gets or sets all available subscription groups.
         /// </summary>
-        public List<MqttSettings> SubscriptionGroups { get; set; } = new();
+        public List<Mqtt> SubscriptionGroups { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the mqtt broker settings.
+        /// Gets or sets the mqtt broker.
         /// </summary>
-        public List<MqttBrokerSettings> MqttBroker { get; set; } = new();
+        public List<MqttBroker> MqttBroker { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the open telemetry server settings.
+        /// Gets or sets the open telemetry server.
         /// </summary>
-        public List<OtelServerSettings> OtelServer { get; set; } = new();
+        public List<OtelServer> OtelServer { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets all metrics settings.
+        /// Gets or sets all metrics.
         /// </summary>
-        public List<MetricsRuleSettings> Metrics { get; set; } = new();
-
-        /// <summary>
-        /// Gets or sets all logs settings.
-        /// </summary>
-        public List<LoggingRuleSettings> Logs { get; set; } = new();
+        public List<Processor> Processors { get; set; } = new();
 
         /// <summary>
         /// Gets the default otel server. That is the first server defined in <see cref="OtelServer"/> or null, if no otel server
         /// is defined.
         /// </summary>
-        public OtelServerSettings? DefaultOtelServer
+        public OtelServer? DefaultOtelServer
         {
             get => this.OtelServer.FirstOrDefault();
         }
 
         /// <summary>
-        /// Initializes the settings objects. This will apply all inherited informations, like variables and group subscriptions to child elements.
+        /// Initializes the manifest. This will apply all inherited informations, like variables and group subscriptions to child elements.
         /// </summary>
         public void Initialize()
         {
             this.ApplyOtelServerNamesToRules();
 
-            foreach (var metric in this.Metrics)
+            foreach (var processor in this.Processors)
             {
-                this.ApplySubscriptionGroupsToSubscriptions(metric.Mqtt.SubscriptionGroups, metric.Mqtt.Subscriptions);
-                this.ApplyTransformationFromParent(metric.Mqtt.Transform, metric.Mqtt.Subscriptions);
-            }
-
-            foreach (var log in this.Logs)
-            {
-                this.ApplySubscriptionGroupsToSubscriptions(log.Mqtt.SubscriptionGroups, log.Mqtt.Subscriptions);
-                this.ApplyTransformationFromParent(log.Mqtt.Transform, log.Mqtt.Subscriptions);
+                this.ApplySubscriptionGroupsToSubscriptions(processor.Mqtt.SubscriptionGroups, processor.Mqtt.Subscriptions);
+                this.ApplyTransformationFromParent(processor.Mqtt.Transform, processor.Mqtt.Subscriptions);
             }
         }
 
@@ -163,9 +146,9 @@ namespace mqtt2otel.Configuration
             
             bool result = false;
 
-            foreach (var otelServerSettings in this.OtelServer)
+            foreach (var otelServer in this.OtelServer)
             {
-                if (otelServerSettings.Name == name) 
+                if (otelServer.Name == name) 
                 { 
                     result = true; 
                     break; 
@@ -183,24 +166,20 @@ namespace mqtt2otel.Configuration
         {
             if (this.DefaultOtelServer == null) return;
 
-            foreach(var metric in this.Metrics)
+            foreach(var processor in this.Processors)
             {
-                if (metric.OtelServerName == null) metric.OtelServerName = this.DefaultOtelServer.Name;
+                if (processor.OtelServerName == null) processor.OtelServerName = this.DefaultOtelServer.Name;
 
-                foreach (var metricRule in metric.Otel.Rules)
+                foreach (var metricRule in processor.Otel.Metrics)
                 {
-                    if (metricRule.OtelServerName == null) metricRule.OtelServerName = metric.OtelServerName;
+                    if (metricRule.OtelServerName == null) metricRule.OtelServerName = processor.OtelServerName;
                 }
-            }
 
-            foreach (var logging in this.Logs)
-            {
-                if (logging.Otel.OtelServerName == null) logging.Otel.OtelServerName = this.DefaultOtelServer.Name;
-
-                foreach (var loggingRule in logging.Otel.Rules)
+                foreach (var metricRule in processor.Otel.Logs)
                 {
-                    if (loggingRule.OtelServerName == null) loggingRule.OtelServerName = logging.Otel.OtelServerName;
+                    if (metricRule.OtelServerName == null) metricRule.OtelServerName = processor.OtelServerName;
                 }
+
             }
         }
 
@@ -209,7 +188,7 @@ namespace mqtt2otel.Configuration
         /// </summary>
         /// <param name="subscriptionGroups">The subscription groups that should be applied to the subscriptions</param>
         /// <param name="subscriptions">The subscriptions where the subscription group information should be added.</param>
-        private void ApplySubscriptionGroupsToSubscriptions(IEnumerable<SubscriptionGroupSettings> subscriptionGroups, List<MqttSubscriptionSettings> subscriptions)
+        private void ApplySubscriptionGroupsToSubscriptions(IEnumerable<SubscriptionGroup> subscriptionGroups, List<MqttSubscription> subscriptions)
         {
             foreach (var group in subscriptionGroups)
             {
@@ -229,7 +208,7 @@ namespace mqtt2otel.Configuration
                     if (!string.IsNullOrWhiteSpace(group.ParentPath)) newPath = group.ParentPath + "/" + newPath;
                     if (!string.IsNullOrWhiteSpace(group.SubPath)) newPath += "/" + group.SubPath;
 
-                    var newSubscription = new MqttSubscriptionSettings()
+                    var newSubscription = new MqttSubscription()
                     {
                         Name = subscription.Name,
                         Description = subscription.Description,
@@ -248,7 +227,7 @@ namespace mqtt2otel.Configuration
         /// </summary>
         /// <param name="parentTransform">The transformation that should be applied to all subscriptions.</param>
         /// <param name="subscriptions">The list of subscriptions to which the transformation should be applied.</param>
-        private void ApplyTransformationFromParent(string parentTransform, List<MqttSubscriptionSettings> subscriptions)
+        private void ApplyTransformationFromParent(string parentTransform, List<MqttSubscription> subscriptions)
         {
             if (string.IsNullOrEmpty(parentTransform)) return;
 

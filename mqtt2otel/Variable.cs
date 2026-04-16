@@ -1,4 +1,4 @@
-﻿using mqtt2otel.Configuration;
+﻿using mqtt2otel.Manifest;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;

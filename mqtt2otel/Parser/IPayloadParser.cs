@@ -16,11 +16,10 @@
         /// Parses a string payload to a given type.
         /// </summary>
         /// <typeparam name="T">The expected result type.</typeparam>
-        /// <param name="category">The subscription type where the parser was used.</param>
         /// <param name="name">An identifier identifying the context of the parser. This enables the user to find the cause of the error.</param>
         /// <param name="payload">The payload to be parsed.</param>
         /// <param name="expression">The expression that should be applied to the payload.</param>
         /// <returns>The parsed value.</returns>
-        Task<T> Parse<T>(SubscriptionType category, string name, string payload, string expression);
+        Task<T> Parse<T>(string name, string payload, string expression);
     }
 }

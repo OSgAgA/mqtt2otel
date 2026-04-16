@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
-    /// Represents settings that have an id, a name and a descriptin. Mainly used as a base class for other settings.
+    /// Represents objects that have an id, a name and a descriptin. Mainly used as a base class for other objects.
     /// </summary>
-    public class NamedSetting
+    public class NamedIdObject
     {
         /// <summary>
         /// Gets or sets the unique id of this setting. This is mainly used internally.

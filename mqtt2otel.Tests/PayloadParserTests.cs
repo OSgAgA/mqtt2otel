@@ -11,7 +11,7 @@ namespace mqtt2otel.Tests
 
             parser.AutoDetectStrategies();
 
-            var result = await parser.ParseExpression<int>(SubscriptionType.Metric, "Test", "123", "CONST('42')");
+            var result = await parser.ParseExpression<int>("Test", "123", "CONST('42')");
 
             Assert.Equal(42, result);
         }
@@ -28,7 +28,7 @@ namespace mqtt2otel.Tests
             parser.AutoDetectStrategies();
 
             string payload = "{ \"Test\": { ValueA: 42, ValueB: 10, ValueC: { ValueD: 11 } }, ValueE: 23 }";
-            var result = await parser.ParseExpression<int>(SubscriptionType.Metric, "Test", payload, $"JSONPATH({pattern})");
+            var result = await parser.ParseExpression<int>("Test", payload, $"JSONPATH({pattern})");
 
             Assert.Equal(expectedResult, result);
         }
@@ -41,7 +41,7 @@ namespace mqtt2otel.Tests
             parser.AutoDetectStrategies();
 
             string payload = "{ \"Test\": { ValueA: 42.2, ValueB: 10, ValueC: { ValueD: 11 } }, ValueE: 23 }";
-            var result = await parser.ParseExpression<float>(SubscriptionType.Metric, "Test", payload, "JSONPATH('int', '$.Test.ValueA')");
+            var result = await parser.ParseExpression<float>("Test", payload, "JSONPATH('int', '$.Test.ValueA')");
 
             Assert.Equal(42, result);
         }
@@ -54,7 +54,7 @@ namespace mqtt2otel.Tests
             parser.AutoDetectStrategies();
 
             string payload = "{ \"Test\": { ValueA: 42 } }";
-            var result = await parser.ParseExpression<string>(SubscriptionType.Metric, "Test", payload, "PAYLOAD()");
+            var result = await parser.ParseExpression<string>("Test", payload, "PAYLOAD()");
 
             Assert.Equal(payload, result);
         }
@@ -69,7 +69,7 @@ namespace mqtt2otel.Tests
             var parser = new PayloadParser();
 
             string payload = string.Empty;
-            var result = await parser.ParseExpression<float>(SubscriptionType.Metric, "Test", payload, expression);
+            var result = await parser.ParseExpression<float>("Test", payload, expression);
 
             Assert.Equal(expectedResult, result);
         }
@@ -85,7 +85,7 @@ namespace mqtt2otel.Tests
             parser.AutoDetectStrategies();
 
             string payload = "{ \"Test\": { ValueA: 42 } }";
-            var result = await parser.ParseExpression<DateTime>(SubscriptionType.Metric, "Test", payload, expression);
+            var result = await parser.ParseExpression<DateTime>("Test", payload, expression);
 
             Assert.Equal(DateTime.Parse(expectedResult), result);
         }
@@ -105,7 +105,7 @@ namespace mqtt2otel.Tests
             parser.AutoDetectStrategies();
 
             string payload = "{ \"Test\": { ValueA: 42 } }";
-            var result = await parser.ParseExpression<DateTime>(SubscriptionType.Metric, "Test", payload, expression);
+            var result = await parser.ParseExpression<DateTime>("Test", payload, expression);
 
             Assert.Equal(DateTime.Parse(expectedResult), result);
         }
@@ -132,7 +132,7 @@ namespace mqtt2otel.Tests
             parser.AutoDetectStrategies();
 
             string payload = string.Empty;
-            var exception = await Assert.ThrowsAsync<ExpressionParsingException>( async () => await parser.ParseExpression<DateTime>(SubscriptionType.Metric, "Test", payload, expression) );
+            var exception = await Assert.ThrowsAsync<ExpressionParsingException>( async () => await parser.ParseExpression<DateTime>("Test", payload, expression) );
 
             Assert.NotNull(exception);
             Assert.NotNull(exception.InnerException);
@@ -162,7 +162,7 @@ namespace mqtt2otel.Tests
             parser.AutoDetectStrategies();
 
             string payload = string.Empty;
-            var exception = await Assert.ThrowsAsync<ExpressionParsingException>(async () => await parser.ParseExpression<DateTime>(SubscriptionType.Metric, "Test", payload, expression));
+            var exception = await Assert.ThrowsAsync<ExpressionParsingException>(async () => await parser.ParseExpression<DateTime>("Test", payload, expression));
 
             Assert.NotNull(exception);
             Assert.NotNull(exception.InnerException);
@@ -187,7 +187,7 @@ namespace mqtt2otel.Tests
             parser.AutoDetectStrategies();
 
             string payload = string.Empty;
-            var exception = await Assert.ThrowsAsync<ExpressionParsingException>(async () => await parser.ParseExpression<DateTime>(SubscriptionType.Metric, "Test", payload, expression));
+            var exception = await Assert.ThrowsAsync<ExpressionParsingException>(async () => await parser.ParseExpression<DateTime>("Test", payload, expression));
 
             Assert.NotNull(exception);
             Assert.NotNull(exception.InnerException);
@@ -215,7 +215,7 @@ namespace mqtt2otel.Tests
             parser.AutoDetectStrategies();
 
             string payload = "  1232134 aA_42 239847";
-            var result = await parser.ParseExpression<string>(SubscriptionType.Metric, "test", payload, expression);
+            var result = await parser.ParseExpression<string>("test", payload, expression);
 
             Assert.Equal(expectedResult, result);
         }
@@ -230,7 +230,7 @@ namespace mqtt2otel.Tests
             parser.AutoDetectStrategies();
 
             string payload = "  1232134 aA_42 239847";
-            var result = await parser.ParseExpression<int>(SubscriptionType.Metric, "test", payload, expression);
+            var result = await parser.ParseExpression<int>("test", payload, expression);
 
             Assert.Equal(expectedResult, result);
         }
@@ -245,7 +245,7 @@ namespace mqtt2otel.Tests
             parser.AutoDetectStrategies();
 
             string payload = " --2022-02-16--";
-            var result = await parser.ParseExpression<DateTime>(SubscriptionType.Metric, "test", payload, expression);
+            var result = await parser.ParseExpression<DateTime>("test", payload, expression);
 
             Assert.Equal(DateTime.Parse(expectedResult), result);
         }
@@ -260,7 +260,7 @@ namespace mqtt2otel.Tests
             parser.AutoDetectStrategies();
 
             string payload = " <root><child>42</child><child>11</child></root>";
-            var result = await parser.ParseExpression<int>(SubscriptionType.Metric, "test", payload, expression);
+            var result = await parser.ParseExpression<int>("test", payload, expression);
 
             Assert.Equal(expectedResult, result);
         }

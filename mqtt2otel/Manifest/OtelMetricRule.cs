@@ -6,12 +6,12 @@ using System.Linq.Expressions;
 using System.Text;
 using NCalc;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
-    /// Provides settings for open telemetry metric rules.
+    /// Provides open telemetry metric rules.
     /// </summary>
-    public class OtelMetricRuleSettings : NamedSetting
+    public class OtelMetricRule : NamedIdObject
     {
         /// <summary>
         /// Gets or sets the open telemetry instrument that will be used by the rule.
@@ -51,7 +51,7 @@ namespace mqtt2otel.Configuration
         public List<string> HistogramBucketBoundaries { get; set; } = new();
 
         /// <summary>
-        /// Validates all settings.
+        /// Validates all objects.
         /// </summary>
         /// <param name="context">The currently active context. This will be provided as a hint to the user, where a problem occured.</param>
         /// <param name="result">The validation result.</param>

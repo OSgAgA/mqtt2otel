@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using mqtt2otel.Configuration;
+using mqtt2otel.Manifest;
 using mqtt2otel.Helper;
 using mqtt2otel.Parser;
 using System;
@@ -65,6 +65,14 @@ namespace mqtt2otel.Stores
         public bool ContainsKey(Guid key)
         {
             return this.store.ContainsKey(key);
+        }
+
+        /// <summary>
+        /// Deletes all entries from the store.
+        /// </summary>
+        public void DeleteStore()
+        {
+            this.store.Clear();
         }
     }
 }

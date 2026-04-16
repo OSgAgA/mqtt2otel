@@ -4,17 +4,17 @@ using System.Collections.Generic;
 using System.Security.Authentication;
 using System.Text;
 
-namespace mqtt2otel.Configuration
+namespace mqtt2otel.Manifest
 {
     /// <summary>
-    /// Provides the default values for the mqtt broker endpoint settings.
+    /// Provides the default values for the mqtt broker endpoint.
     /// </summary>
-    public class MqttBrokerEndpointSettings : EndpointSettings
+    public class MqttBrokerEndpoint : Endpoint
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="MqttBrokerEndpointSettings"/> class.
+        /// Initializes a new instance of the <see cref="MqttBrokerEndpoint"/> class.
         /// </summary>
-        public MqttBrokerEndpointSettings() : base()
+        public MqttBrokerEndpoint() : base()
         {
             this.Port = 1813;
             this.Protocol = "tcp";
