@@ -66,7 +66,7 @@ namespace mqtt2otel.Manifest
         public void Validate(string context, ValidationResult result)
         {
             if (string.IsNullOrWhiteSpace(this.Filter)) result.AddError($"{this.Name}: Filter may not be empty.");
-            this.Attributes.ForEach(attribute => attribute.Validate($"{this.Name} / Attributes", result));
+            this.Attributes.ForEach(attribute => attribute.Validate($"{this.Name}/Attributes", result));
         }
     }
 }

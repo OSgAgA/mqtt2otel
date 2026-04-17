@@ -75,7 +75,7 @@ namespace mqtt2otel.Manifest
         /// <param name="result">The validation result.</param>
         public void Validate(ValidationResult result)
         {
-            string context = $"Metric ({this.Name})";
+            string context = $"Processor ({this.Name})";
             this.Otel.Validate(context, result);
             this.Mqtt.Validate(context, result);
         }

@@ -38,7 +38,7 @@ namespace mqtt2otel.Manifest
         /// <param name="result">The validation result.</param>
         public void Validate(string context, ValidationResult result)
         {
-            context = $"{context} / Mqtt subscription ({this.Name})";
+            context = $"{context}/Mqtt subscription ({this.Name})";
             if (string.IsNullOrWhiteSpace(this.Topic)) result.AddError($"{context}: Empty topic found. Plesae set the topic to a non empty value.");
             this.Variables.ForEach(var => var.Validate(context, result));
         }

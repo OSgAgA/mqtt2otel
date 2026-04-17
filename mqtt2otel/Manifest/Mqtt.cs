@@ -39,7 +39,7 @@ namespace mqtt2otel.Manifest
         /// <param name="result">The validation result.</param>
         public void Validate(string context, ValidationResult result)
         {
-            context = $"{context} / Mqtt ({this.Name})";
+            context = $"{context}/({this.Name})";
             this.Variables.ForEach(var => var.Validate(context, result));
             this.Subscriptions.ForEach(sub => sub.Validate(context, result));
 
@@ -52,11 +52,11 @@ namespace mqtt2otel.Manifest
 
                     if (expression.Error.InnerException != null)
                     {
-                        result.AddError($"{context} ({this.Name}) {nameof(Transform)}: Expression is \"{this.Transform}\". {expression.Error.InnerException.Message}");
+                        result.AddError($"{context}/({this.Name})/{nameof(Transform)}: Expression is \"{this.Transform}\". {expression.Error.InnerException.Message}");
                     }
                     else
                     {
-                        result.AddError($"{context} ({this.Name}) {nameof(Transform)}: Expression is \"{this.Transform}\". {expression.Error}");
+                        result.AddError($"{context}/({this.Name})/{nameof(Transform)}: Expression is \"{this.Transform}\". {expression.Error}");
                     }
                 }
             }
