@@ -16,7 +16,7 @@ namespace mqtt2otel.Manifest
         public List<Variable> Variables { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets a transformation expression (<see cref="Transformation.PayloadTransformation"/>). 
+        /// Gets or sets a transformation expression (<see cref="Interfaces.IPayloadTransformation"/>). 
         /// 
         /// If not empty, this transformation will be applied to all mqtt messages, before it is further processed.
         /// </summary>

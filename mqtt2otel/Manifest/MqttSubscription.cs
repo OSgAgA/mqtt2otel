@@ -20,7 +20,7 @@ namespace mqtt2otel.Manifest
         public string? Broker { get; set; } = null;
 
         /// <summary>
-        /// Gets or sets a transform expression (<see cref="Transformation.PayloadTransformation"/>).
+        /// Gets or sets a transform expression (<see cref="Interfaces.IPayloadTransformation"/>).
         /// 
         /// If non empty this transformation will be applied to all messages received via this subscription.
         /// </summary>

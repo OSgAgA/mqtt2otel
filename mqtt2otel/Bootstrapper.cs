@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
-using mqtt2otel.Manifest;
+using mqtt2otel.Interfaces;
 using mqtt2otel.InternalLogging;
+using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
+using YamlDotNet.Serialization;
 
 namespace mqtt2otel
 {
@@ -17,7 +19,7 @@ namespace mqtt2otel
         /// <summary>
         /// The manifest coordinator used for loading, unloading and reloading of manifests files.
         /// </summary>
-        private ManifestCoordinator manifestCoordinator;
+        private IManifestCoordinator manifestCoordinator;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Bootstrapper"/> class.
@@ -30,8 +32,10 @@ namespace mqtt2otel
         ///   4. <see cref="Bootstrap"/>
         ///   
         /// </summary>
+        /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="manifestCoordinator">The manifest coordinator used for loading, unloading and reloading of manifests files.</param>
-        public Bootstrapper(ILogger<Bootstrapper> internalLogger, ManifestCoordinator manifestCoordinator, ObjectFactory objectFactory)
+        /// <param name="objectFactory">The object factory for creating objects from a yaml file.</param>
+        public Bootstrapper(ILogger<Bootstrapper> internalLogger, IManifestCoordinator manifestCoordinator, IObjectFactory objectFactory)
         {
             this.internalLogger = internalLogger;
             this.manifestCoordinator = manifestCoordinator;

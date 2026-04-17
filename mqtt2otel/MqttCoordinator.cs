@@ -16,13 +16,14 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using mqtt2otel.Interfaces;
 
 namespace mqtt2otel
 {
     /// <summary>
     /// Represents the main class for communicating with the mqtt broker.
     /// </summary>
-    public class MqttCoordinator
+    public class MqttCoordinator : IMqttCoordinator
     {
         /// <summary>
         /// Every subscription will get an id. This counter contains the next id that can be used for 

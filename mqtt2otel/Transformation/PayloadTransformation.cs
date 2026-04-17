@@ -1,4 +1,5 @@
 ﻿using mqtt2otel.Helper;
+using mqtt2otel.Interfaces;
 using mqtt2otel.Parser;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace mqtt2otel.Transformation
     /// Represents a class that can transform a string payload to another string payload based on the provided
     /// <see cref="ITransformationStrategy"/> strategies.
     /// </summary>
-    public class PayloadTransformation : StrategyParser<ITransformationStrategy>
+    public class PayloadTransformation : StrategyParser<ITransformationStrategy>, IPayloadTransformation
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="PayloadTransformation"/> class.

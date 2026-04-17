@@ -34,7 +34,7 @@ namespace mqtt2otel.Manifest
         public List<Variable> Attributes { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the value of the metric as a parse expression (<see cref="Parser.PayloadParser"/>).
+        /// Gets or sets the value of the metric as a parse expression (<see cref="IPayloadParser"/>).
         /// </summary>
         public string Value { get; set; } = "TEXT()";
 

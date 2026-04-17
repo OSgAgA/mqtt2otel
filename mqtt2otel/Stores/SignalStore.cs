@@ -3,13 +3,14 @@ using mqtt2otel.Helper;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using mqtt2otel.Interfaces;
 
 namespace mqtt2otel.Stores
 {
     /// <summary>
     /// Stores metric signals to be delivered to an open telemetry endpoint.
     /// </summary>
-    public class SignalStore
+    public class SignalStore : ISignalStore
     {
         /// <summary>
         /// The metric values that are stored inside the signal store.

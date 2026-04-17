@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using mqtt2otel.Interfaces;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;

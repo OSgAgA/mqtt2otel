@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using mqtt2otel.Helper;
+using mqtt2otel.Interfaces;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
@@ -14,12 +15,12 @@ namespace mqtt2otel.Manifest
     /// Represents a processor. A processor is responsible for subscribing to mqtt topics and
     /// applying otel rules to these subscriptions.
     /// </summary>
-    public class Processor : NamedIdObject
+    public class Processor : NamedIdObject, IProcessor
     {
         /// <summary>
         /// The data stores used by the application to exchange data asynchronously.
         /// </summary>
-        private DataStores dataStores;
+        private IDataStores dataStores;
 
 
         /// <summary>
@@ -30,12 +31,12 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// The payload parser for processing payloads.
         /// </summary>
-        private PayloadParser payloadParser;
+        private IPayloadParser payloadParser;
 
         /// <summary>
         /// The object used for processing payload transformations.
         /// </summary>
-        private PayloadTransformation payloadTransformation;
+        private IPayloadTransformation payloadTransformation;
 
         /// <summary>
         /// Creates a new instance of the <see cref="Processor"/> type.
@@ -44,7 +45,7 @@ namespace mqtt2otel.Manifest
         /// <param name="payloadParser">The payload parser for processing payloads.</param>
         /// <param name="payloadTransformation">The object used for processing payload transformations.</param>
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
-        public Processor(ILogger internalLogger, PayloadParser payloadParser, PayloadTransformation payloadTransformation, DataStores dataStores)
+        public Processor(ILogger internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores)
         {
             this.internalLogger = internalLogger;
             this.payloadParser = payloadParser;
@@ -84,8 +85,8 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="payload">The received payload.</param>
         /// <param name="subscription">The subscription that received the payload.</param>
-        /// <returns></returns>
-        public async Task <bool> ProcessSubscriptionPayload(string payload, MqttSubscription subscription)
+        /// <returns>A value indicating whether the operation has been successful.</returns>
+        public async Task<bool> ProcessSubscriptionPayload(string payload, MqttSubscription subscription)
         {
             bool success = await this.ProcessMetricsSubscription(payload, subscription);
             success = success && await this.ProcessLogsSubscription(payload, subscription);

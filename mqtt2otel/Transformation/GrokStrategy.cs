@@ -1,4 +1,5 @@
 ﻿using GrokNet;
+using mqtt2otel.Interfaces;
 using mqtt2otel.Parser;
 using Newtonsoft.Json;
 using System;

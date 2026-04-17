@@ -1,7 +1,9 @@
+using mqtt2otel.Interfaces;
 using mqtt2otel.InternalLogging;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
+using YamlDotNet.Serialization;
 
 namespace mqtt2otel.Server
 {
@@ -20,16 +22,16 @@ namespace mqtt2otel.Server
 
             builder.Services.AddSingleton<ApplicationSettings>(appSettings);
             builder.Services.AddSingleton<ILoggerFactory>(logFactory);
-            builder.Services.AddSingleton<SignalStore>();
-            builder.Services.AddSingleton<LoggerStore>();
-            builder.Services.AddSingleton<PayloadParser>();
-            builder.Services.AddSingleton<PayloadTransformation>();
-            builder.Services.AddSingleton<Manifest.ObjectFactory>();
-            builder.Services.AddSingleton<ManifestCoordinator>();
-            builder.Services.AddSingleton<OtelCoordinator>();
-            builder.Services.AddSingleton<MqttCoordinator>();
+            builder.Services.AddSingleton<ISignalStore, SignalStore>();
+            builder.Services.AddSingleton<ILoggerStore, LoggerStore>();
+            builder.Services.AddSingleton<IPayloadParser, PayloadParser>();
+            builder.Services.AddSingleton<IPayloadTransformation, PayloadTransformation>();
+            builder.Services.AddSingleton<IObjectFactory, Manifest.ObjectFactory>();
+            builder.Services.AddSingleton<IManifestCoordinator, ManifestCoordinator>();
+            builder.Services.AddSingleton<IOtelCoordinator, OtelCoordinator>();
+            builder.Services.AddSingleton<IMqttCoordinator, MqttCoordinator>();
             builder.Services.AddSingleton<Bootstrapper>();
-            builder.Services.AddSingleton<DataStores>();
+            builder.Services.AddSingleton<IDataStores, DataStores>();
 
             var app = builder.Build();
 

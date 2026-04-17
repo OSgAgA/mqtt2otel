@@ -5,7 +5,7 @@ using System.Text;
 namespace mqtt2otel.Parser
 {
     /// <summary>
-    /// Defines a strategy that will be used for parsing string payloads via the <see cref="PayloadParser"/>.
+    /// Defines a strategy that will be used for parsing string payloads via the <see cref="IPayloadParser"/>.
     /// 
     /// The strategy will be identified by its <see cref="IKeyObject.Key"/> property.
     /// </summary>

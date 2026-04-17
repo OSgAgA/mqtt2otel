@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using mqtt2otel.Interfaces;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
@@ -25,7 +26,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// The data stores used by the application to exchange data asynchronously.
         /// </summary>
-        private DataStores dataStores;
+        private IDataStores dataStores;
 
         /// <summary>
         /// The logger used internaly for logging.
@@ -35,12 +36,12 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// The payload parser for processing payloads.
         /// </summary>
-        private PayloadParser payloadParser;
+        private IPayloadParser payloadParser;
 
         /// <summary>
         /// The object used for processing payload transformations.
         /// </summary>
-        private PayloadTransformation payloadTransformation;
+        private IPayloadTransformation payloadTransformation;
 
         /// <summary>
         /// Creates a new instance of the <see cref="ObjectFactory"/> class.
@@ -50,7 +51,7 @@ namespace mqtt2otel.Manifest
         /// <param name="payloadParser">The payload parser for processing payloads.</param>
         /// <param name="payloadTransformation">The object used for processing payload transformations.</param>
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
-        public ObjectFactory(ILogger<Processor> internalLogger, PayloadParser payloadParser, PayloadTransformation payloadTransformation, DataStores dataStores)
+        public ObjectFactory(ILogger<Processor> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores)
         {
             fallback = new DefaultObjectFactory();
             this.internalLogger = internalLogger;

@@ -19,13 +19,14 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
+using mqtt2otel.Interfaces;
 
 namespace mqtt2otel
 {
     /// <summary>
     /// The main class for communicating with the open telemetry endpoint
     /// </summary>
-    public class OtelCoordinator : IDisposable
+    public class OtelCoordinator : IOtelCoordinator
     {
         /// <summary>
         /// The activity source used by the coordinator for tracing.
@@ -35,12 +36,12 @@ namespace mqtt2otel
         /// <summary>
         /// Gets the logger factory map, that maps the otel server name to the loggerFactory used for creating otel loggers.
         /// </summary>
-        public Dictionary<string, ILoggerFactory> LoggerFactoryMap { get; private set; } = new();
+        private Dictionary<string, ILoggerFactory> loggerFactoryMap = new();
 
         /// <summary>
         /// The data stores used by the application to exchange data asynchronously.
         /// </summary>
-        private DataStores dataStores;
+        private IDataStores dataStores;
 
         /// <summary>
         /// Gets or sets a tracer provider.
@@ -67,7 +68,7 @@ namespace mqtt2otel
         /// </summary>
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
-        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, DataStores dataStores)
+        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IDataStores dataStores)
         {
             this.internalLogger = internalLogger;
             this.dataStores = dataStores;
@@ -109,7 +110,7 @@ namespace mqtt2otel
         /// Initializes the otel meters based on the provided settings.
         /// </summary>
         /// <param name="manifest">The rules for creating meters.</param>
-        public void InitializeMeters(Manifest.Manifest manifest)
+        private void InitializeMeters(Manifest.Manifest manifest)
         {
 
             // Create a separate meter for each server.
@@ -159,7 +160,7 @@ namespace mqtt2otel
             otlpOptions.Protocol = server.OtlpExportProtocol;
             otlpOptions.ExportProcessorType = server.ExportProcessorType;
 
-            if(server.Endpoint.Headers != null)
+            if (server.Endpoint.Headers != null)
             {
                 otlpOptions.Headers = server.Endpoint.Headers;
             }
@@ -256,7 +257,7 @@ namespace mqtt2otel
 
             foreach (var otelServer in manifest.OtelServer)
             {
-                this.LoggerFactoryMap[otelServer.Name] = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+                this.loggerFactoryMap[otelServer.Name] = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
                 {
                     builder.AddOpenTelemetry(options =>
                     {
@@ -280,7 +281,7 @@ namespace mqtt2otel
                 {
                     if (otelLoggingRule.OtelServerName == null) throw new Exception($"Internal error: OtelServerName must not be null for logging rule: {otelLoggingRule.Name}");
 
-                    var logger = this.LoggerFactoryMap[otelLoggingRule.OtelServerName].CreateLogger(otelLoggingRule.CategoryName);
+                    var logger = this.loggerFactoryMap[otelLoggingRule.OtelServerName].CreateLogger(otelLoggingRule.CategoryName);
                     this.dataStores.LoggerStore.StoreLogger(otelLoggingRule.Id, logger);
                 }
             }
@@ -482,7 +483,7 @@ namespace mqtt2otel
                 meterProvider.Dispose();
             }
 
-            foreach (var loggerFactory in this.LoggerFactoryMap.Values)
+            foreach (var loggerFactory in this.loggerFactoryMap.Values)
             {
                 loggerFactory.Dispose();
             }

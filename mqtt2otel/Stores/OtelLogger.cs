@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using mqtt2otel.Manifest;
 using mqtt2otel.Helper;
+using mqtt2otel.Interfaces;
+using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 using mqtt2otel.Transformation;
 using System;
@@ -22,23 +23,24 @@ namespace mqtt2otel.Stores
         /// <summary>
         /// A payload parser for parsing mqtt payloads.
         /// </summary>
-        private readonly PayloadParser payloadParser;
+        private readonly IPayloadParser payloadParser;
 
         /// <summary>
         /// A transformation parser for applying transformation to payloads.
         /// </summary>
-        private readonly PayloadTransformation payloadTransformation;
+        private readonly IPayloadTransformation payloadTransformation;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OtelLogger"/> class.
         /// </summary>
         /// <param name="logger">The logger to log to open telemetry.</param>
         /// <param name="payloadParser">The payload parser used for parsing mqtt payloads.</param>
-        public OtelLogger(ILogger logger, PayloadParser payloadParser)
+        /// <param name="payloadParser">The payload transformation parser used for transforming mqtt payloads.</param>
+        public OtelLogger(ILogger logger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation)
         {
             this.logger = logger;
             this.payloadParser = payloadParser;
-            this.payloadTransformation = new PayloadTransformation();
+            this.payloadTransformation = payloadTransformation;
         }
 
         /// <summary>

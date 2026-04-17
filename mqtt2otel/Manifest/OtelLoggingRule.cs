@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using mqtt2otel.Interfaces;
 
 namespace mqtt2otel.Manifest
 {
@@ -15,7 +16,7 @@ namespace mqtt2otel.Manifest
         public string CategoryName { get; set; } = "mqtt2otel";
 
         /// <summary>
-        /// Gets or sets a filter expression (<see cref="Parser.PayloadParser"/> for the processed payload.
+        /// Gets or sets a filter expression (<see cref="IPayloadParser"/> for the processed payload.
         /// 
         /// This filter is applied to every payload received by the logger and reduces the data to the result
         /// of the expression. This will be applied after <see cref="Transform"/>.
@@ -34,7 +35,7 @@ namespace mqtt2otel.Manifest
         public OtelLoggingPayloadType PayloadType { get; set; } = OtelLoggingPayloadType.Text;
 
         /// <summary>
-        /// Gets or sets a transformation expression (<see cref="Transformation.PayloadTransformation"/>) that will be applied to the payload before 
+        /// Gets or sets a transformation expression (<see cref="Interfaces.IPayloadTransformation"/>) that will be applied to the payload before 
         /// the <see cref="Filter"/> expression.
         /// 
         /// Leave empty to not apply any transformation to the payload.

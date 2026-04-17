@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using mqtt2otel.Interfaces;
 using mqtt2otel.InternalLogging;
 using mqtt2otel.Manifest;
 using mqtt2otel.Stores;
@@ -11,22 +12,22 @@ namespace mqtt2otel
     /// <summary>
     /// Coordinates all efforts regarding loading, unloading and updating of manifests.
     /// </summary>
-    public class ManifestCoordinator
+    public class ManifestCoordinator : IManifestCoordinator
     {
         /// <summary>
         /// The otel coordinator used for managing all open telemetry connections.
         /// </summary>
-        private OtelCoordinator otelCoordinator;
+        private IOtelCoordinator otelCoordinator;
 
         /// <summary>
         /// The data stores used by the application to exchange data asynchronously.
         /// </summary>
-        private DataStores dataStores;
+        private IDataStores dataStores;
 
         /// <summary>
         /// The mqtt broker coordinater that manages all mqtt connections.
         /// </summary>
-        private MqttCoordinator mqttCoordinator;
+        private IMqttCoordinator mqttCoordinator;
 
         /// <summary>
         /// The logger used for internal logging.
@@ -52,7 +53,7 @@ namespace mqtt2otel
         /// <param name="mqttCoordinator">The mqtt coordinator for communicating with a mqtt broker.</param>
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
         /// <param name="loggerStore">The logger store for providing otel loggers to consumers.</param>
-        public ManifestCoordinator(ILogger<Bootstrapper> internalLogger, OtelCoordinator otelCoordinator, MqttCoordinator mqttCoordinator, DataStores dataStores, ApplicationSettings applicationSettings)
+        public ManifestCoordinator(ILogger<Bootstrapper> internalLogger, IOtelCoordinator otelCoordinator, IMqttCoordinator mqttCoordinator, IDataStores dataStores, ApplicationSettings applicationSettings)
         {
             this.applicationSettings = applicationSettings;
             this.otelCoordinator = otelCoordinator;
