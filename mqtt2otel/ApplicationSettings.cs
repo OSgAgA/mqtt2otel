@@ -32,11 +32,6 @@ namespace mqtt2otel
         public InternalLoggingSettings Logging { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets a value defining how an update of the manifest file is detected.
-        /// </summary>
-        public AutoUpdateMode AutoUpdateMode { get; set; } = AutoUpdateMode.PollManifestFile;
-
-        /// <summary>
         /// Gets or sets the delay intervall that will be used for <see cref="AutoUpdateMode.PollManifestFile"/>.
         /// </summary>
         public int PollIntervallInSeconds { get; set; } = 5;

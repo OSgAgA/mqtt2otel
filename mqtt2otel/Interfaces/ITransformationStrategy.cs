@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace mqtt2otel.Transformation
+namespace mqtt2otel.Interfaces
 {
     /// <summary>
     /// Represents a strategy for applying transformations to a string payload.

@@ -74,6 +74,9 @@ namespace mqtt2otel.InternalLogging
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
             var message = formatter(state, exception);
+
+            if (this.indentCounter < 0) this.indentCounter = 0;
+
             var indented = new string(' ', this.indentCounter * 4) + message;
 
             this.innerLogger.Log(

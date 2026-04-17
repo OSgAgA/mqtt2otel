@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using mqtt2otel.Interfaces;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
@@ -23,14 +24,9 @@ namespace mqtt2otel.Manifest
         private readonly IObjectFactory fallback;
 
         /// <summary>
-        /// The signal store that should be provided to the processor objects.
+        /// The data stores used by the application to exchange data asynchronously.
         /// </summary>
-        private readonly SignalStore signalStore;
-
-        /// <summary>
-        /// The store used for accessing the available loggers.
-        /// </summary>
-        private LoggerStore loggerStore;
+        private IDataStores dataStores;
 
         /// <summary>
         /// The logger used internaly for logging.
@@ -40,12 +36,12 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// The payload parser for processing payloads.
         /// </summary>
-        private PayloadParser payloadParser;
+        private IPayloadParser payloadParser;
 
         /// <summary>
         /// The object used for processing payload transformations.
         /// </summary>
-        private PayloadTransformation payloadTransformation;
+        private IPayloadTransformation payloadTransformation;
 
         /// <summary>
         /// Creates a new instance of the <see cref="ObjectFactory"/> class.
@@ -54,15 +50,14 @@ namespace mqtt2otel.Manifest
         /// <param name="internalLogger">The logger used internaly for logging.</param>
         /// <param name="payloadParser">The payload parser for processing payloads.</param>
         /// <param name="payloadTransformation">The object used for processing payload transformations.</param>
-        /// <param name="loggerStore">The store used for accessing the available loggers.</param>
-        public ObjectFactory(SignalStore signalStore, ILogger<Processor> internalLogger, PayloadParser payloadParser, PayloadTransformation payloadTransformation, LoggerStore loggerStore)
+        /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
+        public ObjectFactory(ILogger<Processor> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores)
         {
             fallback = new DefaultObjectFactory();
-            this.signalStore = signalStore;
             this.internalLogger = internalLogger;
             this.payloadParser = payloadParser;
             this.payloadTransformation = payloadTransformation;
-            this.loggerStore = loggerStore;
+            this.dataStores = dataStores;
         }
 
         /// <summary>
@@ -74,7 +69,7 @@ namespace mqtt2otel.Manifest
         {
             if (type == typeof(Processor))
             {
-                return new Processor(this.signalStore, this.internalLogger, this.payloadParser, this.payloadTransformation, this.loggerStore);
+                return new Processor(this.internalLogger, this.payloadParser, this.payloadTransformation, this.dataStores);
             }
 
             return fallback.Create(type);

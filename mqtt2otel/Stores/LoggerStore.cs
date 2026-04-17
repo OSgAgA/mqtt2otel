@@ -5,31 +5,38 @@ using mqtt2otel.Parser;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using mqtt2otel.Interfaces;
 
 namespace mqtt2otel.Stores
 {
     /// <summary>
     /// A class that stores open telemetry logger and make them accessable to consumers.
     /// </summary>
-    public class LoggerStore
+    public class LoggerStore : ILoggerStore
     {
         /// <summary>
         /// Contains the stored open telemetry loggers and their id.
         /// </summary>
-        private Dictionary<Guid, OtelLogger> store = new ();
+        private Dictionary<Guid, OtelLogger> store = new();
 
         /// <summary>
         /// A payload parser that will be given to the stored <see cref="OtelLogger"/> to parse payloads.
         /// </summary>
-        private readonly PayloadParser payloadParser;
+        private readonly IPayloadParser payloadParser;
+
+        /// <summary>
+        /// A payload parser that will be given to the stored <see cref="OtelLogger"/> to parse payloads.
+        /// </summary>
+        private readonly IPayloadTransformation payloadTransformation;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LoggerStore"/> class.
         /// </summary>
         /// <param name="payloadParser">A payload parser that will be provided to all stored loggers.</param>
-        public LoggerStore(PayloadParser payloadParser)
+        public LoggerStore(IPayloadParser payloadParser, IPayloadTransformation payloadTransformation)
         {
             this.payloadParser = payloadParser;
+            this.payloadTransformation = payloadTransformation;
         }
 
         /// <summary>
@@ -42,8 +49,8 @@ namespace mqtt2otel.Stores
         {
             if (this.store.ContainsKey(key))
                 throw new Mqtt2OtelException($"Cannot add logger with key {key} to store, as the key allready exists.");
-            
-            this.store[key] = new OtelLogger(logger, payloadParser);
+
+            this.store[key] = new OtelLogger(logger, payloadParser, payloadTransformation);
         }
 
         /// <summary>
@@ -54,7 +61,7 @@ namespace mqtt2otel.Stores
         /// <returns>The logger with the given key.</returns>
         public OtelLogger GetLogger(Guid key)
         {
-            return this.store [key]; 
+            return this.store[key];
         }
 
         /// <summary>

@@ -16,13 +16,14 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using mqtt2otel.Interfaces;
 
 namespace mqtt2otel
 {
     /// <summary>
     /// Represents the main class for communicating with the mqtt broker.
     /// </summary>
-    public class MqttCoordinator
+    public class MqttCoordinator : IMqttCoordinator
     {
         /// <summary>
         /// Every subscription will get an id. This counter contains the next id that can be used for 
@@ -49,26 +50,6 @@ namespace mqtt2otel
         /// Maps a subscription id to a subscription.
         /// </summary>
         private Dictionary<uint, MqttSubscription> subscriptionIdSubscriptionMapping = new();
-
-        /// <summary>
-        /// The signal store used for storing metric signals.
-        /// </summary>
-        private SignalStore signalStore;
-
-        /// <summary>
-        /// The logger store used for getting open telemetry loggers.
-        /// </summary>
-        private LoggerStore loggerStore;
-
-        /// <summary>
-        /// The payload parser that will be used to parse mqtt subscription payloads.
-        /// </summary>
-        private PayloadParser payloadParser;
-
-        /// <summary>
-        /// The payload transformation parser that will be used to transform mqtt subscription payloads.
-        /// </summary>
-        private PayloadTransformation payloadTransformation;
 
         /// <summary>
         /// Used for internal logging.
@@ -105,17 +86,9 @@ namespace mqtt2otel
         /// Initializes a new instance of the <see cref="MqttCoordinator"/> class.
         /// </summary>
         /// <param name="internalLogger">The logger for internal log messages.</param>
-        /// <param name="store">The signal store to store metric signals.</param>
-        /// <param name="loggerStore">The logger store to access open telemetry loggers.</param>
-        /// <param name="payloadParser">The payload parser to be used.</param>
-        /// <param name="payloadTransformation">The payload transformer.</param>
-        public MqttCoordinator(ILogger<MqttCoordinator> internalLogger, SignalStore store, LoggerStore loggerStore, PayloadParser payloadParser, PayloadTransformation payloadTransformation)
+        public MqttCoordinator(ILogger<MqttCoordinator> internalLogger)
         {
             this.internalLogger = internalLogger;
-            this.signalStore = store;
-            this.loggerStore = loggerStore;
-            this.payloadParser = payloadParser;
-            this.payloadTransformation = payloadTransformation;
         }
 
         /// <summary>

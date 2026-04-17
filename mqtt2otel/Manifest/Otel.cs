@@ -37,9 +37,9 @@ namespace mqtt2otel.Manifest
         /// <param name="result">The validation result.</param>
         public void Validate(string context, ValidationResult result)
         {
-            this.Attributes.ForEach(attribute => attribute.Validate(context + " / Attributes", result));
-            this.Metrics.ForEach( rule => rule.Validate( context + " / Rules", result));
-            this.Logs.ForEach( rule => rule.Validate( context + " / Rules", result));
+            this.Attributes.ForEach(attribute => attribute.Validate(context + "/Attributes", result));
+            this.Metrics.ForEach( rule => rule.Validate( context + "/Metrics", result));
+            this.Logs.ForEach( rule => rule.Validate( context + "/Logs", result));
         }
     }
 }

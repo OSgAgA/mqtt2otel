@@ -42,7 +42,7 @@ namespace mqtt2otel.Manifest
         /// Creates log messages for the validation results.
         /// </summary>
         /// <param name="internalLogger">The internal logger used for logging the results.</param>
-        public void LogOutput(ILogger<ValidationResult> internalLogger)
+        public void LogOutput(ILogger internalLogger)
         {
             if (this.Success)
             {

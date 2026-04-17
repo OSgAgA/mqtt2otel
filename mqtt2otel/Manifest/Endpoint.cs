@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 using YamlDotNet.Serialization;
+using mqtt2otel.Interfaces;
 
 namespace mqtt2otel.Manifest
 {
     /// <summary>
-    /// Describes an endpoint used to connect to the <see cref="MqttCoordinator"/> or the <see cref="OtelCoordinator"/>.
+    /// Describes an endpoint used to connect to the <see cref="IMqttCoordinator"/> or the <see cref="IOtelCoordinator"/>.
     /// </summary>
     public class Endpoint
     {

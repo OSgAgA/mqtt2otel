@@ -1,4 +1,6 @@
-﻿namespace mqtt2otel.Parser
+﻿using mqtt2otel.Parser;
+
+namespace mqtt2otel.Interfaces
 {
     /// <summary>
     /// Represents a parser for parsing string payloads, e.g. provided by mqtt subscriptions.

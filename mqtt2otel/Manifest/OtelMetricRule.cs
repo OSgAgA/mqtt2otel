@@ -34,7 +34,7 @@ namespace mqtt2otel.Manifest
         public List<Variable> Attributes { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the value of the metric as a parse expression (<see cref="Parser.PayloadParser"/>).
+        /// Gets or sets the value of the metric as a parse expression (<see cref="IPayloadParser"/>).
         /// </summary>
         public string Value { get; set; } = "TEXT()";
 
@@ -57,8 +57,8 @@ namespace mqtt2otel.Manifest
         /// <param name="result">The validation result.</param>
         public void Validate(string context, ValidationResult result)
         {
-            this.Attributes.ForEach(attribute => attribute.Validate(context + " / Attributes", result));
-            if (string.IsNullOrWhiteSpace(this.Value)) result.AddError($"{context} ({this.Name}): Value not set. Please set Value property to a non empty value.");
+            this.Attributes.ForEach(attribute => attribute.Validate(context + "/Attributes", result));
+            if (string.IsNullOrWhiteSpace(this.Value)) result.AddError($"{context}/({this.Name}): Value not set. Please set Value property to a non empty value.");
 
             var expression = new AsyncExpression(this.Value);
             if (expression.HasErrors())
@@ -67,11 +67,11 @@ namespace mqtt2otel.Manifest
 
                 if (expression.Error.InnerException != null)
                 {
-                    result.AddError($"{context} ({this.Name}) {nameof(Value)}: Expression is \"{this.Value}\". {expression.Error.InnerException.Message}");
+                    result.AddError($"{context}/({this.Name})/{nameof(Value)}: Expression is \"{this.Value}\". {expression.Error.InnerException.Message}");
                 }
                 else
                 {
-                    result.AddError($"{context} ({this.Name}) {nameof(Value)}: Expression is \"{this.Value}\". {expression.Error}");
+                    result.AddError($"{context}/({this.Name})/{nameof(Value)}: Expression is \"{this.Value}\". {expression.Error}");
                 }
             }
         }
