@@ -1,5 +1,4 @@
 # mqtt2otel
-------------
 
 `mqtt2otel` is a powerful yet lightweight bridge between the MQTT messaging protocol—commonly used in the IoT 
 (Internet of Things) context—and OpenTelemetry (Otel) protocol, which is typically used for professional application 
