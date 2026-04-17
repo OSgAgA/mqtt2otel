@@ -297,10 +297,10 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateAsynchronousGauge<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(key, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
             meter.CreateObservableGauge<T>(
                 expandedName,
-                () => this.CreateMeasurement<T>(key),
+                () => this.CreateMeasurement<T>(mqttSubscription, otelMetricRule),
                 unit: otelMetricRule.Unit,
                 description: otelMetricRule.Description);
         }
@@ -316,12 +316,12 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateGauge<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(key, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
             var gauge = meter.CreateGauge<T>(
                 expandedName,
                 unit: otelMetricRule.Unit,
                 description: otelMetricRule.Description);
-            this.dataStores.SignalStore.RegisterCallback(key, signalStoreKey => this.RecordAttributedValue<T>(signalStoreKey, (value, attributes) => gauge.Record(value, attributes)));
+            this.dataStores.SignalStore.RegisterCallback(mqttSubscription.Id, otelMetricRule.Id, signalStoreKey => this.RecordAttributedValue<T>(mqttSubscription, otelMetricRule, (value, attributes) => gauge.Record(value, attributes)));
         }
 
         /// <summary>
@@ -334,10 +334,10 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateAsynchronousCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(key, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
             meter.CreateObservableCounter<T>(
                 expandedName,
-                () => this.CreateMeasurement<T>(key),
+                () => this.CreateMeasurement<T>(mqttSubscription, otelMetricRule),
                 unit: otelMetricRule.Unit,
                 description: otelMetricRule.Description);
         }
@@ -352,12 +352,12 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(key, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
             var counter = meter.CreateCounter<T>(
                 expandedName,
                 unit: otelMetricRule.Unit,
                 description: otelMetricRule.Description);
-            this.dataStores.SignalStore.RegisterCallback(key, signalStoreKey => this.RecordAttributedValue<T>(signalStoreKey, (value, attributes) => counter.Add(value, attributes)));
+            this.dataStores.SignalStore.RegisterCallback(mqttSubscription.Id, otelMetricRule.Id, signalStoreKey => this.RecordAttributedValue<T>(mqttSubscription, otelMetricRule, (value, attributes) => counter.Add(value, attributes)));
         }
 
         /// <summary>
@@ -365,15 +365,15 @@ namespace mqtt2otel
         /// </summary>
         /// <typeparam name="T">The type of the signal stored.</typeparam>
         /// <param name="otelMetricRule">The rule settings defining the metric.</param>
-        /// <param name="mqtt">The subscription settings for connecting the instrument with the subscription.</param>
+        /// <param name="mqttSubscription">The subscription settings for connecting the instrument with the subscription.</param>
         /// <param name="key">The key under which the value will be stored in the signal store.</param>
         /// <param name="meter">The meter to which this instrument should be added.</param>
-        private void CreateAsynchronousUpDownCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqtt, string key, Meter meter, string expandedName) where T : struct
+        private void CreateAsynchronousUpDownCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(key, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
             meter.CreateObservableUpDownCounter<T>(
                 expandedName,
-                () => this.CreateMeasurement<T>(key),
+                () => this.CreateMeasurement<T>(mqttSubscription, otelMetricRule),
                 unit: otelMetricRule.Unit,
                 description: otelMetricRule.Description);
         }
@@ -388,12 +388,12 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateUpDownCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(key, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
             var counter = meter.CreateUpDownCounter<T>(
                 expandedName,
                 unit: otelMetricRule.Unit,
                 description: otelMetricRule.Description);
-            this.dataStores.SignalStore.RegisterCallback(key, signalStoreKey => this.RecordAttributedValue<T>(signalStoreKey, (value, attributes) => counter.Add(value, attributes)));
+            this.dataStores.SignalStore.RegisterCallback(mqttSubscription.Id, otelMetricRule.Id, signalStoreKey => this.RecordAttributedValue<T>(mqttSubscription, otelMetricRule, (value, attributes) => counter.Add(value, attributes)));
         }
 
         /// <summary>
@@ -406,7 +406,7 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateHistogram<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(key, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
 
             Histogram<T>? histogram = null;
 
@@ -431,7 +431,7 @@ namespace mqtt2otel
 
             if (histogram != null)
             {
-                this.dataStores.SignalStore.RegisterCallback(key, signalStoreKey => this.RecordAttributedValue<T>(signalStoreKey, (value, attributes) => histogram.Record(value, attributes)));
+                this.dataStores.SignalStore.RegisterCallback(mqttSubscription.Id, otelMetricRule.Id, signalStoreKey => this.RecordAttributedValue<T>(mqttSubscription, otelMetricRule, (value, attributes) => histogram.Record(value, attributes)));
             }
         }
 
@@ -439,13 +439,14 @@ namespace mqtt2otel
         /// Transforms a value from the signal store into a measurement to be used by the open telementry instruments.
         /// </summary>
         /// <typeparam name="TPayload">The type of the value.</typeparam>
-        /// <param name="signalStoreKey">The key under which the value can be retrieved from the signal store.</param>
+        /// <param name="mqttSubscription">The subscription for connecting the instrument with the subscription.</param>
+        /// <param name="otelMetricRule">The rule defining the metric.</param>
         /// <returns>The created measurement.</returns>
-        private Measurement<TPayload> CreateMeasurement<TPayload>(string signalStoreKey) where TPayload : struct
+        private Measurement<TPayload> CreateMeasurement<TPayload>(MqttSubscription mqttSubscription, OtelMetricRule otelMetricRule) where TPayload : struct
         {
-            var metric = this.dataStores.SignalStore.GetValue<TPayload>(signalStoreKey);
+            var metric = this.dataStores.SignalStore.GetValue<TPayload>(mqttSubscription.Id, otelMetricRule.Id);
 
-            this.internalLogger.LogDebug($"Providing measurement ({metric.Value}) with attributes ({string.Join(",", metric.Attributes.Select(attribute => attribute.Key + ": " + attribute.Value))}) for {signalStoreKey}");
+            this.internalLogger.LogDebug($"Providing measurement ({metric.Value}) with attributes ({string.Join(",", metric.Attributes.Select(attribute => attribute.Key + ": " + attribute.Value))}).");
 
             return new Measurement<TPayload>(
                 value: metric.Value,
@@ -457,13 +458,14 @@ namespace mqtt2otel
         /// Record a value stored in the signal store via an instrument including alll provided attributes.
         /// </summary>
         /// <typeparam name="TPayload">The type of the value stored.</typeparam>
-        /// <param name="signalStoreKey">The key under which the value is stored in the signal store.</param>
+        /// <param name="mqttSubscription">The subscription for connecting the instrument with the subscription.</param>
+        /// <param name="otelMetricRule">The rule defining the metric.</param>
         /// <param name="record">An action that will record the payload and the provided attributes to the instrument.</param>
-        private void RecordAttributedValue<TPayload>(string signalStoreKey, Action<TPayload, TagList> record) where TPayload : struct
+        private void RecordAttributedValue<TPayload>(MqttSubscription mqttSubscription, OtelMetricRule otelMetricRule, Action<TPayload, TagList> record) where TPayload : struct
         {
-            var metric = this.dataStores.SignalStore.GetValue<TPayload>(signalStoreKey);
+            var metric = this.dataStores.SignalStore.GetValue<TPayload>(mqttSubscription.Id, otelMetricRule.Id);
 
-            this.internalLogger.LogDebug($"Providing measurement ({metric.Value}) with attributes ({string.Join(",", metric.Attributes.Select(attribute => attribute.Key + ": " + attribute.Value))}) for {signalStoreKey}");
+            this.internalLogger.LogDebug($"Providing measurement ({metric.Value}) with attributes ({string.Join(",", metric.Attributes.Select(attribute => attribute.Key + ": " + attribute.Value))}).");
 
             record(metric.Value, metric.Attributes.ToTagList());
         }
