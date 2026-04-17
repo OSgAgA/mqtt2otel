@@ -15,17 +15,17 @@ flowchart LR
     IoT3(IoT device) -->|Publish| broker
     mqtt2otel(mqtt2otel server) --> |Subscribe| broker
     broker --> |Send| mqtt2otel(mqtt2otel server)
-    mqtt2otel -->|send| otel(Open telemetry endpoint)
+    mqtt2otel -->|send| otel(Open telemetry endpoint<br/>e.g. an otel collector)
     otel -->|retrieve| mqtt2otel
+    otel -->|send| dashboard(Dashboard tool)
+    dashboard-->|retrieve| otel
 ```
 
 # Documentation
-----------------
 
 More detailed information is available in the official [documentation](http://NotAvailableYet.de).
 
 # Background
--------------
 
 To learn more about the underlying technologies, check out the following resources:
 
