@@ -10,31 +10,17 @@ namespace mqtt2otel.Server
     public class Mqtt2OtelService : BackgroundService
     {
         /// <summary>
-        /// The object factory used for creating the manifest from the yaml file.
+        /// The bootstrapper for bootstrapping the application.
         /// </summary>
-        private Manifest.ObjectFactory objectFactory;
-
-        /// <summary>
-        /// The store for otel signals.
-        /// </summary>
-        private SignalStore signalStore;
-
-        /// <summary>
-        /// The store for otel loggers.
-        /// </summary>
-        private LoggerStore loggerStore;
+        private Bootstrapper Bootstrapper;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Mqtt2OtelService"/> class.
         /// </summary>
-        /// <param name="objectFactory">The object factory used for creating the manifest from the yaml file.</param>
-        /// <param name="signalStore">The store for otel signals.</param>
-        /// <param name="loggerStore">The store for otel loggers.</param>
-        public Mqtt2OtelService(Manifest.ObjectFactory objectFactory, SignalStore signalStore, LoggerStore loggerStore)
+        /// <param name="bootstrapper">The bootstrapper for bootstrapping the application.</param>
+        public Mqtt2OtelService(Bootstrapper bootstrapper)
         {
-            this.objectFactory = objectFactory;
-            this.signalStore = signalStore;
-            this.loggerStore = loggerStore;
+            this.Bootstrapper = bootstrapper;
         }
 
         /// <summary>
@@ -44,7 +30,7 @@ namespace mqtt2otel.Server
         /// <returns></returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await Bootstrapper.Bootstrap(this.objectFactory, this.signalStore, this.loggerStore);
+            await Bootstrapper.Bootstrap();
 
             while (!stoppingToken.IsCancellationRequested)
             {

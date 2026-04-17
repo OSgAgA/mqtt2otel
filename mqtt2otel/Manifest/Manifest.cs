@@ -17,20 +17,30 @@ namespace mqtt2otel.Manifest
     public class Manifest
     {
         /// <summary>
-        /// Reads the manifest from a yaml file.
+        /// Gets or sets the object factory that should be used for parsing the yaml file.
         /// </summary>
-        /// <param name="objectFactory">The object factory for reading the yaml file.</param>
-        /// <param name="internalLoggerFactory">The factory for creating internal loggers..</param>
+        public static IObjectFactory? ObjectFactory;
+
+        /// <summary>
+        /// Reads the manifest from a yaml file.
+        /// 
+        /// Object factory must be set before this method can be called.
+        /// </summary>
+        /// <param name="internalLogger">The logger used for internal logging..</param>
         /// <param name="path">The path to the yaml file.</param>
         /// <returns>The created manifest.</returns>
-        public static Manifest ReadFromYaml(ObjectFactory objectFactory, ILoggerFactory internalLoggerFactory, string path = "Manifest.yaml")
+        public static Manifest ReadFromYaml(ILogger internalLogger, string path = "Manifest.yaml")
         {
-            var internalLogger = internalLoggerFactory.CreateLogger(nameof(Manifest));
-
             internalLogger.LogInformation($"Reading {Path.GetFullPath(path)}");
 
+            if (Manifest.ObjectFactory == null)
+            {
+                internalLogger.LogCritical($"Internal error: Calling {nameof(ReadFromYaml)} without initializíng {nameof(ObjectFactory)} first. Providing default manifest.");
+                return new Manifest();
+            }
+
             var yaml = File.ReadAllText(path);
-            var deserializer = new DeserializerBuilder().WithObjectFactory(objectFactory).Build();
+            var deserializer = new DeserializerBuilder().WithObjectFactory(Manifest.ObjectFactory).Build();
 
             var result = deserializer.Deserialize<Manifest>(yaml);
             result.internalLogger = internalLogger;

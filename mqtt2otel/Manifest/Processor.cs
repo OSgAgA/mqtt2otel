@@ -17,14 +17,10 @@ namespace mqtt2otel.Manifest
     public class Processor : NamedIdObject
     {
         /// <summary>
-        /// The store used for storing data for otel signals.
+        /// The data stores used by the application to exchange data asynchronously.
         /// </summary>
-        private SignalStore signalStore;
+        private DataStores dataStores;
 
-        /// <summary>
-        /// The store used for accessing the available loggers.
-        /// </summary>
-        private LoggerStore loggerStore;
 
         /// <summary>
         /// The logger used internaly for logging.
@@ -44,18 +40,16 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Creates a new instance of the <see cref="Processor"/> type.
         /// </summary>
-        /// <param name="signalStore">The store used for storing data for otel signals.</param>
         /// <param name="internalLogger">The logger used internaly for logging.</param>
         /// <param name="payloadParser">The payload parser for processing payloads.</param>
         /// <param name="payloadTransformation">The object used for processing payload transformations.</param>
-        /// <param name="loggerStore">The store used for accessing the available loggers.</param>
-        public Processor(SignalStore signalStore, ILogger internalLogger, PayloadParser payloadParser, PayloadTransformation payloadTransformation, LoggerStore loggerStore)
+        /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
+        public Processor(ILogger internalLogger, PayloadParser payloadParser, PayloadTransformation payloadTransformation, DataStores dataStores)
         {
-            this.signalStore = signalStore;
             this.internalLogger = internalLogger;
             this.payloadParser = payloadParser;
             this.payloadTransformation = payloadTransformation;
-            this.loggerStore = loggerStore;
+            this.dataStores = dataStores;
         }
 
         /// <summary>
@@ -137,13 +131,13 @@ namespace mqtt2otel.Manifest
             foreach (var logRuleSettings in this.Otel.Logs)
             {
                 var key = logRuleSettings.Id;
-                if (!this.loggerStore.ContainsKey(key))
+                if (!this.dataStores.LoggerStore.ContainsKey(key))
                 {
                     this.internalLogger.LogError($"Internal error: Could not get logger with id: {key}. Skipping event.");
                     return false;
                 }
 
-                var logger = this.loggerStore.GetLogger(key);
+                var logger = this.dataStores.LoggerStore.GetLogger(key);
                 var combinedAttributes = logRuleSettings.Attributes.Combine(this.Otel.Attributes);
 
                 success = await logger.ProcessLogMessage(payload, logRuleSettings, subscription.Variables, this.internalLogger, combinedAttributes);
@@ -219,7 +213,7 @@ namespace mqtt2otel.Manifest
         private async Task UpdateSignalStoreValue<T>(string key, OtelMetricRule rule, string payload, IEnumerable<Variable> expandedAttributes)
         {
             T value = await this.payloadParser.Parse<T>(rule.Name, payload, rule.Value);
-            this.signalStore.UpdateValue(key, value, expandedAttributes);
+            this.dataStores.SignalStore.UpdateValue(key, value, expandedAttributes);
         }
 
     }
