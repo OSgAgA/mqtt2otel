@@ -37,7 +37,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets a value indicating whether transport level security should be enabled for the endpoint.
         /// </summary>
-        public bool EnableTls { get; set; } = false;
+        public bool EnableTls { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the path for a provided TLS client certificate.
