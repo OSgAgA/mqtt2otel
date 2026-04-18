@@ -42,7 +42,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets the export protocoll that should be used when connecting to the server.
         /// </summary>
-        public OtlpExportProtocol OtlpExportProtocol { get; set; } = OtlpExportProtocol.Grpc;
+        public OtlpExportProtocol OtlpExportProtocol { get; set; } = OtlpExportProtocol.HttpProtobuf;
 
         /// <summary>
         /// Gets or sets the export processor type used when connecting to the server.
