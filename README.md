@@ -28,11 +28,11 @@ flowchart LR
 
 # Homepage
 
-You can find the official homepage of the project [here](http://mqtt2otel.org).
+You can find the official homepage of the project [here](https://mqtt2otel.org).
 
 # Documentation
 
-More detailed information is available in the official [documentation](http://mqtt2otel.org/docs/introduction/).
+More detailed information is available in the official [documentation](https://mqtt2otel.org/docs/introduction/).
 
 # Background
 
@@ -45,7 +45,7 @@ To learn more about the underlying technologies, check out the following resourc
 
 ## Installation
 
-Please have a look at the [installation instructions](http://mqtt2otel.org/docs/installation/)
+Please have a look at the [installation instructions](https://mqtt2otel.org/docs/installation/)
 
 ## Connect to the MQTT Broker and Otel Server
 
@@ -70,7 +70,7 @@ OtelServer:
       Address: "my-otel-collector.net"
 ````
 
-This assumes no credentials are required to log into the broker or the Otel collector. For further configuration options, see [Configure MQTT Broker](http://mqtt2otel.org/docs/manifest/mqttbroker/) and [Configure Otel Server](todo).
+This assumes no credentials are required to log into the broker or the Otel collector. For further configuration options, see [Configure MQTT Broker](https://mqtt2otel.org/docs/manifest/mqttbroker/) and [Configure Otel Server](todo).
 
 ### Breakdown of the configuration
 
@@ -215,7 +215,7 @@ like `[Pi]` are supported.
 | `PAYLOAD`  | `PAYLOAD()`               | Returns the raw payload                  |
 | `CONST`    | `CONST('42')`             | Returns a constant value                 |
 
-For more details, please refer to the [documentation](http://mqtt2otel.org/docs/introduction/).
+For more details, please refer to the [documentation](https://mqtt2otel.org/docs/introduction/).
 
 ## Log Messages and Transformation
 
@@ -438,7 +438,7 @@ Processors:
 By using **Subscription Groups**, you can easily reuse configurations across different rules, making your setup more modular 
 and scalable. Grouping devices and topics this way allows you to handle complex MQTT topic structures efficiently.
 
-For further details, please refer to the [documentation](http://mqtt2otel.org/docs/manifest/subscription/#subscription-groups).
+For further details, please refer to the [documentation](https://mqtt2otel.org/docs/manifest/subscription/#subscription-groups).
 
 ## Complete example manifest
 
