@@ -189,13 +189,13 @@ jobs:
           extended: true
   
       - name: Build Hugo site
-        working-directory: ./doc
+        working-directory: ./docs
         run: hugo --minify
   
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./doc/public
+          path: ./docs/public
   
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
