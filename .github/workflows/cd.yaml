@@ -35,7 +35,7 @@ jobs:
         run: dotnet restore --packages .nuget/packages
 
       - name: Build
-        run: dotnet build -c Release --no-restore
+        run: dotnet build -c Release --no-restore -warnaserror
 
       - name: Publish
         run: dotnet publish ./mqtt2otel.Server/mqtt2otel.Server.csproj -c Release --no-restore --output ./app
