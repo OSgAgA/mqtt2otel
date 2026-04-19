@@ -126,7 +126,17 @@ namespace mqtt2otel
                 Environment.Exit(0);
             };
 
-            bool success = await this.manifestCoordinator.ProcessManifest();
+            bool success = false;
+
+            try
+            {
+                success = await this.manifestCoordinator.ProcessManifest();
+            }
+            catch (Exception ex)
+            {
+                internalLogger.LogCritical(ex, "Error on starting up application. Shutting down.");
+                return -1;
+            }
 
             this.manifestCoordinator.RegisterAutoUpdater();
 

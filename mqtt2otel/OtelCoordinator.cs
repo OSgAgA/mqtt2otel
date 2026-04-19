@@ -177,6 +177,10 @@ namespace mqtt2otel
 
             if (server.Endpoint.EnableTls)
             {
+                if (string.IsNullOrWhiteSpace(server.Endpoint.ClientCertificatePath))
+                {
+                    throw new Exception("Tls is enabled for otel endpoint, but client certificate path is not set.");
+                }
                 otlpOptions.HttpClientFactory = () =>
                 {
                     var handler = new HttpClientHandler();
