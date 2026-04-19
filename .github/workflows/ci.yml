@@ -38,7 +38,7 @@ jobs:
         run: dotnet build -c Release --no-restore
 
       - name: Test
-        run: dotnet test --no-build --logger "trx;LogFileName=TestResults.trx"
+        run: dotnet test --logger "trx;LogFileName=TestResults.trx"
 
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
