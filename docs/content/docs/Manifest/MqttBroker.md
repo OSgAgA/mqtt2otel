@@ -19,6 +19,7 @@ MqttBroker:
       Port: 1813
       Protocol: tcp
       Address: "mymqtt-broker.net"
+      EnableTls: false
 ```
 
 It has the following parameters:
