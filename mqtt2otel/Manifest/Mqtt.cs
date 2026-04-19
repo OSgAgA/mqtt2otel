@@ -30,7 +30,12 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets a list of broker subscription groups.
         /// </summary>
-        public List<SubscriptionGroup> SubscriptionGroups { get; set; } = new();
+        public List<SubscriptionGroupReference> SubscriptionGroups { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the broker to which this subscription is bound. A null value represents the default broker.
+        /// </summary>
+        public string? Broker { get; set; } = null;
 
         /// <summary>
         /// Validates the object.

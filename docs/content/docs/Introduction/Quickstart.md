@@ -1,47 +1,13 @@
-<div style="text-align:center;">
-
-  ![logo](docs/static/logo_small.png)
-
-</div>
-
-# mqtt2otel
-
-`mqtt2otel` is a powerful yet lightweight bridge between the MQTT messaging protocol—commonly used in the IoT 
-(Internet of Things) context—and OpenTelemetry (Otel) protocol, which is typically used for professional application 
-and infrastructure monitoring. The tool can subscribe to MQTT broker topics, process and enrich messages with 
-additional information, and then generate Otel metrics or logs for further analysis using standard tools.
-
-The basic workflow is as following:
-
-```mermaid
-flowchart LR
-    IoT1(IoT device) -->|Publish| broker(Mqtt broker)
-    IoT2(IoT device) -->|Publish| broker
-    IoT3(IoT device) -->|Publish| broker
-    mqtt2otel(mqtt2otel server) --> |Subscribe| broker
-    broker --> |Send| mqtt2otel(mqtt2otel server)
-    mqtt2otel -->|send| otel(Open telemetry endpoint<br/>e.g. an otel collector)
-    otel -->|retrieve| mqtt2otel
-    otel -->|send| dashboard(Dashboard tool)
-    dashboard-->|retrieve| otel
-```
-
-# Documentation
-
-More detailed information is available in the official [documentation](http://NotAvailableYet.de).
-
-# Background
-
-To learn more about the underlying technologies, check out the following resources:
-
-* [Official OpenTelemetry page](https://opentelemetry.io/)
-* [Official MQTT page](https://mqtt.org/)
-
-# Getting Started
+---
+title: "Quickstart"
+weight: 0
+bookCollapseSection: false
+---
+# Quick start
 
 ## Installation
 
-**ToDo**
+[Installation](../../installation)
 
 ## Connect to the MQTT Broker and Otel Server
 
@@ -139,7 +105,7 @@ The syntax is as following:
             
 ## Variables and Attributes
 
-Subscriptions can have variables, which can be used later in the rules section. Here’s an example of how to define variables:
+Subscriptions can have variables, which can be used later in the rules section. Hereâ€™s an example of how to define variables:
 
 ```yaml
 Mqtt:
@@ -155,7 +121,7 @@ You can access variables in Otel rules by prefixing them with a `$` sign. For ex
 `$SensorName`.
 
 Otel rules can also include attributes, which are added to the Otel signal for filtering or grouping. You can use variables
-inside attributes where needed. Here’s an example of how to add attributes:
+inside attributes where needed. Hereâ€™s an example of how to add attributes:
 
 ```yaml
 Otel:
@@ -191,7 +157,7 @@ The attributes directly added under the Metrics section will be added to all met
 
 ## Working with Expressions
 
-We’ve already used an expression to parse the payload with `JSONPATH('$.Processor.Temperature')`. However, you can also perform 
+Weâ€™ve already used an expression to parse the payload with `JSONPATH('$.Processor.Temperature')`. However, you can also perform 
 mathematical transformations. For example, to convert the temperature from Celsius to Fahrenheit, you can use this expression:
 
 ```yaml
@@ -224,7 +190,7 @@ Log messages work similarly to metrics. Let's say you receive a log message payl
 Rather than sending the raw message to Otel, we can transform it into a structured log format using a 
 [GROK](https://www.elastic.co/docs/reference/logstash/plugins/plugins-filters-grok) expression.
 
-Here’s how to configure it:
+Hereâ€™s how to configure it:
 
 ```yaml
 Processors:
@@ -256,7 +222,7 @@ expression will convert the log into a JSON structure like this:
 }
 ```
 
-Since we’ve specified `PayloadType: Json`, Otel will interpret the top-level keys 
+Since weâ€™ve specified `PayloadType: Json`, Otel will interpret the top-level keys 
 (`otel_timestamp`, `otel_loglevel`, `server_name`, and `otel_message`) as attributes in the log message.
 Attributes starting with "otel_" will have a special meaning so they are interpreted not as attributes but as the 
 message body, timestamp and log level.
@@ -269,7 +235,7 @@ under the same topic structure but need to handle them differently in your rules
 
 ### Example Scenario
 
-Let’s say you have a device that sends both power consumption metrics (like current, power, voltage) and status information 
+Letâ€™s say you have a device that sends both power consumption metrics (like current, power, voltage) and status information 
 (like the microcontroller core temperature) in the same MQTT message. The message payload is structured as follows:
 
 ```json
@@ -316,7 +282,7 @@ metrics or logs.
 
 ### Using Subscription Groups in Metrics and Logs
 
-Once you’ve created the `Power sensors` group, you can refer to it in your **metrics** or **logs** as follows:
+Once youâ€™ve created the `Power sensors` group, you can refer to it in your **metrics** or **logs** as follows:
 
 ```yaml
 Processor:
@@ -489,6 +455,3 @@ Processors:
           Transform: "GROK('%{TIME:otel_timestamp} [%{WORD:otel_loglevel}] [%{WORD:server_name}] %{GREEDYDATA:otel_message}')"
 
 ```
-
-Happy building! :-)
-

@@ -1,0 +1,7 @@
+baseURL = 'https://mqtt2otel.org/'
+languageCode = 'en-us'
+title = 'mqtt2otel'
+theme = 'hugo-book'
+
+[markup.goldmark.renderer]
+  unsafe = true

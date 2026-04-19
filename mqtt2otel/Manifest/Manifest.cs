@@ -65,8 +65,8 @@ namespace mqtt2otel.Manifest
             if (string.IsNullOrEmpty(this.Version)) return result.AddError($"No or empty Version property in file. Version must allways be set! {supportedVersions}");
             if (this.Version != "1.0") return result.AddError($"Provided version {this.Version} is not supported. {supportedVersions}");
 
-            this.MqttBroker.ForEach( broker => broker.Validate(result));
-            this.OtelServer.ForEach( server => server.Validate(result));
+            this.MqttBroker.ForEach(broker => broker.Validate(result));
+            this.OtelServer.ForEach(server => server.Validate(result));
             this.SubscriptionGroups.ForEach(group => group.Validate("Subscription groups", result));
             this.Processors.ForEach(metric => metric.Validate(result));
 
@@ -105,7 +105,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets all available subscription groups.
         /// </summary>
-        public List<Mqtt> SubscriptionGroups { get; set; } = new();
+        public List<SubscriptionGroup> SubscriptionGroups { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the mqtt broker.
@@ -138,10 +138,75 @@ namespace mqtt2otel.Manifest
         {
             this.ApplyOtelServerNamesToRules();
 
+            foreach (var subscriptionGroup in this.SubscriptionGroups)
+            {
+                this.ApplyBrokerToSubscriptions(subscriptionGroup);
+                this.ApplyTransformationToSubscriptions(subscriptionGroup);
+                this.ApplyVariablesToSubscriptions(subscriptionGroup);
+            }
+
             foreach (var processor in this.Processors)
             {
+                this.ApplyBrokerToSubscriptions(processor.Mqtt);
                 this.ApplySubscriptionGroupsToSubscriptions(processor.Mqtt.SubscriptionGroups, processor.Mqtt.Subscriptions);
                 this.ApplyTransformationFromParent(processor.Mqtt.Transform, processor.Mqtt.Subscriptions);
+            }
+        }
+
+        /// <summary>
+        /// Applies the broker of the mqtt section (if set) to the subscriptions of the section. It will only be applied if the
+        /// broker is not explicitly set inside a subscription.
+        /// </summary>
+        /// <param name="subscriptionGroup">The mqtt section of a processor.</param>
+        private void ApplyBrokerToSubscriptions(Mqtt mqtt)
+        {
+            if (mqtt.Broker == null) return;
+
+            foreach (var subscription in mqtt.Subscriptions)
+            {
+                if (subscription.Broker == null) subscription.Broker = mqtt.Broker;
+            }
+        }
+
+        /// <summary>
+        /// Applies the variables of the subscription group (if any) to the subscriptions of the group. 
+        /// </summary>
+        /// <param name="subscriptionGroup">The subscription group.</param>
+        private void ApplyVariablesToSubscriptions(SubscriptionGroup subscriptionGroup)
+        {
+            foreach (var subscription in subscriptionGroup.Subscriptions)
+            {
+                subscription.Variables = subscriptionGroup.Variables.Combine(subscription.Variables).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Applies the transform pattern of the subscription group (if set) to the subscriptions of the group. It will only be applied if the
+        /// transform pattern is not explicitly set inside a subscription.
+        /// </summary>
+        /// <param name="subscriptionGroup">The subscription group.</param>
+        private void ApplyTransformationToSubscriptions(SubscriptionGroup subscriptionGroup)
+        {
+            if (string.IsNullOrWhiteSpace(subscriptionGroup.Transform)) return;
+
+            foreach (var subscription in subscriptionGroup.Subscriptions)
+            {
+                if (string.IsNullOrWhiteSpace(subscription.Transform)) subscription.Transform = subscriptionGroup.Transform;
+            }
+        }
+
+        /// <summary>
+        /// Applies the broker of the subscription group (if set) to the subscriptions of the group. It will only be applied if the
+        /// broker is not explicitly set inside a subscription.
+        /// </summary>
+        /// <param name="subscriptionGroup">The subscription group.</param>
+        private void ApplyBrokerToSubscriptions(SubscriptionGroup subscriptionGroup)
+        {
+            if (subscriptionGroup.Broker == null) return;
+
+            foreach (var subscription in subscriptionGroup.Subscriptions)
+            {
+                if (subscription.Broker == null) subscription.Broker = subscriptionGroup.Broker;
             }
         }
 
@@ -153,15 +218,15 @@ namespace mqtt2otel.Manifest
         private bool ServerNameExists(string? name)
         {
             if (name == null) return false;
-            
+
             bool result = false;
 
             foreach (var otelServer in this.OtelServer)
             {
-                if (otelServer.Name == name) 
-                { 
-                    result = true; 
-                    break; 
+                if (otelServer.Name == name)
+                {
+                    result = true;
+                    break;
                 }
             }
 
@@ -176,7 +241,7 @@ namespace mqtt2otel.Manifest
         {
             if (this.DefaultOtelServer == null) return;
 
-            foreach(var processor in this.Processors)
+            foreach (var processor in this.Processors)
             {
                 if (processor.OtelServerName == null) processor.OtelServerName = this.DefaultOtelServer.Name;
 
@@ -198,7 +263,7 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="subscriptionGroups">The subscription groups that should be applied to the subscriptions</param>
         /// <param name="subscriptions">The subscriptions where the subscription group information should be added.</param>
-        private void ApplySubscriptionGroupsToSubscriptions(IEnumerable<SubscriptionGroup> subscriptionGroups, List<MqttSubscription> subscriptions)
+        private void ApplySubscriptionGroupsToSubscriptions(IEnumerable<SubscriptionGroupReference> subscriptionGroups, List<MqttSubscription> subscriptions)
         {
             foreach (var group in subscriptionGroups)
             {
@@ -224,7 +289,7 @@ namespace mqtt2otel.Manifest
                         Description = subscription.Description,
                         Topic = newPath,
                         Transform = subscription.Transform,
-                        Variables = subscriptionGroup.Variables.Combine(subscription.Variables).ToList(),
+                        Variables = subscription.Variables,
                     };
 
                     subscriptions.Add(newSubscription);

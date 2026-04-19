@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NCalc;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,21 +9,59 @@ namespace mqtt2otel.Manifest
     /// Provides the subscription groups. Subscription groups bundle multiple subscriptions to make them available
     /// in different contexts.
     /// </summary>
-    public class SubscriptionGroup
+    public class SubscriptionGroup : NamedIdObject
     {
         /// <summary>
-        /// Gets or sets the name of the subscription group.
+        /// Gets or sets all variables.
         /// </summary>
-        public string Name { get; set; } = string.Empty;
+        public List<Variable> Variables { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets a subpath that should be added to the end of the subscription topic.
+        /// Gets or sets a transformation expression (<see cref="Interfaces.IPayloadTransformation"/>). 
+        /// 
+        /// If not empty, this transformation will be applied to all mqtt messages, before it is further processed.
         /// </summary>
-        public string SubPath { get; set; } = string.Empty;
+        public string Transform { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a parent path that should be added at the beginning of the subscription topic.
+        /// Gets or sets a list of mqtt broker subscriptions.
         /// </summary>
-        public string ParentPath { get; set; } = string.Empty;
+        public List<MqttSubscription> Subscriptions { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the broker to which this subscription is bound. A null value represents the default broker.
+        /// </summary>
+        public string? Broker { get; set; } = null;
+
+        /// <summary>
+        /// Validates the object.
+        /// </summary>
+        /// <param name="context">The currently active context. This will be provided as a hint to the user, where a problem occured.</param>
+        /// <param name="result">The validation result.</param>
+        public void Validate(string context, ValidationResult result)
+        {
+            context = $"{context}/({this.Name})";
+            this.Variables.ForEach(var => var.Validate(context, result));
+            this.Subscriptions.ForEach(sub => sub.Validate(context, result));
+
+            if (!string.IsNullOrWhiteSpace(this.Transform))
+            {
+                var expression = new AsyncExpression(this.Transform);
+                if (expression.HasErrors())
+                {
+                    if (expression.Error == null) return;
+
+                    if (expression.Error.InnerException != null)
+                    {
+                        result.AddError($"{context}/({this.Name})/{nameof(Transform)}: Expression is \"{this.Transform}\". {expression.Error.InnerException.Message}");
+                    }
+                    else
+                    {
+                        result.AddError($"{context}/({this.Name})/{nameof(Transform)}: Expression is \"{this.Transform}\". {expression.Error}");
+                    }
+                }
+            }
+        }
+
     }
 }
