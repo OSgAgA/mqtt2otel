@@ -59,6 +59,7 @@ MqttBroker:
     Endpoint:
       Port: 32007
       Address: "mymqtt-broker.net"
+      EnableTls: false
 
 OtelServer:
   - Name: "My Otel server"
@@ -68,6 +69,7 @@ OtelServer:
       Protocol: "http"
       Port: 32014
       Address: "my-otel-collector.net"
+      EnableTls: false
 ````
 
 This assumes no credentials are required to log into the broker or the Otel collector. For further configuration options, see [Configure MQTT Broker](https://mqtt2otel.org/docs/manifest/mqttbroker/) and [Configure Otel Server](todo).

@@ -18,9 +18,10 @@ OtelServer:
     ServiceName: "my-service"
     ServiceNamespace: "my-service-namespace"
     Endpoint:
-      Protocol: "https"
+      Protocol: "http"
       Port: 4317
       Address: "my-otel-collector.net"
+      EnableTls: false
 ```
 
 It has the following parameters:
