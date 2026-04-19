@@ -101,6 +101,15 @@ namespace mqtt2otel
         /// <returns>A return code.</returns>
         public async Task<int> Bootstrap()
         {
+            string version = "Not defined";
+            string versionFilePath = "./version.txt";
+            if (Path.Exists(versionFilePath))
+            {
+                var lines = File.ReadLines(versionFilePath);
+                if (lines.Count() > 0) version = lines.First();
+            }
+
+            this.internalLogger.LogInformation($"Starting application with version: {version}");
             this.internalLogger.LogInformation("ApplicationSettings.yaml read.");
 
             Console.CancelKeyPress += (sender, e) =>
