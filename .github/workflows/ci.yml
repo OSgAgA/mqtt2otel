@@ -89,9 +89,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract version from PR label (strict)
+      - name: Determine version (label or git tag)
         id: version
         run: |
+          # Get PR labels
           LABELS=$(echo '${{ toJson(github.event.pull_request.labels) }}' | jq -r '.[].name')
 
           VERSION=""
@@ -101,13 +102,35 @@ jobs:
             fi
           done
 
-          if [[ -z "$VERSION" ]]; then
-            echo "❌ ERROR: No version label found (expected: version:X.Y.Z)"
-            exit 1
+          # Fetch all tags
+          git fetch --tags
+
+          if [[ -n "$VERSION" ]]; then
+            echo "Using version from label: $VERSION"
+          else
+            echo "No version label found. Using latest git tag..."
+
+            # Get latest semver tag
+            LATEST=$(git tag -l '[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -n 1)
+
+            if [[ -z "$LATEST" ]]; then
+              echo "No tags found. Starting at 0.1.0"
+              VERSION="0.1.0"
+            else
+              echo "Latest tag: $LATEST"
+
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST"
+              PATCH=$((PATCH + 1))
+
+              VERSION="$MAJOR.$MINOR.$PATCH"
+            fi
+
+            echo "Auto-generated version: $VERSION"
           fi
 
+          # Validate version format
           if [[ ! "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            echo "❌ ERROR: Version label '$VERSION' is not valid semantic version (expected X.Y.Z)"
+            echo "❌ ERROR: Invalid version format: $VERSION"
             exit 1
           fi
 
@@ -145,6 +168,10 @@ jobs:
           name: changelog
           path: CHANGELOG.md
 
+      - name: Write version file
+        run: |
+          echo "${{ steps.version.outputs.version }}" > mqtt2otel/Deployment/app/version.txt
+
       - name: Build & Push multi-arch image
         uses: docker/build-push-action@v6
         with:
@@ -162,3 +189,12 @@ jobs:
             org.opencontainers.image.changelog=${{ steps.changelog.outputs.changelog }}
           cache-from: type=registry,ref=osgaga/mqtt2otel:cache
           cache-to: type=registry,ref=osgaga/mqtt2otel:cache,mode=max
+
+      - name: Create and push git tag
+        if: github.event.pull_request.merged == true
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git tag ${{ steps.version.outputs.version }}
+          git push origin ${{ steps.version.outputs.version }}
