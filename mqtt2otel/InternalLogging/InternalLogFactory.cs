@@ -55,6 +55,11 @@ namespace mqtt2otel.InternalLogging
         /// <exception cref="Exception">Thrown if no otel server endpoint address is set.</exception>
         private static void AddOtelLogger(ILoggingBuilder loggingBuilder, InternalLoggingSettings settings)
         {
+            if (settings.Otel == null)
+            {
+                throw new Exception($"Cannot activate otel internal logging. No otel server is configured.");
+            }
+
             loggingBuilder.AddOpenTelemetry(options =>
             {
                 options.SetResourceBuilder(

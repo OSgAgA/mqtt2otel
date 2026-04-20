@@ -24,6 +24,8 @@ Logging:
   MinimumLogLevel: Information  
 ``` 
 
+If no log file is found the application creates a new `ApplicationSettings.yaml` file using default values in the `/config` path.
+
 Copy your manifest file in the data directory and name it `Manifest.yaml`.
 
 With that we can now start the docker container via:

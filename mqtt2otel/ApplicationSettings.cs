@@ -20,6 +20,38 @@ namespace mqtt2otel
         /// <returns>The parsed settings.</returns>
         public static ApplicationSettings ReadFromYaml(string path = "ApplicationSettings.yaml")
         {
+            if (!Path.Exists(path))
+            {
+                // Look directly in the application directory, useful for development
+                var developmentPath = "./ApplicationSettings.yaml";
+
+                if (Path.Exists(developmentPath))
+                {
+                    path = developmentPath;
+                }
+                else
+                {
+                    try
+                    {
+                        // try creating a new application file.
+                        var settings = new ApplicationSettings();
+                        var serializer = new SerializerBuilder().Build();
+
+                        var serialized = serializer.Serialize(settings);
+                        File.WriteAllText(path, serialized);
+
+                        return settings;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Cannot create application settings file at {path}. The following error occured: {ex}");
+
+                        return new ApplicationSettings();
+                    }
+                }
+            }
+
+            // read settings from file.
             var yaml = File.ReadAllText(path);
             var deserializer = new DeserializerBuilder().Build();
 

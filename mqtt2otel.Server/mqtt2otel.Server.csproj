@@ -15,7 +15,7 @@
     <None Update="ApplicationSettings.yaml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Manifest.yaml">
+    <None Update="Manifest2.yaml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -46,6 +46,6 @@ namespace mqtt2otel.InternalLogging
         /// <summary>
         /// Gets or sets the otel server settings. Will be ignored if <see cref="LogToOtel"/> is false.
         /// </summary>
-        public OtelServer Otel { get; set; }  = new();
+        public OtelServer? Otel { get; set; }  = null;
     }
 }
