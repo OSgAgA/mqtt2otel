@@ -1,0 +1,185 @@
+Version: 1.0
+
+MqttBroker:
+  - Name: "Mosquitto"
+    ClientPrefix: "mqtt2otel-dev"
+    Endpoint: 
+      Port: 32007
+      Address: "192.168.1.9"
+      EnableTls: false
+
+OtelServer:
+  - Name: "Local"
+    ServiceName: "mqtt2otel"
+    ServiceNamespace: "dev-mqtt2otel"
+    ExportProcessorType: "Simple"
+    OtlpExportProtocol: "Grpc"
+    Endpoint:
+      Protocol: "http"
+      Port: 32014
+      Address: "192.168.1.9"
+      EnableTls: false
+
+
+SubscriptionGroups:
+  - Name: "Tasmota Plugs"
+    Variables:
+        - Key: DeviceName
+          Value: Tasmota_Plug
+    Subscriptions:
+      - Name: "Plug Trockner"
+        Topic: "tasmota_071C74"
+        Variables:
+          - Key: "SensorName"
+            Value: "Trockner"
+      - Name: "Plug Waschmaschine"
+        Topic: "tasmota_071264"
+        Variables:
+          - Key: "SensorName"
+            Value: "Waschmaschine"
+
+Processors:
+  - Name: "Tasmota Plug Energy Metrics"
+    Description: "Provides power information from a Tasmota plug."
+    Mqtt: 
+      SubscriptionGroups:
+        - Name: "Tasmota Plugs"
+          ParentPath: "tele"
+          SubPath: "SENSOR"
+    Otel:
+      Attributes:
+        - Key: SensorName
+          Value: $SensorName
+        - Key: DeviceName
+          Value: $DeviceName
+      Metrics:
+        - Name: "Energy_Power_W"
+          Description: "The current power consumption at the time of measurement in Watt."
+          SignalDataType: Float
+          Instrument: Gauge
+          Unit: "W"
+          Value: "JSONPATH('$.ENERGY.Power')"
+        - Name: "Energy_Voltage"
+          Description: "The current voltage at the time of the measurement in Volt."
+          SignalDataType: Float
+          Instrument: Gauge
+          Unit: "V"
+          Value: "JSONPATH('$.ENERGY.Voltage')"
+        - Name: "Energy_Total_Consumption_kwh"
+          Description: "The total energy consumed untill the last reset in kwh."
+          SignalDataType: Float
+          Instrument: Gauge
+          Unit: "kwh"
+          Value: "JSONPATH('$.ENERGY.Total')"
+        - Name: "Energy_Apparent_Power_VA"
+          Description: "The current apparent power at the time of the measurement in VA."
+          SignalDataType: Float
+          Instrument: Gauge
+          Unit: "VA"
+          Value: "JSONPATH('$.ENERGY.ApparentPower')"
+        - Name: "Energy_Reactive_Power_var"
+          Description: "The current reactive power at the time of the measurement in var."
+          SignalDataType: Float
+          Instrument: Gauge
+          Unit: "var"
+          Value: "JSONPATH('$.ENERGY.ReactivePower')"
+        - Name: "Energy_Power_Factor"
+          Description: "The power factor, indicating how much of the available energy was used."
+          SignalDataType: Float
+          Instrument: Gauge
+          Value: "JSONPATH('$.ENERGY.Factor')"
+        - Name: "Energy_Current_A"
+          Description: "The currently used current at the time of the measurement in Ampere."
+          SignalDataType: Float
+          Instrument: Gauge
+          Unit: "A"
+          Value: "JSONPATH('$.ENERGY.Current')"
+        - Name: "Tasmota_Plug_ESP32_Temperature_C"
+          Description: "The current temperature of the ESP32 on the tasmota plug."
+          SignalDataType: Float
+          Instrument: Gauge
+          Unit: "C"
+          Value: "JSONPATH('$.ESP32.Temperature')"
+        - Name: "Energy_Power_Factor_Histogram"
+          Description: "The power factor, indicating how much of the available energy was used."
+          SignalDataType: Float
+          Instrument: Histogram
+          HistogramBucketBoundaries:
+            - 0
+            - 0.5
+            - 0.8
+            - 1
+          Value: "JSONPATH('$.ENERGY.Factor')"
+
+  - Name: "Tasmota Plug Status"
+    Description: "Provides status information from a Tasmota plug."
+    Mqtt: 
+      SubscriptionGroups:
+        - Name: "Tasmota Plugs"
+          ParentPath: "tele"
+          SubPath: "STATE"
+    Otel:
+      Attributes:
+        - Key: SensorName
+          Value: $SensorName
+        - Key: DeviceName
+          Value: $DeviceName
+      Metrics:
+        - Name: "Tasmota_Plug_State_Heap"
+          Description: "The current heap size of the tasmota plug in bytes."
+          SignalDataType: Float
+          Instrument: Gauge
+          Unit: "B"
+          Value: "JSONPATH('$.Heap')"
+        - Name: "Tasmota_Plug_State_Sleep"
+          Description: "The current sleep state of the tasmota plug in seconds."
+          SignalDataType: Float
+          Instrument: Gauge
+          Unit: "s"
+          Value: "JSONPATH('$.Sleep')"
+        - Name: "Tasmota_Plug_State_Load_Average"
+          Description: "The current average load of the tasmota plug."
+          SignalDataType: Float
+          Instrument: Gauge
+          Value: "JSONPATH('$.LoadAvg')"
+        - Name: "Tasmota_Plug_State_MqttCount"
+          Description: "The current mqtt count of the tasmota plug."
+          SignalDataType: Float
+          Instrument: Gauge
+          Value: "JSONPATH('$.MqttCount')"
+        - Name: "Tasmota_Plug_State_Berry_Heap_Used_B"
+          Description: "The current berry heap usage of the tasmota plug."
+          SignalDataType: Float
+          Instrument: Gauge
+          Value: "JSONPATH('$.Berry.HeapUsed')"
+        - Name: "Tasmota_Plug_State_Berry_Objects"
+          Description: "The current number of berry objects of the tasmota plug."
+          SignalDataType: Float
+          Instrument: Gauge
+          Value: "JSONPATH('$.Berry.Objects')"
+        - Name: "Tasmota_Plug_State_Wifi_Signal"
+          Description: "The current wifi signal strength of the tasmota plug."
+          SignalDataType: Float
+          Instrument: Gauge
+          Unit: "k"
+          Value: "JSONPATH('$.Wifi.Signal')"
+
+  - Name: "Tasmota Plug Trockner Logs"
+    Description: "Collect all log messages from the tasmota plug."
+    Mqtt:
+      SubscriptionGroups:
+        - Name: "Tasmota Plugs"
+          ParentPath: "stat"
+          SubPath: "LOGGING"
+    Otel:
+      Attributes:
+        - Key: SensorName
+          Value: $SensorName
+        - Key: DeviceName
+          Value: $DeviceName
+        - Key: otel_loglevel
+          Value: Info
+      Logs:
+        - Name: "Logging"
+          PayloadType: Json
+          Transform: "GROK('%{TIME:otel_timestamp} %{WORD:category}: %{GREEDYDATA:otel_message}')"

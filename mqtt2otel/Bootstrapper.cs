@@ -52,26 +52,17 @@ namespace mqtt2otel
             // Default path for application settings.
             string applicationSettingsPath = "/config/ApplicationSettings.yaml";
 
-            // Look directly in the application directory, useful for development
-            if (!Path.Exists(applicationSettingsPath)) applicationSettingsPath = "./ApplicationSettings.yaml";
-
-            // If it does not exist, just take the default settings.
-            if (Path.Exists(applicationSettingsPath))
+            try
             {
-                try
-                {
-                    return ApplicationSettings.ReadFromYaml(applicationSettingsPath);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"CRITICAL: Could not read {applicationSettingsPath}. The following error occured: {ex.ToString()}.");
-                    Console.WriteLine("CRITICAL: Shutting down application.");
-
-                    throw new Exception();
-                }
+                return ApplicationSettings.ReadFromYaml(applicationSettingsPath);
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"CRITICAL: Could not read {applicationSettingsPath}. The following error occured: {ex.ToString()}.");
+                Console.WriteLine("CRITICAL: Shutting down application.");
 
-            return new ApplicationSettings();
+                throw new Exception();
+            }
         }
 
         /// <summary>
@@ -101,6 +92,7 @@ namespace mqtt2otel
         /// <returns>A return code.</returns>
         public async Task<int> Bootstrap()
         {
+            // Read version number file or set to not defined, if no file is found.
             string version = "Not defined";
             string versionFilePath = "./version.txt";
             if (Path.Exists(versionFilePath))
@@ -112,6 +104,7 @@ namespace mqtt2otel
             this.internalLogger.LogInformation($"Starting application with version: {version}");
             this.internalLogger.LogInformation("ApplicationSettings.yaml read.");
 
+            // Register ctrl-c
             Console.CancelKeyPress += (sender, e) =>
             {
                 e.Cancel = true; // prevent immediate termination
@@ -128,6 +121,7 @@ namespace mqtt2otel
 
             bool success = false;
 
+            // Process the manifest file.
             try
             {
                 success = await this.manifestCoordinator.ProcessManifest();
