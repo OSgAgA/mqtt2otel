@@ -30,7 +30,7 @@ Value: "42"
 ### Functions
 Most of the time you want to process a payload as delivered by a mqtt subscription. Lets take the following example json payload:
 
-```json
+```json {hl_lines=[4]}
 {
     "Processor": 
     {
@@ -62,7 +62,7 @@ This will return the value 42.
 | ---------- | ------------------------- | ----------------------------------------                                                                                                             |
 | `JSONPATH` | `JSONPATH('$.Root')`      | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax                                                                        |
 | `XPATH`    | `XPATH('/root/child[1]')` | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax                                                                                  |
-| `REGEX`    | `REGEX('[0-9]+')`         | Extracts data using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference) |
+| `REGEX`    | `REGEX('[0-9]+')`         | Extracts data using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
 | `PAYLOAD`  | `PAYLOAD()`               | Returns the raw payload                                                                                                                              |
 | `CONST`    | `CONST('42')`             | Returns a constant value                                                                                                                             |
 
@@ -79,7 +79,7 @@ Standard mathematical operations like `+`, `-`, `*`, `/`, and functions such as 
 like `[Pi]` are also supported. Further details can be found at the [NCalc library](https://github.com/ncalc/ncalc).
 
 
-## Transformation
+## Transformations
 
 ### The basics
 
@@ -100,6 +100,16 @@ The grok expression for parsing the payload is:
 %{TIMESTAMP_ISO8601:otel_timestamp} \[%{WORD:otel_loglevel}\] \[%{WORD:server_name}\] %{GREEDYDATA:otel_message}')
 ```
 
+This can be read as:
+
+* Parse an ISO8061 timestamp and name it otel_timestamp
+* Read a space and a [ (needs to be escaped as \[) adn discard the information
+* Read a word and name it otel_loglevel
+* Read ] [ and discard the information
+* Read a word and name it server_name
+* Read ] [ and discard the information
+* Read the remaining part of the message and name it otel_message
+
 With that the payload will be transformed in a log message that looks like this:
 
 ```json
@@ -114,7 +124,7 @@ With that the payload will be transformed in a log message that looks like this:
 This message can than be passed to the log processor. Be careful to set `PayloadType: Json` for getting the expected results.
 The usage is similar to expressions:
 
-```yaml
+```yaml {hl_lines=[3,4]}
       Logs:
         - Name: "Logging"
           PayloadType: Json

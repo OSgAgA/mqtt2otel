@@ -20,7 +20,7 @@ The value is usually a string, but may be any other data type.
 
 To use a variable you will address it with `$key. So the variable as defined above can be used as:
 
-```yaml
+```yaml {hl_lines=[7,9]}
 Processors:
   - Name: "My processor"
     ...    

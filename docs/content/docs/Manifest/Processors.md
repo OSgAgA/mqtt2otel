@@ -93,7 +93,7 @@ It consists of the following parameters:
 | Subscriptions         | A list of [subscriptions](../subscription/#configure-subscriptions) to which the processor will subscribe                       |
 | SubscriptionGroups    | A list of [subscription groups](../subscription/#subscription-groups) to which the processor will subscribe                     |
 | Broker                | The (optional) broker that will be applied to all subscriptions and subscription groups that do not have a specific broker set. | 
-| Transform             | An optional transform expression that will be applied to all received message payloads.                                         | 
+| Transform             | An optional transform expression that will be applied to all received message payloads. [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformation)                                        | 
 
 The processor will subscribe to all subscriptions (and subscription groups) in the `Mqtt` section. When a message for one of the subscriptions is received 
 the message is transformed (if `Transform` is set) and afterwards the `Otel` section will be executed. 
@@ -126,7 +126,7 @@ It consists of the following parameters:
 |-----------------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | Name            | An optional name for the otel configuration.                                                                                            |
 | Description     | An optional description.                                                                                                                |
-| Attributes      | A list of otel attributes that will be added to the otel signal. {{< badge style="info" title="supports" value="variables" >}}          |
+| Attributes      | A list of otel attributes that will be added to the otel signal. [{{< badge style="info" title="supports" value="variables" >}}](/docs/manifest/variables)          |
 | OtelServerName  | The (optional) otel server name that will be applied to all `Metrics` and `Logs` sections that do not explicitly state the server name. | 
 | Metrics         | An optional list of `Metrics` that will describe how the payload of a subscription message will be parsed into an otel metric signal.   | 
 | Logs            | An optional list of `Logs` that will describe how the payload of a subscription message will be parsed into an otel log message.        | 
@@ -141,13 +141,12 @@ It consists of the following parameters:
 |----------------------------|--------------------------------------------------------------------------------------------------------------------------------|
 | Name                       | The name of the created metric that will be send to the open telemetry endpoint.                                               |
 | Description                | The optional description that will be send to the open telemetry endpoint.                                                     |
-| Attributes                 | A list of otel attributes that will be added to the otel metric. {{< badge style="info" title="supports" value="variables" >}} |
+| Attributes                 | A list of otel attributes that will be added to the otel metric. [{{< badge style="info" title="supports" value="variables" >}}](/docs/manifest/variables) |
 | OtelServerName             | The (optional) otel server name that will be applied to the metric. If not set the default server is used.                     | 
 | Instrument                 | Defines the otel metric instruments to be used. See [otel instruments](#otel-instruments) for details.                         | 
 | SignalDataType             | The data type of the metric. See [otel data types](#otel-data-types) for details.                                              | 
 | Unit                       | The optional unit that will be sent to the open telemetry endpoint as part of the metric.                                      | 
-| Value                      | The value of the metric. Must be of type `SignalDataType`. {{< badge style="info" title="supports" value="expressions" >}}     | 
-| OtelServerName             | The (optional) otel server name that will be applied to the metric. If not set the default server is used.                     | 
+| Value                      | The value of the metric. Must be of type `SignalDataType`. [{{< badge style="info" title="supports" value="expressions" >}}](/docs/expressions/#expressions)     | 
 | HistogramBucketBoundaries  | A list of bucket values for the `Histogram` instrument. See [histogram bucket boundaries](#histogram-bucket-boundaries).       | 
 
 ### Example:
@@ -213,18 +212,18 @@ It consists of the following parameters:
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Name           | The optional name of the log processor.                                                                                                                   |
 | Description    | The optional description.                                                                                                                                 |
-| Attributes     | A list of otel attributes that will be added to the otel log entry. {{< badge style="info" title="supports" value="variables" >}}                         |
+| Attributes     | A list of otel attributes that will be added to the otel log entry. [{{< badge style="info" title="supports" value="variables" >}}](/docs/manifest/variables)                         |
 | OtelServerName | The (optional) otel server name of the otel endpoint where the log entry should be send. If not set the default server is used.                           | 
-| Filter         | Defines the filter expression that will be applied if the `PayloadType` is set to `Text`. {{< badge style="info" title="supports" value="expressions" >}} | 
+| Filter         | Defines the filter expression that will be applied if the `PayloadType` is set to `Text`. [{{< badge style="info" title="supports" value="expressions" >}}](/docs/expressions/#expressions) | 
 | PayloadType    | The type of the payload, that the processor will process. Must be one of the following: `Text` or `Json`                                                  | 
 | CategoryName   | The category name, that will be send with the open telemetry log entry. Default is `mqtt2otel`                                                            | 
-| Transform      | An optional transform expression that will be applied to the message payloads. {{< badge style="info" title="supports" value="expressions" >}}            | 
+| Transform      | An optional transform expression that will be applied to the message payloads. [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformation)            | 
 | MessageKey     | If `PayloadType`is `Json` this is the key that will be used for identifying the message body. Default is: `otel_message`                                  | 
 | LogLevelKey    | If `PayloadType`is `Json` this is the key that will be used for identifying the log level. Default is: `otel_loglevel`                                    | 
 
 ### Example:
 
-```yaml
+```yaml {hl_lines=[3,4]}
       Logs:
         - Name: "Logging"
           PayloadType: Json
