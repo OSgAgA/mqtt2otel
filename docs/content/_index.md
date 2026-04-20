@@ -33,6 +33,11 @@ additional information, and then generate Otel metrics or logs for further analy
   {{< /card >}}
 {{% /columns %}}
 
+# Why mqtt2otel?
+
+IoT systems often rely on MQTT for efficient communication, while modern applications use OpenTelemetry for monitoring and observability.  
+**mqtt2otel bridges this gap**, enabling you to bring IoT data into your existing observability stack without custom integrations.
+
 # Background
 
 To learn more about the underlying technologies, check out the following resources:
@@ -40,11 +45,11 @@ To learn more about the underlying technologies, check out the following resourc
 * [Official OpenTelemetry page](https://opentelemetry.io/)
 * [Official MQTT page](https://mqtt.org/)
 
-## The setup
+# Architecture
 
-Currently mqtt2otel is not shipping an internal mqtt broker or an otel-collector. These tools have to be provided separatly. This may change in future versions.
+mqtt2otel does not include an embedded MQTT broker or OpenTelemetry Collector. These components must be provided externally (this may change in future versions).
 
-So a typical setup for using this tool may look like this:
+A typical setup looks like this:
 
 ```mermaid
 flowchart LR
