@@ -38,6 +38,7 @@ MqttBroker:
     Endpoint:
       Port: 32007
       Address: "mymqtt-broker.net"
+      EnableTls: false
 
 OtelServer:
   - Name: "My Otel server"
@@ -47,6 +48,7 @@ OtelServer:
       Protocol: "http"
       Port: 32014
       Address: "my-otel-collector.net"
+      EnableTls: false
 
 Processors:
   - Name: "Processor Temperature"

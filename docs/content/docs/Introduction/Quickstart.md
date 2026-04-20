@@ -7,7 +7,7 @@ bookCollapseSection: false
 
 ## Installation
 
-[Installation](../../installation)
+See [Installation](../../installation) overview.
 
 ## Connect to the MQTT Broker and Otel Server
 
@@ -55,7 +55,7 @@ Now that we have connected to the MQTT broker and Otel server, let's subscribe t
 
 Suppose the server sends messages to the topic `message-topic` in the following JSON format:
 
-```json
+```json {hl_lines=[4]}
 {
     "Processor": 
     {
@@ -68,7 +68,7 @@ Suppose the server sends messages to the topic `message-topic` in the following 
 To extract the temperature, we will use the [JSONPath](https://www.rfc-editor.org/rfc/rfc9535) syntax `$.Processor.Temperature`.
 The corresponding YAML would look like this:
 
-```yaml
+```yaml 
 Processors:
   - Name: "Processor Temperature"
     Description: "Provides the current processor temperature."
@@ -109,14 +109,14 @@ The syntax is as following:
 
 Subscriptions can have variables, which can be used later in the rules section. Here’s an example of how to define variables:
 
-```yaml
+```yaml {hl_lines=[14,15]}
 Mqtt:
   Subscriptions:
     - Name: "Processor information"
-      Topic: "message-topic"
+      Topic: "metric/sensor_1234"
       Variables:
         - Key: "SensorName"
-          Value: "ProcessorMainServer"
+          Value: "ProcessorServerA"
 ```
 
 You can access variables in Otel rules by prefixing them with a `$` sign. For example, to access the `SensorName`, you would use
@@ -125,7 +125,7 @@ You can access variables in Otel rules by prefixing them with a `$` sign. For ex
 Otel rules can also include attributes, which are added to the Otel signal for filtering or grouping. You can use variables
 inside attributes where needed. Here’s an example of how to add attributes:
 
-```yaml
+```yaml {hl_lines=["2-6", "10-12"]}
 Otel:
   Attributes:
     - Key: SensorName
@@ -138,8 +138,6 @@ Otel:
       Attributes:
         - Key: MeasurementQuality
           Value: 10
-        - Key: Location
-          Value: "Main server room"
       SignalDataType: Float
       Instrument: Gauge
       Value: "JSONPATH('$.Processor.Temperature')"
@@ -153,7 +151,7 @@ The attributes directly added under the Metrics section will be added to all met
 
 | Attribute Name     | Attribute Value     |
 | ------------------ | ------------------- |
-| SensorName         | ProcessorMainServer |
+| SensorName         | ProcessorServerA    |
 | MeasurementQuality | 10                  |
 | Location           | Main server room    |
 
@@ -171,15 +169,15 @@ like `[Pi]` are supported.
 
 ### Available Functions
 
-| Function   | Example                   | Description                              |
-| ---------- | ------------------------- | ---------------------------------------- |
-| `JSONPATH` | `JSONPATH('$.Root')`      | Extracts data using JSONPath syntax      |
-| `XPATH`    | `XPATH('/root/child[1]')` | Extracts data using XPath syntax         |
-| `REGEX`    | `REGEX('[0-9]+')`         | Extracts data using a regular expression |
-| `PAYLOAD`  | `PAYLOAD()`               | Returns the raw payload                  |
-| `CONST`    | `CONST('42')`             | Returns a constant value                 |
+| Function   | Example                   | Description                                                                                                                                          |
+| ---------- | ------------------------- | ----------------------------------------                                                                                                             |
+| `JSONPATH` | `JSONPATH('$.Root')`      | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax                                                                        |
+| `XPATH`    | `XPATH('/root/child[1]')` | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax                                                                                  |
+| `REGEX`    | `REGEX('[0-9]+')`         | Extracts data using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
+| `PAYLOAD`  | `PAYLOAD()`               | Returns the raw payload                                                                                                                              |
+| `CONST`    | `CONST('42')`             | Returns a constant value                                                                                                                             |
 
-For more details, please refer to the [documentation](#).
+For more details, please refer to the [documentation](/docs/expressions).
 
 ## Log Messages and Transformation
 
@@ -190,11 +188,25 @@ Log messages work similarly to metrics. Let's say you receive a log message payl
 ```
 
 Rather than sending the raw message to Otel, we can transform it into a structured log format using a 
-[GROK](https://www.elastic.co/docs/reference/logstash/plugins/plugins-filters-grok) expression.
+[GROK](https://www.elastic.co/docs/reference/logstash/plugins/plugins-filters-grok) expression:
 
-Here’s how to configure it:
+```grok
+%{TIMESTAMP_ISO8601:otel_timestamp} \[%{WORD:otel_loglevel}\] \[%{WORD:server_name}\] %{GREEDYDATA:otel_message}
+```
 
-```yaml
+This can be read as:
+
+* Parse an ISO8061 timestamp and name it otel_timestamp
+* Read a space and a [ (needs to be escaped as \[) adn discard the information
+* Read a word and name it otel_loglevel
+* Read ] [ and discard the information
+* Read a word and name it server_name
+* Read ] [ and discard the information
+* Read the remaining part of the message and name it otel_message
+
+This expression can then be used in a `Transform` expression inside the `Logs` section:
+
+```yaml {linenos=inline hl_lines=[14,15]}
 Processors:
   - Name: "Server logs"
     Description: "Collect all log messages from the server."
@@ -286,7 +298,7 @@ metrics or logs.
 
 Once you’ve created the `Power sensors` group, you can refer to it in your **metrics** or **logs** as follows:
 
-```yaml
+```yaml {hl_lines=[5,6,22,23]}
 Processor:
   - Name: "Power Metrics"
     Description: "Provides power information from a power sensor."
@@ -347,7 +359,7 @@ and **SubPath** to correctly target the topics.
 
 ### Defining Subscription Groups with ParentPath and SubPath
 
-```yaml
+```yaml {hl_lines=[15,16,31,32]}
 SubscriptionGroups:
   - Name: "Power sensors"
     Subscriptions:
@@ -402,8 +414,6 @@ Processors:
 By using **Subscription Groups**, you can easily reuse configurations across different rules, making your setup more modular 
 and scalable. Grouping devices and topics this way allows you to handle complex MQTT topic structures efficiently.
 
-For further details, please refer to the [documentation](#).
-
 ## Complete example manifest
 
 Here is a complete minimal example manifest using logs, and metrics:
@@ -416,6 +426,7 @@ MqttBroker:
     Endpoint:
       Port: 32007
       Address: "mymqtt-broker.net"
+      EnableTls: false
 
 OtelServer:
   - Name: "My Otel server"
@@ -425,6 +436,7 @@ OtelServer:
       Protocol: "http"
       Port: 32014
       Address: "my-otel-collector.net"
+      EnableTls: false
 
 Processors:
   - Name: "Processor Temperature"

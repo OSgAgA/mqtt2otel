@@ -3,5 +3,13 @@ languageCode = 'en-us'
 title = 'mqtt2otel'
 theme = 'hugo-book'
 
-[markup.goldmark.renderer]
-  unsafe = true
+[markup]
+  [markup.goldmark.renderer]
+    unsafe = true
+
+  [markup.highlight]
+    codeFences = true       # Enable fenced code block highlighting
+    guessSyntax = false     # Don't guess language if not specified
+    lineNos = true          # Enable line numbers
+    lineNumbersInTable = false # false = inline numbers, true = table style
+    style = 'lovelace'
