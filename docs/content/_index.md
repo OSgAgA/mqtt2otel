@@ -11,8 +11,8 @@ layout: landing
 
 # mqtt2otel {anchor=false}
 
-`mqtt2otel` is a powerful yet lightweight bridge between the MQTT messaging protocol—commonly used in the IoT 
-(Internet of Things) context—and OpenTelemetry (Otel) protocol, which is typically used for professional application 
+`mqtt2otel` is a powerful yet lightweight bridge between the MQTT messaging protocol, commonly used in the IoT 
+(Internet of Things) context, and OpenTelemetry (Otel) protocol, which is typically used for professional application 
 and infrastructure monitoring. The tool can subscribe to MQTT broker topics, process and enrich messages with 
 additional information, and then generate Otel metrics or logs for further analysis using standard tools.
 
@@ -33,9 +33,18 @@ additional information, and then generate Otel metrics or logs for further analy
   {{< /card >}}
 {{% /columns %}}
 
-## The standard workflow
+# Background
 
-The basic workflow is as following:
+To learn more about the underlying technologies, check out the following resources:
+
+* [Official OpenTelemetry page](https://opentelemetry.io/)
+* [Official MQTT page](https://mqtt.org/)
+
+## The setup
+
+Currently mqtt2otel is not shipping an internal mqtt broker or an otel-collector. These tools have to be provided separatly. This may change in future versions.
+
+So a typical setup for using this tool may look like this:
 
 ```mermaid
 flowchart LR
@@ -49,15 +58,6 @@ flowchart LR
     otel -->|send| dashboard(Dashboard tool)
     dashboard-->|retrieve| otel
 ```
-
-Currently mqtt2otel is not shipping an internal mqtt broker or an otel-collector. These tools have to be provided separatly. This may change in future versions.
-
-# Background
-
-To learn more about the underlying technologies, check out the following resources:
-
-* [Official OpenTelemetry page](https://opentelemetry.io/)
-* [Official MQTT page](https://mqtt.org/)
 
 # Documentation
 
