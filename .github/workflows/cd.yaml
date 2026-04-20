@@ -1,4 +1,4 @@
-name: On PR closed
+name: Deployment
 
 permissions:
   contents: write
