@@ -93,7 +93,7 @@ It consists of the following parameters:
 | Subscriptions         | A list of [subscriptions](../subscription/#configure-subscriptions) to which the processor will subscribe                       |
 | SubscriptionGroups    | A list of [subscription groups](../subscription/#subscription-groups) to which the processor will subscribe                     |
 | Broker                | The (optional) broker that will be applied to all subscriptions and subscription groups that do not have a specific broker set. | 
-| Transform             | An optional transform expression that will be applied to all received message payloads. [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformation)                                        | 
+| Transform             | An optional transform expression that will be applied to all received message payloads. [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformations)                                        | 
 
 The processor will subscribe to all subscriptions (and subscription groups) in the `Mqtt` section. When a message for one of the subscriptions is received 
 the message is transformed (if `Transform` is set) and afterwards the `Otel` section will be executed. 
@@ -217,7 +217,7 @@ It consists of the following parameters:
 | Filter         | Defines the filter expression that will be applied if the `PayloadType` is set to `Text`. [{{< badge style="info" title="supports" value="expressions" >}}](/docs/expressions/#expressions) | 
 | PayloadType    | The type of the payload, that the processor will process. Must be one of the following: `Text` or `Json`                                                  | 
 | CategoryName   | The category name, that will be send with the open telemetry log entry. Default is `mqtt2otel`                                                            | 
-| Transform      | An optional transform expression that will be applied to the message payloads. [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformation)            | 
+| Transform      | An optional transform expression that will be applied to the message payloads. [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformations)            | 
 | MessageKey     | If `PayloadType`is `Json` this is the key that will be used for identifying the message body. Default is: `otel_message`                                  | 
 | LogLevelKey    | If `PayloadType`is `Json` this is the key that will be used for identifying the log level. Default is: `otel_loglevel`                                    | 
 
