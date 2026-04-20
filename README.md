@@ -11,7 +11,11 @@
 and infrastructure monitoring. The tool can subscribe to MQTT broker topics, process and enrich messages with 
 additional information, and then generate Otel metrics or logs for further analysis using standard tools.
 
-The basic workflow is as following:
+# Architecture
+
+mqtt2otel does not include an embedded MQTT broker or OpenTelemetry Collector. These components must be provided externally (this may change in future versions).
+
+A typical setup looks like this:
 
 ```mermaid
 flowchart LR
@@ -25,6 +29,7 @@ flowchart LR
     otel -->|send| dashboard(Dashboard tool)
     dashboard-->|retrieve| otel
 ```
+
 
 # Homepage
 

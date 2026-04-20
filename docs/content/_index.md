@@ -11,8 +11,8 @@ layout: landing
 
 # mqtt2otel {anchor=false}
 
-`mqtt2otel` is a powerful yet lightweight bridge between the MQTT messaging protocol—commonly used in the IoT 
-(Internet of Things) context—and OpenTelemetry (Otel) protocol, which is typically used for professional application 
+`mqtt2otel` is a powerful yet lightweight bridge between the MQTT messaging protocol, commonly used in the IoT 
+(Internet of Things) context, and OpenTelemetry (Otel) protocol, which is typically used for professional application 
 and infrastructure monitoring. The tool can subscribe to MQTT broker topics, process and enrich messages with 
 additional information, and then generate Otel metrics or logs for further analysis using standard tools.
 
@@ -33,9 +33,23 @@ additional information, and then generate Otel metrics or logs for further analy
   {{< /card >}}
 {{% /columns %}}
 
-## The standard workflow
+# Why mqtt2otel?
 
-The basic workflow is as following:
+IoT systems often rely on MQTT for efficient communication, while modern applications use OpenTelemetry for monitoring and observability.  
+**mqtt2otel bridges this gap**, enabling you to bring IoT data into your existing observability stack without custom integrations.
+
+# Background
+
+To learn more about the underlying technologies, check out the following resources:
+
+* [Official OpenTelemetry page](https://opentelemetry.io/)
+* [Official MQTT page](https://mqtt.org/)
+
+# Architecture
+
+mqtt2otel does not include an embedded MQTT broker or OpenTelemetry Collector. These components must be provided externally (this may change in future versions).
+
+A typical setup looks like this:
 
 ```mermaid
 flowchart LR
@@ -49,15 +63,6 @@ flowchart LR
     otel -->|send| dashboard(Dashboard tool)
     dashboard-->|retrieve| otel
 ```
-
-Currently mqtt2otel is not shipping an internal mqtt broker or an otel-collector. These tools have to be provided separatly. This may change in future versions.
-
-# Background
-
-To learn more about the underlying technologies, check out the following resources:
-
-* [Official OpenTelemetry page](https://opentelemetry.io/)
-* [Official MQTT page](https://mqtt.org/)
 
 # Documentation
 
