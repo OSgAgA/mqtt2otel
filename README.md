@@ -30,10 +30,13 @@ flowchart LR
     dashboard-->|retrieve| otel
 ```
 
-
 # Homepage
 
 You can find the official homepage of the project [here](https://mqtt2otel.org).
+
+# Installation
+
+Installation instructions can be found in the [documentation](https://mqtt2otel.org/docs/installation/).
 
 # Quickstart
 
