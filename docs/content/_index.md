@@ -35,7 +35,7 @@ additional information, and then generate Otel metrics or logs for further analy
 
 # Why mqtt2otel?
 
-IoT systems often rely on MQTT for efficient communication, while modern applications use OpenTelemetry for monitoring and observability.  
+IoT systems often rely on MQTT for efficient communication, while modern applications use OpenTelemetry for monitoring and observability. 
 **mqtt2otel bridges this gap**, enabling you to bring IoT data into your existing observability stack without custom integrations.
 
 # Background
@@ -63,6 +63,10 @@ flowchart LR
     otel -->|send| dashboard(Dashboard tool)
     dashboard-->|retrieve| otel
 ```
+
+# Installation
+
+Installation instructions can be found in the [documentation](https://mqtt2otel.org/docs/installation/).
 
 # Documentation
 
