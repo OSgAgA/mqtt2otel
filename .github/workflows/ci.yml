@@ -1,29 +1,40 @@
 name: Integration
 
+# Only executed on pull requests for the main branch.
 on:
   pull_request:
     branches: [ main ]
 
+# Workflow can 
+#   * read repositroy content
+#   * create and update GitHub Checks.
+#   * comment on PRs, update PR statuses, or modify PR metadata.
 permissions:
   contents: read
   checks: write
   pull-requests: write
 
+# Prevents multiple runs of the same workflow from overlapping.
+# If a new run starts for the same branch, GitHub automatically cancels the previous run.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  # Build the application and run tests.
   build-test:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the code.
       - uses: actions/checkout@v4
 
+      # Setup dotnet sdk.
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0'
 
+      # Cache nuget references to speed up build.
       - name: Cache NuGet
         uses: actions/cache@v4
         with:
@@ -31,15 +42,19 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
 
+      # Restore nuget.
       - name: Restore
         run: dotnet restore
 
+      # Build the application.
       - name: Build
         run: dotnet build -c Release --no-restore -warnaserror
 
+      # Run tests and generate TestResults file.
       - name: Test
         run: dotnet test --logger "trx;LogFileName=TestResults.trx"
 
+      # Publish the test report.
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
         if: always()
@@ -48,17 +63,9 @@ jobs:
           path: mqtt2otel.Tests/TestResults/TestResults.trx
           reporter: dotnet-trx
 
+      # Upload test results as artifacts.
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: TestResults/TestResults.trx
-
-      - name: Publish
-        run: dotnet publish ./mqtt2otel.Server/mqtt2otel.Server.csproj -c Release --no-build --output ./app
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app
-          path: ./app

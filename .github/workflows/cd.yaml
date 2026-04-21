@@ -1,29 +1,37 @@
 name: Deployment
 
+# Workflow can 
+#   * write repositroy content
+#   * create and update GitHub Checks.
+#   * comment on PRs, update PR statuses, or modify PR metadata.
 permissions:
   contents: write
   checks: write
   pull-requests: write
 
+# Only executed on pushes to the main branch.
 on:
   push:
     branches: [ main ]
 
 jobs:
-
+  # Publishes the application
   build:
-    name: Build
+    name: publish
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the code.
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Setup dotnet sdk.
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0'
 
+      # Cache nuget references to speed up build.
       - name: Cache NuGet
         uses: actions/cache@v4
         with:
@@ -31,15 +39,15 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
 
+      # Restore nuget.
       - name: Restore
         run: dotnet restore --packages .nuget/packages
 
-      - name: Build
-        run: dotnet build -c Release --no-restore -warnaserror
-
+      # Publish the application to the ./app folder.
       - name: Publish
         run: dotnet publish ./mqtt2otel.Server/mqtt2otel.Server.csproj -c Release --no-restore --output ./app
 
+      # Upload ./app folder as artifact.
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -47,40 +55,48 @@ jobs:
           path: ./app
 
   docker:
+    # Build and push a docker image.
     name: Build & Push Docker (multi-arch)
     runs-on: ubuntu-latest
-    needs: build
+    needs: publish
 
     steps:
+      # Checkout the repository.
       - name: Checkout
         uses: actions/checkout@v4
         with:
             fetch-depth: 0
 
+      # Download the published app artifact.
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: app
           path: mqtt2otel/Deployment/app
 
+      # Set up QEMU for building multi platform docker images.
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
+      # Setup the docker builder.
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Login to docker hub.
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Get the pullrequest number from the commit message and store it in PR_NUMBER.
       - name: Extract PR number (safe)
         id: pr
         run: |
             PR_NUMBER=$(echo "${{ github.event.head_commit.message }}" | grep -oE '#[0-9]+' | tr -d '#' || true)
             echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
+      # Try to find a github label named version:X.Y.Z and write it to VERSION if found.
       - name: Fetch PR labels
         id: pr_labels
         if: steps.pr.outputs.pr_number != ''
@@ -101,6 +117,10 @@ jobs:
 
             echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      # Take version from previous step if existing. If not existing, then get the latest git tag that has the
+      # form: X.Y.Z and take this as the version X.Y.Z+1. If no tag is found, then the version is set to 0.1.0.
+      #
+      # Version is then split int $MAJOR, $MINOR, $PATCH.
       - name: Determine version
         id: version
         run: |
@@ -130,16 +150,24 @@ jobs:
             echo "minor=$MINOR" >> $GITHUB_OUTPUT
             echo "patch=$PATCH" >> $GITHUB_OUTPUT
 
+      # Writes version into a file, that is later accessed by the application to show its version
+      # on application startup.
       - name: Write version file
         run: |
           echo "${{ steps.version.outputs.version }}" > mqtt2otel/Deployment/app/version.txt
 
+      # upload version file as artifact to document the version inside the CI/CD workflow.
       - name: Upload version artifact
         uses: actions/upload-artifact@v4
         with:
           name: version
           path: mqtt2otel/Deployment/app/version.txt
 
+      # Build the docker multi-arch image and push it to the docker registry.
+      #
+      # The following tags will be provided based on the version number created in the previous steps:
+      #
+      # Version 0.5.1 => Tags: "0", "0.5", "0.5.1", "latest"
       - name: Build & Push multi-arch image
         uses: docker/build-push-action@v6
         with:
@@ -156,6 +184,8 @@ jobs:
           cache-from: type=registry,ref=osgaga/mqtt2otel:cache
           cache-to: type=registry,ref=osgaga/mqtt2otel:cache,mode=max
 
+      # Create a git tag with the version number. This tag is then used, next time the workflow is triggered
+      # to create a new version number.
       - name: Create and push git tag
         run: |
             git config user.name "github-actions"
@@ -168,34 +198,44 @@ jobs:
               git push origin ${{ steps.version.outputs.version }}
             fi
 
+  # Deploy the documentation to github-pages.
   deploy-docs:
     name: Deploy Hugo Docs
     runs-on: ubuntu-latest
     needs: build
 
+    # Workflow can 
+    #   * read repositroy content
+    #   * deploy github pages.
+    #   * request an OIDC token (OpenID Connect). Needed as actions/deploy-pages@v4 uses OIDC internally.
     permissions:
       contents: read
       pages: write
       id-token: write
 
     steps:
+      # Checkout the repository.
       - name: Checkout
         uses: actions/checkout@v4
   
+      # Setup Hugo static side generator.
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: 'latest'
           extended: true
   
+      # Build the static html via hugo. The static html is written to the public directory inside ./docs.
       - name: Build Hugo site
         working-directory: ./docs
         run: hugo --minify
   
+      # Upload the generated static html as a github-pages-artifact.
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./docs/public
   
+      # Deploy the artifact to github-pages.
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
