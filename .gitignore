@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /mqtt2otel.Server/Manifest.yaml
 /mqtt2otel.Server/ApplicationSettings.yaml
+/mqtt2otel.Server/Manifest2.yaml
