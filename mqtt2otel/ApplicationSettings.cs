@@ -40,6 +40,8 @@ namespace mqtt2otel
                         var serialized = serializer.Serialize(settings);
                         File.WriteAllText(path, serialized);
 
+                        Console.WriteLine($"Created new application settings file at {path}.");
+
                         return settings;
                     }
                     catch (Exception ex)
@@ -71,6 +73,6 @@ namespace mqtt2otel
         /// <summary>
         /// Gets or sets the path to the manifest file.
         /// </summary>
-        public string ManifestPath { get; set; } = "./Manifest.yaml";
+        public string ManifestPath { get; set; } = "/data/Manifest.yaml";
     }
 }
