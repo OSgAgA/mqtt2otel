@@ -25,7 +25,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets a list of mqtt broker subscriptions.
         /// </summary>
-        public List<MqttSubscription> Subscriptions { get; set; } = new();
+        public ImportEnabledList<MqttSubscription> Subscriptions { get; set; } = new();
 
         /// <summary>
         /// Gets or sets a list of broker subscription groups.

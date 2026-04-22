@@ -23,5 +23,18 @@ namespace mqtt2otel.Manifest
         /// Gets or sets an (optional) description of the setting item.
         /// </summary>
         public string Description { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets a path to a yaml file from which a list of objects of the derived type can be created.
+        /// If this is set, all other parameters are ignored.
+        /// 
+        /// The path may contain wildcard characters:
+        /// 
+        ///   - '*' matches any number of characters
+        ///   - '$' matches exactly one character.
+        /// 
+        /// Set to null if nothing should be imported.
+        /// </summary>
+        public string? ImportFrom { get; set; } = null;
     }
 }
