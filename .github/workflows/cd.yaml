@@ -198,6 +198,14 @@ jobs:
               git push origin ${{ steps.version.outputs.version }}
             fi
 
+      # As we created a tag, the new commit must be merged back to develop.
+      - name: Sync main back to develop
+        run: |
+          git fetch origin
+          git checkout develop
+          git merge origin/main --no-edit
+          git push origin develop
+
   # Deploy the documentation to github-pages.
   deploy-docs:
     name: Deploy Hugo Docs
@@ -239,11 +247,3 @@ jobs:
       # Deploy the artifact to github-pages.
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
-
-      # As we created a tag, the new commit must be merged back to develop.
-      - name: Sync main back to develop
-        run: |
-          git fetch origin
-          git checkout develop
-          git merge origin/main --no-edit
-          git push origin develop
