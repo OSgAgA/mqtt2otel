@@ -5,6 +5,7 @@ using MQTTnet.Internal;
 using OpenTelemetry.Metrics;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using YamlDotNet.Serialization;
@@ -105,22 +106,22 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets all available subscription groups.
         /// </summary>
-        public List<SubscriptionGroup> SubscriptionGroups { get; set; } = new();
+        public ImportEnabledList<SubscriptionGroup> SubscriptionGroups { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the mqtt broker.
         /// </summary>
-        public List<MqttBroker> MqttBroker { get; set; } = new();
+        public ImportEnabledList<MqttBroker> MqttBroker { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the open telemetry server.
         /// </summary>
-        public List<OtelServer> OtelServer { get; set; } = new();
+        public ImportEnabledList<OtelServer> OtelServer { get; set; } = new();
 
         /// <summary>
         /// Gets or sets all metrics.
         /// </summary>
-        public List<Processor> Processors { get; set; } = new();
+        public ImportEnabledList<Processor> Processors { get; set; } = new();
 
         /// <summary>
         /// Gets the default otel server. That is the first server defined in <see cref="OtelServer"/> or null, if no otel server
@@ -136,6 +137,10 @@ namespace mqtt2otel.Manifest
         /// </summary>
         public void Initialize()
         {
+            if (Manifest.ObjectFactory == null)
+                return;
+
+            ImportEnabledList<NamedIdObject>.InitializeImports(this, this.internalLogger, Manifest.ObjectFactory);
             this.ApplyOtelServerNamesToRules();
 
             foreach (var subscriptionGroup in this.SubscriptionGroups)

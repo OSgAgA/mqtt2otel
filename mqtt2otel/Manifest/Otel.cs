@@ -17,12 +17,12 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets the rules for creating open telemetry metrics.
         /// </summary>
-        public List<OtelMetricRule> Metrics { get; set; } = new();
+        public ImportEnabledList<OtelMetricRule> Metrics { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the rules for creating open telemetry metrics.
         /// </summary>
-        public List<OtelLoggingRule> Logs { get; set; } = new();
+        public ImportEnabledList<OtelLoggingRule> Logs { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the name of the open telemetriy server to be used for this rule. 
