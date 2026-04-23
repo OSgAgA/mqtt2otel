@@ -13,5 +13,5 @@ enableRobotsTXT = true
     codeFences = true       # Enable fenced code block highlighting
     guessSyntax = false     # Don't guess language if not specified
     lineNos = true          # Enable line numbers
-    lineNumbersInTable = false # false = inline numbers, true = table style
+    lineNumbersInTable = true # false = inline numbers, true = table style
     style = 'lovelace'
