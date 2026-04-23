@@ -21,7 +21,8 @@ namespace mqtt2otel.Interfaces
         /// <param name="name">An identifier identifying the context of the parser. This enables the user to find the cause of the error.</param>
         /// <param name="payload">The payload to be parsed.</param>
         /// <param name="expression">The expression that should be applied to the payload.</param>
+        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed value.</returns>
-        Task<T> Parse<T>(string name, string payload, string expression);
+        Task<T> Parse<T>(string name, string payload, string expression, ParsingContext context);
     }
 }

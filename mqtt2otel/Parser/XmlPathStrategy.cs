@@ -22,8 +22,9 @@ namespace mqtt2otel.Parser
         /// <typeparam name="T">The expected return type.</typeparam>
         /// <param name="payload">The input as xml.</param>
         /// <param name="filter">A XPath expression (see <see cref="https://www.w3.org/TR/xpath-31/"/>) that will be applied to the payload.</param>
+        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed payload.</returns>
-        public T Parse<T>(string payload, string filter)
+        public T Parse<T>(string payload, string filter, ParsingContext context)
         {
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(payload);

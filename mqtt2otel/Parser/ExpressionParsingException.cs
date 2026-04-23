@@ -22,7 +22,7 @@ namespace mqtt2otel.Parser
         private static string FormatMessage(Exception ex, string name, string expression)
         {
             string message = ex.Message;
-            if (ex is NCalcException && ex.InnerException != null) message = ex.InnerException.Message;
+            if (ex.InnerException != null) message = ex.InnerException.Message;
 
             return $"[{name}]: Error while parsing expression \"{expression}\": {message}";
         }

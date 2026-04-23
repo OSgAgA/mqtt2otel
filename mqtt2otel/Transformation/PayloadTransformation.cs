@@ -33,10 +33,11 @@ namespace mqtt2otel.Transformation
         /// <param name="name">An identifier to help the user to idnetify the correct position of the transformation in case of an error.</param>
         /// <param name="payload">The payload that should be processed.</param>
         /// <param name="expression">The expression that should be used for transforming the payload.</param>
+        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The transformed payload</returns>
-        public async Task<string> Apply(string name, string payload, string expression)
+        public async Task<string> Apply(string name, string payload, string expression, ParsingContext context)
         {
-            return await this.ParseExpression<string>(name, payload, expression);
+            return await this.ParseExpression<string>(name, payload, expression, context);
         }
 
         /// <summary>
@@ -46,10 +47,11 @@ namespace mqtt2otel.Transformation
         /// <param name="strategy">The strategy to be applied.</param>
         /// <param name="payload">The payload that will be transformed.</param>
         /// <param name="pattern">The pattern that will be passed to the strategy for performing the transformation.</param>
+        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The transformed payload.</returns>
-        protected override TResult ApplyStrategy<TResult>(ITransformationStrategy strategy, string payload, string pattern)
+        protected override TResult ApplyStrategy<TResult>(ITransformationStrategy strategy, string payload, string pattern, ParsingContext context)
         {
-            return TypeHelper.ConvertObject<TResult>(strategy.Apply(payload, pattern));
+            return TypeHelper.ConvertObject<TResult>(strategy.Apply(payload, pattern, context));
         }
     }
 }

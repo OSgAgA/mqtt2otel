@@ -22,8 +22,9 @@ namespace mqtt2otel.Parser
         /// <typeparam name="T">The expected return type.</typeparam>
         /// <param name="payload">Will be ignored.</param>
         /// <param name="filter">The value that will be returned.</param>
+        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed filter value.</returns>
-        public T Parse<T>(string payload, string filter)
+        public T Parse<T>(string payload, string filter, ParsingContext context)
         {
             return TypeHelper.Parse<T>(filter);
         }

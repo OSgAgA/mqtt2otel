@@ -26,16 +26,16 @@ namespace mqtt2otel.Parser
         }
 
         /// <inheritdoc/>
-        public async Task<T> Parse<T>(string name, string payload, string filterDefinition)
+        public async Task<T> Parse<T>(string name, string payload, string filterDefinition, ParsingContext context)
         {
-            return await this.ParseExpression<T>(name, payload, filterDefinition);
+            return await this.ParseExpression<T>(name, payload, filterDefinition, context);
         }
 
         /// <inheritdoc/>
-        protected override TResult ApplyStrategy<TResult>(IParsingStrategy strategy, string payload, string pattern)
+        protected override TResult ApplyStrategy<TResult>(IParsingStrategy strategy, string payload, string pattern, ParsingContext context)
         {
             {
-                return strategy.Parse<TResult>(payload, pattern);
+                return strategy.Parse<TResult>(payload, pattern, context);
             }
         }
     }

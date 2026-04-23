@@ -22,8 +22,9 @@ namespace mqtt2otel.Parser
         /// <typeparam name="T">The expected return type.</typeparam>
         /// <param name="payload">The input as json.</param>
         /// <param name="filter">A JsonPath expression (see <see cref="https://www.rfc-editor.org/rfc/rfc9535"/>) that will be applied to the payload.</param>
+        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed payload.</returns>
-        public T Parse<T>(string payload, string filter)
+        public T Parse<T>(string payload, string filter, ParsingContext context)
         {
            var jsonPayload = JObject.Parse(payload);
            var token = jsonPayload.SelectToken(filter);
