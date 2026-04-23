@@ -52,6 +52,12 @@ More complex use cases involve:
 ### Data distribution
 
 ```mermaid
+---
+config:
+  flowchart:
+    curve: stepBefore
+---
+
 flowchart LR
   mqttBroker[mqtt broker]
   subgraph mqtt2otel
@@ -75,6 +81,12 @@ it to different otel endpoints that are optimized for different use cases.
 ### Integrate into existing otel infrastructure
 
 ```mermaid
+---
+config:
+  flowchart:
+    curve: stepAfter
+---
+
 flowchart LR
   mqtt2otel[mqtt2otel<br/>attributes:<br/> device = 'sensor A']
   applicationA[Application A<br/>attributes:<br/> application = 'A']
@@ -92,6 +104,11 @@ otel sources and enrich it with further attributes, before sending it to a dashb
 ### Manage load
 
 ```mermaid
+---
+config:
+  flowchart:
+    curve: stepBefore
+---
 flowchart LR
   subgraph internal network
     mqttBroker[mqtt broker]

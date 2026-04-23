@@ -1,0 +1,67 @@
+.mermaid svg > rect {
+    fill: none !important;
+    stroke: none !important;
+    filter: none !important;
+}
+
+/* Base diagram spacing */
+.mermaid {
+    margin: 1.5rem 0;
+}
+
+    .mermaid .edgeLabel:has(span:empty) {
+        display: none;
+    }
+
+.mermaid {
+    text-align: center;
+}
+
+    /* Nodes (boxes) 00b3b3 */
+    .mermaid .node > rect,
+    .mermaid .node > polygon,
+    .mermaid .node > ellipse {
+        fill: #ffffff !important;
+        stroke: #404040 !important;
+        stroke-width: 1.5px;
+        rx: 8;
+        ry: 8;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+    }
+
+    /* Node text */
+    .mermaid .node text {
+        font-weight: 500;
+        fill: #1f2937;
+    }
+
+    /* Edges (lines/arrows) */
+    .mermaid .edgePath path {
+        stroke: #6b7280;
+        stroke-width: 1.5px;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+    /* Edge label as pill */
+    .mermaid .edgeLabel {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(0,0,0,0.08);
+        color: #1f2937 !important;
+        font-weight: 500;
+    }
+
+    /* Arrowheads */
+    .mermaid marker path {
+        fill: #6b7280;
+    }
+
+    /* Subgraphs */
+    .mermaid .cluster rect {
+        fill: #fafafa !important;
+        stroke: #808080 !important;
+        rx: 10;
+        ry: 10;
+        filter: drop-shadow(0 4px 10px rgba(0,0,0,0.08));
+    }
