@@ -1,0 +1,59 @@
+name: PublishDocs
+
+# Workflow can 
+#   * write repositroy content
+#   * create and update GitHub Checks.
+#   * comment on PRs, update PR statuses, or modify PR metadata.
+permissions:
+  contents: write
+  checks: write
+  pull-requests: write
+
+# Only executed on pushes to the main branch.
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+
+jobs:
+  # Deploy the documentation to github-pages.
+  deploy-docs:
+    name: Deploy Hugo Docs
+    runs-on: ubuntu-latest
+
+    # Workflow can 
+    #   * read repositroy content
+    #   * deploy github pages.
+    #   * request an OIDC token (OpenID Connect). Needed as actions/deploy-pages@v4 uses OIDC internally.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    steps:
+      # Checkout the repository.
+      - name: Checkout
+        uses: actions/checkout@v4
+  
+      # Setup Hugo static side generator.
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+          extended: true
+  
+      # Build the static html via hugo. The static html is written to the public directory inside ./docs.
+      - name: Build Hugo site
+        working-directory: ./docs
+        run: hugo --minify
+  
+      # Upload the generated static html as a github-pages-artifact.
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs/public
+  
+      # Deploy the artifact to github-pages.
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

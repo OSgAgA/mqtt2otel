@@ -1,4 +1,4 @@
-name: Deployment
+name: DeployApplication
 
 # Workflow can 
 #   * write repositroy content
@@ -13,6 +13,11 @@ permissions:
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'mqtt2otel.Server/**'
+      - 'mqtt2otel/**'
+      - 'mqtt2otel.Tests/**'
+      - 'github/workflows/**'
 
 jobs:
   # Publishes the application
