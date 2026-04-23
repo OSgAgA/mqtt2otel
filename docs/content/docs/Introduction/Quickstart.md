@@ -174,6 +174,7 @@ like `[Pi]` are supported.
 | `JSONPATH` | `JSONPATH('$.Root')`      | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax                                                                        |
 | `XPATH`    | `XPATH('/root/child[1]')` | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax                                                                                  |
 | `REGEX`    | `REGEX('[0-9]+')`         | Extracts data using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
+| `VAR`      | `VAR('MyVariable')`       | Returns the variable with the given name. No `$` is needed before the variable name.                                                                 |
 | `PAYLOAD`  | `PAYLOAD()`               | Returns the raw payload                                                                                                                              |
 | `CONST`    | `CONST('42')`             | Returns a constant value                                                                                                                             |
 

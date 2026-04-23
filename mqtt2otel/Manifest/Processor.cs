@@ -124,7 +124,8 @@ namespace mqtt2otel.Manifest
         {
             if (subscription.Transform != null)
             {
-                payload = await this.payloadTransformation.Apply(this.Name, payload, subscription.Transform);
+                var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
+                payload = await this.payloadTransformation.Apply(this.Name, payload, subscription.Transform, new ParsingContext(combinedVariables));
             }
 
             bool success = true;
@@ -169,25 +170,25 @@ namespace mqtt2otel.Manifest
                 switch (rule.SignalDataType)
                 {
                     case SignalDataType.Float:
-                        await UpdateSignalStoreValue<float>(subscriptionId, ruleId, rule, payload, expandedAttributes);
+                        await UpdateSignalStoreValue<float>(subscriptionId, ruleId, rule, payload, expandedAttributes, variables);
                         break;
                     case SignalDataType.Int:
-                        await UpdateSignalStoreValue<int>(subscriptionId, ruleId, rule, payload, expandedAttributes);
+                        await UpdateSignalStoreValue<int>(subscriptionId, ruleId, rule, payload, expandedAttributes, variables);
                         break;
                     case SignalDataType.Double:
-                        await UpdateSignalStoreValue<double>(subscriptionId, ruleId, rule, payload, expandedAttributes);
+                        await UpdateSignalStoreValue<double>(subscriptionId, ruleId, rule, payload, expandedAttributes, variables);
                         break;
                     case SignalDataType.Long:
-                        await UpdateSignalStoreValue<long>(subscriptionId, ruleId, rule, payload, expandedAttributes);
+                        await UpdateSignalStoreValue<long>(subscriptionId, ruleId, rule, payload, expandedAttributes, variables);
                         break;
                     case SignalDataType.Decimal:
-                        await UpdateSignalStoreValue<decimal>(subscriptionId, ruleId, rule, payload, expandedAttributes);
+                        await UpdateSignalStoreValue<decimal>(subscriptionId, ruleId, rule, payload, expandedAttributes, variables);
                         break;
                     case SignalDataType.String:
-                        await UpdateSignalStoreValue<string>(subscriptionId, ruleId, rule, payload, expandedAttributes);
+                        await UpdateSignalStoreValue<string>(subscriptionId, ruleId, rule, payload, expandedAttributes, variables);
                         break;
                     case SignalDataType.DateTime:
-                        await UpdateSignalStoreValue<DateTime>(subscriptionId, ruleId, rule, payload, expandedAttributes);
+                        await UpdateSignalStoreValue<DateTime>(subscriptionId, ruleId, rule, payload, expandedAttributes, variables);
                         break;
                     default:
                         throw new ExpressionParsingException(new Exception(), rule.Name, $"Signal type {rule.SignalDataType} not supported.");
@@ -212,10 +213,11 @@ namespace mqtt2otel.Manifest
         /// <param name="rule">The otel metric rule that should be applied.</param>
         /// <param name="payload">The payload to be parsed.</param>
         /// <param name="expandedAttributes">The attributes to be applied to the value.</param>
+        /// <param name="variables">The currently active variables.</param>
         /// <returns></returns>
-        private async Task UpdateSignalStoreValue<T>(Guid subscriptionId, Guid ruleId, OtelMetricRule rule, string payload, IEnumerable<Variable> expandedAttributes)
+        private async Task UpdateSignalStoreValue<T>(Guid subscriptionId, Guid ruleId, OtelMetricRule rule, string payload, IEnumerable<Variable> expandedAttributes, IEnumerable<Variable> variables)
         {
-            T value = await this.payloadParser.Parse<T>(rule.Name, payload, rule.Value);
+            T value = await this.payloadParser.Parse<T>(rule.Name, payload, rule.Value, new ParsingContext(variables));
             this.dataStores.SignalStore.UpdateValue(subscriptionId, ruleId, value, expandedAttributes);
         }
 

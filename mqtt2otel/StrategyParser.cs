@@ -2,6 +2,7 @@
 using mqtt2otel.Parser;
 using MQTTnet;
 using NCalc;
+using Parlot.Fluent;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -50,9 +51,10 @@ namespace mqtt2otel
         /// <param name="name">The rule name to identify the settings in case of an error.</param>
         /// <param name="payload">The payload to be parsed.</param>
         /// <param name="expressionString">The NCalc expression that will be applied to the payload.</param>
+        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed expression.</returns>
         /// <exception cref="ExpressionParsingException">Thrown if the expression could not be parsed.</exception>
-        public async Task<TResult> ParseExpression<TResult>(string name, string payload, string expressionString)
+        public async Task<TResult> ParseExpression<TResult>(string name, string payload, string expressionString, ParsingContext context)
         {
             try
             {
@@ -60,7 +62,7 @@ namespace mqtt2otel
 
                 foreach (var strategyName in this.NameStrategyMapping.Keys)
                 {
-                    this.ApplyStrategy<TResult>(payload, expression, strategyName);
+                    this.ApplyStrategy<TResult>(payload, expression, strategyName, context);
                 }
 
                 CustomExpressionFunctions.AddTo(expression);
@@ -82,8 +84,9 @@ namespace mqtt2otel
         /// <param name="payload">The payload that should be parsed.</param>
         /// <param name="expression">The NCalc expression to be applied.</param>
         /// <param name="strategyName">The name of the strategy that should be used for parsing the payload.</param>
+        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <exception cref="InvalidArgumentCountException"></exception>
-        private void ApplyStrategy<TResult>(string payload, AsyncExpression expression, string strategyName)
+        private void ApplyStrategy<TResult>(string payload, AsyncExpression expression, string strategyName, ParsingContext context)
         {
             expression.Functions[strategyName] = async (args) =>
             {
@@ -107,7 +110,7 @@ namespace mqtt2otel
                         pattern = string.Empty;
                     }
 
-                    if (pattern != null) return TypeHelper.CallMethodWithGenericType(this, returnType, nameof(this.ApplyStrategy), new object[] { this.NameStrategyMapping[strategyName], payload, pattern });
+                    if (pattern != null) return TypeHelper.CallMethodWithGenericType(this, returnType, nameof(this.ApplyStrategy), new object[] { this.NameStrategyMapping[strategyName], payload, pattern, context });
                 }
 
                 throw new InvalidArgumentCountException(strategyName, 0, 2, args.Count());
@@ -121,8 +124,9 @@ namespace mqtt2otel
         /// <param name="strategy">The strategy that should be applied.</param>
         /// <param name="payload">The payload that should be processed by the strategy.</param>
         /// <param name="pattern">The pattern describing how the payload should be processed.</param>
-        /// <returns></returns>
-        protected abstract TResult ApplyStrategy<TResult>(T strategy, string payload, string pattern);
+        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
+        /// <returns>The parse result.</returns>
+        protected abstract TResult ApplyStrategy<TResult>(T strategy, string payload, string pattern, ParsingContext context);
 
         /// <summary>
         /// Detects all types that derive from <see cref="T"/>. These can then be added as strategies to the instance.

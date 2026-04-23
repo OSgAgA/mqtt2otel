@@ -58,7 +58,7 @@ namespace mqtt2otel.Stores
 
             if (!string.IsNullOrWhiteSpace(rule.Transform))
             {
-                payload = await this.payloadTransformation.Apply(rule.Name, payload, rule.Transform);
+                payload = await this.payloadTransformation.Apply(rule.Name, payload, rule.Transform, new ParsingContext(variables));
             }
 
             List<KeyValuePair<string, object?>> attributes = combinedAttributes
@@ -70,7 +70,7 @@ namespace mqtt2otel.Stores
             switch (rule.PayloadType)
             {
                 case OtelLoggingPayloadType.Text:
-                    body = await this.payloadParser.Parse<string>(rule.Name, payload, rule.Filter);
+                    body = await this.payloadParser.Parse<string>(rule.Name, payload, rule.Filter, new ParsingContext(variables));
                     break;
                 case OtelLoggingPayloadType.Json:
                     var obj = Newtonsoft.Json.Linq.JObject.Parse(payload).ToObject<Dictionary<string, object?>>();

@@ -23,8 +23,9 @@ namespace mqtt2otel.Transformation
         /// </summary>
         /// <param name="payload">The payload to be processed.</param>
         /// <param name="pattern">The grok pattern to be applied. See <see cref="https://www.elastic.co/docs/reference/logstash/plugins/plugins-filters-grok"/></param>
+        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed payload as a structured json string.</returns>
-        public string Apply(string payload, string pattern)
+        public string Apply(string payload, string pattern, ParsingContext context)
         {
             var grok = new Grok(pattern);
 

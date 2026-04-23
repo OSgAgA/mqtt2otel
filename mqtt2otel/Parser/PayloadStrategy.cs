@@ -23,9 +23,10 @@ namespace mqtt2otel.Parser
         /// <typeparam name="T">Must be string.</typeparam>
         /// <param name="payload">The payload.</param>
         /// <param name="filter">Will be ignored.</param>
+        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed payload.</returns>
         /// <exception cref="Exception">Thrown if generic return type is not a string.</exception>
-        public T Parse<T>(string input, string filter)
+        public T Parse<T>(string input, string filter, ParsingContext context)
         {
             if (typeof(T) != typeof(string))
             {
