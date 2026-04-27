@@ -9,15 +9,17 @@
     margin: 1.5rem 0;
 }
 
-    .mermaid .edgeLabel:has(span:empty) {
-        display: none;
-    }
+/* Do not show empty edge labels, that are created by mermaid for layout reasons. */
+.mermaid .edgeLabel:has(span:empty) {
+    display: none;
+}
 
+/* center mermaid diagram */
 .mermaid {
     text-align: center;
 }
 
-    /* Nodes (boxes) 00b3b3 */
+    /* Nodes */
     .mermaid .node > rect,
     .mermaid .node > polygon,
     .mermaid .node > ellipse {
@@ -35,7 +37,7 @@
         fill: #1f2937;
     }
 
-    /* Edges (lines/arrows) */
+    /* Edges */
     .mermaid .edgePath path {
         stroke: #6b7280;
         stroke-width: 1.5px;
@@ -51,6 +53,12 @@
         color: #1f2937 !important;
         font-weight: 500;
     }
+
+    /* Remove background of original label */
+    .mermaid .edgeLabel .labelBkg {
+        background-color: rgba(0,0,0,0) !important
+    }
+
 
     /* Arrowheads */
     .mermaid marker path {
