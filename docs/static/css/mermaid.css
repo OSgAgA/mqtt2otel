@@ -59,6 +59,10 @@
         background-color: rgba(0,0,0,0) !important
     }
 
+    /* Remove background of original label paragraph */
+    .mermaid .edgeLabel .labelBkg p {
+        background-color: rgba(0,0,0,0) !important
+    }
 
     /* Arrowheads */
     .mermaid marker path {
