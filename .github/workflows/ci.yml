@@ -4,6 +4,11 @@ name: Integration
 on:
   pull_request:
     branches: [ main ]
+    paths:
+      - 'mqtt2otel.Server/**'
+      - 'mqtt2otel/**'
+      - 'mqtt2otel.Tests/**'
+      - 'github/workflows/**'
 
 # Workflow can 
 #   * read repositroy content
@@ -57,7 +62,10 @@ jobs:
       # Publish the test report.
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
-        if: always()
+        # Will run, when previous step was executed. Will not run, if previous step has not been executed at all.
+        # This may happen, if e.g. the build breaks. Then no test is executed -> state is neither failure, nor
+        # success, so no test result needs to be published.
+        if: failure() || success() 
         with:
           name: .NET Tests
           path: mqtt2otel.Tests/TestResults/TestResults.trx

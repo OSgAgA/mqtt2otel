@@ -29,5 +29,5 @@ What would you like to do first:
    Get help on how the application can be [configured](../applicationsettings).
 
 4. ## Processing data
-   Start processing data by writing your first [Manifest](../Manifest).
+   Start processing data by writing your first [Manifest](../manifest).
 {{% /steps %}}
