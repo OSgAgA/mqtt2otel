@@ -54,7 +54,8 @@ jobs:
           args: >
             --verbose
             --no-progress
-            --accept 200,429
+            --accept 200
+            --root-dir ./docs/public
             ./docs/public/**/*.html
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
