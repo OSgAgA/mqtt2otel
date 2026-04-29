@@ -15,6 +15,7 @@ on:
     branches: [ main ]
     paths:
       - 'docs/**'
+      - 'workflows/publish_pages.yaml'
 
 jobs:
   # Deploy the documentation to github-pages.
