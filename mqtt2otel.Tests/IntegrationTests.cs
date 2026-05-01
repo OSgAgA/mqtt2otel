@@ -25,7 +25,7 @@ namespace mqtt2otel.Tests
             var yaml = """
                        Version: 1.0
                 
-                       MqttBroker:
+                       MqttConnections:
                          - ClientPrefix: "mqtt2otel-dev"
                            Endpoint:
                              Port: 1883
@@ -77,7 +77,7 @@ namespace mqtt2otel.Tests
             var yaml = """
                        Version: 1.0
                 
-                       MqttBroker:
+                       MqttConnections:
                          - ClientPrefix: "mqtt2otel-dev"
                            Endpoint:
                              Port: 1883
@@ -131,7 +131,7 @@ namespace mqtt2otel.Tests
             var yaml = """
                        Version: 1.0
                 
-                       MqttBroker:
+                       MqttConnections:
                          - ClientPrefix: "mqtt2otel-dev"
                            Endpoint:
                              Port: 1883
@@ -189,7 +189,7 @@ namespace mqtt2otel.Tests
             var yaml = """
                        Version: 1.0
                 
-                       MqttBroker:
+                       MqttConnections:
                          - ClientPrefix: "mqtt2otel-dev"
                            Endpoint:
                              Port: 1883
