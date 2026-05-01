@@ -306,7 +306,7 @@ namespace mqtt2otel
             var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(mqttSubscription.Topic).Build();
             this.internalLogger.LogInformation($"Subscribed to topic {mqttSubscription.Topic}.");
 
-            await this.GetClient(mqttSubscription.Broker).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+            await this.GetClient(mqttSubscription.BrokerConnection).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
         }
 
         /// <summary>

@@ -4,11 +4,6 @@ name: Integration
 on:
   pull_request:
     branches: [ main ]
-    paths:
-      - 'mqtt2otel.Server/**'
-      - 'mqtt2otel/**'
-      - 'mqtt2otel.Tests/**'
-      - 'github/workflows/**'
 
 # Workflow can 
 #   * read repositroy content
@@ -27,7 +22,7 @@ concurrency:
 
 jobs:
   # Build the application and run tests.
-  build-test:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:

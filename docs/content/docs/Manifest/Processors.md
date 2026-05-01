@@ -92,7 +92,7 @@ It consists of the following parameters:
 | Variables             | A list of [variables](../variables) that will be applied to all subscriptions.                                                  |
 | Subscriptions         | A list of [subscriptions](../subscription/#configure-subscriptions) to which the processor will subscribe. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)                       |
 | SubscriptionGroups    | A list of [subscription groups](../subscription/#subscription-groups) to which the processor will subscribe                     |
-| Broker                | The (optional) broker that will be applied to all subscriptions and subscription groups that do not have a specific broker set. | 
+| BrokerConnection      | The (optional) broker that will be applied to all subscriptions and subscription groups that do not have a specific broker set. | 
 | Transform             | An optional transform expression that will be applied to all received message payloads. [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformations)                                        | 
 
 The processor will subscribe to all subscriptions (and subscription groups) in the `Mqtt` section. When a message for one of the subscriptions is received 
