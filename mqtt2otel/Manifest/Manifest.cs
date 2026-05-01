@@ -29,18 +29,27 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="internalLogger">The logger used for internal logging..</param>
         /// <param name="path">The path to the yaml file.</param>
+        /// <param name="yaml">This parameter can be used to provide the yaml to be parsed directly. If this is not null, then the path parameter will be ignored.</param>
         /// <returns>The created manifest.</returns>
-        public static Manifest ReadFromYaml(ILogger internalLogger, string path = "Manifest.yaml")
+        public static Manifest ReadFromYaml(ILogger internalLogger, string path = "Manifest.yaml", string? yaml = null)
         {
-            internalLogger.LogInformation($"Reading {Path.GetFullPath(path)}");
-
             if (Manifest.ObjectFactory == null)
             {
                 internalLogger.LogCritical($"Internal error: Calling {nameof(ReadFromYaml)} without initializíng {nameof(ObjectFactory)} first. Providing default manifest.");
                 return new Manifest();
             }
 
-            var yaml = File.ReadAllText(path);
+            if (yaml == null)
+            {
+                internalLogger.LogInformation($"Reading {Path.GetFullPath(path)}");
+
+                yaml = File.ReadAllText(path);
+            }
+            else
+            {
+                internalLogger.LogInformation("Reading manifest from provided yaml.");
+            }
+
             var deserializer = new DeserializerBuilder().WithObjectFactory(Manifest.ObjectFactory).Build();
 
             var result = deserializer.Deserialize<Manifest>(yaml);

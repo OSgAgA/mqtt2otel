@@ -17,6 +17,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using mqtt2otel.Interfaces;
+using System.Data;
 
 namespace mqtt2otel
 {
@@ -26,10 +27,9 @@ namespace mqtt2otel
     public class MqttCoordinator : IMqttCoordinator
     {
         /// <summary>
-        /// Every subscription will get an id. This counter contains the next id that can be used for 
-        /// creating a new subscription. Should be increased afterwards.
+        /// Stores all subscriptions to all brokers.
         /// </summary>
-        private uint subscriptionIdCounter = 1;
+        private SubscriptionStore subscriptionStore = new();
 
         /// <summary>
         /// The mqtt client factory.
@@ -40,16 +40,6 @@ namespace mqtt2otel
         /// The created mqttClient as a map, mapping the broker name to ghe corresponding client.
         /// </summary>
         private Dictionary<string, IMqttClient> mqttClient = new();
-
-        /// <summary>
-        /// Maps a subscription id to a processor.
-        /// </summary>
-        private Dictionary<uint, Processor> subscriptionIdProcessorMapping = new();
-
-        /// <summary>
-        /// Maps a subscription id to a subscription.
-        /// </summary>
-        private Dictionary<uint, MqttSubscription> subscriptionIdSubscriptionMapping = new();
 
         /// <summary>
         /// Used for internal logging.
@@ -102,7 +92,7 @@ namespace mqtt2otel
 
             if (manifest.MqttBroker.Count > 0) this.defaultBrokerName = manifest.MqttBroker[0].Name;
 
-            subscriptionIdCounter = 1;
+            this.subscriptionStore.Clear();
             this.manifest = manifest;
 
             foreach (var broker in manifest.MqttBroker)
@@ -148,6 +138,11 @@ namespace mqtt2otel
                 }
             }
         }
+
+        /// <summary>
+        /// This event will be called, when an mqtt message has been received for any tracked subscription.
+        /// </summary>
+        public EventHandler<MqttMessageReceivedEventArgs>? OnMessageReceived;
 
         /// <summary>
         /// Connects to a given server and subscribes to all topics as defined in the provided settings.
@@ -204,7 +199,7 @@ namespace mqtt2otel
             mqttClientOptions.ClientId = this.clientId[broker.Name];
 
             // Subscribe to server events.
-            this.mqttClient[broker.Name].ApplicationMessageReceivedAsync += OnMessageReceived;
+            this.mqttClient[broker.Name].ApplicationMessageReceivedAsync += OnMqttMessageReceived;
             this.mqttClient[broker.Name].DisconnectedAsync += args => OnBrokerDisconnect(args, broker.Name);
 
             // This will throw an exception if the server is not available.
@@ -302,15 +297,16 @@ namespace mqtt2otel
         /// Subscribes to a topic.
         /// </summary>
         /// <param name="processor">The processor settings defining the topic to subscribe and the rule that should be applied.</param>
-        /// <param name="mqttSubscriptionSetting">The settings defining the subscription.</param>
-        private async Task SubscribeToTopic(Processor processor, MqttSubscription mqttSubscriptionSetting)
+        /// <param name="mqttSubscription">The settings defining the subscription.</param>
+        private async Task SubscribeToTopic(Processor processor, MqttSubscription mqttSubscription)
         {
-            this.subscriptionIdProcessorMapping[this.subscriptionIdCounter] = processor;
-            this.subscriptionIdSubscriptionMapping[this.subscriptionIdCounter] = mqttSubscriptionSetting;
-            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(mqttSubscriptionSetting.Topic).WithSubscriptionIdentifier(this.subscriptionIdCounter++).Build();
-            this.internalLogger.LogInformation($"Subscribed to topic {mqttSubscriptionSetting.Topic}.");
+            if (mqttSubscription.Topic == null) return;
 
-            await this.GetClient(mqttSubscriptionSetting.Broker).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+            this.subscriptionStore.Store(mqttSubscription.Topic, mqttSubscription, processor);
+            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(mqttSubscription.Topic).Build();
+            this.internalLogger.LogInformation($"Subscribed to topic {mqttSubscription.Topic}.");
+
+            await this.GetClient(mqttSubscription.Broker).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
         }
 
         /// <summary>
@@ -329,7 +325,7 @@ namespace mqtt2otel
         /// Called when a mqtt messag is received for a subscribed topic. Will process the message asynchronously.
         /// </summary>
         /// <param name="e">The message event args.</param>
-        private async Task OnMessageReceived(MqttApplicationMessageReceivedEventArgs e)
+        private async Task OnMqttMessageReceived(MqttApplicationMessageReceivedEventArgs e)
         {
             try
             {
@@ -361,34 +357,28 @@ namespace mqtt2otel
 
             this.internalLogger.LogDebug($"Message received. Payload: {payload}");
 
-            if (!e.ApplicationMessage.SubscriptionIdentifiers.Any())
+            if (!this.subscriptionStore.ContainsTopic(e.ApplicationMessage.Topic))
             {
-                this.internalLogger.LogError("Internal error: Received subscription message without any subscription identifiers.");
+                this.internalLogger.LogError($"Internal error while processing received mqtt message: {nameof(subscriptionStore)} does not contain topic {e.ApplicationMessage.Topic}. Skipping event.");
                 return false;
             }
-
-            var subscriptionId = e.ApplicationMessage.SubscriptionIdentifiers.First<uint>();
-
-            if (!this.subscriptionIdProcessorMapping.ContainsKey(subscriptionId))
-            {
-                this.internalLogger.LogError($"Internal error while processing received mqtt message: {nameof(subscriptionIdProcessorMapping)} does not contain key {subscriptionId}. Skipping event.");
-                return false;
-            }
-
-            if (!this.subscriptionIdSubscriptionMapping.ContainsKey(subscriptionId))
-            {
-                this.internalLogger.LogError($"Internal error while processing received mqtt message: {nameof(subscriptionIdSubscriptionMapping)} does not contain key {subscriptionId}. Skipping event.");
-                return false;
-            }
-
-            var processor = this.subscriptionIdProcessorMapping[subscriptionId];
-            var subscription = this.subscriptionIdSubscriptionMapping[subscriptionId];
 
             bool success = false;
 
-            success = await processor.ProcessSubscriptionPayload(payload, subscription);
+            var subscriptions = this.subscriptionStore.Retrieve(e.ApplicationMessage.Topic);
 
-            if (!success) this.internalLogger.LogError($"Could not process message. See previous errors. Message skipped. Payload: {payload}");
+            foreach (var data in subscriptions)
+            {
+                if (this.OnMessageReceived != null)
+                {
+                    this.OnMessageReceived(this, new MqttMessageReceivedEventArgs(payload, data.Subscription, e.ApplicationMessage.Topic, data.Processor));
+                }
+
+
+                success = await data.Processor.ProcessSubscriptionPayload(payload, data.Subscription);
+                if (!success) this.internalLogger.LogError($"Could not process message. See previous errors. Message skipped. Payload: {payload}");
+            }
+
             return true;
         }
     }
