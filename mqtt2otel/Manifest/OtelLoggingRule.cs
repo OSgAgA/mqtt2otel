@@ -43,10 +43,10 @@ namespace mqtt2otel.Manifest
         public string Transform { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the name of the open telemetriy server to be used for this rule. 
-        /// Set to null for using the default server.
+        /// Gets or sets the name of the open telemetriy connection to be used for this rule. 
+        /// Set to null for using the default connection.
         /// </summary>
-        public string? OtelServerName { get; set; } = null;
+        public string? OtelConnection { get; set; } = null;
 
         /// <summary>
         /// The key for structured payloads (e.g. json) to be used to identify the message body.

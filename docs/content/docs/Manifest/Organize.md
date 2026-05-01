@@ -14,7 +14,7 @@ organized as a yaml list. Parameters that support this can be identified via the
 ```yaml {hl_lines=[9, 12]}
 Version: 1.0
 
-MqttBroker:
+MqttConnections:
   - Name: "My broker"
     Endpoint: 
       Port: 32014
@@ -22,7 +22,7 @@ MqttBroker:
       EnableTls: false
   - ImportFrom: "Another_Broker.yaml"
 
-OtelServer:
+OtelConnections:
   - ImportFrom: "OtelServers.yaml"
 ```
 

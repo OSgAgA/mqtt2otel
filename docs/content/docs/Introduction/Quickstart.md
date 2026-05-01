@@ -23,7 +23,7 @@ MqttBroker:
       Address: "mymqtt-broker.net"
       EnableTls: false
 
-OtelServer:
+OtelConnections:
   - Name: "My Otel server"
     ServiceName: "my-service"
     ServiceNamespace: "my-service-namespace"
@@ -42,9 +42,10 @@ This assumes no credentials are required to log into the broker or the Otel coll
 
   * `Name`: An identifier for the MQTT broker.
   * `Endpoint`: Describes the broker's address and port.
-* **Otel Server**:
+  
+* **Otel Connections**:
 
-  * `Name`: An identifier for the Otel server.
+  * `Name`: An identifier for the Otel connection.
   * `ServiceName`: The name of the service.
   * `ServiceNamespace`: The namespace for the service.
   * `Endpoint`: Describes the Otel collector's address and port.
@@ -429,7 +430,7 @@ MqttBroker:
       Address: "mymqtt-broker.net"
       EnableTls: false
 
-OtelServer:
+OtelConnections:
   - Name: "My Otel server"
     ServiceName: "my-service"
     ServiceNamespace: "my-service-namespace"

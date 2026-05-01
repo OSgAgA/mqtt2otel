@@ -16,11 +16,11 @@ The structure of the file is as following
 1. ## Version
    The version must be set and must be the first line of the file. If not set, or not being on the first line, the file will be declined. Currently the following versions are supported: `1.0`.
 
-2. ## MqttBroker
+2. ## MqttConnections
    In this section the available Mqtt broker connections will be configured. For details, see [Mqtt broker](MqttBroker). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
 
-3. ## OtelServer
-   In this section the available open telemetry connections will be configured. For details, see [Otel server](OtelServer). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
+3. ## OtelConnections
+   In this section the available open telemetry connections will be configured. For details, see [Otel connections](OtelServer). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
 
 4. ## SubscriptionGroups
    A list of grouped subscriptions that can be referred later in the otel section. For details see [Subscription groups](subscription/#subscription-groups). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
@@ -38,14 +38,14 @@ As a starting point, this is an example manifest using logs, and metrics:
 ```yaml
 Version: 1.0
 
-MqttBroker:
+MqttConnections:
   - Name: "My broker"
     Endpoint:
       Port: 32007
       Address: "mymqtt-broker.net"
       EnableTls: false
 
-OtelServer:
+OtelConnections:
   - Name: "My Otel server"
     ServiceName: "my-service"
     ServiceNamespace: "my-service-namespace"

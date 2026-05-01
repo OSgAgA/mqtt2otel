@@ -8,9 +8,9 @@ using System.Text;
 namespace mqtt2otel.Manifest
 {
     /// <summary>
-    /// Provides the open telemetry server.
+    /// Provides an open telemetry server connection.
     /// </summary>
-    public class OtelServer : NamedIdObject
+    public class OtelServerConnection : NamedIdObject
     {
         /// <summary>
         /// Gets or sets the service name that will be used when connecting to the server.

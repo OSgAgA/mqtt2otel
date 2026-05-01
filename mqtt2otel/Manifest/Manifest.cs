@@ -29,18 +29,27 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="internalLogger">The logger used for internal logging..</param>
         /// <param name="path">The path to the yaml file.</param>
+        /// <param name="yaml">This parameter can be used to provide the yaml to be parsed directly. If this is not null, then the path parameter will be ignored.</param>
         /// <returns>The created manifest.</returns>
-        public static Manifest ReadFromYaml(ILogger internalLogger, string path = "Manifest.yaml")
+        public static Manifest ReadFromYaml(ILogger internalLogger, string path = "Manifest.yaml", string? yaml = null)
         {
-            internalLogger.LogInformation($"Reading {Path.GetFullPath(path)}");
-
             if (Manifest.ObjectFactory == null)
             {
                 internalLogger.LogCritical($"Internal error: Calling {nameof(ReadFromYaml)} without initializíng {nameof(ObjectFactory)} first. Providing default manifest.");
                 return new Manifest();
             }
 
-            var yaml = File.ReadAllText(path);
+            if (yaml == null)
+            {
+                internalLogger.LogInformation($"Reading {Path.GetFullPath(path)}");
+
+                yaml = File.ReadAllText(path);
+            }
+            else
+            {
+                internalLogger.LogInformation("Reading manifest from provided yaml.");
+            }
+
             var deserializer = new DeserializerBuilder().WithObjectFactory(Manifest.ObjectFactory).Build();
 
             var result = deserializer.Deserialize<Manifest>(yaml);
@@ -66,31 +75,31 @@ namespace mqtt2otel.Manifest
             if (string.IsNullOrEmpty(this.Version)) return result.AddError($"No or empty Version property in file. Version must allways be set! {supportedVersions}");
             if (this.Version != "1.0") return result.AddError($"Provided version {this.Version} is not supported. {supportedVersions}");
 
-            this.MqttBroker.ForEach(broker => broker.Validate(result));
-            this.OtelServer.ForEach(server => server.Validate(result));
+            this.MqttConnections.ForEach(broker => broker.Validate(result));
+            this.OtelConnections.ForEach(connection => connection.Validate(result));
             this.SubscriptionGroups.ForEach(group => group.Validate("Subscription groups", result));
             this.Processors.ForEach(metric => metric.Validate(result));
 
             foreach (var processor in this.Processors)
             {
-                if (!this.ServerNameExists(processor.OtelServerName))
+                if (!this.OtelConnectionExists(processor.OtelConnection))
                 {
-                    result.AddError($"Processors {processor.Name} refers to a non existing Otel server name: {processor.OtelServerName}");
+                    result.AddError($"Processors {processor.Name} refers to a non existing Otel connection: {processor.OtelConnection}");
                 }
 
                 foreach (var otelRuleSetting in processor.Otel.Metrics)
                 {
-                    if (!this.ServerNameExists(otelRuleSetting.OtelServerName))
+                    if (!this.OtelConnectionExists(otelRuleSetting.OtelConnection))
                     {
-                        result.AddError($"Processors {otelRuleSetting.Name} refers to a non existing Otel server name: {otelRuleSetting.OtelServerName}");
+                        result.AddError($"Processors {otelRuleSetting.Name} refers to a non existing Otel connection: {otelRuleSetting.OtelConnection}");
                     }
                 }
 
                 foreach (var otelRuleSetting in processor.Otel.Logs)
                 {
-                    if (!this.ServerNameExists(otelRuleSetting.OtelServerName))
+                    if (!this.OtelConnectionExists(otelRuleSetting.OtelConnection))
                     {
-                        result.AddError($"Processors {otelRuleSetting.Name} refers to a non existing Otel server name: {otelRuleSetting.OtelServerName}");
+                        result.AddError($"Processors {otelRuleSetting.Name} refers to a non existing Otel connection: {otelRuleSetting.OtelConnection}");
                     }
                 }
             }
@@ -111,12 +120,12 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets the mqtt broker.
         /// </summary>
-        public ImportEnabledList<MqttBroker> MqttBroker { get; set; } = new();
+        public ImportEnabledList<MqttBroker> MqttConnections { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the open telemetry server.
+        /// Gets or sets the open telemetry server connections.
         /// </summary>
-        public ImportEnabledList<OtelServer> OtelServer { get; set; } = new();
+        public ImportEnabledList<OtelServerConnection> OtelConnections { get; set; } = new();
 
         /// <summary>
         /// Gets or sets all metrics.
@@ -124,12 +133,12 @@ namespace mqtt2otel.Manifest
         public ImportEnabledList<Processor> Processors { get; set; } = new();
 
         /// <summary>
-        /// Gets the default otel server. That is the first server defined in <see cref="OtelServer"/> or null, if no otel server
+        /// Gets the default otel server connection. That is the first server defined in <see cref="OtelConnections"/> or null, if no otel server
         /// is defined.
         /// </summary>
-        public OtelServer? DefaultOtelServer
+        public OtelServerConnection? DefaultOtelConnection
         {
-            get => this.OtelServer.FirstOrDefault();
+            get => this.OtelConnections.FirstOrDefault();
         }
 
         /// <summary>
@@ -141,7 +150,7 @@ namespace mqtt2otel.Manifest
                 return;
 
             ImportEnabledList<NamedIdObject>.InitializeImports(this, this.internalLogger, Manifest.ObjectFactory);
-            this.ApplyOtelServerNamesToRules();
+            this.ApplyOtelConnectionNamesToRules();
 
             foreach (var subscriptionGroup in this.SubscriptionGroups)
             {
@@ -216,19 +225,19 @@ namespace mqtt2otel.Manifest
         }
 
         /// <summary>
-        /// Tests if the provided open telemetry server name exists.
+        /// Tests if the provided open telemetry server connection name exists.
         /// </summary>
-        /// <param name="name">The server name.</param>
+        /// <param name="name">The server connection name.</param>
         /// <returns>A value indicating whether the name exists.</returns>
-        private bool ServerNameExists(string? name)
+        private bool OtelConnectionExists(string? name)
         {
             if (name == null) return false;
 
             bool result = false;
 
-            foreach (var otelServer in this.OtelServer)
+            foreach (var connection in this.OtelConnections)
             {
-                if (otelServer.Name == name)
+                if (connection.Name == name)
                 {
                     result = true;
                     break;
@@ -239,25 +248,25 @@ namespace mqtt2otel.Manifest
         }
 
         /// <summary>
-        /// Applies the open telemetry server name down the hierarchy, explicitly setting the default otel server name for 
+        /// Applies the open telemetry server connection name down the hierarchy, explicitly setting the default otel server name for 
         /// null values.
         /// </summary>
-        private void ApplyOtelServerNamesToRules()
+        private void ApplyOtelConnectionNamesToRules()
         {
-            if (this.DefaultOtelServer == null) return;
+            if (this.DefaultOtelConnection == null) return;
 
             foreach (var processor in this.Processors)
             {
-                if (processor.OtelServerName == null) processor.OtelServerName = this.DefaultOtelServer.Name;
+                if (processor.OtelConnection == null) processor.OtelConnection = this.DefaultOtelConnection.Name;
 
                 foreach (var metricRule in processor.Otel.Metrics)
                 {
-                    if (metricRule.OtelServerName == null) metricRule.OtelServerName = processor.OtelServerName;
+                    if (metricRule.OtelConnection == null) metricRule.OtelConnection = processor.OtelConnection;
                 }
 
                 foreach (var metricRule in processor.Otel.Logs)
                 {
-                    if (metricRule.OtelServerName == null) metricRule.OtelServerName = processor.OtelServerName;
+                    if (metricRule.OtelConnection == null) metricRule.OtelConnection = processor.OtelConnection;
                 }
 
             }

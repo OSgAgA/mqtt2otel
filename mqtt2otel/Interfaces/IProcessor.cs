@@ -22,7 +22,7 @@ namespace mqtt2otel.Interfaces
         /// Gets or sets the name of the open telemetriy server to be used for all rules in this section. 
         /// Set to null for using the default server.
         /// </summary>
-        string? OtelServerName { get; set; }
+        string? OtelConnection { get; set; }
 
         /// <summary>
         /// Process a subscription payload that was received from the mqtt broker.

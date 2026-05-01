@@ -64,10 +64,10 @@ namespace mqtt2otel.Manifest
         public Mqtt Mqtt { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the name of the open telemetriy server to be used for all rules in this section. 
-        /// Set to null for using the default server.
+        /// Gets or sets the name of the open telemetriy connection to be used for all rules in this section. 
+        /// Set to null for using the default connection.
         /// </summary>
-        public string? OtelServerName { get; set; } = null;
+        public string? OtelConnection { get; set; } = null;
 
         /// <summary>
         /// Validates the object.

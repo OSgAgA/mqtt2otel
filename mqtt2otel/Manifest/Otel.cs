@@ -25,10 +25,10 @@ namespace mqtt2otel.Manifest
         public ImportEnabledList<OtelLoggingRule> Logs { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the name of the open telemetriy server to be used for this rule. 
-        /// Set to null for using the default server.
+        /// Gets or sets the name of the open telemetriy server connection to be used for this rule. 
+        /// Set to null for using the default server connection.
         /// </summary>
-        public string? OtelServerName { get; set; } = null;
+        public string? OtelConnection { get; set; } = null;
 
         /// <summary>
         /// Validates the object.

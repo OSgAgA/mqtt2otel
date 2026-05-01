@@ -34,7 +34,7 @@ namespace mqtt2otel
         public readonly ActivitySource ActivitySource = new("mqtt2otel");
 
         /// <summary>
-        /// Gets the logger factory map, that maps the otel server name to the loggerFactory used for creating otel loggers.
+        /// Gets the logger factory map, that maps the otel connection name to the loggerFactory used for creating otel loggers.
         /// </summary>
         private Dictionary<string, ILoggerFactory> loggerFactoryMap = new();
 
@@ -49,9 +49,9 @@ namespace mqtt2otel
         private TracerProvider? tracerProvider { get; set; } = null;
 
         /// <summary>
-        /// Gets or sets a map that will map an otel server name to a created otel meter.
+        /// Gets or sets a map that will map an otel connection name to a created otel meter.
         /// </summary>
-        private Dictionary<string, Meter> MeterServerMap { get; set; } = new();
+        private Dictionary<string, Meter> MeterConnectionMap { get; set; } = new();
 
         /// <summary>
         /// Ensures that the meter providers will not get garbage collected.
@@ -80,20 +80,20 @@ namespace mqtt2otel
         /// <param name="manifest">The manifest, contiaining the connection information.</param>
         public void Connect(Manifest.Manifest manifest)
         {
-            foreach (var otelServer in manifest.OtelServer)
+            foreach (var otelConnection in manifest.OtelConnections)
             {
-                string name = otelServer.Name;
+                string name = otelConnection.Name;
 
                 if (string.IsNullOrWhiteSpace(name)) name = "Default";
 
-                using (this.internalLogger.StartActivity($"Otel connection information for server: {otelServer.Name}"))
+                using (this.internalLogger.StartActivity($"Otel connection information for: {otelConnection.Name}"))
                 {
-                    this.internalLogger.LogInformation("Otel endpoint:              {OtelEndpoint}", otelServer.Endpoint.FullAddress);
-                    this.internalLogger.LogInformation("Otel export protocoll:      {OtelExportProtocol}", otelServer.OtlpExportProtocol);
-                    this.internalLogger.LogInformation("Otel export processor type: {OtelExportProcessorType}", otelServer.ExportProcessorType);
-                    this.internalLogger.LogInformation("Otel service name:          {OtelServiceNamespace}", otelServer.ServiceName);
-                    this.internalLogger.LogInformation("Otel service version:       {OtelServicVersion}", otelServer.ServiceVersion);
-                    this.internalLogger.LogInformation("Otel service namespace:     {OtelServiceNamespace}", otelServer.ServiceNamespace);
+                    this.internalLogger.LogInformation("Otel endpoint:              {OtelEndpoint}", otelConnection.Endpoint.FullAddress);
+                    this.internalLogger.LogInformation("Otel export protocoll:      {OtelExportProtocol}", otelConnection.OtlpExportProtocol);
+                    this.internalLogger.LogInformation("Otel export processor type: {OtelExportProcessorType}", otelConnection.ExportProcessorType);
+                    this.internalLogger.LogInformation("Otel service name:          {OtelServiceNamespace}", otelConnection.ServiceName);
+                    this.internalLogger.LogInformation("Otel service version:       {OtelServicVersion}", otelConnection.ServiceVersion);
+                    this.internalLogger.LogInformation("Otel service namespace:     {OtelServiceNamespace}", otelConnection.ServiceNamespace);
                 }
             }
 
@@ -113,12 +113,12 @@ namespace mqtt2otel
         private void InitializeMeters(Manifest.Manifest manifest)
         {
 
-            // Create a separate meter for each server.
-            foreach (var otelServerSettings in manifest.OtelServer)
+            // Create a separate meter for each connection.
+            foreach (var otelConnection in manifest.OtelConnections)
             {
-                var meter = new Meter(otelServerSettings.Name);
+                var meter = new Meter(otelConnection.Name);
 
-                this.MeterServerMap[otelServerSettings.Name] = meter;
+                this.MeterConnectionMap[otelConnection.Name] = meter;
             }
 
             // Create all instruments
@@ -131,14 +131,14 @@ namespace mqtt2otel
             }
 
             // Create meter providers
-            foreach (var otelServer in manifest.OtelServer)
+            foreach (var otelConnection in manifest.OtelConnections)
             {
                 var provider = Sdk.CreateMeterProviderBuilder()
                     .SetResourceBuilder(
                             ResourceBuilder.CreateDefault()
-                            .AddService(otelServer.ServiceName, serviceNamespace: otelServer.ServiceNamespace))
-                    .AddOtlpExporter(otlpOptions => this.InitializeExporterOptions(otlpOptions, otelServer))
-                    .AddMeter(otelServer.Name)
+                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace))
+                    .AddOtlpExporter(otlpOptions => this.InitializeExporterOptions(otlpOptions, otelConnection))
+                    .AddMeter(otelConnection.Name)
                     .Build();
 
                 this.MeterProviders.Add(provider);
@@ -149,42 +149,42 @@ namespace mqtt2otel
         /// Initializes <see cref="OtlpExporterOptions"/> based on the provided settings.
         /// </summary>
         /// <param name="otlpOptions">The options that will be initialized.</param>
-        /// <param name="server">The settings defining the options to be applied.</param>
+        /// <param name="connection">The settings defining the options to be applied.</param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        private OtlpExporterOptions InitializeExporterOptions(OtlpExporterOptions otlpOptions, OtelServer server)
+        private OtlpExporterOptions InitializeExporterOptions(OtlpExporterOptions otlpOptions, OtelServerConnection connection)
         {
-            if (server.Endpoint.Address == null) throw new Exception("Address of Otel server endpoint must be set!");
+            if (connection.Endpoint.Address == null) throw new Exception("Address of Otel server endpoint must be set!");
 
-            otlpOptions.Endpoint = server.Endpoint.Uri;
-            otlpOptions.Protocol = server.OtlpExportProtocol;
-            otlpOptions.ExportProcessorType = server.ExportProcessorType;
+            otlpOptions.Endpoint = connection.Endpoint.Uri;
+            otlpOptions.Protocol = connection.OtlpExportProtocol;
+            otlpOptions.ExportProcessorType = connection.ExportProcessorType;
 
-            if (server.Endpoint.Headers != null)
+            if (connection.Endpoint.Headers != null)
             {
-                otlpOptions.Headers = server.Endpoint.Headers;
+                otlpOptions.Headers = connection.Endpoint.Headers;
             }
 
-            if (server.Endpoint.BatchTimeoutInMs != null)
+            if (connection.Endpoint.BatchTimeoutInMs != null)
             {
-                otlpOptions.TimeoutMilliseconds = server.Endpoint.BatchTimeoutInMs.Value;
+                otlpOptions.TimeoutMilliseconds = connection.Endpoint.BatchTimeoutInMs.Value;
             }
 
-            if (server.ClientPrefix != null)
+            if (connection.ClientPrefix != null)
             {
-                otlpOptions.UserAgentProductIdentifier = server.ClientPrefix;
+                otlpOptions.UserAgentProductIdentifier = connection.ClientPrefix;
             }
 
-            if (server.Endpoint.EnableTls)
+            if (connection.Endpoint.EnableTls)
             {
-                if (string.IsNullOrWhiteSpace(server.Endpoint.ClientCertificatePath))
+                if (string.IsNullOrWhiteSpace(connection.Endpoint.ClientCertificatePath))
                 {
                     throw new Exception("Tls is enabled for otel endpoint, but client certificate path is not set.");
                 }
                 otlpOptions.HttpClientFactory = () =>
                 {
                     var handler = new HttpClientHandler();
-                    var cert = X509CertificateLoader.LoadPkcs12FromFile(server.Endpoint.ClientCertificatePath, server.Endpoint.ClientCertificatePassword);
+                    var cert = X509CertificateLoader.LoadPkcs12FromFile(connection.Endpoint.ClientCertificatePath, connection.Endpoint.ClientCertificatePassword);
 
                     handler.ClientCertificates.Add(cert);
                     return new HttpClient(handler);
@@ -207,7 +207,7 @@ namespace mqtt2otel
             {
                 if (rulesSettings.Name == null) throw new ArgumentNullException(nameof(rulesSettings));
 
-                if (rulesSettings.OtelServerName == null || !this.MeterServerMap.ContainsKey(rulesSettings.OtelServerName))
+                if (rulesSettings.OtelConnection == null || !this.MeterConnectionMap.ContainsKey(rulesSettings.OtelConnection))
                 {
                     throw new Exception($"Cannot create instrument. No meter exists for metric rule with name: {rulesSettings.Name}.");
                 }
@@ -245,7 +245,7 @@ namespace mqtt2otel
                         throw new Exception($"Unsupported otel metric type: '{rulesSettings.Instrument.ToString()}' for metric {processor.Name}.");
                 }
 
-                var meter = this.MeterServerMap[rulesSettings.OtelServerName];
+                var meter = this.MeterConnectionMap[rulesSettings.OtelConnection];
                 TypeHelper.CallMethodWithGenericType(this, rulesSettings.SignalDataType, instrumentCreationMethodName, new object[] { rulesSettings, mqttSubscription, key, meter, expandedName });
             }
         }
@@ -257,20 +257,20 @@ namespace mqtt2otel
         /// <exception cref="Exception">Thrown if no otel server endpoint is defined.</exception>
         private void InitializeLogging(Manifest.Manifest manifest)
         {
-            // Create log factories for each server
+            // Create log factories for each connection
 
-            foreach (var otelServer in manifest.OtelServer)
+            foreach (var otelConnection in manifest.OtelConnections)
             {
-                this.loggerFactoryMap[otelServer.Name] = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+                this.loggerFactoryMap[otelConnection.Name] = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
                 {
                     builder.AddOpenTelemetry(options =>
                     {
                         options.SetResourceBuilder(
                             ResourceBuilder.CreateDefault()
-                            .AddService(otelServer.ServiceName, serviceNamespace: otelServer.ServiceNamespace))
+                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace))
                             .IncludeScopes = true;
 
-                        options.AddOtlpExporter(otlpOptions => this.InitializeExporterOptions(otlpOptions, otelServer));
+                        options.AddOtlpExporter(otlpOptions => this.InitializeExporterOptions(otlpOptions, otelConnection));
 
                         options.AddProcessor(new TimestampOverrideProcessor());
                     });
@@ -283,9 +283,9 @@ namespace mqtt2otel
             {
                 foreach (var otelLoggingRule in processor.Otel.Logs)
                 {
-                    if (otelLoggingRule.OtelServerName == null) throw new Exception($"Internal error: OtelServerName must not be null for logging rule: {otelLoggingRule.Name}");
+                    if (otelLoggingRule.OtelConnection == null) throw new Exception($"Internal error: {nameof(otelLoggingRule.OtelConnection)} must not be null for logging rule: {otelLoggingRule.Name}");
 
-                    var logger = this.loggerFactoryMap[otelLoggingRule.OtelServerName].CreateLogger(otelLoggingRule.CategoryName);
+                    var logger = this.loggerFactoryMap[otelLoggingRule.OtelConnection].CreateLogger(otelLoggingRule.CategoryName);
                     this.dataStores.LoggerStore.StoreLogger(otelLoggingRule.Id, logger);
                 }
             }
@@ -479,7 +479,7 @@ namespace mqtt2otel
         /// </summary>
         public void Dispose()
         {
-            foreach (var meter in this.MeterServerMap.Values)
+            foreach (var meter in this.MeterConnectionMap.Values)
             {
                 meter.Dispose();
             }
