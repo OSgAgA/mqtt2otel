@@ -30,7 +30,7 @@ It consists of the following parameters:
 | Description                        | An optional description of the subscription.                                                                 |
 | Variables                          | A list of [variables](Variables) that will be set for each procssing that is triggered via this subscription.|
 | Topic                              | The topic to subscribe to.                                                                                   |
-| Broker                             | Optional. Set the broker to be used. If not set, the default broker will be used.                            | 
+| BrokerConnection                   | Optional. Set the broker to be used. If not set, the default broker will be used.                            | 
 | Transform                          | A transform expression that will be applied to the message before it is send to a processor [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformations)    |
 
 ## Subscription Groups
@@ -90,7 +90,7 @@ A subscription group has the following parameters:
 | Description                        | An optional description of the group                                                                                                          |
 | Subscriptions                      | A list of subscriptions belonging to this group                                                                                               |
 | Variables                          | Optional. A list of [variables](Variables) that will be set for each procssing that is triggered via any subscription in this group.          |
-| Broker                             | Optional. Set the broker to be used. If not set, the default broker will be used. Can be overriden in a subscription.                         | 
+| BrokerConnection                   | Optional. Set the broker to be used. If not set, the default broker will be used. Can be overriden in a subscription.                         | 
 | Transform                          | A transform expression that will be applied to the message before it is send to a processor. Can be overriden in a subscription. [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformations) |
 
 Here, we define a **Subscription Group** called `Power sensors`, which includes two subscriptions: 

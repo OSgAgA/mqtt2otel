@@ -174,11 +174,11 @@ namespace mqtt2otel.Manifest
         /// <param name="subscriptionGroup">The mqtt section of a processor.</param>
         private void ApplyBrokerToSubscriptions(Mqtt mqtt)
         {
-            if (mqtt.Broker == null) return;
+            if (mqtt.BrokerConnection == null) return;
 
             foreach (var subscription in mqtt.Subscriptions)
             {
-                if (subscription.Broker == null) subscription.Broker = mqtt.Broker;
+                if (subscription.BrokerConnection == null) subscription.BrokerConnection = mqtt.BrokerConnection;
             }
         }
 
@@ -220,7 +220,7 @@ namespace mqtt2otel.Manifest
 
             foreach (var subscription in subscriptionGroup.Subscriptions)
             {
-                if (subscription.Broker == null) subscription.Broker = subscriptionGroup.Broker;
+                if (subscription.BrokerConnection == null) subscription.BrokerConnection = subscriptionGroup.Broker;
             }
         }
 

@@ -1,5 +1,5 @@
 ---
-title: "Mqtt broker"
+title: "Mqtt broker connection"
 weight: 10
 bookCollapseSection: false
 ---
