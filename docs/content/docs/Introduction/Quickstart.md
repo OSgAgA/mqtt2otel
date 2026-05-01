@@ -16,7 +16,7 @@ The mapping between MQTT and Otel is configured via a file called `Manifest.yaml
 ```yaml
 Version: 1.0
 
-MqttBroker:
+MqttConnections:
   - Name: "My broker"
     Endpoint:
       Port: 32007
@@ -423,7 +423,7 @@ Here is a complete minimal example manifest using logs, and metrics:
 ```yaml
 Version: 1.0
 
-MqttBroker:
+MqttConnections:
   - Name: "My broker"
     Endpoint:
       Port: 32007
