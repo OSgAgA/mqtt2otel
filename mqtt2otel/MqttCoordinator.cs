@@ -90,12 +90,12 @@ namespace mqtt2otel
         {
             this.isDiconnecting = false;
 
-            if (manifest.MqttBroker.Count > 0) this.defaultBrokerName = manifest.MqttBroker[0].Name;
+            if (manifest.MqttConnections.Count > 0) this.defaultBrokerName = manifest.MqttConnections[0].Name;
 
             this.subscriptionStore.Clear();
             this.manifest = manifest;
 
-            foreach (var broker in manifest.MqttBroker)
+            foreach (var broker in manifest.MqttConnections)
             {
                 await this.ConnectAndSubscribe(broker);
             }
@@ -124,7 +124,7 @@ namespace mqtt2otel
 
             using (this.internalLogger.StartActivity("Disconnect from brokers"))
             {
-                foreach (var broker in manifest.MqttBroker)
+                foreach (var broker in manifest.MqttConnections)
                 {
                     try
                     {

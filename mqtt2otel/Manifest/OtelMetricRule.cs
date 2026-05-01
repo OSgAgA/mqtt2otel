@@ -39,10 +39,10 @@ namespace mqtt2otel.Manifest
         public string Value { get; set; } = "TEXT()";
 
         /// <summary>
-        /// Gets or sets the name of the open telemetriy server to be used for this rule. 
-        /// Set to null for using the default server.
+        /// Gets or sets the name of the open telemetriy connection to be used for this rule. 
+        /// Set to null for using the default connection.
         /// </summary>
-        public string? OtelServerName { get; set; } = null;
+        public string? OtelConnection { get; set; } = null;
 
         /// <summary>
         /// Gets or sets a list of bucket boundaries used in a histogram instrument. If no histogram instrument is used, this

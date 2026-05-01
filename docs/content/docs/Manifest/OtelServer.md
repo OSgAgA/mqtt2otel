@@ -1,19 +1,19 @@
 ---
-title: "Open telemetry server"
+title: "Open telemetry connections"
 weight: 20
 bookCollapseSection: false
 ---
-# The Open Telemetry server
+# The Open Telemetry connection
 
 ## Configuration
 
-Within the `OtelServer` section of the manifest file you can configure how to connect to an open telemetry endpoint. At the moment
+Within the `OtelConnections` section of the manifest file you can configure how to connect to an open telemetry endpoint. At the moment
 mqtt2otel does not provide an otel collector so an external one has to be used.
 
 A simple example for an otel connection would look like that:
 
 ```yaml
-OtelServer:
+OtelConnections:
   - Name: "My Otel server"
     ServiceName: "my-service"
     ServiceNamespace: "my-service-namespace"
@@ -60,6 +60,6 @@ It's important to understand the differences in the processor types to ensure th
 
 ## Using multiple connections
 
-The `OtelServer` section contains a list of servers. That means you can add multiple servers. The **first server** in this list is always the
-**default server**, that will be used if nothing else is specified. If you want to address another broker, than the default you have to use the
-provided name of the server.
+The `OtelConnections` section contains a list of servers. That means you can add multiple servers. The **first server** in this list is always the
+**default connection**, that will be used if nothing else is specified. If you want to address another broker, than the default you have to use the
+provided name of the connection.

@@ -7,13 +7,13 @@ bookCollapseSection: false
 
 ## Configuration
 
-Within the `MqttBroker` section of the manifest file you can configure how to connect to mqtt brokers. At the moment
+Within the `MqttConnections` section of the manifest file you can configure how to connect to mqtt brokers. At the moment
 mqtt2otel does not provide a broker itself so an external one has to be used.
 
 A simple example for a mqtt broker connection would look like that:
 
 ```yaml
-MqttBroker:
+MqttConnections:
   - Name: "My broker"
     Endpoint:
       Port: 1813
@@ -44,6 +44,6 @@ It has the following parameters:
 
 ## Using multiple connections
 
-The `MqttBroker` section contains a list of brokers. That means you can add multiple brokers. The first broker in this list is always the
+The `MqttConnections` section contains a list of brokers. That means you can add multiple brokers. The first broker in this list is always the
 default broker, that will be used if nothing else is specified. If you want to address another broker, than the default you have to use the
 provided name of the broker.

@@ -22,7 +22,7 @@ namespace mqtt2otel.Manifest
 
         /// <summary>
         /// Gets or sets a prefix that will be prepended to the client guid used to connect to the broker. This helps in tracking down issues,
-        /// when mutliple connections to clients are active, maybe even from different mqtt2otel servers.
+        /// when mutliple connections to clients are active, maybe even from different mqtt2otel server connections.
         /// </summary>
         public string ClientPrefix { get; set; } = ApplicationStringConstants.ApplicationName;
 
