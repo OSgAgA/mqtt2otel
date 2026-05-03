@@ -1,7 +1,7 @@
 ﻿using mqtt2otel.Parser;
 using System.Linq.Expressions;
 
-namespace mqtt2otel.Tests
+namespace mqtt2otel.Tests._10_UnitTests
 {
     public class PayloadParserTests
     {

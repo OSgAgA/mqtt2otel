@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Moq;
 using mqtt2otel.Parser;
@@ -13,9 +14,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace mqtt2otel.Tests
+namespace mqtt2otel.Tests._20_IntegrationTests
+
 {
-    public class IntegrationTests
+    public class MqttIntegrationTests
     {
         [Fact]
         public async Task ShouldReceiveMessageFromMqttServer()

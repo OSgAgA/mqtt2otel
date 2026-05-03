@@ -145,6 +145,11 @@ namespace mqtt2otel
         public EventHandler<MqttMessageReceivedEventArgs>? OnMessageReceived;
 
         /// <summary>
+        /// This event will be called, when an mqtt message has been completely processed for any tracked subscription.
+        /// </summary>
+        public EventHandler<MqttMessageReceivedEventArgs>? OnMessageProcessed;
+
+        /// <summary>
         /// Connects to a given server and subscribes to all topics as defined in the provided settings.
         /// </summary>
         /// <param name="broker">The broker settings containing information about connection details.</param>
@@ -376,6 +381,12 @@ namespace mqtt2otel
 
 
                 success = await data.Processor.ProcessSubscriptionPayload(payload, data.Subscription);
+
+                if (this.OnMessageProcessed != null)
+                {
+                    this.OnMessageProcessed(this, new MqttMessageReceivedEventArgs(payload, data.Subscription, e.ApplicationMessage.Topic, data.Processor));
+                }
+
                 if (!success) this.internalLogger.LogError($"Could not process message. See previous errors. Message skipped. Payload: {payload}");
             }
 
