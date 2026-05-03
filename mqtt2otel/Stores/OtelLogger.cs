@@ -70,7 +70,7 @@ namespace mqtt2otel.Stores
             switch (rule.PayloadType)
             {
                 case OtelLoggingPayloadType.Text:
-                    body = await this.payloadParser.Parse<string>(rule.Name, payload, rule.Filter, new ParsingContext(variables));
+                    body = payload;
                     break;
                 case OtelLoggingPayloadType.Json:
                     var obj = Newtonsoft.Json.Linq.JObject.Parse(payload).ToObject<Dictionary<string, object?>>();
@@ -87,7 +87,7 @@ namespace mqtt2otel.Stores
                     }
                     else
                     {
-                        body = string.Format("{payload}", obj);
+                        body = obj.ToString();
                     }
 
                     break;

@@ -32,6 +32,7 @@ namespace mqtt2otel.Server
             builder.Services.AddSingleton<IMqttCoordinator, MqttCoordinator>();
             builder.Services.AddSingleton<Bootstrapper>();
             builder.Services.AddSingleton<IDataStores, DataStores>();
+            builder.Services.AddSingleton<IOtelExporterBuilder, OtelExporterBuilder>();
 
             var app = builder.Build();
 

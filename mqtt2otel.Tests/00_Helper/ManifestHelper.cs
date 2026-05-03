@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
@@ -11,18 +12,25 @@ namespace mqtt2otel.Tests.Helper
 {
     public static class ManifestHelper
     {
-        public static Manifest.Manifest ReadManifestFromString(string yaml)
+        public static Manifest.Manifest ReadManifestFromString(string yaml, DataStores? dataStores = null)
         {
             var objFactoryLoggerMock = new Mock<ILogger<Manifest.Processor>>();
             var signalStore = new SignalStore();
             var loggerStore = new LoggerStore(new PayloadParser(), new PayloadTransformation());
 
-            var dataStores = new DataStores(signalStore, loggerStore);
+            if (dataStores == null)
+            {
+                dataStores = new DataStores(signalStore, loggerStore);
+            }
+
             Manifest.Manifest.ObjectFactory = new Manifest.ObjectFactory(objFactoryLoggerMock.Object, new PayloadParser(), new PayloadTransformation(), dataStores);
 
             var loggerMock = new Mock<ILogger>();
 
-            return Manifest.Manifest.ReadFromYaml(loggerMock.Object, yaml: yaml);
+            var manifest = Manifest.Manifest.ReadFromYaml(loggerMock.Object, yaml: yaml);
+            manifest.Initialize();
+
+            return manifest;
         }
 
     }

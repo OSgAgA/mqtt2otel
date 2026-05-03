@@ -64,13 +64,20 @@ namespace mqtt2otel
         private ILogger<OtelCoordinator> internalLogger;
 
         /// <summary>
+        /// The exporter builder for creating open telemetry exporters.
+        /// </summary>
+        private IOtelExporterBuilder exporterBuilder;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OtelCoordinator"/> class.
         /// </summary>
         /// <param name="internalLogger">The logger used for internal logging.</param>
+        /// <param name="exporterBuilder">The exporter builder for creating open telemetry exporters.</param>
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
-        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IDataStores dataStores)
+        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IOtelExporterBuilder exporterBuilder, IDataStores dataStores)
         {
             this.internalLogger = internalLogger;
+            this.exporterBuilder = exporterBuilder;
             this.dataStores = dataStores;
         }
 
@@ -107,6 +114,17 @@ namespace mqtt2otel
         }
 
         /// <summary>
+        /// Forces a flush for all meter providers.
+        /// </summary>
+        public void FlushMeters()
+        {
+            foreach (var meterProvider in this.MeterProviders)
+            {
+                meterProvider.ForceFlush();
+            }
+        }
+
+        /// <summary>
         /// Initializes the otel meters based on the provided settings.
         /// </summary>
         /// <param name="manifest">The rules for creating meters.</param>
@@ -133,65 +151,18 @@ namespace mqtt2otel
             // Create meter providers
             foreach (var otelConnection in manifest.OtelConnections)
             {
-                var provider = Sdk.CreateMeterProviderBuilder()
+                var builder = Sdk.CreateMeterProviderBuilder()
                     .SetResourceBuilder(
                             ResourceBuilder.CreateDefault()
                             .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace))
-                    .AddOtlpExporter(otlpOptions => this.InitializeExporterOptions(otlpOptions, otelConnection))
-                    .AddMeter(otelConnection.Name)
-                    .Build();
+                    .AddMeter(otelConnection.Name);
+
+                this.exporterBuilder.AddToMeterProviderBuilder(builder, otelConnection);
+
+                var provider = builder.Build();
 
                 this.MeterProviders.Add(provider);
             }
-        }
-
-        /// <summary>
-        /// Initializes <see cref="OtlpExporterOptions"/> based on the provided settings.
-        /// </summary>
-        /// <param name="otlpOptions">The options that will be initialized.</param>
-        /// <param name="connection">The settings defining the options to be applied.</param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        private OtlpExporterOptions InitializeExporterOptions(OtlpExporterOptions otlpOptions, OtelServerConnection connection)
-        {
-            if (connection.Endpoint.Address == null) throw new Exception("Address of Otel server endpoint must be set!");
-
-            otlpOptions.Endpoint = connection.Endpoint.Uri;
-            otlpOptions.Protocol = connection.OtlpExportProtocol;
-            otlpOptions.ExportProcessorType = connection.ExportProcessorType;
-
-            if (connection.Endpoint.Headers != null)
-            {
-                otlpOptions.Headers = connection.Endpoint.Headers;
-            }
-
-            if (connection.Endpoint.BatchTimeoutInMs != null)
-            {
-                otlpOptions.TimeoutMilliseconds = connection.Endpoint.BatchTimeoutInMs.Value;
-            }
-
-            if (connection.ClientPrefix != null)
-            {
-                otlpOptions.UserAgentProductIdentifier = connection.ClientPrefix;
-            }
-
-            if (connection.Endpoint.EnableTls)
-            {
-                if (string.IsNullOrWhiteSpace(connection.Endpoint.ClientCertificatePath))
-                {
-                    throw new Exception("Tls is enabled for otel endpoint, but client certificate path is not set.");
-                }
-                otlpOptions.HttpClientFactory = () =>
-                {
-                    var handler = new HttpClientHandler();
-                    var cert = X509CertificateLoader.LoadPkcs12FromFile(connection.Endpoint.ClientCertificatePath, connection.Endpoint.ClientCertificatePassword);
-
-                    handler.ClientCertificates.Add(cert);
-                    return new HttpClient(handler);
-                };
-            }
-
-            return otlpOptions;
         }
 
         /// <summary>
@@ -258,7 +229,6 @@ namespace mqtt2otel
         private void InitializeLogging(Manifest.Manifest manifest)
         {
             // Create log factories for each connection
-
             foreach (var otelConnection in manifest.OtelConnections)
             {
                 this.loggerFactoryMap[otelConnection.Name] = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
@@ -269,16 +239,14 @@ namespace mqtt2otel
                             ResourceBuilder.CreateDefault()
                             .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace))
                             .IncludeScopes = true;
-
-                        options.AddOtlpExporter(otlpOptions => this.InitializeExporterOptions(otlpOptions, otelConnection));
-
                         options.AddProcessor(new TimestampOverrideProcessor());
+
+                        this.exporterBuilder.AddToLoggerOptions(options, otelConnection);
                     });
                 });
             }
 
             // Prrocess logging rules
-
             foreach (var processor in manifest.Processors)
             {
                 foreach (var otelLoggingRule in processor.Otel.Logs)

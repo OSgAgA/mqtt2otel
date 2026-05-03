@@ -22,7 +22,6 @@ namespace mqtt2otel.Manifest
         /// </summary>
         private IDataStores dataStores;
 
-
         /// <summary>
         /// The logger used internaly for logging.
         /// </summary>
