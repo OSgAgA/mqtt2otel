@@ -40,7 +40,7 @@ Installation instructions can be found in the [documentation](https://mqtt2otel.
 
 # Quickstart
 
-If you want to get started fast, have a look at our [quickstart guide](http://localhost:1313/docs/introduction/quickstart/).
+If you want to get started fast, have a look at our [quickstart guide](https://mqtt2otel.org/docs/introduction/quickstart/).
 
 # Documentation
 
