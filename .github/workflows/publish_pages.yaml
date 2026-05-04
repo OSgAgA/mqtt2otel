@@ -58,6 +58,7 @@ jobs:
             --accept 200
             --root-dir ./docs/public
             ./docs/public/**/*.html
+            **/*.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
