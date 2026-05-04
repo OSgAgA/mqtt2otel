@@ -47,6 +47,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
                        """;
 
             var manifest = ManifestHelper.ReadManifestFromString(yaml);
+            manifest.Initialize();
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var dataStores = GenericHelper.GetDataStores();
@@ -115,6 +116,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
                        """;
 
             var manifest = ManifestHelper.ReadManifestFromString(yaml);
+            manifest.Initialize();
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var dataStores = GenericHelper.GetDataStores();
@@ -165,6 +167,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
                        """;
 
             var manifest = ManifestHelper.ReadManifestFromString(yaml);
+            manifest.Initialize();
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var dataStores = GenericHelper.GetDataStores();

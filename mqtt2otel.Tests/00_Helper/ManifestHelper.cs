@@ -28,7 +28,6 @@ namespace mqtt2otel.Tests.Helper
             var loggerMock = new Mock<ILogger>();
 
             var manifest = Manifest.Manifest.ReadFromYaml(loggerMock.Object, yaml: yaml);
-            manifest.Initialize();
 
             return manifest;
         }
