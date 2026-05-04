@@ -17,12 +17,14 @@ using System.Text;
 namespace mqtt2otel.Tests._20_IntegrationTests
 
 {
+    [Collection("MQTT Tests")]
     public class MqttIntegrationTests
     {
         [Fact]
         public async Task ShouldReceiveMessageFromMqttServer()
         {
-            await MqttTestHelper.EnsureServerIsStarted();
+            using var mqttHelper = new MqttTestHelper();
+            await mqttHelper.EnsureServerIsStarted();
 
             var yaml = """
                        Version: 1.0
@@ -55,11 +57,11 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             string topic = "sensors/temperature";
             string payload = "42";
             
-            await MqttTestHelper.PublishPayload(topic, payload);
+            await mqttHelper.PublishPayload(topic, payload);
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
-                               Task.Delay(1000));
+                               Task.Delay(1000, TestContext.Current.CancellationToken));
 
             Assert.True(completedTask == tcs.Task, "Callback was not triggered");
 
@@ -74,7 +76,8 @@ namespace mqtt2otel.Tests._20_IntegrationTests
         [Fact]
         public async Task ShouldReceiveMessageWithCorrectSubscription()
         {
-            await MqttTestHelper.EnsureServerIsStarted();
+            using var mqttHelper = new MqttTestHelper();
+            await mqttHelper.EnsureServerIsStarted();
 
             var yaml = """
                        Version: 1.0
@@ -109,11 +112,11 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             string topic = "sensors/temperature";
             string payload = "42";
 
-            await MqttTestHelper.PublishPayload(topic, payload);
+            await mqttHelper.PublishPayload(topic, payload);
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
-                               Task.Delay(1000));
+                               Task.Delay(1000, TestContext.Current.CancellationToken));
 
             Assert.True(completedTask == tcs.Task, "Callback was not triggered");
 
@@ -128,7 +131,8 @@ namespace mqtt2otel.Tests._20_IntegrationTests
         [Fact]
         public async Task ShouldProcessMessageWithCorrectProcessor()
         {
-            await MqttTestHelper.EnsureServerIsStarted();
+            using var mqttHelper = new MqttTestHelper();
+            await mqttHelper.EnsureServerIsStarted();
 
             var yaml = """
                        Version: 1.0
@@ -167,11 +171,11 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             string topic = "sensors/temperature";
             string payload = "42";
 
-            await MqttTestHelper.PublishPayload(topic, payload);
+            await mqttHelper.PublishPayload(topic, payload);
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
-                               Task.Delay(1000));
+                               Task.Delay(1000, TestContext.Current.CancellationToken));
 
             Assert.True(completedTask == tcs.Task, "Callback was not triggered");
 
@@ -186,7 +190,8 @@ namespace mqtt2otel.Tests._20_IntegrationTests
         [Fact]
         public async Task ShouldProcessMessageWithAllProcessors()
         {
-            await MqttTestHelper.EnsureServerIsStarted();
+            using var mqttHelper = new MqttTestHelper();
+            await mqttHelper.EnsureServerIsStarted();
 
             var yaml = """
                        Version: 1.0
@@ -233,11 +238,11 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             string topic = "sensors/temperature";
             string payload = "42";
 
-            await MqttTestHelper.PublishPayload(topic, payload);
+            await mqttHelper.PublishPayload(topic, payload);
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
-                               Task.Delay(1000));
+                               Task.Delay(1000, TestContext.Current.CancellationToken));
 
             Assert.True(completedTask == tcs.Task, "Callback was not triggered");
 

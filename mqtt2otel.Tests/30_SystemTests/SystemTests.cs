@@ -8,12 +8,14 @@ using System.Text;
 
 namespace mqtt2otel.Tests._30_SystemTests
 {
+    [Collection("MQTT Tests")]
     public class SystemTests
     {
         [Fact]
         public async Task ShouldProcessSimpleMetric()
         {
-            await MqttTestHelper.EnsureServerIsStarted();
+            using var mqttHelper = new MqttTestHelper();
+            await mqttHelper.EnsureServerIsStarted();
 
             var yaml = """
                        Version: 1.0
@@ -71,18 +73,13 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             string topic = "sensors/temperature";
             string payload = "{ Temperature: 42 }";
-            await MqttTestHelper.PublishPayload(topic, payload);
+            await mqttHelper.PublishPayload(topic, payload);
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
-                               Task.Delay(1000));
+                               Task.Delay(1000, TestContext.Current.CancellationToken));
 
             Assert.True(completedTask == tcs.Task, "Callback was not triggered");
-
-            // We have to wait until the metric is really recorded inside the gauge. 
-            // Typically only 5 ms should be enought, using 100 to include some margin.
-            // Maybe there is a better way?
-            await Task.Delay(100);
 
             otelCoordinator.FlushMeters();
 
@@ -112,7 +109,8 @@ namespace mqtt2otel.Tests._30_SystemTests
         [Fact]
         public async Task ShouldProcessSimpleLogEntry()
         {
-            await MqttTestHelper.EnsureServerIsStarted();
+            using var mqttHelper = new MqttTestHelper();
+            await mqttHelper.EnsureServerIsStarted();
 
             var yaml = """
                        Version: 1.0
@@ -165,11 +163,11 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             string topic = "sensors/logEntry";
             string payload = "2026-01-31T15:42Z WARN This is a simple log message.";
-            await MqttTestHelper.PublishPayload(topic, payload);
+            await mqttHelper.PublishPayload(topic, payload);
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
-                               Task.Delay(1000));
+                               Task.Delay(100, TestContext.Current.CancellationToken));
 
             Assert.True(completedTask == tcs.Task, "Callback was not triggered");
 

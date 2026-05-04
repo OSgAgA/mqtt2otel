@@ -156,7 +156,7 @@ namespace mqtt2otel.Manifest
             {
                 this.ApplyBrokerToSubscriptions(subscriptionGroup);
                 this.ApplyTransformationToSubscriptions(subscriptionGroup);
-                this.ApplyVariablesToSubscriptions(subscriptionGroup);
+                this.ApplyVariablesToSubscriptions(subscriptionGroup.Subscriptions, subscriptionGroup.Variables);
             }
 
             foreach (var processor in this.Processors)
@@ -164,6 +164,7 @@ namespace mqtt2otel.Manifest
                 this.ApplyBrokerToSubscriptions(processor.Mqtt);
                 this.ApplySubscriptionGroupsToSubscriptions(processor.Mqtt.SubscriptionGroups, processor.Mqtt.Subscriptions);
                 this.ApplyTransformationFromParent(processor.Mqtt.Transform, processor.Mqtt.Subscriptions);
+                this.ApplyVariablesToSubscriptions(processor.Mqtt.Subscriptions, processor.Mqtt.Variables);
             }
         }
 
@@ -183,14 +184,15 @@ namespace mqtt2otel.Manifest
         }
 
         /// <summary>
-        /// Applies the variables of the subscription group (if any) to the subscriptions of the group. 
+        /// Applies the variables of a parent subscription (if any) to the subscriptions of the group. 
         /// </summary>
-        /// <param name="subscriptionGroup">The subscription group.</param>
-        private void ApplyVariablesToSubscriptions(SubscriptionGroup subscriptionGroup)
+        /// <param name="subscriptions">The subscription group.</param>
+        /// <param name="variables">The variables that should be applied to all subscriptions.</param>
+        private void ApplyVariablesToSubscriptions(List<MqttSubscription> subscriptions, List<Variable> variables)
         {
-            foreach (var subscription in subscriptionGroup.Subscriptions)
+            foreach (var subscription in subscriptions)
             {
-                subscription.Variables = subscriptionGroup.Variables.Combine(subscription.Variables).ToList();
+                subscription.Variables = variables.Combine(subscription.Variables).ToList();
             }
         }
 
@@ -216,11 +218,11 @@ namespace mqtt2otel.Manifest
         /// <param name="subscriptionGroup">The subscription group.</param>
         private void ApplyBrokerToSubscriptions(SubscriptionGroup subscriptionGroup)
         {
-            if (subscriptionGroup.Broker == null) return;
+            if (subscriptionGroup.BrokerConnection == null) return;
 
             foreach (var subscription in subscriptionGroup.Subscriptions)
             {
-                if (subscription.BrokerConnection == null) subscription.BrokerConnection = subscriptionGroup.Broker;
+                if (subscription.BrokerConnection == null) subscription.BrokerConnection = subscriptionGroup.BrokerConnection;
             }
         }
 

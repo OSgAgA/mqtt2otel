@@ -31,7 +31,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets the broker to which this subscription is bound. A null value represents the default broker.
         /// </summary>
-        public string? Broker { get; set; } = null;
+        public string? BrokerConnection { get; set; } = null;
 
         /// <summary>
         /// Validates the object.
