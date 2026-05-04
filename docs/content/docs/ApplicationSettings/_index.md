@@ -42,6 +42,6 @@ It consists of the following settings:
 | Logging.LogFilePath     | logs                | Sets the root directory for created log files                                                                          |
 | Logging.LogFileKeepMax  | 5                   | The maximum amount of log files that should be kept before deleting.                                                   |
 | Logging.MinimumLogLevel | Information         | The minimum log level that will be logged. Must be one of the following: Debug, Information, Warning, Error, Critical. |
-| Logging.Otel            | empty               | The connection data for the otel endpoint. [see otel server connection](../Manifest/otelserver)                       |
+| Logging.Otel            | empty               | The connection data for the otel endpoint. [see otel server connection](../manifest/otelserver)                       |
 
                                                   
