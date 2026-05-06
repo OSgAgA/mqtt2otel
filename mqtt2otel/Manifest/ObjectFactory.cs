@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using mqtt2otel.Interfaces;
+using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
@@ -44,6 +45,11 @@ namespace mqtt2otel.Manifest
         private IPayloadTransformation payloadTransformation;
 
         /// <summary>
+        /// The processor meter for recording internal processor metrics.
+        /// </summary>
+        private ProcessorMeter processorMeter;
+
+        /// <summary>
         /// Creates a new instance of the <see cref="ObjectFactory"/> class.
         /// </summary>
         /// <param name="signalStore">The store used for storing data for otel signals.</param>
@@ -51,8 +57,10 @@ namespace mqtt2otel.Manifest
         /// <param name="payloadParser">The payload parser for processing payloads.</param>
         /// <param name="payloadTransformation">The object used for processing payload transformations.</param>
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
-        public ObjectFactory(ILogger<Processor> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores)
+        /// <param name="meter">The processor meter for recording internal processor metrics.</param>
+        public ObjectFactory(ILogger<Processor> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores, ProcessorMeter meter)
         {
+            this.processorMeter = meter;
             fallback = new DefaultObjectFactory();
             this.internalLogger = internalLogger;
             this.payloadParser = payloadParser;
@@ -69,7 +77,7 @@ namespace mqtt2otel.Manifest
         {
             if (type == typeof(Processor))
             {
-                return new Processor(this.internalLogger, this.payloadParser, this.payloadTransformation, this.dataStores);
+                return new Processor(this.internalLogger, this.payloadParser, this.payloadTransformation, this.dataStores, this.processorMeter);
             }
 
             return fallback.Create(type);

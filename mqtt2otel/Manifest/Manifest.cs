@@ -1,10 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using mqtt2otel.Helper;
 using mqtt2otel.InternalLogging;
+using mqtt2otel.InternalMetrics;
 using MQTTnet.Internal;
 using OpenTelemetry.Metrics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;

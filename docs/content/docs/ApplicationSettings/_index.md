@@ -28,6 +28,16 @@ Logging:
       Protocol: "http"
       Port: 32042
       Address: "192.168.1.8"
+Metrics:
+  CollectMetrics: false
+  Otel:
+    ServiceName: "mqtt2otel-internal"
+    ServiceNamespace: "prod-mqtt2otel"
+    Endpoint:
+      Protocol: "http"
+      Port: 32042
+      Address: "192.168.1.8"
+
 ```
 
 It consists of the following settings:
@@ -42,6 +52,8 @@ It consists of the following settings:
 | Logging.LogFilePath     | logs                | Sets the root directory for created log files                                                                          |
 | Logging.LogFileKeepMax  | 5                   | The maximum amount of log files that should be kept before deleting.                                                   |
 | Logging.MinimumLogLevel | Information         | The minimum log level that will be logged. Must be one of the following: Debug, Information, Warning, Error, Critical. |
-| Logging.Otel            | empty               | The connection data for the otel endpoint. [see otel server connection](../manifest/otelserver)                       |
+| Logging.Otel            | empty               | The connection data for the otel endpoint. [see otel server connection](../manifest/otelserver)                        |
+| Metrics.CollectMetrics  | true                | Enables the collection of internal metrics, that will be send to the Metrics.Otel endpoing.                            |
+| Metrics.Otel            | empty               | The connection data for the otel metrics endpoint. [see otel server connection](../manifest/otelserver)                |
 
                                                   

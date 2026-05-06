@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
+using mqtt2otel.InternalMetrics;
 using mqtt2otel.Server.Helper;
 using mqtt2otel.Tests.Helper;
 using System;
@@ -60,7 +61,7 @@ namespace mqtt2otel.Tests._30_SystemTests
             manifest.Initialize();
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
             mqttCoordinator.OnMessageProcessed += (sender, args) => tcs.SetResult(args);
 
@@ -68,7 +69,7 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var exportBuilder = new OtelTestExporterBuilder();
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores);
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter());
             otelCoordinator.Connect(manifest);
 
             string topic = "sensors/temperature";
@@ -150,7 +151,7 @@ namespace mqtt2otel.Tests._30_SystemTests
             manifest.Initialize();
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
             mqttCoordinator.OnMessageProcessed += (sender, args) => tcs.SetResult(args);
 
@@ -158,7 +159,7 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var exportBuilder = new OtelTestExporterBuilder();
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores);
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter());
             otelCoordinator.Connect(manifest);
 
             string topic = "sensors/logEntry";

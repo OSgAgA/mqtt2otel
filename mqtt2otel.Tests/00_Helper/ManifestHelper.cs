@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
@@ -23,7 +24,7 @@ namespace mqtt2otel.Tests.Helper
                 dataStores = new DataStores(signalStore, loggerStore);
             }
 
-            Manifest.Manifest.ObjectFactory = new Manifest.ObjectFactory(objFactoryLoggerMock.Object, new PayloadParser(), new PayloadTransformation(), dataStores);
+            Manifest.Manifest.ObjectFactory = new Manifest.ObjectFactory(objFactoryLoggerMock.Object, new PayloadParser(), new PayloadTransformation(), dataStores, new ProcessorMeter());
 
             var loggerMock = new Mock<ILogger>();
 

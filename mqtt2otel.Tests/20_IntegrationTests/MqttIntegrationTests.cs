@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Moq;
+using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
 using mqtt2otel.Server.Helper;
 using mqtt2otel.Stores;
@@ -48,7 +49,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var manifest = ManifestHelper.ReadManifestFromString(yaml);
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
             mqttCoordinator.OnMessageReceived += (sender, args) => tcs.SetResult(args);
 
@@ -103,7 +104,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var manifest = ManifestHelper.ReadManifestFromString(yaml);
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
             mqttCoordinator.OnMessageReceived += (sender, args) => tcs.SetResult(args);
 
@@ -161,7 +162,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var manifest = ManifestHelper.ReadManifestFromString(yaml);
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
 
             mqttCoordinator.OnMessageReceived += (sender, args) => tcs.SetResult(args);
@@ -220,7 +221,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var manifest = ManifestHelper.ReadManifestFromString(yaml);
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
             var tcs = new TaskCompletionSource<List<MqttMessageReceivedEventArgs>>();
             List<MqttMessageReceivedEventArgs> results = new();
 
