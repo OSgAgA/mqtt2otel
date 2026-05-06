@@ -10,5 +10,10 @@
         /// </summary>
         /// <param name="manifest">The manifest, contiaining the connection information.</param>
         void Connect(Manifest.Manifest manifest);
+
+        /// <summary>
+        /// Flushes all meter data to the otel exporter.
+        /// </summary>
+        public void FlushMeters();
     }
 }

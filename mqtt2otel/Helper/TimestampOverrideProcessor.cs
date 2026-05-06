@@ -1,4 +1,5 @@
-﻿using OpenTelemetry;
+﻿using mqtt2otel.InternalMetrics;
+using OpenTelemetry;
 using OpenTelemetry.Logs;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,20 @@ namespace mqtt2otel.Helper
     /// </summary>
     public class TimestampOverrideProcessor : BaseProcessor<LogRecord>
     {
+        /// <summary>
+        /// The meter for recording internal metrics.
+        /// </summary>
+        private OtelMeter otelMeter;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TimestampOverrideProcessor"/> class.
+        /// </summary>
+        /// <param name="meter">The meter for recording internal metrics.</param>
+        public TimestampOverrideProcessor(OtelMeter meter)
+        {
+            this.otelMeter = meter;
+        }
+
         /// <summary>
         /// Gets the current scope used by the logger. Will be set via the <see cref="GetScope(LogRecordScope, object?)"/> callback.
         /// </summary>

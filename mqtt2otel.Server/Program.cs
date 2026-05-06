@@ -1,5 +1,6 @@
 using mqtt2otel.Interfaces;
 using mqtt2otel.InternalLogging;
+using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
@@ -33,6 +34,10 @@ namespace mqtt2otel.Server
             builder.Services.AddSingleton<Bootstrapper>();
             builder.Services.AddSingleton<IDataStores, DataStores>();
             builder.Services.AddSingleton<IOtelExporterBuilder, OtelExporterBuilder>();
+            builder.Services.AddSingleton<MqttMeter>(new MqttMeter());
+            builder.Services.AddSingleton<OtelMeter>(new OtelMeter());
+            builder.Services.AddSingleton<ManifestMeter>(new ManifestMeter());
+            builder.Services.AddSingleton<ProcessorMeter>(new ProcessorMeter());
 
             var app = builder.Build();
 

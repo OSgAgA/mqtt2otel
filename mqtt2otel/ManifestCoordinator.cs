@@ -1,10 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
+using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
 using mqtt2otel.InternalLogging;
+using mqtt2otel.InternalMetrics;
 using mqtt2otel.Manifest;
 using mqtt2otel.Stores;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace mqtt2otel
@@ -45,6 +48,11 @@ namespace mqtt2otel
         private DateTime? LastManifestFileChange;
 
         /// <summary>
+        /// The manifest meter used used for internal metris.
+        /// </summary>
+        private ManifestMeter manifestMeter;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Bootstrapper"/> class.
         /// 
         /// </summary>
@@ -53,8 +61,11 @@ namespace mqtt2otel
         /// <param name="mqttCoordinator">The mqtt coordinator for communicating with a mqtt broker.</param>
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
         /// <param name="loggerStore">The logger store for providing otel loggers to consumers.</param>
-        public ManifestCoordinator(ILogger<Bootstrapper> internalLogger, IOtelCoordinator otelCoordinator, IMqttCoordinator mqttCoordinator, IDataStores dataStores, ApplicationSettings applicationSettings)
+        /// <param name="applicationSettings">The application settings.</param>
+        /// <param name="manifestMeter">The manifest meter used for internal metrics.</param>
+        public ManifestCoordinator(ILogger<Bootstrapper> internalLogger, IOtelCoordinator otelCoordinator, IMqttCoordinator mqttCoordinator, IDataStores dataStores, ApplicationSettings applicationSettings, ManifestMeter manifestMeter)
         {
+            this.manifestMeter = manifestMeter;
             this.applicationSettings = applicationSettings;
             this.otelCoordinator = otelCoordinator;
             this.dataStores = dataStores;
@@ -82,7 +93,11 @@ namespace mqtt2otel
         public void DisposeConnections()
         {
             if (this.mqttCoordinator != null) this.mqttCoordinator.DisconnectAllBrokers().Wait();
-            if (this.otelCoordinator != null) this.otelCoordinator.Dispose();
+            if (this.otelCoordinator != null)
+            {
+                this.otelCoordinator.FlushMeters();
+                this.otelCoordinator.Dispose();
+            }
         }
 
         /// <summary>
@@ -91,6 +106,9 @@ namespace mqtt2otel
         /// <returns>A value indicating whether the operation has been successfull.</returns>
         public async Task<bool> ProcessManifest()
         {
+            var sw = new Stopwatch();
+            sw.Start();
+
             var manifest = new Manifest.Manifest();
             try
             {
@@ -106,6 +124,12 @@ namespace mqtt2otel
                 }
 
                 this.internalLogger.LogCritical($"Error parsing manifest file. {message}");
+                sw.Stop();
+                this.manifestMeter.ManifestReadDuration.Record(sw.ElapsedMicroseconds);
+                this.manifestMeter.ProcessorsCount.Record(manifest.Processors.Count());
+                this.manifestMeter.SubscriptionGroupsCount.Record(manifest.SubscriptionGroups.Count());
+                this.manifestMeter.ManifestUnsuccessfulRead.Add(1);
+
                 return false;
             }
 
@@ -118,6 +142,12 @@ namespace mqtt2otel
             if (validationResult.Success == false)
             {
                 this.internalLogger.LogCritical("Could not validate manifest. Shutting down application.");
+                sw.Stop();
+                this.manifestMeter.ManifestReadDuration.Record(sw.ElapsedMicroseconds);
+                this.manifestMeter.ProcessorsCount.Record(manifest.Processors.Count());
+                this.manifestMeter.SubscriptionGroupsCount.Record(manifest.SubscriptionGroups.Count());
+                this.manifestMeter.ManifestUnsuccessfulRead.Add(1);
+
                 return false;
             }
 
@@ -127,14 +157,31 @@ namespace mqtt2otel
             if (this.otelCoordinator == null)
             {
                 this.internalLogger.LogCritical("Internal error: OtelCoordinator is not set!");
+                sw.Stop();
+                this.manifestMeter.ManifestReadDuration.Record(sw.ElapsedMicroseconds);
+                this.manifestMeter.ProcessorsCount.Record(manifest.Processors.Count());
+                this.manifestMeter.SubscriptionGroupsCount.Record(manifest.SubscriptionGroups.Count());
+                this.manifestMeter.ManifestUnsuccessfulRead.Add(1);
+
                 return false;
             }
 
             if (this.mqttCoordinator == null)
             {
                 this.internalLogger.LogCritical("Internal error: MqttCoordinator is not set!");
+                sw.Stop();
+                this.manifestMeter.ManifestReadDuration.Record(sw.ElapsedMicroseconds);
+                this.manifestMeter.ProcessorsCount.Record(manifest.Processors.Count());
+                this.manifestMeter.SubscriptionGroupsCount.Record(manifest.SubscriptionGroups.Count());
+                this.manifestMeter.ManifestUnsuccessfulRead.Add(1);
+
                 return false;
             }
+
+            sw.Stop();
+            this.manifestMeter.ManifestReadDuration.Record(sw.ElapsedMicroseconds);
+            this.manifestMeter.ProcessorsCount.Record(manifest.Processors.Count());
+            this.manifestMeter.SubscriptionGroupsCount.Record(manifest.SubscriptionGroups.Count());
 
             this.otelCoordinator.Connect(manifest);
 

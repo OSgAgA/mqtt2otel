@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using YamlDotNet.Serialization;
+using mqtt2otel.InternalMetrics;
 
 namespace mqtt2otel
 {
@@ -64,6 +65,11 @@ namespace mqtt2otel
         /// Gets or sets the logging settings used for internal logging.
         /// </summary>
         public InternalLoggingSettings Logging { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the settings used for internal metrics.
+        /// </summary>
+        public InternalMetricsSettings Metrics { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the delay intervall that will be used for <see cref="AutoUpdateMode.PollManifestFile"/>.

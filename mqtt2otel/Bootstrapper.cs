@@ -1,10 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
 using mqtt2otel.Interfaces;
 using mqtt2otel.InternalLogging;
+using mqtt2otel.InternalMetrics;
 using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using YamlDotNet.Serialization;
 
 namespace mqtt2otel
@@ -22,6 +26,16 @@ namespace mqtt2otel
         private IManifestCoordinator manifestCoordinator;
 
         /// <summary>
+        /// The application settings.
+        /// </summary>
+        private ApplicationSettings applicationSettings;
+
+        /// <summary>
+        /// The internally used meter provider.
+        /// </summary>
+        private MeterProvider? meterProvider;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Bootstrapper"/> class.
         /// 
         /// Bootstrapping the application should be done in the following order:
@@ -35,11 +49,15 @@ namespace mqtt2otel
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="manifestCoordinator">The manifest coordinator used for loading, unloading and reloading of manifests files.</param>
         /// <param name="objectFactory">The object factory for creating objects from a yaml file.</param>
-        public Bootstrapper(ILogger<Bootstrapper> internalLogger, IManifestCoordinator manifestCoordinator, IObjectFactory objectFactory)
+        /// <param name="settings">The application settings.</param>
+        /// <param name="exporterBuilder">The exporter builder for connecting the metrics to an otel exporter.</param>
+        public Bootstrapper(ILogger<Bootstrapper> internalLogger, IManifestCoordinator manifestCoordinator, IObjectFactory objectFactory, ApplicationSettings settings, IOtelExporterBuilder exporterBuilder)
         {
             this.internalLogger = internalLogger;
+            this.applicationSettings = settings;
             this.manifestCoordinator = manifestCoordinator;
             Manifest.Manifest.ObjectFactory = objectFactory;
+            this.InitializeInternalMeters(exporterBuilder, settings);
         }
 
         /// <summary>
@@ -84,6 +102,29 @@ namespace mqtt2otel
 
                 throw new Exception();
             }
+        }
+
+        /// <summary>
+        /// Initializes all supported internal otel meters if otel logging is configured in the application settings.
+        /// </summary>
+        /// <param name="exporterBuilder">The exporter builder for configuring an exporter for the metrics.</param>
+        /// <param name="settings">The application settings.</param>
+        public void InitializeInternalMeters(IOtelExporterBuilder exporterBuilder, ApplicationSettings settings)
+        {
+            if (settings.Metrics.Otel == null || !settings.Metrics.CollectMetrics) return;
+
+            var builder = Sdk.CreateMeterProviderBuilder()
+                    .SetResourceBuilder(
+                            ResourceBuilder.CreateDefault()
+                            .AddService(settings.Metrics.Otel.ServiceName, serviceNamespace: settings.Metrics.Otel.ServiceNamespace, serviceVersion: settings.Metrics.Otel.ServiceVersion))
+                    .AddMeter(nameof(MqttMeter))
+                    .AddMeter(nameof(ProcessorMeter))
+                    .AddMeter(nameof(ManifestMeter))
+                    .AddMeter(nameof(OtelMeter));
+
+            exporterBuilder.AddToMeterProviderBuilder(builder, settings.Metrics.Otel);
+
+            this.meterProvider = builder.Build();
         }
 
         /// <summary>

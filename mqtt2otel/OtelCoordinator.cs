@@ -20,6 +20,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using mqtt2otel.Interfaces;
+using mqtt2otel.InternalMetrics;
 
 namespace mqtt2otel
 {
@@ -69,13 +70,20 @@ namespace mqtt2otel
         private IOtelExporterBuilder exporterBuilder;
 
         /// <summary>
+        /// The meter for reporting internal metrics.
+        /// </summary>
+        private OtelMeter otelMeter;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OtelCoordinator"/> class.
         /// </summary>
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="exporterBuilder">The exporter builder for creating open telemetry exporters.</param>
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
-        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IOtelExporterBuilder exporterBuilder, IDataStores dataStores)
+        /// <param name="meter">The meter for reporting internal metrics.</param>
+        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IOtelExporterBuilder exporterBuilder, IDataStores dataStores, OtelMeter meter)
         {
+            this.otelMeter = meter;
             this.internalLogger = internalLogger;
             this.exporterBuilder = exporterBuilder;
             this.dataStores = dataStores;
@@ -103,6 +111,8 @@ namespace mqtt2otel
                     this.internalLogger.LogInformation("Otel service namespace:     {OtelServiceNamespace}", otelConnection.ServiceNamespace);
                 }
             }
+
+            this.otelMeter.Connections.Record(manifest.OtelConnections.Count);
 
             this.internalLogger.LogInformation("Initializing otel meters...");
             this.InitializeMeters(manifest);
@@ -239,7 +249,7 @@ namespace mqtt2otel
                             ResourceBuilder.CreateDefault()
                             .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace))
                             .IncludeScopes = true;
-                        options.AddProcessor(new TimestampOverrideProcessor());
+                        options.AddProcessor(new TimestampOverrideProcessor(this.otelMeter));
 
                         this.exporterBuilder.AddToLoggerOptions(options, otelConnection);
                     });
@@ -447,6 +457,9 @@ namespace mqtt2otel
         /// </summary>
         public void Dispose()
         {
+            this.otelMeter.Connections.Record(0);
+            this.FlushMeters();
+
             foreach (var meter in this.MeterConnectionMap.Values)
             {
                 meter.Dispose();

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
+using mqtt2otel.InternalMetrics;
 using mqtt2otel.Tests.Helper;
 using System;
 using System.Collections.Generic;
@@ -52,7 +53,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var dataStores = GenericHelper.GetDataStores();
             var exportBuilder = new OtelTestExporterBuilder();
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores);
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter());
             otelCoordinator.Connect(manifest);
 
             var subscription = manifest.Processors[0].Mqtt.Subscriptions[0];
@@ -121,7 +122,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var dataStores = GenericHelper.GetDataStores();
             var exportBuilder = new OtelTestExporterBuilder();
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores);
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter());
             otelCoordinator.Connect(manifest);
 
             var logRule = manifest.Processors[0].Otel.Logs[0];
@@ -172,7 +173,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var dataStores = GenericHelper.GetDataStores();
             var exportBuilder = new OtelTestExporterBuilder();
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores);
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter());
             otelCoordinator.Connect(manifest);
 
             var logRule = manifest.Processors[0].Otel.Logs[0];
