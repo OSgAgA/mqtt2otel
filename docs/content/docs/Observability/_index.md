@@ -6,7 +6,7 @@ bookCollapseSection: false
 
 # Observability
 
-To observe the **internals of mqtt2otel** or for troubleshooting, there are different possibilites, that are provided.
+To observe the **internals of mqtt2otel** or for troubleshooting, there are different possibilites, that are provided by mqtt2otel.
 
 ## Logging and tracing
 
