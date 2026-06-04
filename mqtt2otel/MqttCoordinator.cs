@@ -312,7 +312,7 @@ namespace mqtt2otel
 
                 if (!connected)
                 {
-                    this.internalLogger.LogError($"Could not connect to mqtt broker. Waiting for ${this.nameToBrokerMap[brokerName].ReconnectDelayInMs}ms.");
+                    this.internalLogger.LogError($"Could not connect to mqtt broker. Waiting for {this.nameToBrokerMap[brokerName].ReconnectDelayInMs}ms.");
                     await Task.Delay(this.nameToBrokerMap[brokerName].ReconnectDelayInMs);
                 }
                 else

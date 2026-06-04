@@ -189,20 +189,20 @@ Log messages work similarly to metrics. Let's say you receive a log message payl
 2026-02-26T10:28:34Z [Info] [ServerA] Temperature value read successfully.
 ```
 
-Rather than sending the raw message to Otel, we can transform it into a structured log format using a 
-[GROK](https://www.elastic.co/docs/reference/logstash/plugins/plugins-filters-grok) expression:
+Rather than sending the raw message to Otel, we can transform it into a structured log format using an extended 
+[DISSECT](https://github.com/OSgAgA/Dissect.Extended.Net) expression:
 
-```grok
-%{TIMESTAMP_ISO8601:otel_timestamp} \[%{WORD:otel_loglevel}\] \[%{WORD:server_name}\] %{GREEDYDATA:otel_message}
+```dissect
+%{otel_timestamp:DateTime} [%{otel_loglevel}] [{server_name}] %{otel_message}
 ```
 
 This can be read as:
 
-* Parse an ISO8061 timestamp and name it otel_timestamp
-* Read a space and a [ (needs to be escaped as \[) adn discard the information
-* Read a word and name it otel_loglevel
+* Parse date and time and name it otel_timestamp
+* Read a space and a [ and discard the information
+* Read everything up until ] and name it otel_loglevel
 * Read ] [ and discard the information
-* Read a word and name it server_name
+* Read everything up until ] and name it server_name
 * Read ] [ and discard the information
 * Read the remaining part of the message and name it otel_message
 
@@ -223,7 +223,7 @@ Processors:
       Logs:
         - Name: "Logging"
           PayloadType: Json
-          Transform: "GROK('%{TIMESTAMP_ISO8601:otel_timestamp} \[%{WORD:otel_loglevel}\] \[%{WORD:server_name}\] %{GREEDYDATA:otel_message}')"
+          Transform: "DISSECT('%{otel_timestamp:DateTime} [%{otel_loglevel}] [{server_name}] %{otel_message}')"
 ```
 
 You should notice, that we are using the `Logs` keyword now in the otel section to identify log messages. The `Transform` 
@@ -398,7 +398,7 @@ Processors:
       Logs:
         - Name: "Logging"
           PayloadType: Json
-          Transform: "GROK('%{TIME:otel_timestamp} %{WORD:category}: %{GREEDYDATA:otel_message}')"
+          Transform: "DISSECT('%{otel_timestamp:DateTime} [%{otel_loglevel}] [{server_name}] %{otel_message}')"
 ```
 
 ### Explanation:
@@ -468,6 +468,6 @@ Processors:
       Logs:
         - Name: "Logging"
           PayloadType: Json
-          Transform: "GROK('%{TIME:otel_timestamp} [%{WORD:otel_loglevel}] [%{WORD:server_name}] %{GREEDYDATA:otel_message}')"
+          Transform: "DISSECT('%{otel_timestamp:DateTime} [%{otel_loglevel}] [{server_name}] %{otel_message}')"
 
 ```

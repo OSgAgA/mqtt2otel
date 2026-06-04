@@ -92,22 +92,20 @@ Let's say you receive a log message payload in the following format from MQTT:
 2026-02-26T10:28:34Z [Info] [ServerA] Temperature value read successfully.
 ```
 
-Rather than sending the raw message to Otel, we can transform it into a structured log format using a 
-[GROK](https://www.elastic.co/docs/reference/logstash/plugins/plugins-filters-grok) expression. 
+Rather than sending the raw message to Otel, we can transform it into a structured log format using an extended 
+[DISSECT](https://github.com/OSgAgA/Dissect.Extended.Net) expression:
 
-The grok expression for parsing the payload is:
-
-```grok
-%{TIMESTAMP_ISO8601:otel_timestamp} \[%{WORD:otel_loglevel}\] \[%{WORD:server_name}\] %{GREEDYDATA:otel_message}')
+```dissect
+%{otel_timestamp:DateTime} [%{otel_loglevel}] [{server_name}] %{otel_message}
 ```
 
 This can be read as:
 
-* Parse an ISO8061 timestamp and name it otel_timestamp
-* Read a space and a [ (needs to be escaped as \[) adn discard the information
-* Read a word and name it otel_loglevel
+* Parse date and time and name it otel_timestamp
+* Read a space and a [ and discard the information
+* Read everything up until ] and name it otel_loglevel
 * Read ] [ and discard the information
-* Read a word and name it server_name
+* Read everything up until ] and name it server_name
 * Read ] [ and discard the information
 * Read the remaining part of the message and name it otel_message
 
@@ -129,11 +127,12 @@ The usage is similar to expressions:
       Logs:
         - Name: "Logging"
           PayloadType: Json
-          Transform: "GROK('%{TIMESTAMP_ISO8601:otel_timestamp} \[%{WORD:otel_loglevel}\] \[%{WORD:server_name}\] %{GREEDYDATA:otel_message}')"
+          Transform: "DISSECT('%{otel_timestamp:DateTime} [%{otel_loglevel}] [{server_name}] %{otel_message}')"
 ```
 
 ### Available Functions
 
 | Function   | Example                              | Description                                                                                                                   |
 | ---------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------|
+| `DISSECT`  | `DISSECT('%{otel_message}')`         | Converts a payload to json using [Exgtended dissect](https://github.com/OSgAgA/Dissect.Extended.Net) syntax                   |                                
 | `GROK`     | `GROK('%{GREEDYDATA:otel_message}')` | Converts a payload to json using [GROK](https://www.elastic.co/docs/reference/logstash/plugins/plugins-filters-grok) syntax   |
