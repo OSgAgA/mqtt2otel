@@ -1,0 +1,114 @@
+﻿@page "/{ExampleId?}"
+@using mqtt2otel.ManifestExplorer.DTOs
+
+@rendermode InteractiveServer
+@inject IHttpClientFactory Factory
+
+
+<PageTitle>mqtt2otel manifest explorer</PageTitle>
+
+<h1 style="text-align: center">Manifest explorer</h1>
+
+<div class="flex-container">
+    <div class="row">
+        <div class="col">
+            <label><b>Manifest</b></label>
+            <InputTextArea class="form-control w-100" title="Processor pattern" @bind-Value="@this.processorPattern" rows="27" />
+        </div>
+        <div class="col-auto separator-vertical"></div>
+        <div class="col">
+            <div class="flex-container">
+                 <div class="row">
+                    <div class="col" style="margin-top:15px;">
+                        <label><b>Topic</b></Label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col" style="margin-bottom:20px;">
+                        <InputText @bind-Value="@this.topic" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label><b>Payload</b></label>
+                        <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.payload" rows="25" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" style="text-align:center">
+            <div class="col">
+                <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="Apply">Apply</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <hr />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <Tabs EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
+                    <Tab Title="Metrics" IsActive="true">
+                        <Content>
+                            <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultText" rows="15" />
+                        </Content>
+                    </Tab>
+                    <Tab Title="Logs">
+                        <Content>
+                            <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultLogText" rows="10" />
+                        </Content>
+                    </Tab>
+                </Tabs>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public string? ExampleId { get; set; }
+
+    private string payload = string.Empty;
+
+    private string processorPattern = string.Empty;
+
+    private string resultText = string.Empty;
+
+    private string resultLogText = "Here are the logs.";
+
+    private string topic = "message-topic";
+
+    private async Task Apply()
+    {
+        var httpClient = Factory.CreateClient("ServerAPI");
+
+        var request = new ApplyPatternToPayloadRequest(this.topic, this.payload, this.processorPattern);
+        var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/ApplyPatternToPayload", request);
+
+        var result = await response.Content.ReadFromJsonAsync<ApplyPatternToPayloadResult>();
+
+        if (result != null)
+        {
+            this.resultText = result.Metrics;
+            this.resultLogText = result.Logs;
+        }
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        if (this.ExampleId != null)
+        {
+            var example = ExampleData.GetExampleById(this.ExampleId);
+
+            this.topic = example.Topic;
+            this.payload = example.Payload;
+            this.processorPattern = example.Manifest;
+        }
+
+        return base.OnInitializedAsync();
+    }
+}

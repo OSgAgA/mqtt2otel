@@ -90,13 +90,21 @@ namespace mqtt2otel
         private int connectionCount = 0;
 
         /// <summary>
+        /// Indicates whether this class only simulates processing of data, but does not connect to a real mqtt broker.
+        /// </summary>
+        private bool isSimulator = false;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MqttCoordinator"/> class.
         /// </summary>
         /// <param name="internalLogger">The logger for internal log messages.</param>
-        public MqttCoordinator(ILogger<MqttCoordinator> internalLogger, MqttMeter meter)
+        /// <param name="meter">The meter used for internal metrics.</param>
+        /// <param name="isSimulator">A value indicating whether this class only simulates processing of data, but does not connect to a real mqtt broker.</param>
+        public MqttCoordinator(ILogger<MqttCoordinator> internalLogger, MqttMeter meter, bool isSimulator = false)
         {
             this.internalLogger = internalLogger;
             this.mqttMeter = meter;
+            this.isSimulator = isSimulator;
         }
 
         /// <summary>
@@ -137,6 +145,8 @@ namespace mqtt2otel
         /// </summary>
         public async Task DisconnectAllBrokers()
         {
+            if (this.isSimulator) return;
+
             this.isDiconnecting = true;
             this.internalLogger.LogInformation("Disconnecting from all mqtt brokers.");
 
@@ -183,6 +193,8 @@ namespace mqtt2otel
         /// <exception cref="Exception">Thrown if client is unable to connect to server or if settings contain an error.</exception>
         private async Task ConnectAndSubscribe(MqttBroker broker)
         {
+            if (this.isSimulator) return;
+
             this.nameToBrokerMap[broker.Name] = broker;
             this.clientId[broker.Name] = broker.ClientPrefix + "-" + Guid.NewGuid().ToString();
             this.mqttClient[broker.Name] = this.mqttFactory.CreateMqttClient();
@@ -344,10 +356,12 @@ namespace mqtt2otel
             if (mqttSubscription.Topic == null) return;
 
             this.subscriptionStore.Store(mqttSubscription.Topic, mqttSubscription, processor);
-            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(mqttSubscription.Topic).Build();
+            if (!this.isSimulator)
+            {
+                var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(mqttSubscription.Topic).Build();
+                await this.GetClient(mqttSubscription.BrokerConnection).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+            }
             this.internalLogger.LogInformation($"Subscribed to topic {mqttSubscription.Topic}.");
-
-            await this.GetClient(mqttSubscription.BrokerConnection).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
             this.mqttMeter.SubscriptionsCount.Record(++this.subscriptionCount);
         }
 
@@ -374,8 +388,9 @@ namespace mqtt2otel
                 this.mqttMeter.MessagesReceived.Add(1);
                 this.mqttMeter.PayloadSize.Record(e.ApplicationMessage.Payload.Length);
 
-                bool flowControl = await ProcessReceivedMessage(e);
-                if (!flowControl)
+                var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                bool success = await ProcessReceivedMessage(e.ApplicationMessage.Topic, payload);
+                if (!success)
                 {
                     return;
                 }
@@ -394,29 +409,28 @@ namespace mqtt2otel
         /// <summary>
         /// Processes a received mqtt message.
         /// </summary>
-        /// <param name="e">The message event args.</param>
+        /// <param name="topic">The mqtt topic.</param>
+        /// <param name="payload">The mqtt message payload as a string.</param>
         /// <returns>A value indicating whether processing has been successful.</returns>
-        private async Task<bool> ProcessReceivedMessage(MqttApplicationMessageReceivedEventArgs e)
+        public async Task<bool> ProcessReceivedMessage(string topic, string payload)
         {
-            var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-
             this.internalLogger.LogDebug($"Message received. Payload: {payload}");
 
-            if (!this.subscriptionStore.ContainsTopic(e.ApplicationMessage.Topic))
+            if (!this.subscriptionStore.ContainsTopic(topic))
             {
-                this.internalLogger.LogError($"Internal error while processing received mqtt message: {nameof(subscriptionStore)} does not contain topic {e.ApplicationMessage.Topic}. Skipping event.");
+                this.internalLogger.LogError($"Internal error while processing received mqtt message: {nameof(subscriptionStore)} does not contain topic {topic}. Skipping event.");
                 return false;
             }
 
             bool success = false;
 
-            var subscriptions = this.subscriptionStore.Retrieve(e.ApplicationMessage.Topic);
+            var subscriptions = this.subscriptionStore.Retrieve(topic);
 
             foreach (var data in subscriptions)
             {
                 if (this.OnMessageReceived != null)
                 {
-                    this.OnMessageReceived(this, new MqttMessageReceivedEventArgs(payload, data.Subscription, e.ApplicationMessage.Topic, data.Processor));
+                    this.OnMessageReceived(this, new MqttMessageReceivedEventArgs(payload, data.Subscription, topic, data.Processor));
                 }
 
 
@@ -424,7 +438,7 @@ namespace mqtt2otel
 
                 if (this.OnMessageProcessed != null)
                 {
-                    this.OnMessageProcessed(this, new MqttMessageReceivedEventArgs(payload, data.Subscription, e.ApplicationMessage.Topic, data.Processor));
+                    this.OnMessageProcessed(this, new MqttMessageReceivedEventArgs(payload, data.Subscription, topic, data.Processor));
                 }
 
                 if (!success) this.internalLogger.LogError($"Could not process message. See previous errors. Message skipped. Payload: {payload}");

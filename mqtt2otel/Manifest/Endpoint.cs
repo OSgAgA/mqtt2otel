@@ -14,7 +14,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets the address of the endpoint without a protocoll or a port.
         /// </summary>
-        public string? Address { get; set; } = null;
+        public string? Address { get; set; } = "localhost";
 
         /// <summary>
         /// Gets or sets the port of the endpoint.
