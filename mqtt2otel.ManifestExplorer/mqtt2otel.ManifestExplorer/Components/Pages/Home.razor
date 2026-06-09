@@ -4,37 +4,46 @@
 @rendermode InteractiveServer
 @inject IHttpClientFactory Factory
 
-
 <PageTitle>mqtt2otel manifest explorer</PageTitle>
-
-<h1 style="text-align: center">Manifest explorer</h1>
 
 <div class="flex-container">
     <div class="row">
         <div class="col">
-            <label><b>Manifest</b></label>
-            <InputTextArea class="form-control w-100" title="Processor pattern" @bind-Value="@this.processorPattern" rows="27" />
+            <Card>
+                <CardHeader>
+                    <b>Manifest</b>
+                </CardHeader>
+                <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.processorPattern" rows="26" />
+            </Card>
         </div>
-        <div class="col-auto separator-vertical"></div>
+        @* <div class="vr"></div> *@
         <div class="col">
-            <div class="flex-container">
-                 <div class="row">
-                    <div class="col" style="margin-top:15px;">
-                        <label><b>Topic</b></Label>
+            <Card>
+
+                <div class="flex-container">
+                    <div class="row">
+                        <div class="col" style="margin-bottom:20px;">
+                            <Card>
+                                <CardHeader>
+                                    <b>Topic</b>
+                                </CardHeader>
+                                <InputText @bind-Value="@this.topic" />
+                            </Card>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <Card>
+                                <CardHeader>
+                                    <b>Payload</b>
+                                </CardHeader>
+
+                                <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.payload" rows="22" />
+                            </Card>
+                        </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col" style="margin-bottom:20px;">
-                        <InputText @bind-Value="@this.topic" />
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <label><b>Payload</b></label>
-                        <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.payload" rows="25" />
-                    </div>
-                </div>
-            </div>
+            </Card>
         </div>
         <div class="row" style="text-align:center">
             <div class="col">
@@ -50,7 +59,12 @@
 
         <div class="row">
             <div class="col">
-                <Tabs EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
+                <Tabs @ref="tabs" EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
+                    <Tab Title="Errors" Id="ErrorsTab">
+                        <Content>
+                            <InputTextArea class="form-control w-100" title="Errors" @bind-Value="@this.errorText" rows="15" />
+                        </Content>
+                    </Tab>
                     <Tab Title="Metrics" IsActive="true">
                         <Content>
                             <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultText" rows="15" />
@@ -68,6 +82,7 @@
 </div>
 
 @code {
+    Tabs tabs;
 
     [Parameter]
     public string? ExampleId { get; set; }
@@ -78,7 +93,9 @@
 
     private string resultText = string.Empty;
 
-    private string resultLogText = "Here are the logs.";
+    private string errorText = string.Empty;
+
+    private string resultLogText = string.Empty;
 
     private string topic = "message-topic";
 
@@ -95,6 +112,20 @@
         {
             this.resultText = result.Metrics;
             this.resultLogText = result.Logs;
+            this.errorText = result.Errors;
+
+            if (!string.IsNullOrWhiteSpace(this.errorText))
+            {
+                await this.tabs.ShowTabByIndexAsync(0);
+            }
+            else if (!string.IsNullOrWhiteSpace(this.resultText))
+            {
+                await this.tabs.ShowTabByIndexAsync(1);
+            }
+            else if (!string.IsNullOrWhiteSpace(this.resultLogText))
+            {
+                await this.tabs.ShowTabByIndexAsync(2);
+            }
         }
     }
 

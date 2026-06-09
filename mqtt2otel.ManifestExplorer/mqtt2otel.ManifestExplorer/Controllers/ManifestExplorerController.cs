@@ -10,6 +10,7 @@ using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
 using System.Diagnostics.Metrics;
 using System.Text;
+using YamlDotNet.Core;
 
 namespace mqtt2otel.ManifestExplorer.Controllers
 {
@@ -30,9 +31,33 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             ProcessorMeter meter = new ProcessorMeter();
 
             Manifest.Manifest.ObjectFactory = new mqtt2otel.Manifest.ObjectFactory(logger, payloadParser, payloadTransformation, dataStores, meter);
-            var manifest = Manifest.Manifest.ReadFromYaml(logger, yaml: request.Pattern);
-            manifest.Validate();
+
+            Manifest.Manifest manifest;
+
+            try
+            {
+                manifest = Manifest.Manifest.ReadFromYaml(logger, yaml: request.Pattern); 
+            }
+            catch (YamlException ex)
+            {
+                var message = $"({ex.Start.ToString()}) - ({ex.End.ToString()}): {ex.Message}";
+                return new ApplyPatternToPayloadResult(string.Empty, string.Empty, message);
+            }
+
+            catch (Exception ex)
+            {
+                return new ApplyPatternToPayloadResult(string.Empty, string.Empty, ex.Message ?? "");
+
+            }
+
             manifest.Initialize();
+
+            var validationResult = manifest.Validate();
+
+            if (!validationResult.Success)
+            {
+                return new ApplyPatternToPayloadResult(string.Empty, string.Empty, validationResult.ToString() ?? "");
+            }
 
             ILogger<MqttCoordinator> mqttLogger = new Logger<MqttCoordinator>(new LoggerFactory());
             var mqtt = new MqttCoordinator(mqttLogger, new MqttMeter(), isSimulator: true);

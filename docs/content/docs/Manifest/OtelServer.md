@@ -33,6 +33,7 @@ It has the following parameters:
 | ServiceName                        | The otel service name                                                                                     |
 | ServiceVersion                     | The otel service version                                                                                  |
 | ServiceNamespace                   | The otel service namespace                                                                                |
+| MinimumLogLevel                    | Set the minimum log level to: trace, debug, information, warning, error or critical                       |
 | Eendpoint.Protocol                 | The optional protocol that will be used for connecting to the broker, e.g. https                          |
 | Endpoint.Address                   | The address of the otel server                                                                            |
 | Endpoint.Port                      | The optional port under which the broker can be reached. Default is 4317.                                 |
