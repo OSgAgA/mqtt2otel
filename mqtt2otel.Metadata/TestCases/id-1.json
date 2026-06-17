@@ -1,0 +1,33 @@
+{
+  "Setup": {
+    "Id": "id-1",
+    "Name": "Just a test",
+    "Description": "My description",
+    "Topic": "message-topic",
+    "Payload": "{\r\n   Processor:\r\n   {\r\n      Temperature: 42\r\n   }\r\n}",
+    "Manifest": "Version: 1.0\r\n\r\nMqttConnections:\r\n  - Name: \u0022My broker\u0022\r\n\r\nOtelConnections:\r\n  - Name: \u0022My Otel server\u0022\r\n    ServiceName: \u0022my-service\u0022\r\n    ServiceNamespace: \u0022my-service-namespace\u0022\r\n\r\nProcessors:\r\n  - Name: \u0022Processor Temperature\u0022\r\n    Description: \u0022Provides the current processor temperature.\u0022\r\n    Mqtt: \r\n      Subscriptions:\r\n        - Name: \u0022Processor information\u0022\r\n          Topic: \u0022message-topic\u0022\r\n    Otel:\r\n      Metrics:\r\n        - Name: \u0022Processor.Temperature\u0022\r\n          Description: \u0022The current processor temperature.\u0022\r\n          SignalDataType: Float\r\n          Instrument: Gauge\r\n          Attributes:\r\n            - Key: \u0022test\u0022\r\n              Value: \u0022value\u0022\r\n          Value: \u0022JSONPATH(\u0027$.Processor.Temperature\u0027)\u0022"
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Processor.Temperature",
+        "OtelServer": "My Otel server",
+        "MeterVersion": "",
+        "Description": "The current processor temperature.",
+        "Unit": "",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 42,
+            "StartTime": "2026-06-17T20:31:34.9373895+00:00",
+            "EndTime": "2026-06-17T20:31:35.0102006+00:00",
+            "Tags": {
+              "test": "value"
+            }
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

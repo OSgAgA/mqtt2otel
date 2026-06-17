@@ -1,11 +1,25 @@
-﻿using System.Runtime.CompilerServices;
+﻿using mqtt2otel.Metadata;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 
 namespace mqtt2otel.ManifestExplorer.DTOs
 {
-    public class ExampleData(string id, string name, string description, string topic, string payload, string manifest)
+    public class ExampleData
     {
         private static Dictionary<string, ExampleData> cache = new Dictionary<string, ExampleData>();
+
+        public ExampleData() { }
+
+        public ExampleData(string id, string name, string description, string topic, string payload, string manifest)
+        {
+            this.Id = id;
+            this.Name = name;
+            this.Description = description;
+            this.Topic = topic;
+            this.Payload = payload;
+            this.Manifest = manifest;
+        }
 
         private static void Create()
         {
@@ -96,6 +110,7 @@ namespace mqtt2otel.ManifestExplorer.DTOs
                     """
             );
         }
+
         public static ExampleData GetExampleById(string id)
         {
             ExampleData.Create();
@@ -117,17 +132,17 @@ namespace mqtt2otel.ManifestExplorer.DTOs
             return result;
         }
 
-        public string Id { get; set; } = id;
+        public string Id { get; set; } = string.Empty;
 
-        public string Name { get; set; } = name;
+        public string Name { get; set; } = string.Empty;
 
-        public string Description { get; set; } = description;
+        public string Description { get; set; } = string.Empty;
 
-        public string Topic { get; set; } = topic;
+        public string Topic { get; set; } = string.Empty;
 
-        public string Payload { get; set; } = payload;
+        public string Payload { get; set; } = string.Empty;
 
-        public string Manifest { get; set; } = manifest;
+        public string Manifest { get; set; } = string.Empty;
 
 
     }

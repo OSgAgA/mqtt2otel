@@ -5,11 +5,13 @@ using mqtt2otel.Interfaces;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Manifest;
 using mqtt2otel.ManifestExplorer.DTOs;
+using mqtt2otel.Metadata;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
 using System.Diagnostics.Metrics;
 using System.Text;
+using System.Text.Json;
 using YamlDotNet.Core;
 
 namespace mqtt2otel.ManifestExplorer.Controllers
@@ -19,7 +21,7 @@ namespace mqtt2otel.ManifestExplorer.Controllers
     public class ManifestExplorerController : ControllerBase
     {
         [HttpPost(nameof(ApplyPatternToPayload))]
-        public async Task<ApplyPatternToPayloadResult> ApplyPatternToPayload([FromBody] ApplyPatternToPayloadRequest request)
+        public async Task<ApplyPatternToPayloadResult> ApplyPatternToPayload([FromBody] ApplyPatternToPayloadData request)
         {
             ILogger<Processor> logger = new Logger<Processor>(new LoggerFactory());
 
@@ -36,17 +38,16 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             try
             {
-                manifest = Manifest.Manifest.ReadFromYaml(logger, yaml: request.Pattern); 
+                manifest = Manifest.Manifest.ReadFromYaml(logger, yaml: request.Pattern);
             }
             catch (YamlException ex)
             {
                 var message = $"({ex.Start.ToString()}) - ({ex.End.ToString()}): {ex.Message}";
-                return new ApplyPatternToPayloadResult(string.Empty, string.Empty, message);
+                return new ApplyPatternToPayloadResult(new ErrorTestData(ex.Message, new Position(ex.Start.Line, ex.Start.Column), new Position(ex.End.Line, ex.End.Column)));
             }
-
             catch (Exception ex)
             {
-                return new ApplyPatternToPayloadResult(string.Empty, string.Empty, ex.Message ?? "");
+                return new ApplyPatternToPayloadResult(new ErrorTestData(ex.Message ?? ""));
 
             }
 
@@ -56,7 +57,7 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             if (!validationResult.Success)
             {
-                return new ApplyPatternToPayloadResult(string.Empty, string.Empty, validationResult.ToString() ?? "");
+                return new ApplyPatternToPayloadResult(new ErrorTestData(validationResult.ToString() ?? ""));
             }
 
             ILogger<MqttCoordinator> mqttLogger = new Logger<MqttCoordinator>(new LoggerFactory());
@@ -71,7 +72,20 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             bool success = await mqtt.ProcessReceivedMessage(request.Topic, request.Payload);
 
             otel.FlushMeters();
-            return new ApplyPatternToPayloadResult(exportBuilder.GetStringRepresentationOfMetrics(), exportBuilder.GetStringRepresentationOfLogEntries());
+            return new ApplyPatternToPayloadResult(exportBuilder.Metrics.ToList(), exportBuilder.Logs.ToList());
+        }
+
+        [HttpPost(nameof(CreateJson))]
+        public async Task<string> CreateJson([FromBody] ApplyPatternToPayloadData request)
+        {
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+
+            string result = JsonSerializer.Serialize(this.ApplyPatternToPayload(request), options);
+
+            return result;
         }
     }
 }

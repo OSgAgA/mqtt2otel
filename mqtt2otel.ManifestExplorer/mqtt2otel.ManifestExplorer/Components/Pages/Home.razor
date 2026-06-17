@@ -1,5 +1,8 @@
 ﻿@page "/{ExampleId?}"
 @using mqtt2otel.ManifestExplorer.DTOs
+@using mqtt2otel.Metadata
+@using System.Text.Json
+@inject IJSRuntime JS
 
 @rendermode InteractiveServer
 @inject IHttpClientFactory Factory
@@ -7,91 +10,147 @@
 <PageTitle>mqtt2otel manifest explorer</PageTitle>
 
 <div class="flex-container">
-    <div class="row">
-        <div class="col">
-            <Card>
-                <CardHeader>
-                    <b>Manifest</b>
-                </CardHeader>
-                <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.processorPattern" rows="26" />
-            </Card>
-        </div>
-        @* <div class="vr"></div> *@
-        <div class="col">
-            <Card>
 
-                <div class="flex-container">
-                    <div class="row">
-                        <div class="col" style="margin-bottom:20px;">
-                            <Card>
-                                <CardHeader>
-                                    <b>Topic</b>
-                                </CardHeader>
-                                <InputText @bind-Value="@this.topic" />
-                            </Card>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <Card>
-                                <CardHeader>
-                                    <b>Payload</b>
-                                </CardHeader>
+    <Modal @ref="modal" Title="Enter Json Data" IsVerticallyCentered="true">
+        <BodyTemplate>
+            <div class="row" style="margin-bottom:10px">
+                <div class="col-2">
+                    <label>Id</label>
+                </div>
+                <div class="col-8">
+                    <InputText class="form-control w-100" @bind-Value="@this.testCaseId" />
+                </div>
+            </div>
 
-                                <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.payload" rows="22" />
-                            </Card>
-                        </div>
+            <div class="row" style="margin-bottom:10px">
+                <div class="col-2">
+                    <label>Name</label>
+                </div>
+                <div class="col-8">
+                    <InputText class="form-control w-100" @bind-Value="@this.testCaseName" />
+                </div>
+            </div>
+
+            <div class="row" style="margin-bottom:10px">
+                <div class="col-2">
+                    <label>Description</label>
+                </div>
+                <div class="col-8">
+                    <InputTextArea class="form-control w-100" @bind-Value="@this.testCaseDescription" rows="5" />
+                </div>
+            </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
+        <Button Color="ButtonColor.Primary" @onclick="CreateJson">Copy Json to clipboard</Button>
+    </FooterTemplate>
+</Modal>
+
+<div class="row">
+    <div class="col">
+        <Card>
+            <CardHeader>
+                <b>Manifest</b>
+            </CardHeader>
+            <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.manifest" rows="26" />
+        </Card>
+    </div>
+    @* <div class="vr"></div> *@
+    <div class="col">
+        <Card>
+
+            <div class="flex-container">
+                <div class="row">
+                    <div class="col" style="margin-bottom:20px;">
+                        <Card>
+                            <CardHeader>
+                                <b>Topic</b>
+                            </CardHeader>
+                            <InputText @bind-Value="@this.topic" />
+                        </Card>
                     </div>
                 </div>
-            </Card>
-        </div>
-        <div class="row" style="text-align:center">
-            <div class="col">
-                <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="Apply">Apply</button>
-            </div>
-        </div>
+                <div class="row">
+                    <div class="col">
+                        <Card>
+                            <CardHeader>
+                                <b>Payload</b>
+                            </CardHeader>
 
-        <div class="row">
-            <div class="col-12">
-                <hr />
+                            <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.payload" rows="22" />
+                        </Card>
+                    </div>
+                </div>
             </div>
+        </Card>
+    </div>
+    <div class="row" style="text-align:center">
+        <div class="col">
+            <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="Apply">Apply</button>
+            <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="OnShowModalClick">Create Json</button>
         </div>
+    </div>
 
-        <div class="row">
-            <div class="col">
-                <Tabs @ref="tabs" EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
-                    <Tab Title="Errors" Id="ErrorsTab">
-                        <Content>
-                            <InputTextArea class="form-control w-100" title="Errors" @bind-Value="@this.errorText" rows="15" />
-                        </Content>
-                    </Tab>
-                    <Tab Title="Metrics" IsActive="true">
-                        <Content>
-                            <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultText" rows="15" />
-                        </Content>
-                    </Tab>
-                    <Tab Title="Logs">
-                        <Content>
-                            <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultLogText" rows="10" />
-                        </Content>
-                    </Tab>
-                </Tabs>
-            </div>
+    <div class="row">
+        <div class="col-12">
+            <hr />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <Tabs @ref="tabs" EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
+                <Tab Title="Errors" Id="ErrorsTab">
+                    <Content>
+                        <InputTextArea class="form-control w-100" title="Errors" @bind-Value="@this.errorText" rows="15" />
+                    </Content>
+                </Tab>
+                <Tab Title="Metrics" IsActive="true">
+                    <Content>
+                        <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultMetricsText" rows="15" />
+                    </Content>
+                </Tab>
+                <Tab Title="Logs">
+                    <Content>
+                        <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultLogText" rows="10" />
+                    </Content>
+                </Tab>
+            </Tabs>
         </div>
     </div>
 </div>
+</div>
 
 @code {
-    Tabs tabs;
+    Tabs tabs = new();
+
+    Modal modal = new();
+
+
+    private async Task OnShowModalClick()
+    {
+        await modal.ShowAsync();
+    }
+
+    private async Task OnHideModalClick()
+    {
+        await modal.HideAsync();
+    }
 
     [Parameter]
     public string? ExampleId { get; set; }
 
+    private string testCaseId = string.Empty;
+
+    private string testCaseName = string.Empty;
+
+    private string testCaseDescription = string.Empty;
+
     private string payload = string.Empty;
 
-    private string processorPattern = string.Empty;
+    private string manifest = string.Empty;
 
-    private string resultText = string.Empty;
+    private string resultMetricsText = string.Empty;
 
     private string errorText = string.Empty;
 
@@ -99,34 +158,71 @@
 
     private string topic = "message-topic";
 
+    private ApplyPatternToPayloadResult? Result = null;
+
     private async Task Apply()
     {
         var httpClient = Factory.CreateClient("ServerAPI");
 
-        var request = new ApplyPatternToPayloadRequest(this.topic, this.payload, this.processorPattern);
+        var request = new ApplyPatternToPayloadData(this.topic, this.payload, this.manifest);
         var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/ApplyPatternToPayload", request);
 
         var result = await response.Content.ReadFromJsonAsync<ApplyPatternToPayloadResult>();
 
         if (result != null)
         {
-            this.resultText = result.Metrics;
-            this.resultLogText = result.Logs;
-            this.errorText = result.Errors;
+            this.resultMetricsText = result.GetMetricsAsString();
+            this.resultLogText = result.GetLogsAsString();
+            this.errorText = result.GetErrorsAsString();
 
-            if (!string.IsNullOrWhiteSpace(this.errorText))
+            if (result.HasErrors)
             {
                 await this.tabs.ShowTabByIndexAsync(0);
             }
-            else if (!string.IsNullOrWhiteSpace(this.resultText))
+            else if (result.HasMetrics)
             {
                 await this.tabs.ShowTabByIndexAsync(1);
             }
-            else if (!string.IsNullOrWhiteSpace(this.resultLogText))
+            else if (result.HasLogs)
             {
                 await this.tabs.ShowTabByIndexAsync(2);
             }
         }
+
+        this.Result = result;
+    }
+
+    private async Task CreateJson()
+    {
+        if (this.Result != null)
+        {
+            var testcase = new TestCase() 
+            { 
+                Setup = new ExampleData(this.testCaseId, this.testCaseName, this.testCaseDescription, this.topic, this.payload, this.manifest),
+                ExpectedResult = new ExpectedTestResult(this.Result.Metrics, this.Result.Logs)
+            };
+            
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+
+            var jsonString = JsonSerializer.Serialize(testcase, options);
+
+            await JS.InvokeVoidAsync("copyToClipboard", jsonString);
+
+            await modal.HideAsync();
+        }
+
+        // var httpClient = Factory.CreateClient("ServerAPI");
+
+        // var request = new ApplyPatternToPayloadData(this.topic, this.payload, this.manifest);
+        // var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/CreateJson", request);
+
+        // var json = await response.Content.ReadAsStringAsync();
+        // await JS.InvokeVoidAsync("copyToClipboard", json);
+
+        // await modal.HideAsync();
     }
 
     protected override Task OnInitializedAsync()
@@ -137,7 +233,7 @@
 
             this.topic = example.Topic;
             this.payload = example.Payload;
-            this.processorPattern = example.Manifest;
+            this.manifest = example.Manifest;
         }
 
         return base.OnInitializedAsync();

@@ -2,7 +2,7 @@
 
 namespace mqtt2otel.ManifestExplorer.DTOs
 {
-    public class ApplyPatternToPayloadRequest(string topic, string payload, string pattern)
+    public class ApplyPatternToPayloadData(string topic, string payload, string pattern)
     {
         public string Topic { get; set; } = topic;
 
