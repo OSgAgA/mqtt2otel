@@ -7,28 +7,67 @@ using System.Text;
 
 namespace mqtt2otel.Metadata
 {
+    /// <summary>
+    /// Represents a test outcome for log data.
+    /// </summary>
     public class LogTestData
     {
+        /// <summary>
+        /// Gets or sets the expected timestamp.
+        /// </summary>
         public DateTime Timestamp { get; set; } = DateTime.Now;
 
+        /// <summary>
+        /// Gets or sets the expected log level.
+        /// </summary>
         public LogLevel LogLevel { get; set; } = LogLevel.Information;
 
+        /// <summary>
+        /// Gets or sets the expected body.
+        /// </summary>
         public string? Body { get; set; } = null;
 
+        /// <summary>
+        /// Gets or sets the expected category name.
+        /// </summary>
         public string? CategoryName { get; set; } = null;
 
+        /// <summary>
+        /// Gets or sets the expected attributes.
+        /// </summary>
         public Dictionary<string, object?> Attributes { get; set; } = new();
 
+        /// <summary>
+        /// Gets or sets the expected span id.
+        /// </summary>
         public string SpanId { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets th expected trace id.
+        /// </summary>
         public string TraceId { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the expected TraceState.
+        /// </summary>
         public string? TraceState { get; set; } = null;
 
+        /// <summary>
+        /// Gets or sets the expected trace flags.
+        /// </summary>
         public ActivityTraceFlags TraceFlags { get; set; } = new();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LogTestData"/> class.
+        /// 
+        /// This constructor is for serialization only and should not be used directly.
+        /// </summary>
         public LogTestData() { }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LogTestData"/> class.
+        /// </summary>
+        /// <param name="entry">The log entry, that defines the expectation.</param>
         public LogTestData(LogRecord entry)
         {
             this.Timestamp = entry.Timestamp;
@@ -47,6 +86,7 @@ namespace mqtt2otel.Metadata
             this.TraceFlags = entry.TraceFlags;
         }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             var sb = new StringBuilder();

@@ -1,0 +1,32 @@
+{
+  "Setup": {
+    "Id": "example-1",
+    "Name": "Dissect log parser",
+    "Description": "An example for using the dissect log parser to parse a simple log message.",
+    "Topic": "message-log-topic",
+    "Payload": "2026-01-31T15:42Z [INFO] [ServerA] This is a test.",
+    "Manifest": "Version: 1.0\r\n\r\nMqttConnections:\r\n  - Name: \u0022My broker\u0022\r\n\r\nOtelConnections:\r\n  - Name: \u0022My Otel server\u0022\r\n    ServiceName: \u0022my-service\u0022\r\n    ServiceNamespace: \u0022my-service-namespace\u0022\r\n\r\nProcessors:\r\n  - Name: \u0022Server logs\u0022\r\n    Description: \u0022Collect all log messages from the server.\u0022\r\n    Mqtt:\r\n      Subscriptions:\r\n        - Name: \u0022Server logs\u0022\r\n          Topic: \u0022message-log-topic\u0022\r\n    Otel:\r\n      Attributes:\r\n        - Key: Location\r\n          Value: MainServerRoom\r\n      Logs:\r\n        - Name: \u0022Logging\u0022\r\n          PayloadType: Json\r\n          Transform: \u0022DISSECT(\u0027%{otel_timestamp} [%{otel_loglevel}] [%{server_name}] %{otel_message}\u0027)\u0022"
+  },
+  "ExpectedResult": {
+    "Metrics": [],
+    "Logs": [
+      {
+        "Timestamp": "2026-01-31T15:42:00Z",
+        "LogLevel": 2,
+        "Body": "This is a test.",
+        "CategoryName": "mqtt2otel",
+        "Attributes": {
+          "Location": "MainServerRoom",
+          "otel_timestamp": "2026-01-31T15:42Z",
+          "otel_loglevel": "INFO",
+          "server_name": "ServerA",
+          "original_value": "2026-01-31T15:42Z [INFO] [ServerA] This is a test."
+        },
+        "SpanId": "0cedde14f9d67dd4",
+        "TraceId": "ce81bde8e6cf14e692f94d180a73df2d",
+        "TraceState": null,
+        "TraceFlags": 0
+      }
+    ]
+  }
+}

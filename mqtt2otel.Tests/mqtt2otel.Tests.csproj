@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\mqtt2otel.Metadata\mqtt2otel.Metadata.csproj" />
     <ProjectReference Include="..\mqtt2otel\mqtt2otel.csproj" />
   </ItemGroup>
 

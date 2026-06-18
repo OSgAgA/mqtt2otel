@@ -6,21 +6,25 @@
 
 <h1>Examples</h1>
 
-@foreach (var example in this.examples)
-{
-    <CardGroup>
-        <Card Class="mb-1" Style="width:18rem;">
-            <CardBody>
+<div class="d-flex flex-wrap">
+    @foreach (var example in this.examples)
+    {
+        <Card Class="mb-4" Style="width:18rem; margin: 10px">
+            <CardBody Class="d-flex flex-column">
                 <CardTitle>@example.Name</CardTitle>
                 <CardText>@example.Description</CardText>
-                <Button Color="ButtonColor.Primary" To="@("/" + @example.Id)" Type="ButtonType.Link">Go</Button>
+                <div class="mt-auto text-center">
+                    <Button Color="ButtonColor.Primary" To="@("/" + @example.Id)" Type="ButtonType.Link">Go</Button>
+                </div>
             </CardBody>
         </Card>
-    </CardGroup>
-}
+    }
+</div>
 
-@code 
+@code
 {
-
+    /// <summary>
+    /// All available examples.
+    /// </summary>
     private List<ExampleData> examples = ExampleData.GetAll();
 }

@@ -1,0 +1,9 @@
+{{ $id := .Get "id" }}
+{{ $field := .Get "field" }}
+
+{{ range hugo.Data.examples }}
+  {{ if eq .Setup.Id $id }}
+    {{ index .Setup $field }}
+    {{ break }}
+  {{ end }}
+{{ end }}

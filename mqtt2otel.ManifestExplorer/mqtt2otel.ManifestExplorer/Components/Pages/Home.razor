@@ -41,7 +41,7 @@
             </div>
     </BodyTemplate>
     <FooterTemplate>
-        <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
+        <Button Color="ButtonColor.Secondary" @onclick="HideModal">Close</Button>
         <Button Color="ButtonColor.Primary" @onclick="CreateJson">Copy Json to clipboard</Button>
     </FooterTemplate>
 </Modal>
@@ -87,7 +87,7 @@
     <div class="row" style="text-align:center">
         <div class="col">
             <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="Apply">Apply</button>
-            <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="OnShowModalClick">Create Json</button>
+            <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="ShowModal">Create Json</button>
         </div>
     </div>
 
@@ -100,17 +100,17 @@
     <div class="row">
         <div class="col">
             <Tabs @ref="tabs" EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
-                <Tab Title="Errors" Id="ErrorsTab">
+                    <Tab @bind-Title="@this.errorTitle" Id="ErrorsTab">
                     <Content>
                         <InputTextArea class="form-control w-100" title="Errors" @bind-Value="@this.errorText" rows="15" />
                     </Content>
                 </Tab>
-                <Tab Title="Metrics" IsActive="true">
+                    <Tab @bind-Title="@this.metricsTitle" IsActive="true">
                     <Content>
                         <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultMetricsText" rows="15" />
                     </Content>
                 </Tab>
-                <Tab Title="Logs">
+                    <Tab @bind-Title="@this.logsTitle">
                     <Content>
                         <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultLogText" rows="10" />
                     </Content>
@@ -122,44 +122,91 @@
 </div>
 
 @code {
+    /// <summary>
+    /// The tabs controll that contains the different results.
+    /// </summary>
     Tabs tabs = new();
 
+    /// <summary>
+    /// The modal dialog used for creating json data.
+    /// </summary>
     Modal modal = new();
 
-
-    private async Task OnShowModalClick()
-    {
-        await modal.ShowAsync();
-    }
-
-    private async Task OnHideModalClick()
-    {
-        await modal.HideAsync();
-    }
-
+    /// <summary>
+    /// The id of the example that should be used to prefill the page. May be null if no example is provided.
+    /// </summary>
     [Parameter]
     public string? ExampleId { get; set; }
 
+    ///# <summary>
+    /// The tilte of the error tab.
+    /// </summary>
+    private string errorTitle = "Errors";
+
+    /// <summary>
+    /// The title of the metric tab.
+    /// </summary>
+    private string metricsTitle = "Metrics";
+
+    /// <summary>
+    /// The title of the log tab.
+    /// </summary>
+    private string logsTitle = "Logs";
+
+    /// <summary>
+    /// The test case id used by the modal dialog.
+    /// </summary>
     private string testCaseId = string.Empty;
 
+    /// <summary>
+    /// The test case name used by the modal dialog.
+    /// </summary>
     private string testCaseName = string.Empty;
 
+    /// <summary>
+    /// The test case description used by the modal dialog.
+    /// </summary>
     private string testCaseDescription = string.Empty;
 
+    /// <summary>
+    /// The simulated mqtt payload.
+    /// </summary>
     private string payload = string.Empty;
 
+    /// <summary>
+    /// The mqtt2otel manifest data.
+    /// </summary>
     private string manifest = string.Empty;
 
+    /// <summary>
+    /// The text representation of the metric result.
+    /// </summary>
     private string resultMetricsText = string.Empty;
 
+    /// <summary>
+    /// The text representation of the error result.
+    /// </summary>
     private string errorText = string.Empty;
 
+    /// <summary>
+    /// The text representation of the log result.
+    /// </summary>
     private string resultLogText = string.Empty;
 
+    /// <summary>
+    /// The mqtt topic.
+    /// </summary>
     private string topic = "message-topic";
 
+    /// <summary>
+    /// The result received via the ApplyPatternToPayload request. Maybe null if request is not yet called,
+    /// or if not successfull.
+    /// </summary>
     private ApplyPatternToPayloadResult? Result = null;
 
+    /// <summary>
+    /// Apply the provided data and set the result tabs.
+    /// </summary>
     private async Task Apply()
     {
         var httpClient = Factory.CreateClient("ServerAPI");
@@ -174,6 +221,10 @@
             this.resultMetricsText = result.GetMetricsAsString();
             this.resultLogText = result.GetLogsAsString();
             this.errorText = result.GetErrorsAsString();
+
+            this.errorTitle = $"Errors ({result.Errors.Count})";
+            this.metricsTitle = $"Metrics ({result.Metrics.Count})";
+            this.logsTitle = $"Logs ({result.Logs.Count})";
 
             if (result.HasErrors)
             {
@@ -190,8 +241,12 @@
         }
 
         this.Result = result;
+        this.StateHasChanged();
     }
 
+    /// <summary>
+    /// Copy Json into the clipboard.
+    /// </summary>
     private async Task CreateJson()
     {
         if (this.Result != null)
@@ -201,10 +256,10 @@
                 Setup = new ExampleData(this.testCaseId, this.testCaseName, this.testCaseDescription, this.topic, this.payload, this.manifest),
                 ExpectedResult = new ExpectedTestResult(this.Result.Metrics, this.Result.Logs)
             };
-            
+
             var options = new JsonSerializerOptions
             {
-                WriteIndented = true
+                WriteIndented = true,
             };
 
             var jsonString = JsonSerializer.Serialize(testcase, options);
@@ -213,18 +268,12 @@
 
             await modal.HideAsync();
         }
-
-        // var httpClient = Factory.CreateClient("ServerAPI");
-
-        // var request = new ApplyPatternToPayloadData(this.topic, this.payload, this.manifest);
-        // var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/CreateJson", request);
-
-        // var json = await response.Content.ReadAsStringAsync();
-        // await JS.InvokeVoidAsync("copyToClipboard", json);
-
-        // await modal.HideAsync();
     }
 
+    /// <summary>
+    /// Called when the side is initialized. Will load example data if an example id is provided.
+    /// </summary>
+    /// <returns></returns>
     protected override Task OnInitializedAsync()
     {
         if (this.ExampleId != null)
@@ -237,5 +286,22 @@
         }
 
         return base.OnInitializedAsync();
+    }
+
+    /// <summary>
+    /// Shows the modal dialog.
+    /// </summary>
+    private async Task ShowModal()
+    {
+        await modal.ShowAsync();
+    }
+
+    /// <summary>
+    /// Hides the modal dialog.
+    /// </summary>
+    /// <returns></returns>
+    private async Task HideModal()
+    {
+        await modal.HideAsync();
     }
 }

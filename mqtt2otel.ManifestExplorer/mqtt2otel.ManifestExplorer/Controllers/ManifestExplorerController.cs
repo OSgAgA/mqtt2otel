@@ -16,10 +16,18 @@ using YamlDotNet.Core;
 
 namespace mqtt2otel.ManifestExplorer.Controllers
 {
+    /// <summary>
+    /// The default controller for the manifest explorer.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class ManifestExplorerController : ControllerBase
     {
+        /// <summary>
+        /// Applies the provided pattern to the provided payload.
+        /// </summary>
+        /// <param name="request">The request describing the setup.</param>
+        /// <returns>The created result.</returns>
         [HttpPost(nameof(ApplyPatternToPayload))]
         public async Task<ApplyPatternToPayloadResult> ApplyPatternToPayload([FromBody] ApplyPatternToPayloadData request)
         {
@@ -51,6 +59,16 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             }
 
+            if (manifest.MqttConnections.Count == 0)
+            {
+                manifest.MqttConnections.Add(new MqttBroker());
+            }
+
+            if (manifest.OtelConnections.Count == 0)
+            {
+                manifest.OtelConnections.Add(new OtelServerConnection());
+            }
+
             manifest.Initialize();
 
             var validationResult = manifest.Validate();
@@ -73,19 +91,6 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             otel.FlushMeters();
             return new ApplyPatternToPayloadResult(exportBuilder.Metrics.ToList(), exportBuilder.Logs.ToList());
-        }
-
-        [HttpPost(nameof(CreateJson))]
-        public async Task<string> CreateJson([FromBody] ApplyPatternToPayloadData request)
-        {
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true
-            };
-
-            string result = JsonSerializer.Serialize(this.ApplyPatternToPayload(request), options);
-
-            return result;
         }
     }
 }

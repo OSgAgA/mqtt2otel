@@ -6,24 +6,57 @@ using System.Text;
 
 namespace mqtt2otel.Metadata
 {
+    /// <summary>
+    /// Represents the expectation for a metric test result.
+    /// </summary>
     public class MetricTestData
     {
+        /// <summary>
+        /// Gets or sets the expected name of the metric.
+        /// </summary>
         public string Name { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the expected otel server that delivered the metric.
+        /// </summary>
         public string OtelServer { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the expected meter version.
+        /// </summary>
         public string MeterVersion { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the expected description.
+        /// </summary>
         public string Description { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the expected unit.
+        /// </summary>
         public string Unit { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the expected metric type.
+        /// </summary>
         public MetricType MetricType { get; set; } = new MetricType();
 
+        /// <summary>
+        /// Gets or sets the expected metric points.
+        /// </summary>
         public List<MetricPointTestData> MetricPoints { get; set; } = new();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetricTestData"/> class.
+        /// 
+        /// This constructor is for serialization only and should not be called directly.
+        /// </summary>
         public MetricTestData() { }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetricTestData"/> class.
+        /// </summary>
+        /// <param name="metric">The metric representing the expected result.</param>
         public MetricTestData(Metric metric)
         {
             this.Name = metric.Name;
@@ -80,6 +113,7 @@ namespace mqtt2otel.Metadata
             }
         }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             var sb = new StringBuilder();
