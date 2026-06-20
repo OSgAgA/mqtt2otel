@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Moq;
 using mqtt2otel.Helper;
 using mqtt2otel.InternalMetrics;
@@ -15,11 +16,19 @@ namespace mqtt2otel.Tests._30_SystemTests
     [Collection("MQTT Tests")]
     public class JsonTestCases
     {
+        private readonly ITestOutputHelper _output;
+
+        public JsonTestCases(ITestOutputHelper output)
+        {
+            _output = output;
+        }
 
         [Theory]
         [MemberData(nameof(TestCase.LoadAllAsMemberdata), MemberType = typeof(TestCase))]
         public async Task ShouldPassAllJsonTestCases(TestCase testCase)
         {
+            this._output.WriteLine($"{DateTime.UtcNow}: Executing test case with id: '{testCase.Setup.Id}'");
+
             // Arrange
 
             using var mqttHelper = new MqttTestHelper();
@@ -54,6 +63,8 @@ namespace mqtt2otel.Tests._30_SystemTests
             var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter());
             otelCoordinator.Connect(manifest);
 
+            this._output.WriteLine($"{DateTime.UtcNow}: Arrange completed.");
+
             // Act
 
             await mqttHelper.PublishPayload(testCase.Setup.Topic, testCase.Setup.Payload);
@@ -65,6 +76,8 @@ namespace mqtt2otel.Tests._30_SystemTests
             Assert.True(completedTask == tcs.Task, "Callback was not triggered");
 
             otelCoordinator.FlushMeters();
+
+            this._output.WriteLine($"{DateTime.UtcNow}: Act completed.");
 
             // Assert
             // Metrics
@@ -100,6 +113,8 @@ namespace mqtt2otel.Tests._30_SystemTests
                 Assert.Equal(expectedMetric.MetricPoints.Count+1, count);
             }
 
+            this._output.WriteLine($"{DateTime.UtcNow}: Assert metrics completed.");
+
             // Logs
 
             Assert.Equal(testCase.ExpectedResult.Logs.Count, exportBuilder.Logs.Count);
@@ -113,6 +128,10 @@ namespace mqtt2otel.Tests._30_SystemTests
                 Assert.Equal(expectedLogEntry.LogLevel, logEntry.LogLevel);
                 Assert.Equal(expectedLogEntry.Timestamp, logEntry.Timestamp);
             }
+
+            _output.WriteLine($"{DateTime.UtcNow}: Assert logs completed.");
+
+            this._output.WriteLine($"{DateTime.UtcNow}: Test case with id '{testCase.Setup.Id}' completed.");
         }
     }
 }
