@@ -18,7 +18,7 @@
                     <label>Id</label>
                 </div>
                 <div class="col-8">
-                    <InputText class="form-control w-100" @bind-Value="@this.testCaseId" />
+                    <InputText class="form-control w-100" @bind-Value="@this.testCaseId"/>
                 </div>
             </div>
 
@@ -27,7 +27,7 @@
                     <label>Name</label>
                 </div>
                 <div class="col-8">
-                    <InputText class="form-control w-100" @bind-Value="@this.testCaseName" />
+                    <InputText class="form-control w-100" @bind-Value="@this.testCaseName"/>
                 </div>
             </div>
 
@@ -36,89 +36,88 @@
                     <label>Description</label>
                 </div>
                 <div class="col-8">
-                    <InputTextArea class="form-control w-100" @bind-Value="@this.testCaseDescription" rows="5" />
+                    <InputTextArea class="form-control w-100" @bind-Value="@this.testCaseDescription" rows="5"/>
                 </div>
             </div>
-    </BodyTemplate>
-    <FooterTemplate>
-        <Button Color="ButtonColor.Secondary" @onclick="HideModal">Close</Button>
-        <Button Color="ButtonColor.Primary" @onclick="CreateJson">Copy Json to clipboard</Button>
-    </FooterTemplate>
-</Modal>
-
-<div class="row">
-    <div class="col">
-        <Card>
-            <CardHeader>
-                <b>Manifest</b>
-            </CardHeader>
-            <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.manifest" rows="26" />
-        </Card>
-    </div>
-    @* <div class="vr"></div> *@
-    <div class="col">
-        <Card>
-
-            <div class="flex-container">
-                <div class="row">
-                    <div class="col" style="margin-bottom:20px;">
-                        <Card>
-                            <CardHeader>
-                                <b>Topic</b>
-                            </CardHeader>
-                            <InputText @bind-Value="@this.topic" />
-                        </Card>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <Card>
-                            <CardHeader>
-                                <b>Payload</b>
-                            </CardHeader>
-
-                            <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.payload" rows="22" />
-                        </Card>
-                    </div>
-                </div>
-            </div>
-        </Card>
-    </div>
-    <div class="row" style="text-align:center">
-        <div class="col">
-            <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="Apply">Apply</button>
-            <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="ShowModal">Create Json</button>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-12">
-            <hr />
-        </div>
-    </div>
+        </BodyTemplate>
+        <FooterTemplate>
+            <Button Color="ButtonColor.Secondary" @onclick="HideModal">Close</Button>
+            <Button Color="ButtonColor.Primary" @onclick="CreateJson">Copy Json to clipboard</Button>
+        </FooterTemplate>
+    </Modal>
 
     <div class="row">
         <div class="col">
-            <Tabs @ref="tabs" EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
+            <Card>
+                <CardHeader>
+                    <b>Manifest</b>
+                </CardHeader>
+                <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.manifest" rows="26" onchange="@this.OnInputChanged()" />
+            </Card>
+        </div>
+        @* <div class="vr"></div> *@
+        <div class="col">
+            <Card>
+
+                <div class="flex-container">
+                    <div class="row">
+                        <div class="col" style="margin-bottom:20px;">
+                            <Card>
+                                <CardHeader>
+                                    <b>Topic</b>
+                                </CardHeader>
+                                <InputText @bind-Value="@this.topic" onchange="@this.OnInputChanged()" />
+                            </Card>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <Card>
+                                <CardHeader>
+                                    <b>Payload</b>
+                                </CardHeader>
+                                <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.payload" rows="22" onchange="@this.OnInputChanged()" />
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            </Card>
+        </div>
+        <div class="row" style="text-align:center">
+            <div class="col">
+                <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="Apply">Apply</button>
+                <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="ShowModal" disabled="@this.IsDirty">Create Json</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <hr />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <Tabs @ref="tabs" EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
                     <Tab @bind-Title="@this.errorTitle" Id="ErrorsTab">
-                    <Content>
-                        <InputTextArea class="form-control w-100" title="Errors" @bind-Value="@this.errorText" rows="15" />
-                    </Content>
-                </Tab>
+                        <Content>
+                            <InputTextArea class="form-control w-100" title="Errors" @bind-Value="@this.errorText" rows="15" />
+                        </Content>
+                    </Tab>
                     <Tab @bind-Title="@this.metricsTitle" IsActive="true">
-                    <Content>
-                        <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultMetricsText" rows="15" />
-                    </Content>
-                </Tab>
+                        <Content>
+                            <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultMetricsText" rows="15" />
+                        </Content>
+                    </Tab>
                     <Tab @bind-Title="@this.logsTitle">
-                    <Content>
-                        <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultLogText" rows="10" />
-                    </Content>
-                </Tab>
-            </Tabs>
+                        <Content>
+                            <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultLogText" rows="10" />
+                        </Content>
+                    </Tab>
+                </Tabs>
+            </div>
         </div>
     </div>
-</div>
 </div>
 
 @code {
@@ -205,6 +204,11 @@
     private ApplyPatternToPayloadResult? Result = null;
 
     /// <summary>
+    /// A value indicating whether the current results shown, reflects the data entered by the user.
+    /// </summary>
+    private bool IsDirty = true;
+
+    /// <summary>
     /// Apply the provided data and set the result tabs.
     /// </summary>
     private async Task Apply()
@@ -241,7 +245,8 @@
         }
 
         this.Result = result;
-        this.StateHasChanged();
+        this.IsDirty = false;
+        //this.StateHasChanged();
     }
 
     /// <summary>
@@ -251,8 +256,8 @@
     {
         if (this.Result != null)
         {
-            var testcase = new TestCase() 
-            { 
+            var testcase = new TestCase()
+            {
                 Setup = new ExampleData(this.testCaseId, this.testCaseName, this.testCaseDescription, this.topic, this.payload, this.manifest),
                 ExpectedResult = new ExpectedTestResult(this.Result.Metrics, this.Result.Logs)
             };
@@ -303,5 +308,13 @@
     private async Task HideModal()
     {
         await modal.HideAsync();
+    }
+
+    /// <summary>
+    /// Called when input changed. Sets the <see cref="IsDirty"/>e flag.
+    /// </summary>
+    private async Task OnInputChanged()
+    {
+        this.IsDirty = true;
     }
 }
