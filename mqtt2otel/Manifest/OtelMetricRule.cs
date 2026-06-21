@@ -60,7 +60,7 @@ namespace mqtt2otel.Manifest
             this.Attributes.ForEach(attribute => attribute.Validate(context + "/Attributes", result));
             if (string.IsNullOrWhiteSpace(this.Value)) result.AddError($"{context}/({this.Name}): Value not set. Please set Value property to a non empty value.");
 
-            var expression = new AsyncExpression(this.Value);
+            var expression = new NCalc.Expression(this.Value);
             if (expression.HasErrors())
             {
                 if (expression.Error == null) return;

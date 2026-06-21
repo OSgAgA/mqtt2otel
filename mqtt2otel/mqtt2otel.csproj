@@ -8,15 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dissect.Extended.Net" Version="1.0.0" />
+    <PackageReference Include="Dissect.Extended.Net" Version="1.0.1" />
     <PackageReference Include="grok.net" Version="2.0.0" />
     <PackageReference Include="MQTTnet" Version="5.1.0.1559" />
     <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="4.3.7.1207" />
-    <PackageReference Include="NCalcAsync" Version="5.13.0" />
+    <PackageReference Include="NCalcAsync" Version="6.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="OpenTelemetry" Version="1.15.3" />
-    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.15.3" />
-    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
+    <PackageReference Include="OpenTelemetry" Version="1.16.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.16.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.InMemory" Version="1.16.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.16.0" />
     <PackageReference Include="YamlDotNet" Version="18.0.0" />
     <PackageReference Include="ZLogger" Version="2.5.10" />
   </ItemGroup>

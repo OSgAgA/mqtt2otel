@@ -58,7 +58,7 @@ namespace mqtt2otel
         {
             try
             {
-                var expression = new NCalc.AsyncExpression(expressionString);
+                var expression = new NCalc.Expression(expressionString);
 
                 foreach (var strategyName in this.NameStrategyMapping.Keys)
                 {
@@ -86,9 +86,9 @@ namespace mqtt2otel
         /// <param name="strategyName">The name of the strategy that should be used for parsing the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <exception cref="InvalidArgumentCountException"></exception>
-        private void ApplyStrategy<TResult>(string payload, AsyncExpression expression, string strategyName, ParsingContext context)
+        private void ApplyStrategy<TResult>(string payload, NCalc.Expression expression, string strategyName, ParsingContext context)
         {
-            expression.Functions[strategyName] = async (args) =>
+            expression.Functions[strategyName] = (args) =>
             {
                 if (this.NameStrategyMapping.ContainsKey(strategyName))
                 {
@@ -97,13 +97,13 @@ namespace mqtt2otel
 
                     if (args.Count() == 2)
                     {
-                        returnType = await CustomExpressionFunctions.GetArgument<string>(strategyName, 0, args);
-                        pattern = await CustomExpressionFunctions.GetArgument<string>(strategyName, 1, args);
+                        returnType = CustomExpressionFunctions.GetArgument<string>(strategyName, 0, args);
+                        pattern = CustomExpressionFunctions.GetArgument<string>(strategyName, 1, args);
 
                     }
                     else if (args.Count() == 1)
                     {
-                        pattern = await CustomExpressionFunctions.GetArgument<string>(strategyName, 0, args);
+                        pattern = CustomExpressionFunctions.GetArgument<string>(strategyName, 0, args);
                     }
                     else if (args.Count() == 0)
                     {

@@ -55,6 +55,9 @@ namespace mqtt2otel.Manifest
             var deserializer = new DeserializerBuilder().WithObjectFactory(Manifest.ObjectFactory).Build();
 
             var result = deserializer.Deserialize<Manifest>(yaml);
+
+            if (result == null) result = new Manifest();
+
             result.internalLogger = internalLogger;
 
             return result;

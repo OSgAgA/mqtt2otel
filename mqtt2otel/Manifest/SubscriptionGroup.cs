@@ -46,7 +46,7 @@ namespace mqtt2otel.Manifest
 
             if (!string.IsNullOrWhiteSpace(this.Transform))
             {
-                var expression = new AsyncExpression(this.Transform);
+                var expression = new Expression(this.Transform);
                 if (expression.HasErrors())
                 {
                     if (expression.Error == null) return;

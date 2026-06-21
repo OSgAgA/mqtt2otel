@@ -243,6 +243,7 @@ namespace mqtt2otel
             {
                 this.loggerFactoryMap[otelConnection.Name] = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
                 {
+                    builder.SetMinimumLevel(otelConnection.MinimumLogLevel);
                     builder.AddOpenTelemetry(options =>
                     {
                         options.SetResourceBuilder(
