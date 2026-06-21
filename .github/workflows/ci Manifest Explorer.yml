@@ -1,0 +1,51 @@
+name: IntegrationManifestExplorer
+
+# Only executed on pull requests for the main branch.
+on:
+  pull_request:
+    branches: [ main ]
+
+# Workflow can 
+#   * read repositroy content
+#   * create and update GitHub Checks.
+#   * comment on PRs, update PR statuses, or modify PR metadata.
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+# Prevents multiple runs of the same workflow from overlapping.
+# If a new run starts for the same branch, GitHub automatically cancels the previous run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Build the application and run tests.
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code.
+      - uses: actions/checkout@v4
+
+      # Setup dotnet sdk.
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0'
+
+      # Cache nuget references to speed up build.
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      # Restore nuget.
+      - name: Restore
+        run: dotnet restore
+
+      # Build the application.
+      - name: Build
+        run: dotnet build -c Release --no-restore -warnaserror
