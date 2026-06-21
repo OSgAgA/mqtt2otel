@@ -17,7 +17,7 @@ permissions:
 # Prevents multiple runs of the same workflow from overlapping.
 # If a new run starts for the same branch, GitHub automatically cancels the previous run.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-explorer-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
