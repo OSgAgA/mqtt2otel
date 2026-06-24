@@ -58,14 +58,15 @@ namespace mqtt2otel
         {
             try
             {
-                var expression = new NCalc.Expression(expressionString);
+                var expressionContext = new ExpressionContext();
+                var expression = new NCalc.Expression(expressionString, expressionContext);
 
                 foreach (var strategyName in this.NameStrategyMapping.Keys)
                 {
-                    this.ApplyStrategy<TResult>(payload, expression, strategyName, context);
+                    this.ApplyStrategy<TResult>(payload, expressionContext, strategyName, context);
                 }
 
-                CustomExpressionFunctions.AddTo(expression);
+                CustomExpressionFunctions.AddTo(expressionContext);
 
                 var result = await expression.EvaluateAsync() ?? throw new Exception();
 
@@ -82,13 +83,13 @@ namespace mqtt2otel
         /// </summary>
         /// <typeparam name="TResult">The expected result type.</typeparam>
         /// <param name="payload">The payload that should be parsed.</param>
-        /// <param name="expression">The NCalc expression to be applied.</param>
+        /// <param name="expressionContext">The NCalc expression context to be applied.</param>
         /// <param name="strategyName">The name of the strategy that should be used for parsing the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <exception cref="InvalidArgumentCountException"></exception>
-        private void ApplyStrategy<TResult>(string payload, NCalc.Expression expression, string strategyName, ParsingContext context)
+        private void ApplyStrategy<TResult>(string payload, NCalc.ExpressionContext expressionContext, string strategyName, ParsingContext context)
         {
-            expression.Functions[strategyName] = (args) =>
+            expressionContext.Functions[strategyName] = (args) =>
             {
                 if (this.NameStrategyMapping.ContainsKey(strategyName))
                 {
@@ -97,13 +98,13 @@ namespace mqtt2otel
 
                     if (args.Count() == 2)
                     {
-                        returnType = CustomExpressionFunctions.GetArgument<string>(strategyName, 0, args);
-                        pattern = CustomExpressionFunctions.GetArgument<string>(strategyName, 1, args);
+                        returnType = CustomExpressionFunctions.GetArgument<string>(strategyName, expressionContext, 0, args);
+                        pattern = CustomExpressionFunctions.GetArgument<string>(strategyName, expressionContext, 1, args);
 
                     }
                     else if (args.Count() == 1)
                     {
-                        pattern = CustomExpressionFunctions.GetArgument<string>(strategyName, 0, args);
+                        pattern = CustomExpressionFunctions.GetArgument<string>(strategyName, expressionContext, 0, args);
                     }
                     else if (args.Count() == 0)
                     {
