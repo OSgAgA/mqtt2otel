@@ -15,7 +15,7 @@ on:
     branches: [ main ]
     paths:
       - 'mqtt2otel.ManifestExplorer/**'
-      - 'github/workflows/**'
+      - '.github/workflows/**'
 
 jobs:
   # Publishes the application
