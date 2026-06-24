@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
+using mqtt2otel.Helper;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Server.Helper;
 using mqtt2otel.Tests.Helper;

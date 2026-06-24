@@ -53,5 +53,20 @@ namespace mqtt2otel.Manifest
                 this.errors.ForEach(error => internalLogger.LogError(error));
             }
         }
+
+        public override string ToString()
+        {
+            if (this.Success)
+            {
+                return "Validation of Manifest.yaml successful.";
+            }
+            else
+            {
+                var message = string.Empty;
+                this.errors.ForEach(error => message += error + "\n");
+
+                return message;
+            }
+        }
     }
 }

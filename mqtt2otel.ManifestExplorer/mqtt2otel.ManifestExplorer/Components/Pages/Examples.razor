@@ -1,0 +1,30 @@
+﻿@page "/examples"
+@attribute [StreamRendering]
+@using mqtt2otel.ManifestExplorer.DTOs
+
+<PageTitle>Examples</PageTitle>
+
+<h1>Examples</h1>
+
+<div class="d-flex flex-wrap">
+    @foreach (var example in this.examples)
+    {
+        <Card Class="mb-4" Style="width:18rem; margin: 10px">
+            <CardBody Class="d-flex flex-column">
+                <CardTitle>@example.Name</CardTitle>
+                <CardText>@example.Description</CardText>
+                <div class="mt-auto text-center">
+                    <Button Color="ButtonColor.Primary" To="@("/" + @example.Id)" Type="ButtonType.Link">Go</Button>
+                </div>
+            </CardBody>
+        </Card>
+    }
+</div>
+
+@code
+{
+    /// <summary>
+    /// All available examples.
+    /// </summary>
+    private List<ExampleData> examples = ExampleData.GetAll();
+}

@@ -1,4 +1,5 @@
-﻿using mqtt2otel.Helper;
+﻿using Microsoft.Extensions.Logging;
+using mqtt2otel.Helper;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using System;
@@ -48,6 +49,11 @@ namespace mqtt2otel.Manifest
         /// Gets or sets the export processor type used when connecting to the server.
         /// </summary>
         public ExportProcessorType ExportProcessorType { get; set; } = ExportProcessorType.Batch;
+
+        /// <summary>
+        /// Gets or sets the minimum log level that will be reported to the otel endpoint.
+        /// </summary>
+        public LogLevel MinimumLogLevel { get; set; } = LogLevel.Information;
 
         /// <summary>
         /// Validates the object.
