@@ -48,7 +48,7 @@ jobs:
 
       # Publish the application to the ./app folder.
       - name: Publish
-        run: dotnet publish ./mqtt2otel.ManifestExplorer/mqtt2otel.ManifestExplorer/mqtt2otel.mqtt2otel.ManifestExplorer.csproj -c Release --no-restore --output ./app
+        run: dotnet publish ./mqtt2otel.ManifestExplorer/mqtt2otel.ManifestExplorer/mqtt2otel.ManifestExplorer.csproj -c Release --no-restore --output ./app
 
       # Upload ./app folder as artifact.
       - name: Upload Build Artifact
