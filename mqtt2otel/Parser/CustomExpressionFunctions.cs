@@ -1,4 +1,5 @@
 ﻿using NCalc;
+using NCalc.Exceptions;
 using NCalc.Extensions;
 using NCalc.Handlers;
 using System;
@@ -17,19 +18,19 @@ namespace mqtt2otel.Parser
         /// <summary>
         /// Adds all custom functions to the given expression.
         /// </summary>
-        /// <param name="expression">The expression to which the functions should be added.,</param>
-        public static void AddTo(NCalc.Expression expression)
+        /// <param name="context">The expression context to which the functions should be added.,</param>
+        public static void AddTo(NCalc.ExpressionContext context)
         {
-            AddParseDateTimeFunction(expression, "ParseDateTime");
+            AddParseDateTimeFunction(context, "ParseDateTime");
 
-            AddDateTimeFunction(expression, "AddDays", (date, increment) => date.AddDays(increment));
-            AddDateTimeFunction(expression, "AddMonths", (date, increment) => date.AddMonths(increment));
-            AddDateTimeFunction(expression, "AddYears", (date, increment) => date.AddYears(increment));
-            AddDateTimeFunction(expression, "AddHours", (date, increment) => date.AddHours(increment));
-            AddDateTimeFunction(expression, "AddMinutes", (date, increment) => date.AddMinutes(increment));
-            AddDateTimeFunction(expression, "AddSeconds", (date, increment) => date.AddSeconds(increment));
+            AddDateTimeFunction(context, "AddDays", (date, increment) => date.AddDays(increment));
+            AddDateTimeFunction(context, "AddMonths", (date, increment) => date.AddMonths(increment));
+            AddDateTimeFunction(context, "AddYears", (date, increment) => date.AddYears(increment));
+            AddDateTimeFunction(context, "AddHours", (date, increment) => date.AddHours(increment));
+            AddDateTimeFunction(context, "AddMinutes", (date, increment) => date.AddMinutes(increment));
+            AddDateTimeFunction(context, "AddSeconds", (date, increment) => date.AddSeconds(increment));
 
-            AddConvertTimeZoneFunction(expression, "ConvertTimezone");
+            AddConvertTimeZoneFunction(context, "ConvertTimezone");
         }
 
         /// <summary>
@@ -41,13 +42,17 @@ namespace mqtt2otel.Parser
         /// <param name="args">The function arguments.</param>
         /// <returns>The argument as the given type.</returns>
         /// <exception cref="ArgumentTypeException">Thrown if argument could not be case to the given type.</exception>
-        public static TResult GetArgument<TResult>(string functionName, int index, FunctionData args)
+        public static TResult GetArgument<TResult>(string functionName, ExpressionContext context, int index, FunctionData args)
         {
             try
             {
-                return (TResult)(args[index].Evaluate(new ExpressionContext()) ?? throw new Exception());
+                return (TResult)(args[index].Evaluate(context) ?? throw new Exception());
             }
-            catch
+            catch (NCalcFunctionNotFoundException ex)
+            {
+                throw new FunctionNotFoundException(ex.FunctionName);
+            }
+            catch 
             {
                 throw new ArgumentTypeException(functionName, index, typeof(TResult), args[index]?.ToExpressionString() ?? string.Empty);
             }
@@ -61,18 +66,18 @@ namespace mqtt2otel.Parser
         ///   
         /// Where timezones are as defined in <see cref="TimeZoneInfo.FindSystemTimeZoneById(string)"/>.
         /// </summary>
-        /// <param name="expression">The expresssion to which this function should be added.</param>
+        /// <param name="context">The expresssion context to which this function should be added.</param>
         /// <param name="functionName">The function name.</param>
         /// <exception cref="InvalidArgumentCountException">Thrown if the argument has not exactly 3 arguments.</exception>
-        private static void AddConvertTimeZoneFunction(NCalc.Expression expression, string functionName)
+        private static void AddConvertTimeZoneFunction(NCalc.ExpressionContext context, string functionName)
         {
-            expression.Functions[functionName] = (args) =>
+            context.Functions[functionName] = (args) =>
             {
                 if (args.Count() == 3)
                 {
-                    var date = GetArgument<DateTime>(functionName, 0, args);
-                    var sourceTimezone = GetArgument<string>(functionName, 1, args);
-                    var destTimezone = GetArgument<string>(functionName, 2, args);
+                    var date = GetArgument<DateTime>(functionName, context, 0, args);
+                    var sourceTimezone = GetArgument<string>(functionName, context, 1, args);
+                    var destTimezone = GetArgument<string>(functionName, context, 2, args);
 
                     var utc = TimeZoneInfo.ConvertTimeToUtc(date, TimeZoneInfo.FindSystemTimeZoneById(sourceTimezone));
 
@@ -92,17 +97,17 @@ namespace mqtt2otel.Parser
         ///   
         /// format strings are parsed with InvariantCulture.
         /// </summary>
-        /// <param name="expression">The expresssion to which this function should be added.</param>
+        /// <param name="context">The expresssion context to which this function should be added.</param>
         /// <param name="functionName">The function name.</param>
         /// <exception cref="InvalidArgumentCountException">Thrown if the argument has not 1-2 arguments.</exception>
         /// <exception cref="ParsingFailedException">Thrown if the string could not be parsed to a DateTime.</exception>
-        private static void AddParseDateTimeFunction(NCalc.Expression expression, string functionName)
+        private static void AddParseDateTimeFunction(NCalc.ExpressionContext context, string functionName)
         {
-            expression.Functions[functionName] = (args) =>
+            context.Functions[functionName] = (args) =>
             {
                 if (args.Count() == 1)
                 {
-                    var dateAsString = GetArgument<string>(functionName, 0, args);
+                    var dateAsString = GetArgument<string>(functionName, context, 0, args);
 
                     try
                     {
@@ -115,8 +120,8 @@ namespace mqtt2otel.Parser
                 }
                 if (args.Count() == 2)
                 {
-                    var dateAsString = GetArgument<string>(functionName, 0, args);
-                    var format = GetArgument<string>(functionName, 1, args);
+                    var dateAsString = GetArgument<string>(functionName, context, 0, args);
+                    var format = GetArgument<string>(functionName, context, 1, args);
 
                     try
                     {
@@ -144,19 +149,19 @@ namespace mqtt2otel.Parser
         ///   
         /// Calls the provided function.
         /// </summary>
-        /// <param name="expression">The expresssion to which this function should be added.</param>
+        /// <param name="context">The expresssion context to which this function should be added.</param>
         /// <param name="functionName">The function name.</param>
         /// <param name="func">The function that should be called on the date argument.</param>
         /// <exception cref="InvalidArgumentCountException">Thrown if the argument has not exactly 2 arguments.</exception>
 
-        private static void AddDateTimeFunction(NCalc.Expression expression, string functionName, Func<DateTime, int,  DateTime> func)
+        private static void AddDateTimeFunction(NCalc.ExpressionContext context, string functionName, Func<DateTime, int,  DateTime> func)
         {
-            expression.Functions[functionName] = (args) =>
+            context.Functions[functionName] = (args) =>
             {
                 if (args.Count() == 2)
                 {
-                    var date = GetArgument<DateTime>(functionName, 0, args);
-                    var inc = GetArgument<int>(functionName, 1, args);
+                    var date = GetArgument<DateTime>(functionName, context, 0, args);
+                    var inc = GetArgument<int>(functionName, context, 1, args);
 
                     return func(date, inc);
                 }
