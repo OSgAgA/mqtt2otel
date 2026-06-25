@@ -178,10 +178,10 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: |
-            osgaga/mqtt2otel:${{ steps.version.outputs.version }}
-            osgaga/mqtt2otel:${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
-            osgaga/mqtt2otel:${{ steps.version.outputs.major }}
-            osgaga/mqtt2otel:latest
+            osgaga/mqtt2otel.manifestexplorer:${{ steps.version.outputs.version }}
+            osgaga/mqtt2otel.manifestexplorer:${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
+            osgaga/mqtt2otel.manifestexplorer:${{ steps.version.outputs.major }}
+            osgaga/mqtt2otel.manifestexplorer:latest
           labels: |
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
           cache-from: type=registry,ref=osgaga/mqtt2otel.manifestexplorer:cache

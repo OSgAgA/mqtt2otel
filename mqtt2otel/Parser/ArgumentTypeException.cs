@@ -39,7 +39,7 @@ namespace mqtt2otel.Parser
         /// <param name="functionName">The name of the function to which the argument was provided.</param>
         /// <param name="argumentIndex">The zero based index of the argument.</param>
         /// <param name="expectedArgumentType">The type expected by the function.</param>
-        /// <param name="actualArgument">The provided argument as a string representation.</param>
+        /// <param name="actualArgument">The provided argument as a string representation of this argument.</param>
         public ArgumentTypeException(string functionName, int argumentIndex, Type expectedArgumentType, string actualArgument)
             : base($"Invalid argument type for argument {argumentIndex} (zero based) of function {functionName}. Type {expectedArgumentType.Name} was expected, but {actualArgument} has been received.")
         {
