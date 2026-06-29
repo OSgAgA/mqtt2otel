@@ -18,6 +18,11 @@ namespace mqtt2otel.Stores
         private Dictionary<uint, List<SubscriptionStoreData>> store = new();
 
         /// <summary>
+        /// Maps all supported topic wildcards with their broker subscription ids.
+        /// </summary>
+        private Dictionary<string, uint> topicToBrokerSubscriptionIdMapping = new();
+
+        /// <summary>
         /// Stores a subscription.
         /// </summary>
         /// <param name="brokerSubscriptionId">The id of the broker subscription that will trigger the event.</param>
@@ -26,16 +31,12 @@ namespace mqtt2otel.Stores
         /// <param name="processor">The internal processor.</param>
         public void Store(uint brokerSubscriptionId, MqttSubscription subscription, Processor processor)
         {
+            if (subscription.Topic == null) return;
+
             var data = new SubscriptionStoreData(subscription, processor);
 
-            if (store.ContainsKey(brokerSubscriptionId))
-            {
-                store[brokerSubscriptionId].Add(data);
-            }
-            else
-            {
-                store[brokerSubscriptionId] = new List<SubscriptionStoreData>() { data };
-            }
+            this.store[brokerSubscriptionId] = new List<SubscriptionStoreData>() { data };
+            this.topicToBrokerSubscriptionIdMapping[subscription.Topic] = brokerSubscriptionId;
         }
 
         /// <summary>
@@ -67,6 +68,27 @@ namespace mqtt2otel.Stores
         public void Clear()
         {
             this.store.Clear();
+            this.topicToBrokerSubscriptionIdMapping.Clear();
+        }
+
+        /// <summary>
+        /// Tests if the same broker subsrciption already exists and if yes, adds the data to the existing subscription.
+        /// </summary>
+        /// <param name="topic">The topic. May include wildcards.</param>
+        /// <param name="subscription">The internal subscription.</param>
+        /// <param name="processor">The internal processor.</param>
+        /// <returns>True if data has been added to an existing subscription or false otherwise.</returns>
+        public bool AddToExistingSubscription(string topic, MqttSubscription subscription, Processor processor)
+        {
+            if (this.topicToBrokerSubscriptionIdMapping.ContainsKey(topic))
+            {
+                uint id = this.topicToBrokerSubscriptionIdMapping[topic];
+                this.store[id].Add(new SubscriptionStoreData(subscription, processor));
+
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

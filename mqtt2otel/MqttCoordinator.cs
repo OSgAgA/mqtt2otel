@@ -360,14 +360,17 @@ namespace mqtt2otel
         {
             if (mqttSubscription.Topic == null) return;
 
-            this.subscriptionStore.Store(this.nextBrokerSubscriptionId, mqttSubscription, processor);
-            if (!this.isSimulator)
+            if (!this.subscriptionStore.AddToExistingSubscription(mqttSubscription.Topic, mqttSubscription, processor))
             {
-                var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(mqttSubscription.Topic).WithSubscriptionIdentifier(this.nextBrokerSubscriptionId++).Build();
-                await this.GetClient(mqttSubscription.BrokerConnection).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+                this.subscriptionStore.Store(this.nextBrokerSubscriptionId, mqttSubscription, processor);
+                if (!this.isSimulator)
+                {
+                    var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(mqttSubscription.Topic).WithSubscriptionIdentifier(this.nextBrokerSubscriptionId++).Build();
+                    await this.GetClient(mqttSubscription.BrokerConnection).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+                }
+                this.internalLogger.LogInformation($"Subscribed to topic {mqttSubscription.Topic}.");
+                this.mqttMeter.SubscriptionsCount.Record(++this.subscriptionCount);
             }
-            this.internalLogger.LogInformation($"Subscribed to topic {mqttSubscription.Topic}.");
-            this.mqttMeter.SubscriptionsCount.Record(++this.subscriptionCount);
         }
 
         /// <summary>
