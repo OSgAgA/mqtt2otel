@@ -76,8 +76,8 @@ mathematical calculations. For example, to convert the temperature from Celsius 
 Value: "(JSONPATH('$.Processor.Temperature') * 1.8) + 32.0"
 ```
 
-Standard mathematical operations like `+`, `-`, `*`, `/`, and functions such as `SQRT`, `Sin`, `Cos`, `Tan`, and constants 
-like `[Pi]` are also supported. Further details can be found at the [NCalc library](https://github.com/ncalc/ncalc).
+Standard mathematical operations like `+`, `-`, `*`, `/`, and functions such as `Sqrt`, `Sin`, `Cos`, `Tan`, and constants 
+like `[PI]` and `[E]` are also supported. Further details can be found at the [NCalc library](https://github.com/ncalc/ncalc).
 
 
 ## Transformations

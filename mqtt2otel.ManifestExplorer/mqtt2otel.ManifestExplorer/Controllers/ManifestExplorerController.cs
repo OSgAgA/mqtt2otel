@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using BlazorBootstrap;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using mqtt2otel.Helper;
@@ -67,7 +68,7 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             catch (YamlException ex)
             {
                 var message = $"({ex.Start.ToString()}) - ({ex.End.ToString()}): {ex.Message}";
-                return new ApplyPatternToPayloadResult(new ErrorTestData(ex.Message, new Position(ex.Start.Line, ex.Start.Column), new Position(ex.End.Line, ex.End.Column)));
+                return new ApplyPatternToPayloadResult(new ErrorTestData(ex.Message, new Metadata.Position(ex.Start.Line, ex.Start.Column), new Metadata.Position(ex.End.Line, ex.End.Column)));
             }
             catch (Exception ex)
             {
@@ -103,7 +104,7 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelMeter());
             otel.Connect(manifest);
 
-            bool success = await mqtt.ProcessReceivedMessage(request.Topic, request.Payload);
+            bool success = await mqtt.SimulateOnMqttMessageReceived(request.Topic, request.Payload);
 
             otel.FlushMeters();
 
