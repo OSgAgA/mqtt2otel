@@ -18,7 +18,7 @@
                     <label>Id</label>
                 </div>
                 <div class="col-8">
-                    <InputText class="form-control w-100" @bind-Value="@this.testCaseId"/>
+                    <InputText class="form-control w-100" @bind-Value="@this.testCaseId" />
                 </div>
             </div>
 
@@ -27,7 +27,7 @@
                     <label>Name</label>
                 </div>
                 <div class="col-8">
-                    <InputText class="form-control w-100" @bind-Value="@this.testCaseName"/>
+                    <InputText class="form-control w-100" @bind-Value="@this.testCaseName" />
                 </div>
             </div>
 
@@ -36,7 +36,7 @@
                     <label>Description</label>
                 </div>
                 <div class="col-8">
-                    <InputTextArea class="form-control w-100" @bind-Value="@this.testCaseDescription" rows="5"/>
+                    <InputTextArea class="form-control w-100" @bind-Value="@this.testCaseDescription" rows="5" />
                 </div>
             </div>
         </BodyTemplate>
@@ -55,33 +55,29 @@
                 <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.manifest" rows="26" onchange="@this.OnInputChanged()" />
             </Card>
         </div>
-        @* <div class="vr"></div> *@
         <div class="col">
-            <Card>
-
-                <div class="flex-container">
-                    <div class="row">
-                        <div class="col" style="margin-bottom:20px;">
-                            <Card>
-                                <CardHeader>
-                                    <b>Topic</b>
-                                </CardHeader>
-                                <InputText @bind-Value="@this.topic" onchange="@this.OnInputChanged()" />
-                            </Card>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <Card>
-                                <CardHeader>
-                                    <b>Payload</b>
-                                </CardHeader>
-                                <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.payload" rows="22" onchange="@this.OnInputChanged()" />
-                            </Card>
-                        </div>
+            <div class="flex-container">
+                <div class="row">
+                    <div class="col" style="margin-bottom:20px;">
+                        <Card>
+                            <CardHeader>
+                                <b>Topic</b>
+                            </CardHeader>
+                            <InputText @bind-Value="@this.topic" onchange="@this.OnInputChanged()" />
+                        </Card>
                     </div>
                 </div>
-            </Card>
+                <div class="row">
+                    <div class="col">
+                        <Card>
+                            <CardHeader>
+                                <b>Payload</b>
+                            </CardHeader>
+                            <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.payload" rows="22" onchange="@this.OnInputChanged()" />
+                        </Card>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="row" style="text-align:center">
             <div class="col">
