@@ -332,3 +332,6 @@ The following metrics will be provided:
   </tr>
 
 </table>
+
+{{< exampleCode id="example-1" field="Topic" lang="yaml">}}
+{{< exampleCode id="example-1" field="Manifest" lang="yaml">}}
