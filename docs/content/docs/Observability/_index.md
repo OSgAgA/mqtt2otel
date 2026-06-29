@@ -323,16 +323,4 @@ The following metrics will be provided:
   	<td>This is the count of all created metrics.</td>
   </tr>
 
-  <tr>
-  	<td></td>
-  	<td></td>
-  	<td></td>
-  	<td></td>
-  	<td></td>
-  </tr>
-
 </table>
-
-**Test**
-{{< exampleCode id="example-1" field="Topic" lang="yaml">}}
-{{< exampleCode id="example-1" field="Manifest" lang="yaml">}}
