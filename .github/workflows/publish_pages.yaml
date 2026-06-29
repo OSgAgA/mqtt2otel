@@ -16,6 +16,7 @@ on:
     paths:
       - 'docs/**'
       - 'workflows/publish_pages.yaml'
+      - 'mqtt2otel.Metadata/**'
 
 jobs:
   # Deploy the documentation to github-pages.
