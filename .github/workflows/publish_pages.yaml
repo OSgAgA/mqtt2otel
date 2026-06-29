@@ -15,7 +15,7 @@ on:
     branches: [ main ]
     paths:
       - 'docs/**'
-      - 'workflows/publish_pages.yaml'
+      - '.github/workflows/publish_pages.yaml'
       - 'mqtt2otel.Metadata/**'
 
 jobs:
