@@ -4,4 +4,5 @@ WORKDIR /app
 FROM base AS final
 WORKDIR /app
 COPY ./app/ .
+RUN apk add --no-cache tzdata
 ENTRYPOINT ["dotnet", "mqtt2otel.ManifestExplorer.dll"]
