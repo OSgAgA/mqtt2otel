@@ -36,6 +36,9 @@ jobs:
       # Checkout the repository.
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Copy folder
+        run: cp -R mqtt2otel.Metadata/TestCases docs/data/examples
   
       # Setup Hugo static side generator.
       - name: Setup Hugo
