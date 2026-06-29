@@ -59,12 +59,16 @@ namespace mqtt2otel
             try
             {
                 var expressionContext = new ExpressionContext();
-                var expression = new NCalc.Expression(expressionString, expressionContext);
+
+                expressionContext.StaticParameters.Add("PI", Math.PI);
+                expressionContext.StaticParameters.Add("E", Math.E);
 
                 foreach (var strategyName in this.NameStrategyMapping.Keys)
                 {
                     this.ApplyStrategy<TResult>(payload, expressionContext, strategyName, context);
                 }
+
+                var expression = new NCalc.Expression(expressionString, expressionContext);
 
                 CustomExpressionFunctions.AddTo(expressionContext);
 
