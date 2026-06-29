@@ -15,7 +15,8 @@ on:
     branches: [ main ]
     paths:
       - 'mqtt2otel.ManifestExplorer/**'
-      - '.github/workflows/**'
+      - '.github/workflows/deploy manifest explorer.yaml'
+      - 'mqtt2otel.Metadata/**'
 
 jobs:
   # Publishes the application
