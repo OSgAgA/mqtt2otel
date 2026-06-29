@@ -2,10 +2,12 @@
 @using mqtt2otel.ManifestExplorer.DTOs
 @using mqtt2otel.Metadata
 @using System.Text.Json
+@using mqtt2otel.ManifestExplorer.Settings
 @inject IJSRuntime JS
 
 @rendermode InteractiveServer
 @inject IHttpClientFactory Factory
+@inject Microsoft.Extensions.Options.IOptions<FeatureToggles> featureToggles
 
 <PageTitle>mqtt2otel manifest explorer</PageTitle>
 
@@ -82,7 +84,10 @@
         <div class="row" style="text-align:center">
             <div class="col">
                 <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="Apply">Apply</button>
-                <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="ShowModal" disabled="@this.IsDirty">Create Json</button>
+                @if (featureToggles.Value.ShowCreateJsonButton)
+                {
+                    <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="ShowModal" disabled="@this.IsDirty">Create Json</button>
+                }
             </div>
         </div>
 

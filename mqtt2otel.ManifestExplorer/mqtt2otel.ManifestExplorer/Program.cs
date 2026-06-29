@@ -20,7 +20,10 @@ namespace mqtt2otel.ManifestExplorer
             builder.Services.AddBlazorBootstrap();
 
             builder.Services.Configure<ServerApiOptions>(builder.Configuration.GetSection("ServerApi"));
+            builder.Services.Configure<FeatureToggles>(builder.Configuration.GetSection("FeatureToggles"));
 
+            var filePath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "version.txt");
+            builder.Services.AddSingleton<ApplicationInfo>(new ApplicationInfo(filePath ?? string.Empty));
 
             builder.Services.AddHttpClient("ServerAPI", (serviceProvider, client) =>
             {
