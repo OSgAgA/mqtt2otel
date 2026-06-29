@@ -42,7 +42,7 @@ jobs:
         run: mkdir -p docs/data/examples
 
       - name: Copy json examples to documentation.
-        run: cp -R mqtt2otel.Metadata/TestCases docs/data/examples
+        run: cp mqtt2otel.Metadata/TestCases/*.json docs/data/examples/
   
       # Setup Hugo static side generator.
       - name: Setup Hugo
