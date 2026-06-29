@@ -1,5 +1,7 @@
+using Microsoft.Extensions.Options;
 using mqtt2otel.ManifestExplorer.Client.Pages;
 using mqtt2otel.ManifestExplorer.Components;
+using mqtt2otel.ManifestExplorer.Settings;
 
 namespace mqtt2otel.ManifestExplorer
 {
@@ -17,9 +19,13 @@ namespace mqtt2otel.ManifestExplorer
             builder.Services.AddControllers();
             builder.Services.AddBlazorBootstrap();
 
-            builder.Services.AddHttpClient("ServerAPI", client =>
+            builder.Services.Configure<ServerApiOptions>(builder.Configuration.GetSection("ServerApi"));
+
+
+            builder.Services.AddHttpClient("ServerAPI", (serviceProvider, client) =>
             {
-                client.BaseAddress = new Uri("http://localhost:5197/"); // adjust to your server
+                var opts = serviceProvider.GetRequiredService<IOptions<ServerApiOptions>>().Value;
+                client.BaseAddress = new Uri(opts.BaseAddress); 
             });
 
             var app = builder.Build();
