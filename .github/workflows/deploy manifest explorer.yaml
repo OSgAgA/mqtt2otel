@@ -158,6 +158,7 @@ jobs:
       # on application startup.
       - name: Write version file
         run: |
+          mkdir -p ./mqtt2otel.ManifestExplorer/mqtt2otel.ManifestExplorer/Deployment/app/App_Data/
           echo "${{ steps.version.outputs.version }}" > ./mqtt2otel.ManifestExplorer/mqtt2otel.ManifestExplorer/Deployment/app/App_Data/version.txt
 
       # upload version file as artifact to document the version inside the CI/CD workflow.
