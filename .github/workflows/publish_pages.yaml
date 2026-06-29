@@ -37,7 +37,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Copy folder
+      - name: Ensure directory for json examples exists
+        run: mkdir -p docs/data/examples
+
+      - name: Copy json examples to documentation.
         run: cp -R mqtt2otel.Metadata/TestCases docs/data/examples
   
       # Setup Hugo static side generator.
