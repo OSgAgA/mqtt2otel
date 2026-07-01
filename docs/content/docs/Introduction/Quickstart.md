@@ -35,40 +35,17 @@ This assumes no credentials are required to log into the broker or the Otel coll
 
 Now that we have connected to the MQTT broker and Otel server, let's subscribe to an MQTT topic and generate an Otel metric from the payload.
 
-Suppose the server sends messages to the topic `message-topic` in the following JSON format:
+Suppose the server sends messages to the topic `{{< exampleData id="doc-2" field="Topic">}}` in the following JSON format:
 
-```json {hl_lines=[4]}
-{
-    "Processor": 
-    {
-        "Temperature": 42.5
-    },
-    "TempUnit": "C"
-}
-```
+{{< exampleCode id="doc-2" field="Payload" lang="yaml" hl_lines="4">}}
 
 To extract the temperature, we will use the [JSONPath](https://www.rfc-editor.org/rfc/rfc9535) syntax `$.Processor.Temperature`.
 The corresponding YAML would look like this:
 
-```yaml 
-Processors:
-  - Name: "Processor Temperature"
-    Description: "Provides the current processor temperature."
-    Mqtt: 
-      Subscriptions:
-        - Name: "Processor information"
-          Topic: "message-topic"
-    Otel:
-      Metrics:
-        - Name: "Processor.Temperature"
-          Description: "The current processor temperature."
-          SignalDataType: Float
-          Instrument: Gauge
-          Value: "JSONPATH('$.Processor.Temperature')"
-```
+{{< exampleCode id="doc-2" field="Manifest" lang="yaml">}}
 
-This configuration subscribes to the MQTT topic `message-topic` and creates an Otel metric called `Processor.Temperature` with 
-a `float` data type and a `Gauge` instrument. Every time a message is received for the `message-topic`, the temperature value 
+This configuration subscribes to the MQTT topic `{{< exampleData id="doc-2" field="Topic">}}` and creates an Otel metric called `Processor.Temperature` with 
+a `float` data type and a `Gauge` instrument. Every time a message is received for the topic `{{< exampleData id="doc-2" field="Topic">}}`, the temperature value 
 parsed from the provided json and sent to the Otel endpoint.
 
 The syntax is as following:

@@ -1,0 +1,37 @@
+{
+  "Setup": {
+    "Id": "doc-2",
+    "Name": "Quickstart Document 2",
+    "Description": "",
+    "Topic": "message-topic",
+    "Payload": "{\n    \u0022Processor\u0022: \n    {\n        \u0022Temperature\u0022: 42.5\n    },\n    \u0022TempUnit\u0022: \u0022C\u0022\n}",
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022message-topic\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Value: \u0022JSONPATH(\u0027$.Processor.Temperature\u0027)\u0022\n",
+    "Category": "Documentation",
+    "Tags": [
+      "doc"
+    ],
+    "CreateExample": false,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Processor.Temperature",
+        "OtelServer": "5f8badd7-ffd1-484b-b41f-d353dcf7df5e",
+        "MeterVersion": "",
+        "Description": "The current processor temperature.",
+        "Unit": "",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 42.5,
+            "StartTime": "2026-07-01T19:34:51.011128+00:00",
+            "EndTime": "2026-07-01T19:34:51.0914117+00:00",
+            "Tags": {}
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

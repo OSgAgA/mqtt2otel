@@ -1,10 +1,13 @@
 {{ $id := .Get "id" }}
 {{ $field := .Get "field" }}
 {{ $lang := .Get "lang" | default "yaml" }}
+{{ $hl := .Get "hl_lines" }}
+
+{{ $opts := dict "hl_lines" $hl }}
 
 {{ range hugo.Data.examples }}
-  {{ if eq .Setup.Id $id }}
-    {{ highlight (index .Setup $field) $lang "" }}
-    {{ break }}
-  {{ end }}
+    {{ if eq .Setup.Id $id }}
+        {{ highlight (index .Setup $field) $lang $opts }}
+        {{ break }}
+    {{ end }}
 {{ end }}
