@@ -28,12 +28,34 @@ namespace mqtt2otel.Parser
         /// <exception cref="Exception">Thrown if generic return type is not a string.</exception>
         public T Parse<T>(string input, string filter, ParsingContext context)
         {
-            if (typeof(T) != typeof(string))
+            object result = string.Empty;
+
+            if (typeof(T) == typeof(int))
             {
-                throw new Exception($"Text strategy only supports string type, but {typeof(T).FullName} was provided.");
+                result = int.Parse(input);
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                result = float.Parse(input);
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                result = double.Parse(input);
+            }
+            else if (typeof(T) == typeof(long))
+            {
+                result = long.Parse(input);
+            }
+            else if (typeof(T) == typeof(decimal))
+            {
+                result = decimal.Parse(input);
+            }
+            else
+            {
+                result = input;
             }
 
-            return (T)(object)input;
+            return (T)result;
         }
     }
 }

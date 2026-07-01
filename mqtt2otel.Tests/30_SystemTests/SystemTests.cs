@@ -106,6 +106,8 @@ namespace mqtt2otel.Tests._30_SystemTests
             }
 
             Assert.Equal(1, count);
+
+            await mqttCoordinator.DisconnectAllBrokers();
         }
 
         [Fact]
@@ -178,6 +180,8 @@ namespace mqtt2otel.Tests._30_SystemTests
             Assert.Equal("This is a simple log message.", logEntry.Body);
             Assert.Equal(LogLevel.Warning, logEntry.LogLevel);
             Assert.Equal(new DateTime(2026, 1, 31, 15, 42, 0), logEntry.Timestamp);
+
+            await mqttCoordinator.DisconnectAllBrokers();
         }
     }
 }

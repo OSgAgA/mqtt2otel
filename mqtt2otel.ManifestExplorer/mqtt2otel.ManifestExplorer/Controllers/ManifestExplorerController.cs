@@ -12,6 +12,7 @@ using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
 using System.Diagnostics.Metrics;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using YamlDotNet.Core;
@@ -33,6 +34,10 @@ namespace mqtt2otel.ManifestExplorer.Controllers
         [HttpPost(nameof(ApplyPatternToPayload))]
         public async Task<ApplyPatternToPayloadResult> ApplyPatternToPayload([FromBody] ApplyPatternToPayloadData request)
         {
+            var culture = new CultureInfo("en-US");
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+
             List<ErrorTestData> processorErrors = new List<ErrorTestData>();
 
             var logger = new Mock<ILogger<Processor>>();
@@ -85,6 +90,8 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             {
                 manifest.OtelConnections.Add(new OtelServerConnection());
             }
+
+            if (string.IsNullOrWhiteSpace(manifest.Version)) manifest.Version = "1.0";
 
             manifest.Initialize();
 

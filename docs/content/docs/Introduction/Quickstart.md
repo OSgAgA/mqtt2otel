@@ -13,26 +13,7 @@ See [Installation](../../installation) overview.
 
 The mapping between MQTT and Otel is configured via a file called `Manifest.yaml`. Here's an example of a simple configuration file that connects to an MQTT broker at `http://mymqtt-broker.net:32007` and an OpenTelemetry collector at `http://my-otel-collector.net:32014`:
 
-```yaml
-Version: 1.0
-
-MqttConnections:
-  - Name: "My broker"
-    Endpoint:
-      Port: 32007
-      Address: "mymqtt-broker.net"
-      EnableTls: false
-
-OtelConnections:
-  - Name: "My Otel server"
-    ServiceName: "my-service"
-    ServiceNamespace: "my-service-namespace"
-    Endpoint:
-      Protocol: "http"
-      Port: 32014
-      Address: "my-otel-collector.net"
-      EnableTls: false
-````
+{{< exampleCode id="doc-1" field="Manifest" lang="yaml">}}
 
 This assumes no credentials are required to log into the broker or the Otel collector. For further configuration options, see [Configure MQTT Broker](todo) and [Configure Otel Server](todo).
 

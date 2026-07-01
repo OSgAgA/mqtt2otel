@@ -1,4 +1,5 @@
 ﻿using mqtt2otel.Metadata;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -14,6 +15,11 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// Maps an example id to the example data.
         /// </summary>
         private static Dictionary<string, ExampleData> cache = new Dictionary<string, ExampleData>();
+
+        /// <summary>
+        /// Gets all available categories.
+        /// </summary>
+        private static List<string> categories = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExampleData"/> class.
@@ -32,7 +38,12 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// <param name="topic">The mqtt topic.</param>
         /// <param name="payload">The mqtt payload</param>
         /// <param name="manifest">The manifest.</param>
-        public ExampleData(string id, string name, string description, string topic, string payload, string manifest)
+        /// <param name="category">The user defined category of the example.</param>
+        /// <param name="tags">The associated tags.</param>
+        /// <param name="createExample">A value indicating whether this should be added to the list of examples or if only a test case should be generated.</param>
+        /// <param name="validateManifestOnly">Indicating whether only the manifest should be validated at testing. All other information, e.g. payload, or results
+        /// are ignored.</param>
+        public ExampleData(string id, string name, string description, string topic, string payload, string manifest, string category, List<string> tags, bool createExample, bool validateManifestOnly)
         {
             this.Id = id;
             this.Name = name;
@@ -40,6 +51,10 @@ namespace mqtt2otel.ManifestExplorer.DTOs
             this.Topic = topic;
             this.Payload = payload;
             this.Manifest = manifest;
+            this.Tags = tags;
+            this.CreateExample = createExample;
+            this.Category = category;
+            this.ValidateManifestOnly = validateManifestOnly;
         }
 
         /// <summary>
@@ -51,9 +66,18 @@ namespace mqtt2otel.ManifestExplorer.DTOs
 
             cache = new Dictionary<string, ExampleData>();
 
-            foreach (var example in TestCase.LoadAllExamples())
+            foreach (var example in TestCaseData.LoadAllExamples())
             {
-                cache[example.Key] = example.Value;
+                if (example.Value.CreateExample)
+                {
+                    cache[example.Key] = example.Value;
+                    if (string.IsNullOrWhiteSpace(example.Value.Category)) example.Value.Category = "Misc";
+
+                    if (!ExampleData.categories.Contains(example.Value.Category))
+                    {
+                        ExampleData.categories.Add(example.Value.Category);
+                    }
+                }
             }
         }
 
@@ -79,10 +103,28 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         {
             var result = new List<ExampleData>();
 
-            Create();
+            ExampleData.Create();
             foreach (var item in cache)
             {
                 result.Add(item.Value);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Gets all available categories.
+        /// </summary>
+        /// <returns>A dictionary mapping category names to a list of <see cref="ExampleData"/>.</returns>
+        public static Dictionary<string, List<ExampleData>> GetAllByCategories()
+        {
+            ExampleData.Create();
+
+            var result = new Dictionary<string, List<ExampleData>>();
+
+            foreach (var category in ExampleData.categories)
+            {
+                result[category] = ExampleData.GetAll().Where( example => example.Category == category).ToList();
             }
 
             return result;
@@ -118,6 +160,25 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// </summary>
         public string Manifest { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the category.
+        /// </summary>
+        public string Category { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the tags associated with this example.
+        /// </summary>
+        public List<string> Tags { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Gets or sets a value indicating whether a real example should be created, or only a system test.
+        /// </summary>
+        public bool CreateExample { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether only the manifest should be validated at testing. All other information, 
+        /// e.g. payload, or results are ignored.
+        /// </summary>
+        public bool ValidateManifestOnly { get; set; }
     }
 }

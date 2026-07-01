@@ -25,7 +25,7 @@ namespace mqtt2otel.Parser
 
             if (!query.Any()) throw new Exception($"Could not find variable '{variableName}'.");
 
-            return (T)query.First().Value;
+            return Helper.TypeHelper.Parse<T>(query.First().Value.ToString() ?? string.Empty);
         }
     }
 }

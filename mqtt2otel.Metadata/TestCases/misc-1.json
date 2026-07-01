@@ -1,0 +1,38 @@
+{
+  "Setup": {
+    "Id": "misc-1",
+    "Name": "Usage of variables",
+    "Description": "Defines a variable at a subscription and then uses this variable in an attribute.",
+    "Topic": "sensor/temperature",
+    "Payload": "42",
+    "Manifest": "Version: 1.0\n\nMqttConnections:\n  - Name: \u0022My broker\u0022\n\nOtelConnections:\n  - Name: \u0022My Otel server\u0022\n    ServiceName: \u0022my-service\u0022\n    ServiceNamespace: \u0022my-service-namespace\u0022\n\nProcessors:\n  - Name: \u0022Sensor Temperature\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Sensor temperature\u0022\n          Topic: \u0022sensor/temperature\u0022\n          Variables:\n             - Key: \u0022SensorName\u0022\n               Value: \u0022My sensor\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Attributes:\n            - Key: \u0022sensor name\u0022\n              Value: \u0022$SensorName\u0022\n          Value: \u0022PAYLOAD()\u0022",
+    "Category": "Misc",
+    "Tags": [
+      "vars"
+    ],
+    "CreateExample": true
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Processor.Temperature",
+        "OtelServer": "My Otel server",
+        "MeterVersion": "",
+        "Description": "The current processor temperature.",
+        "Unit": "",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 42,
+            "StartTime": "2026-06-30T14:30:36.4163237+00:00",
+            "EndTime": "2026-06-30T14:30:36.4487692+00:00",
+            "Tags": {
+              "sensor name": "My sensor"
+            }
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}
