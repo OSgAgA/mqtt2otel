@@ -68,15 +68,7 @@ The syntax is as following:
 
 Subscriptions can have variables, which can be used later in the rules section. Here’s an example of how to define variables:
 
-```yaml {hl_lines=[14,15]}
-Mqtt:
-  Subscriptions:
-    - Name: "Processor information"
-      Topic: "metric/sensor_1234"
-      Variables:
-        - Key: "SensorName"
-          Value: "ProcessorServerA"
-```
+{{< exampleCode id="doc-3" field="Payload" lang="yaml" hl_lines="7-9">}}
 
 You can access variables in Otel rules by prefixing them with a `$` sign. For example, to access the `SensorName`, you would use
 `$SensorName`.
@@ -84,23 +76,7 @@ You can access variables in Otel rules by prefixing them with a `$` sign. For ex
 Otel rules can also include attributes, which are added to the Otel signal for filtering or grouping. You can use variables
 inside attributes where needed. Here’s an example of how to add attributes:
 
-```yaml {hl_lines=["2-6", "10-12"]}
-Otel:
-  Attributes:
-    - Key: SensorName
-      Value: $SensorName
-    - Key: Location
-      Value: "Main server room"
-  Metrics:
-    - Name: "Processor.Temperature"
-      Description: "The current processor temperature."
-      Attributes:
-        - Key: MeasurementQuality
-          Value: 10
-      SignalDataType: Float
-      Instrument: Gauge
-      Value: "JSONPATH('$.Processor.Temperature')"
-```
+{{< exampleCode id="doc-3" field="Manifest" lang="yaml" hl_lines="4-8 12-14">}}
 
 The attributes directly added under the Metrics section will be added to all metrics. The attributes added to the 
 "Processor.Temperature" metric will only be added to this metric. 
@@ -119,9 +95,7 @@ The attributes directly added under the Metrics section will be added to all met
 We’ve already used an expression to parse the payload with `JSONPATH('$.Processor.Temperature')`. However, you can also perform 
 mathematical transformations. For example, to convert the temperature from Celsius to Fahrenheit, you can use this expression:
 
-```yaml
-Value: "(JSONPATH('$.Processor.Temperature') * 1.8) + 32.0"
-```
+{{< exampleCode id="doc-5" field="Description" lang="yaml">}}
 
 Standard mathematical operations like `+`, `-`, `*`, `/`, and functions such as `SQRT`, `Sin`, `Cos`, `Tan`, and constants 
 like `[Pi]` are supported.
@@ -143,16 +117,12 @@ For more details, please refer to the [documentation](/docs/expressions).
 
 Log messages work similarly to metrics. Let's say you receive a log message payload in the following format from MQTT:
 
-```
-2026-02-26T10:28:34Z [Info] [ServerA] Temperature value read successfully.
-```
+{{< exampleCode id="doc-6" field="Payload" lang="dissect">}}
 
 Rather than sending the raw message to Otel, we can transform it into a structured log format using an extended 
 [DISSECT](https://github.com/OSgAgA/Dissect.Extended.Net) expression:
 
-```dissect
-%{otel_timestamp:DateTime} [%{otel_loglevel}] [{server_name}] %{otel_message}
-```
+{{< exampleCode id="doc-6" field="Description" lang="yaml">}}
 
 This can be read as:
 
@@ -166,23 +136,7 @@ This can be read as:
 
 This expression can then be used in a `Transform` expression inside the `Logs` section:
 
-```yaml {linenos=inline hl_lines=[14,15]}
-Processors:
-  - Name: "Server logs"
-    Description: "Collect all log messages from the server."
-    Mqtt:
-      Subscriptions:
-        - Name: "Server logs"
-          Topic: "message-log-topic"
-    Otel:
-      Attributes:
-        - Key: Location
-          Value: MainServerRoom
-      Logs:
-        - Name: "Logging"
-          PayloadType: Json
-          Transform: "DISSECT('%{otel_timestamp:DateTime} [%{otel_loglevel}] [{server_name}] %{otel_message}')"
-```
+{{< exampleCode id="doc-6" field="Payload" lang="yaml" hl_lines="14-15">}}
 
 You should notice, that we are using the `Logs` keyword now in the otel section to identify log messages. The `Transform` 
 expression will convert the log into a JSON structure like this:
@@ -212,43 +166,14 @@ under the same topic structure but need to handle them differently in your rules
 Let’s say you have a device that sends both power consumption metrics (like current, power, voltage) and status information 
 (like the microcontroller core temperature) in the same MQTT message. The message payload is structured as follows:
 
-```json
-{
-  "Time": "2026-04-12T09:07:04",
-  "ENERGY": {
-    "Power": 0.000,
-    "Voltage": 227,
-    "Current": 0.000
-  },
-  "ESP32": {
-    "Temperature": 37.4
-  }
-}
-````
+{{< exampleCode id="doc-7" field="Payload" lang="json">}}
 
 You want to treat power metrics separately from the microcontroller status. To achieve this, you can group the subscriptions 
 into a `SubscriptionGroup` for reuse:
 
 ### Defining a Subscription Group
 
-```yaml
-SubscriptionGroups:
-  - Name: "Power sensors"
-    Variables:
-      - Key: DeviceName
-        Value: "My power sensor"
-    Subscriptions:
-      - Name: "Power Sensor washing machine"
-        Topic: "sensor_1234"
-        Variables:
-          - Key: "SensorName"
-            Value: "WashingMachine"
-      - Name: "Power Sensor dryer"
-        Topic: "sensor_9876"
-        Variables:
-          - Key: "SensorName"
-            Value: "Dryer"
-```
+{{< exampleCode id="doc-7" field="Description" lang="yaml">}}
 
 Here, we define a **Subscription Group** called `Power sensors`, which includes two subscriptions: 
 one for a washing machine and another for a dryer. Both subscriptions have associated variables that can be used later in the 
@@ -258,42 +183,7 @@ metrics or logs.
 
 Once you’ve created the `Power sensors` group, you can refer to it in your **metrics** or **logs** as follows:
 
-```yaml {hl_lines=[5,6,22,23]}
-Processor:
-  - Name: "Power Metrics"
-    Description: "Provides power information from a power sensor."
-    Mqtt: 
-      SubscriptionGroups:
-        - Name: "Power sensors"
-    Otel:
-      Attributes:
-        - Key: Type
-          Value: "Power metrics"
-      Metrics:
-        - Name: "Energy_Power_W"
-          Description: "The current power consumption at the time of measurement in Watt."
-          SignalDataType: Float
-          Instrument: Gauge
-          Value: "JSONPATH('$.ENERGY.Power')"
-        - ...
-
-  - Name: "Processor Status"
-    Description: "Provides processor status from the power sensor."
-    Mqtt: 
-      SubscriptionGroups:
-        - Name: "Power sensors"
-    Otel:
-      Attributes:
-        - Key: Type
-          Value: "Processor metrics"
-      Metrics:
-        - Name: "ESP32_Temperature"
-          Description: "The current temperature of the ESP32 microcontroller."
-          SignalDataType: Float
-          Instrument: Gauge
-          Value: "JSONPATH('$.ESP32.Temperature')"
-        - ...
-```
+{{< exampleCode id="doc-7" field="Manifest" lang="yaml" hl_lines="22-23 38-39">}}
 
 In this example:
 
@@ -319,45 +209,7 @@ and **SubPath** to correctly target the topics.
 
 ### Defining Subscription Groups with ParentPath and SubPath
 
-```yaml {hl_lines=[15,16,31,32]}
-SubscriptionGroups:
-  - Name: "Power sensors"
-    Subscriptions:
-      - Name: "Power Sensor 1"
-        Topic: "1234"
-      - Name: "Power Sensor 2"
-        Topic: "9876"
-
-Processors:
-  - Name: "Power Metrics"
-    Description: "Provides power information from a power sensor."
-    Mqtt: 
-      SubscriptionGroups:
-        - Name: "Power sensors"
-          ParentPath: "tele"
-          SubPath: "sensor"
-    Otel:
-      Metrics:
-        - Name: "Energy_Power_W"
-          Description: "The current power consumption at the time of measurement in Watt."
-          SignalDataType: Float
-          Instrument: Gauge
-          Value: "JSONPATH('$.ENERGY.Power')"
-        - ...
-
-  - Name: "Sensor Logs"
-    Description: "Collect all log messages from the sensors."
-    Mqtt:
-      SubscriptionGroups:
-        - Name: "Power sensors"
-          ParentPath: "stat"
-          SubPath: "logs"
-    Otel:
-      Logs:
-        - Name: "Logging"
-          PayloadType: Json
-          Transform: "DISSECT('%{otel_timestamp:DateTime} [%{otel_loglevel}] [{server_name}] %{otel_message}')"
-```
+{{< exampleCode id="doc-8" field="Manifest" lang="yaml" hl_lines="15-16 30-31">}}
 
 ### Explanation:
 
@@ -378,54 +230,4 @@ and scalable. Grouping devices and topics this way allows you to handle complex 
 
 Here is a complete minimal example manifest using logs, and metrics:
 
-```yaml
-Version: 1.0
-
-MqttConnections:
-  - Name: "My broker"
-    Endpoint:
-      Port: 32007
-      Address: "mymqtt-broker.net"
-      EnableTls: false
-
-OtelConnections:
-  - Name: "My Otel server"
-    ServiceName: "my-service"
-    ServiceNamespace: "my-service-namespace"
-    Endpoint:
-      Protocol: "http"
-      Port: 32014
-      Address: "my-otel-collector.net"
-      EnableTls: false
-
-Processors:
-  - Name: "Processor Temperature"
-    Description: "Provides the current processor temperature."
-    Mqtt: 
-      Subscriptions:
-        - Name: "Processor information"
-          Topic: "message-topic"
-    Otel:
-      Metrics:
-        - Name: "Processor.Temperature"
-          Description: "The current processor temperature."
-          SignalDataType: Float
-          Instrument: Gauge
-          Value: "JSONPATH('$.Processor.Temperature')"
-
-  - Name: "Server logs"
-    Description: "Collect all log messages from the server."
-    Mqtt:
-      Subscriptions:
-        - Name: "Server logs"
-          Topic: "message-log-topic"
-    Otel:
-      Attributes:
-        - Key: Location
-          Value: MainServerRoom
-      Logs:
-        - Name: "Logging"
-          PayloadType: Json
-          Transform: "DISSECT('%{otel_timestamp:DateTime} [%{otel_loglevel}] [{server_name}] %{otel_message}')"
-
-```
+{{< exampleCode id="doc-9" field="Manifest" lang="yaml">}}
