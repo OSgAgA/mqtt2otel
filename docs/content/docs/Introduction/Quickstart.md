@@ -68,7 +68,7 @@ The syntax is as following:
 
 Subscriptions can have variables, which can be used later in the rules section. Here’s an example of how to define variables:
 
-{{< exampleCode id="doc-3" field="Payload" lang="yaml" hl_lines="7-9">}}
+{{< exampleCode id="doc-3" field="Manifest" lang="yaml" hl_lines="7-9">}}
 
 You can access variables in Otel rules by prefixing them with a `$` sign. For example, to access the `SensorName`, you would use
 `$SensorName`.
@@ -76,7 +76,7 @@ You can access variables in Otel rules by prefixing them with a `$` sign. For ex
 Otel rules can also include attributes, which are added to the Otel signal for filtering or grouping. You can use variables
 inside attributes where needed. Here’s an example of how to add attributes:
 
-{{< exampleCode id="doc-3" field="Manifest" lang="yaml" hl_lines="4-8 12-14">}}
+{{< exampleCode id="doc-4" field="Manifest" lang="yaml" hl_lines="4-8 12-14">}}
 
 The attributes directly added under the Metrics section will be added to all metrics. The attributes added to the 
 "Processor.Temperature" metric will only be added to this metric. 
@@ -136,7 +136,7 @@ This can be read as:
 
 This expression can then be used in a `Transform` expression inside the `Logs` section:
 
-{{< exampleCode id="doc-6" field="Payload" lang="yaml" hl_lines="14-15">}}
+{{< exampleCode id="doc-6" field="Manifest" lang="yaml" hl_lines="14-15">}}
 
 You should notice, that we are using the `Logs` keyword now in the otel section to identify log messages. The `Transform` 
 expression will convert the log into a JSON structure like this:
