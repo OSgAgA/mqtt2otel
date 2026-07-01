@@ -71,7 +71,12 @@ namespace mqtt2otel.Tests._30_SystemTests
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
             var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
-            mqttCoordinator.OnMessageProcessed += (sender, args) => tcs.SetResult(args);
+            int tcsCount = 1;
+            int expectedCount = testCase.ExpectedResult.Metrics.Count + testCase.ExpectedResult.Logs.Count;
+            mqttCoordinator.OnMessageProcessed += (sender, args) =>
+            {
+                if (expectedCount == tcsCount++) tcs.SetResult(args);
+            };
 
             await mqttCoordinator.ConnectAndSubscribe(manifest);
 
@@ -106,10 +111,10 @@ namespace mqtt2otel.Tests._30_SystemTests
             {
                 var metric = exportBuilder.Metrics[i++];
 
-                Assert.Equal(expectedMetric.Name, metric.Name);
-                Assert.Equal(expectedMetric.MetricType, metric.MetricType);
-                Assert.Equal(expectedMetric.Unit, metric.Unit);
-                Assert.Equal(expectedMetric.Description, metric.Description);
+                AssertEqual(expectedMetric.Name, metric.Name, "Metric.Name");
+                AssertEqual(expectedMetric.MetricType, metric.MetricType, "Metric.Type");
+                AssertEqual(expectedMetric.Unit, metric.Unit, "Metric.Unit");
+                AssertEqual(expectedMetric.Description, metric.Description, "Metric.Description");
 
                 int count = 0;
                 foreach (var metricPoint in metric.GetMetricPoints())
@@ -117,33 +122,33 @@ namespace mqtt2otel.Tests._30_SystemTests
                     Assert.True(expectedMetric.MetricPoints.Count > count);
                     var expectedPoint = expectedMetric.MetricPoints[count++];
                     count++;
-                    Assert.Equal(expectedPoint.Value.ToString(), metricPoint.GetValueAsObject(metric.MetricType).ToString());
+                    AssertEqual(expectedPoint.Value.ToString(), metricPoint.GetValueAsObject(metric.MetricType).ToString(), "MetricPoint.Value");
                     AssertEqual(expectedPoint.Tags.Count, metricPoint.Tags.Count, "tags.count");
 
                     foreach (var tag in metricPoint.Tags)
                     {
                         Assert.True(expectedPoint.Tags.ContainsKey(tag.Key));
-                        Assert.Equal(expectedPoint.Tags[tag.Key]?.ToString(), tag.Value?.ToString());
+                        AssertEqual(expectedPoint.Tags[tag.Key]?.ToString(), tag.Value?.ToString(), $"Tag.Value for key {tag.Key}");
                     }
                 }
 
-                AssertEqual(expectedMetric.MetricPoints.Count+1, count, "metricPoints.Count+1");
+                AssertEqual(expectedMetric.MetricPoints.Count + 1, count, "metricPoints.Count+1");
             }
 
             this._output.WriteLine($"{DateTime.UtcNow}: Assert metrics completed.");
 
             // Logs
 
-            Assert.Equal(testCase.ExpectedResult.Logs.Count, exportBuilder.Logs.Count);
+            AssertEqual(testCase.ExpectedResult.Logs.Count, exportBuilder.Logs.Count, "Logs.Count");
 
             int logCount = 0;
             foreach (var expectedLogEntry in testCase.ExpectedResult.Logs)
             {
                 Assert.True(exportBuilder.Logs.Count > logCount);
                 var logEntry = exportBuilder.Logs[logCount++];
-                Assert.Equal(expectedLogEntry.Body, logEntry.Body);
-                Assert.Equal(expectedLogEntry.LogLevel, logEntry.LogLevel);
-                Assert.Equal(expectedLogEntry.Timestamp, logEntry.Timestamp);
+                AssertEqual(expectedLogEntry.Body, logEntry.Body, "LogEntry.Body");
+                AssertEqual(expectedLogEntry.LogLevel, logEntry.LogLevel, "LogEntry.LogLevel");
+                AssertEqual(expectedLogEntry.Timestamp, logEntry.Timestamp, "LogLevel.Timestamp");
             }
 
             this._output.WriteLine($"{DateTime.UtcNow}: Assert logs completed.");
@@ -152,7 +157,7 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             mqttHelper.Dispose();
             await mqttCoordinator.DisconnectAllBrokers();
-            
+
             this._output.WriteLine($"{DateTime.UtcNow}: Cleanup completed.");
 
             this._output.WriteLine($"{DateTime.UtcNow}: Test case with id '{testCase.Setup.Id}' completed.");
@@ -171,7 +176,7 @@ namespace mqtt2otel.Tests._30_SystemTests
             {
                 Assert.Equal(expected, actual);
             }
-            catch 
+            catch
             {
                 this._output.WriteLine($"{DateTime.UtcNow}: [ERROR] Assert equal failed: '{message}'");
                 throw;

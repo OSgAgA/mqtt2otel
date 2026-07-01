@@ -1,0 +1,57 @@
+{
+  "Setup": {
+    "Id": "doc-7",
+    "Name": "SubscriptionGroups",
+    "Description": "SubscriptionGroups:\n  - Name: \u0022Power sensors\u0022\n    Variables:\n      - Key: DeviceName\n        Value: \u0022My power sensor\u0022\n    Subscriptions:\n      - Name: \u0022Power Sensor washing machine\u0022\n        Topic: \u0022sensor_1234\u0022\n        Variables:\n          - Key: \u0022SensorName\u0022\n            Value: \u0022WashingMachine\u0022\n      - Name: \u0022Power Sensor dryer\u0022\n        Topic: \u0022sensor_9876\u0022\n        Variables:\n          - Key: \u0022SensorName\u0022\n            Value: \u0022Dryer\u0022",
+    "Topic": "sensor_9876",
+    "Payload": "{\n  \u0022Time\u0022: \u00222026-04-12T09:07:04\u0022,\n  \u0022ENERGY\u0022: {\n    \u0022Power\u0022: 1.000,\n    \u0022Voltage\u0022: 227,\n    \u0022Current\u0022: 0.000\n  },\n  \u0022ESP32\u0022: {\n    \u0022Temperature\u0022: 37.4\n  }\n}",
+    "Manifest": "SubscriptionGroups:\n  - Name: \u0022Power sensors\u0022\n    Variables:\n      - Key: DeviceName\n        Value: \u0022My power sensor\u0022\n    Subscriptions:\n      - Name: \u0022Power Sensor washing machine\u0022\n        Topic: \u0022sensor_1234\u0022\n        Variables:\n          - Key: \u0022SensorName\u0022\n            Value: \u0022WashingMachine\u0022\n      - Name: \u0022Power Sensor dryer\u0022\n        Topic: \u0022sensor_9876\u0022\n        Variables:\n          - Key: \u0022SensorName\u0022\n            Value: \u0022Dryer\u0022\n\nProcessors:\n  - Name: \u0022Power Metrics\u0022\n    Description: \u0022Provides power information from a power sensor.\u0022\n    Mqtt: \n      SubscriptionGroups:\n        - Name: \u0022Power sensors\u0022\n    Otel:\n      Attributes:\n        - Key: Type\n          Value: \u0022Power metrics\u0022\n      Metrics:\n        - Name: \u0022Energy_Power_W\u0022\n          Description: \u0022The current power consumption at the time of measurement in Watt.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Value: \u0022JSONPATH(\u0027$.ENERGY.Power\u0027)\u0022\n\n  - Name: \u0022Processor Status\u0022\n    Description: \u0022Provides processor status from the power sensor.\u0022\n    Mqtt: \n      SubscriptionGroups:\n        - Name: \u0022Power sensors\u0022\n    Otel:\n      Attributes:\n        - Key: Type\n          Value: \u0022Processor metrics\u0022\n      Metrics:\n        - Name: \u0022ESP32_Temperature\u0022\n          Description: \u0022The current temperature of the ESP32 microcontroller.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Value: \u0022JSONPATH(\u0027$.ESP32.Temperature\u0027)\u0022",
+    "Category": "Documentation",
+    "Tags": [
+      "doc"
+    ],
+    "CreateExample": false,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Energy_Power_W",
+        "OtelServer": "7046f8d2-37af-4e2b-92e9-7deb317fd963",
+        "MeterVersion": "",
+        "Description": "The current power consumption at the time of measurement in Watt.",
+        "Unit": "",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 1,
+            "StartTime": "2026-07-01T20:33:07.7282367+00:00",
+            "EndTime": "2026-07-01T20:33:07.7286908+00:00",
+            "Tags": {
+              "Type": "Power metrics"
+            }
+          }
+        ]
+      },
+      {
+        "Name": "ESP32_Temperature",
+        "OtelServer": "7046f8d2-37af-4e2b-92e9-7deb317fd963",
+        "MeterVersion": "",
+        "Description": "The current temperature of the ESP32 microcontroller.",
+        "Unit": "",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 37.400001525878906,
+            "StartTime": "2026-07-01T20:33:07.7282675+00:00",
+            "EndTime": "2026-07-01T20:33:07.7286911+00:00",
+            "Tags": {
+              "Type": "Processor metrics"
+            }
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}
