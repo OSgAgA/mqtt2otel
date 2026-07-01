@@ -270,26 +270,6 @@
     /// </summary>
     private ApplyPatternToPayloadResult? Result = null;
 
-
-    /// <summary>
-    /// Called when the page is initializes. Sets the test case data if a test case is provided via a page parameter.
-    /// </summary>
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-
-        if (!string.IsNullOrWhiteSpace(this.ExampleId))
-        {
-            var example = TestCaseData.GetById(this.ExampleId);
-
-            this.testCaseId = example.Setup.Id;
-            this.testCaseName = example.Setup.Name;
-            this.testCaseDescription = example.Setup.Description;
-            this.category = example.Setup.Category;
-            this.tags = example.Setup.Tags;
-            this.createExample = example.Setup.CreateExample;
-        }
-    }
     /// <summary>
     /// Apply the provided data and set the result tabs.
     /// </summary>
@@ -363,11 +343,18 @@
     {
         if (this.ExampleId != null)
         {
-            var example = ExampleData.GetExampleById(this.ExampleId);
+            var testCaseData = TestCaseData.GetById(this.ExampleId);
 
-            this.topic = example.Topic;
-            this.payload = example.Payload;
-            this.manifest = example.Manifest;
+            this.topic = testCaseData.Setup.Topic;
+            this.payload = testCaseData.Setup.Payload;
+            this.manifest = testCaseData.Setup.Manifest;
+
+            this.testCaseId = testCaseData.Setup.Id;
+            this.testCaseName = testCaseData.Setup.Name;
+            this.testCaseDescription = testCaseData.Setup.Description;
+            this.category = testCaseData.Setup.Category;
+            this.tags = testCaseData.Setup.Tags;
+            this.createExample = testCaseData.Setup.CreateExample;
         }
 
         return base.OnInitializedAsync();
