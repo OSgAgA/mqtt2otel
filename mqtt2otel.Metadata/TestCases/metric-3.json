@@ -1,0 +1,38 @@
+{
+  "Setup": {
+    "Id": "metric-3",
+    "Name": "Advanced json path",
+    "Description": "An advanced example on how to parse a json paylog using child indices to create detailed metrics manually.",
+    "Topic": "message-topic",
+    "Payload": "{\n   Processors:\n   [ \n       { \n           Name: \u0022Processor A\u0022,\n           Temperature: 42\n       },\n       { \n           Name: \u0022Processor B\u0022,\n           Temperature: 54\n       }\n   ]\n}",
+    "Manifest": "Version: 1.0\n\nMqttConnections:\n  - Name: \u0022My broker\u0022\n\nOtelConnections:\n  - Name: \u0022My Otel server\u0022\n    ServiceName: \u0022my-service\u0022\n    ServiceNamespace: \u0022my-service-namespace\u0022\n\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022message-topic\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Attributes:\n            - Key: \u0022test\u0022\n              Value: \u0022value\u0022\n          Value: \u0022JSONPATH(\u0027$.Processors[1].Temperature\u0027)\u0022",
+    "Category": "Metrics",
+    "Tags": [
+      "json"
+    ],
+    "CreateExample": true
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Processor.Temperature",
+        "OtelServer": "My Otel server",
+        "MeterVersion": "",
+        "Description": "The current processor temperature.",
+        "Unit": "",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 54,
+            "StartTime": "2026-06-30T13:25:28.2854093+00:00",
+            "EndTime": "2026-06-30T13:25:28.2874382+00:00",
+            "Tags": {
+              "test": "value"
+            }
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

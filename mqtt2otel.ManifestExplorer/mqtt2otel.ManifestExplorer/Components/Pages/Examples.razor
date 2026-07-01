@@ -6,25 +6,48 @@
 
 <h1>Examples</h1>
 
-<div class="d-flex flex-wrap">
-    @foreach (var example in this.examples)
-    {
-        <Card Class="mb-4" Style="width:18rem; margin: 10px">
-            <CardBody Class="d-flex flex-column">
-                <CardTitle>@example.Name</CardTitle>
-                <CardText>@example.Description</CardText>
-                <div class="mt-auto text-center">
-                    <Button Color="ButtonColor.Primary" To="@("/" + @example.Id)" Type="ButtonType.Link">Go</Button>
-                </div>
-            </CardBody>
-        </Card>
-    }
-</div>
+<p>
+Please choose from a set of predefined examples to get you started using the manifest explorer.
+</p>
+
+@foreach (var categoryExampleMapping in this.categoryExampleMappings)
+{
+    <h3 style="margin-top:30px">@categoryExampleMapping.Key</h3>
+    <hr />
+
+    <div class="d-flex flex-wrap">
+        @foreach (var example in categoryExampleMapping.Value)
+        {
+            <Card Class="mb-4" Style="width:23rem; margin: 10px">
+                <CardBody Class="d-flex flex-column">
+                    <CardTitle class="d-flex align-items-center">
+                        <div><b>@example.Name</b></div>
+
+                        <div class="ms-auto d-flex flex-wrap justify-content-end">
+                            @foreach (var tag in example.Tags)
+                            {
+                                <Button Color="ButtonColor.Info"
+                                        Style="padding-left: 5px; padding-right: 5px; padding-top: 2px; padding-bottom: 2px; margin-right:5px;">
+                                    @tag
+                                </Button>
+                            }
+                        </div>
+                    </CardTitle>
+                    <hr style="margin-left: 0px; margin-right: 0px; margin-top:0px; margin-bottom:10px;"/>
+                    <CardText>@example.Description</CardText>
+                    <div class="mt-auto text-center">
+                        <Button Color="ButtonColor.Light" To="@("/" + @example.Id)" Type="ButtonType.Link">Go</Button>
+                    </div>
+                </CardBody>
+            </Card>
+        }
+    </div>
+}
 
 @code
 {
     /// <summary>
     /// All available examples.
     /// </summary>
-    private List<ExampleData> examples = ExampleData.GetAll();
+    private Dictionary<string, List<ExampleData>> categoryExampleMappings = ExampleData.GetAllByCategories();
 }

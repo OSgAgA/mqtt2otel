@@ -10,8 +10,13 @@ namespace mqtt2otel.Metadata
     /// <summary>
     /// Represents a test case, including the needed setup and the expected outcome.
     /// </summary>
-    public class TestCase
+    public class TestCaseData
     {
+        /// <summary>
+        /// Caches the loaded test case data for further use.
+        /// </summary>
+        private static List<TestCaseData>? cache = null;
+
         /// <summary>
         /// Gets or sets the setup , that is needed to execute the test successfully.
         /// </summary>
@@ -29,10 +34,30 @@ namespace mqtt2otel.Metadata
         /// <exception cref="Exception">Thrown if directory with json files describing the test cases is not found.</exception>
         public static IEnumerable<object[]> LoadAllAsMemberdata()
         {
-            foreach (var testCase in TestCase.LoadAll())
+            foreach (var testCase in TestCaseData.LoadAll())
             {
                 yield return new object[] { testCase };
             }
+        }
+
+        /// <summary>
+        /// Gets the test case data with the given id, or a newly created <see cref="TestCaseData"/> instance if no
+        /// test case with the provided id has been found.
+        /// </summary>
+        /// <param name="id">The test case id.</param>
+        /// <returns>The test case with the provided id.</returns>
+        public static TestCaseData GetById(string id)
+        {
+            var testCases = TestCaseData.LoadAll();
+
+            var query = testCases.Where(tc => tc.Setup.Id == id);
+
+            if (query.Any()) return query.First();
+
+            var result = new TestCaseData();
+            result.Setup.Id = id;
+
+            return result;
         }
 
         /// <summary>
@@ -40,9 +65,11 @@ namespace mqtt2otel.Metadata
         /// </summary>
         /// <returns>All available test cases.</returns>
         /// <exception cref="Exception">Thrown if directory with json files describing the test cases is not found.</exception>
-        public static List<TestCase> LoadAll()
+        public static List<TestCaseData> LoadAll()
         {
-            var results = new List<TestCase>();
+            if (cache != null) return cache;
+
+            cache = new List<TestCaseData>();
 
             var directories = Directory.GetDirectories("./", "TestCases", SearchOption.AllDirectories);
 
@@ -55,11 +82,11 @@ namespace mqtt2otel.Metadata
                     try
                     {
                         var json = File.ReadAllText(file);
-                        var result = JsonSerializer.Deserialize<TestCase>(json);
+                        var result = JsonSerializer.Deserialize<TestCaseData>(json);
 
                         if (result != null)
                         {
-                            results.Add(result);
+                            cache.Add(result);
                         }
                     }
                     catch (Exception ex)
@@ -73,7 +100,7 @@ namespace mqtt2otel.Metadata
                 throw new Exception($"Searching for TestCase directory returned {directories?.Length} results. Exactly one result has been expected.");
             }
 
-            return results;
+            return cache;
         }
 
         /// <summary>
@@ -85,7 +112,7 @@ namespace mqtt2otel.Metadata
         {
             Dictionary<string, ExampleData> result = new Dictionary<string, ExampleData>();
 
-            foreach (var testCase in TestCase.LoadAll())
+            foreach (var testCase in TestCaseData.LoadAll())
             {
                 result[testCase.Setup.Id] = testCase.Setup;
             }
