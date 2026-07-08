@@ -91,46 +91,6 @@ Example:
 
 {{< exampleCode id="doc-9" field="Manifest" lang="yaml" hl_lines="15-16 30-31">}}
 
-```yaml {hl_lines=[15,16,31,32]}
-SubscriptionGroups:
-  - Name: "Power sensors"
-    Subscriptions:
-      - Name: "Power Sensor 1"
-        Topic: "1234"
-      - Name: "Power Sensor 2"
-        Topic: "9876"
-
-Processors:
-  - Name: "Power Metrics"
-    Description: "Provides power information from a power sensor."
-    Mqtt: 
-      SubscriptionGroups:
-        - Name: "Power sensors"
-          ParentPath: "tele"
-          SubPath: "sensor"
-    Otel:
-      Metrics:
-        - Name: "Energy_Power_W"
-          Description: "The current power consumption at the time of measurement in Watt."
-          SignalDataType: Float
-          Instrument: Gauge
-          Value: "JSONPATH('$.ENERGY.Power')"
-        - ...
-
-  - Name: "Sensor Logs"
-    Description: "Collect all log messages from the sensors."
-    Mqtt:
-      SubscriptionGroups:
-        - Name: "Power sensors"
-          ParentPath: "stat"
-          SubPath: "logs"
-    Otel:
-      Logs:
-        - Name: "Logging"
-          PayloadType: Json
-          Transform: "GROK('%{TIME:otel_timestamp} %{WORD:category}: %{GREEDYDATA:otel_message}')"
-```
-
 #### Explanation:
 
 * **ParentPath**: This specifies the top-level directory or prefix of the topic. For example, `tele` for telemetry data or `stat` for status/log data.
