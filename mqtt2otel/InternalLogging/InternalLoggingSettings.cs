@@ -47,5 +47,10 @@ namespace mqtt2otel.InternalLogging
         /// Gets or sets the otel server settings. Will be ignored if <see cref="LogToOtel"/> is false.
         /// </summary>
         public OtelServerConnection? Otel { get; set; }  = null;
+
+        /// <summary>
+        /// Gets or sets the trace sampling ratio as value between 0.0 (=no traces) and 1.0 (=all traces).
+        /// </summary>
+        public double TraceSamplingRatio { get; set; } = 0.0;
     }
 }

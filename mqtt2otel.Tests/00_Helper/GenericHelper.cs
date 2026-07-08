@@ -1,4 +1,6 @@
-﻿using mqtt2otel.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using Moq;
+using mqtt2otel.Interfaces;
 using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
@@ -18,7 +20,8 @@ namespace mqtt2otel.Tests.Helper
         public static DataStores GetDataStores()
         {
             var signalStore = new SignalStore();
-            var loggerStore = new LoggerStore(new PayloadParser(), new PayloadTransformation());
+            var internalLogger = new Mock<ILogger<string>>();
+            var loggerStore = new LoggerStore(internalLogger.Object, new PayloadParser(), new PayloadTransformation());
 
             return new DataStores(signalStore, loggerStore);
         }

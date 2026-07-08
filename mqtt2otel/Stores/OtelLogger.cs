@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
+using mqtt2otel.InternalLogging;
 using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 using mqtt2otel.Transformation;
@@ -31,16 +32,23 @@ namespace mqtt2otel.Stores
         private readonly IPayloadTransformation payloadTransformation;
 
         /// <summary>
+        /// The logger used for internal logging.
+        /// </summary>
+        private readonly ILogger internalLogger;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OtelLogger"/> class.
         /// </summary>
+        /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="logger">The logger to log to open telemetry.</param>
         /// <param name="payloadParser">The payload parser used for parsing mqtt payloads.</param>
-        /// <param name="payloadParser">The payload transformation parser used for transforming mqtt payloads.</param>
-        public OtelLogger(ILogger logger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation)
+        /// <param name="payloadTransformation">The payload transformation parser used for transforming mqtt payloads.</param>
+        public OtelLogger(ILogger internalLogger, ILogger logger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation)
         {
             this.logger = logger;
             this.payloadParser = payloadParser;
             this.payloadTransformation = payloadTransformation;
+            this.internalLogger = internalLogger;
         }
 
         /// <summary>
@@ -58,7 +66,10 @@ namespace mqtt2otel.Stores
 
             if (!string.IsNullOrWhiteSpace(rule.Transform))
             {
-                payload = await this.payloadTransformation.Apply(rule.Name, payload, rule.Transform, new ParsingContext(variables));
+                using (this.internalLogger.StartActivity("Logger rule transformation"))
+                {
+                    payload = await this.payloadTransformation.Apply(rule.Name, payload, rule.Transform, new ParsingContext(variables));
+                }
             }
 
             List<KeyValuePair<string, object?>> attributes = combinedAttributes
@@ -66,36 +77,41 @@ namespace mqtt2otel.Stores
                 .ToList();
 
             string? body = string.Empty;
-
-            switch (rule.PayloadType)
+            using (this.internalLogger.StartActivity("Logger rule execution"))
             {
-                case OtelLoggingPayloadType.Text:
-                    body = payload;
-                    break;
-                case OtelLoggingPayloadType.Json:
-                    var obj = Newtonsoft.Json.Linq.JObject.Parse(payload).ToObject<Dictionary<string, object?>>();
+                switch (rule.PayloadType)
+                {
+                    case OtelLoggingPayloadType.Text:
+                        body = payload;
+                        break;
+                    case OtelLoggingPayloadType.Json:
+                        var obj = Newtonsoft.Json.Linq.JObject.Parse(payload).ToObject<Dictionary<string, object?>>();
 
-                    if (obj == null) return false;
+                        if (obj == null) return false;
 
-                    string messageKey = rule.MessageKey;
-                    if (obj.ContainsKey(messageKey))
-                    {
-                        body = obj[messageKey]?.ToString();
-                        obj.Remove(messageKey);
-                        var additionalAttributes = obj.Select(kvp => new KeyValuePair<string, object?>(kvp.Key, kvp.Value)).ToList();
-                        attributes.AddRange(additionalAttributes);
-                    }
-                    else
-                    {
-                        body = obj.ToString();
-                    }
+                        string messageKey = rule.MessageKey;
+                        if (obj.ContainsKey(messageKey))
+                        {
+                            body = obj[messageKey]?.ToString();
+                            obj.Remove(messageKey);
+                            var additionalAttributes = obj.Select(kvp => new KeyValuePair<string, object?>(kvp.Key, kvp.Value)).ToList();
+                            attributes.AddRange(additionalAttributes);
+                        }
+                        else
+                        {
+                            body = obj.ToString();
+                        }
 
-                    break;
-                default:
-                    return false;
+                        break;
+                    default:
+                        return false;
+                }
             }
 
-            ApplyLoglevelAndLogToOtel(internalLogger, attributes, body, rule);
+            using (this.internalLogger.StartActivity("Log to otel"))
+            {
+                ApplyLoglevelAndLogToOtel(internalLogger, attributes, body, rule);
+            }
 
             return true;
         }

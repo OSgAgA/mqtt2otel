@@ -394,22 +394,25 @@ namespace mqtt2otel
         {
             try
             {
-                this.mqttMeter.MessagesReceived.Add(1);
-                this.mqttMeter.PayloadSize.Record(e.ApplicationMessage.Payload.Length);
-
-                var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-
-                bool success = true;
-
-                foreach (var brokerSubscriptionId in e.ApplicationMessage.SubscriptionIdentifiers)
+                using (this.internalLogger.StartActivity("Process received mqtt message"))
                 {
-                    success = success && await ProcessReceivedMessage(brokerSubscriptionId, e.ApplicationMessage.Topic, payload);
+                    this.mqttMeter.MessagesReceived.Add(1);
+                    this.mqttMeter.PayloadSize.Record(e.ApplicationMessage.Payload.Length);
 
-                }
+                    var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
 
-                if (!success)
-                {
-                    return;
+                    bool success = true;
+
+                    foreach (var brokerSubscriptionId in e.ApplicationMessage.SubscriptionIdentifiers)
+                    {
+                        success = success && await ProcessReceivedMessage(brokerSubscriptionId, e.ApplicationMessage.Topic, payload);
+
+                    }
+
+                    if (!success)
+                    {
+                        return;
+                    }
                 }
             }
             catch (ExpressionParsingException ex)
@@ -467,20 +470,23 @@ namespace mqtt2otel
 
             foreach (var data in subscriptions)
             {
-                if (this.OnMessageReceived != null)
+                using (this.internalLogger.StartActivity("Process subscription"))
                 {
-                    this.OnMessageReceived(this, new MqttMessageReceivedEventArgs(payload, data.Subscription, topic, data.Processor));
+                    if (this.OnMessageReceived != null)
+                    {
+                        this.OnMessageReceived(this, new MqttMessageReceivedEventArgs(payload, data.Subscription, topic, data.Processor));
+                    }
+
+
+                    success = await data.Processor.ProcessSubscriptionPayload(payload, data.Subscription);
+
+                    if (this.OnMessageProcessed != null)
+                    {
+                        this.OnMessageProcessed(this, new MqttMessageReceivedEventArgs(payload, data.Subscription, topic, data.Processor));
+                    }
+
+                    if (!success) this.internalLogger.LogError($"Could not process message. See previous errors. Message skipped. Payload: {payload}");
                 }
-
-
-                success = await data.Processor.ProcessSubscriptionPayload(payload, data.Subscription);
-
-                if (this.OnMessageProcessed != null)
-                {
-                    this.OnMessageProcessed(this, new MqttMessageReceivedEventArgs(payload, data.Subscription, topic, data.Processor));
-                }
-
-                if (!success) this.internalLogger.LogError($"Could not process message. See previous errors. Message skipped. Payload: {payload}");
             }
 
             return true;

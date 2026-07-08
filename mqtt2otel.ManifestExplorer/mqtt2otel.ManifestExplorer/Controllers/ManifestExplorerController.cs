@@ -58,7 +58,8 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             IPayloadParser payloadParser = new PayloadParser();
             IPayloadTransformation payloadTransformation = new PayloadTransformation();
             ISignalStore signalStore = new SignalStore();
-            ILoggerStore loggerStore = new LoggerStore(payloadParser, payloadTransformation);
+            var internalLogger = new Mock<ILogger<string>>();
+            ILoggerStore loggerStore = new LoggerStore(internalLogger.Object, payloadParser, payloadTransformation);
             IDataStores dataStores = new DataStores(signalStore, loggerStore);
             ProcessorMeter meter = new ProcessorMeter();
 
