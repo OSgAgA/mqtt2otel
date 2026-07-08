@@ -89,7 +89,7 @@ and **SubPath** to correctly target the topics.
 
 Example:
 
-{{< exampleCode id="doc-9" field="Manifest" lang="yaml" hl_lines="15-16 30-31">}}
+{{< exampleCode id="doc-11" field="Manifest" lang="yaml" hl_lines="15-16 30-31">}}
 
 #### Explanation:
 
