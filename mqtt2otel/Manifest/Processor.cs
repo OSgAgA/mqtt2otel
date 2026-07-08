@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
+using mqtt2otel.InternalLogging;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
@@ -111,9 +112,14 @@ namespace mqtt2otel.Manifest
             sw.Start();
             try
             {
-
-                success = await this.ProcessMetricsSubscription(payload, subscription);
-                success = success && await this.ProcessLogsSubscription(payload, subscription);
+                using (this.internalLogger.StartActivity("Process metrics processors"))
+                {
+                    success = await this.ProcessMetricsSubscription(payload, subscription);
+                }
+                using (this.internalLogger.StartActivity("Process log processors"))
+                {
+                    success = success && await this.ProcessLogsSubscription(payload, subscription);
+                }
             }
             catch
             {
@@ -141,28 +147,31 @@ namespace mqtt2otel.Manifest
 
             foreach (var rule in this.Otel.Metrics)
             {
-                if (rule.Name == null) continue;
+                using (this.internalLogger.StartActivity("Process metrics rule"))
+                {
+                    if (rule.Name == null) continue;
 
-                var sw = new Stopwatch();
-                sw.Start();
-                var key = subscription.Id + ":" + rule.Id;
-                var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
-                await this.WriteValueToSignalStore(subscription.Id, rule.Id, this.Otel, rule, payload, combinedVariables);
-                sw.Stop();
+                    var sw = new Stopwatch();
+                    sw.Start();
+                    var key = subscription.Id + ":" + rule.Id;
+                    var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
+                    await this.WriteValueToSignalStore(subscription.Id, rule.Id, this.Otel, rule, payload, combinedVariables);
+                    sw.Stop();
 
-                var tags = new TagList();
-                tags.Add("processor.name", this.Name);
-                tags.Add("processor.id", this.Id);
-                tags.Add("processor.otel.connection", this.OtelConnection);
-                tags.Add("subscription.name", subscription.Name);
-                tags.Add("subscription.id", subscription.Id);
-                tags.Add("subscription.connection", subscription.BrokerConnection);
-                tags.Add("rule.name", rule.Name);
-                tags.Add("rule.id", rule.Id);
-                tags.Add("rule.connection", rule.OtelConnection);
-                tags.Add("rule.instrument", rule.Instrument);
-                this.processorMeter.ProcessingTimeMetricRule.Record(sw.ElapsedMicroseconds, tags);
-                this.processorMeter.Metrics.Add(1, tags);
+                    var tags = new TagList();
+                    tags.Add("processor.name", this.Name);
+                    tags.Add("processor.id", this.Id);
+                    tags.Add("processor.otel.connection", this.OtelConnection);
+                    tags.Add("subscription.name", subscription.Name);
+                    tags.Add("subscription.id", subscription.Id);
+                    tags.Add("subscription.connection", subscription.BrokerConnection);
+                    tags.Add("rule.name", rule.Name);
+                    tags.Add("rule.id", rule.Id);
+                    tags.Add("rule.connection", rule.OtelConnection);
+                    tags.Add("rule.instrument", rule.Instrument);
+                    this.processorMeter.ProcessingTimeMetricRule.Record(sw.ElapsedMicroseconds, tags);
+                    this.processorMeter.Metrics.Add(1, tags);
+                }
             }
 
             return true;
@@ -177,49 +186,55 @@ namespace mqtt2otel.Manifest
         private async Task<bool> ProcessLogsSubscription(string payload, MqttSubscription subscription)
         {
             var swTransform = new Stopwatch();
-            swTransform.Start();
-            if (subscription.Transform != null)
-            {
-                var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
-                payload = await this.payloadTransformation.Apply(this.Name, payload, subscription.Transform, new ParsingContext(combinedVariables));
-            }
-            swTransform.Stop();
 
+            using (this.internalLogger.StartActivity("Transform payload"))
+            {
+                swTransform.Start();
+                if (subscription.Transform != null)
+                {
+                    var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
+                    payload = await this.payloadTransformation.Apply(this.Name, payload, subscription.Transform, new ParsingContext(combinedVariables));
+                }
+                swTransform.Stop();
+            }
             bool success = true;
 
             foreach (var rule in this.Otel.Logs)
             {
-                var sw = new Stopwatch();
-                sw.Start();
-
-                var key = rule.Id;
-                if (!this.dataStores.LoggerStore.ContainsKey(key))
+                using (this.internalLogger.StartActivity("Process log rule"))
                 {
-                    this.internalLogger.LogError($"Internal error: Could not get logger with id: {key}. Skipping event.");
-                    return false;
+                    var sw = new Stopwatch();
+                    sw.Start();
+
+                    var key = rule.Id;
+                    if (!this.dataStores.LoggerStore.ContainsKey(key))
+                    {
+                        this.internalLogger.LogError($"Internal error: Could not get logger with id: {key}. Skipping event.");
+                        return false;
+                    }
+
+                    var logger = this.dataStores.LoggerStore.GetLogger(key);
+                    var combinedAttributes = rule.Attributes.Combine(this.Otel.Attributes);
+
+                    success = await logger.ProcessLogMessage(payload, rule, subscription.Variables, this.internalLogger, combinedAttributes);
+
+                    sw.Stop();
+
+                    var tags = new TagList();
+                    tags.Add("processor.name", this.Name);
+                    tags.Add("processor.id", this.Id);
+                    tags.Add("processor.otel.connection", this.OtelConnection);
+                    tags.Add("subscription.name", subscription.Name);
+                    tags.Add("subscription.id", subscription.Id);
+                    tags.Add("subscription.connection", subscription.BrokerConnection);
+                    tags.Add("rule.name", rule.Name);
+                    tags.Add("rule.id", rule.Id);
+                    tags.Add("rule.connection", rule.OtelConnection);
+                    tags.Add("rule.category", rule.CategoryName);
+                    tags.Add("rule.payload_type", rule.PayloadType);
+                    this.processorMeter.ProcessingTimeLoggingRule.Record(swTransform.ElapsedTicks + sw.ElapsedTicks, tags);
+                    this.processorMeter.LogEntries.Add(1, tags);
                 }
-
-                var logger = this.dataStores.LoggerStore.GetLogger(key);
-                var combinedAttributes = rule.Attributes.Combine(this.Otel.Attributes);
-
-                success = await logger.ProcessLogMessage(payload, rule, subscription.Variables, this.internalLogger, combinedAttributes);
-
-                sw.Stop();
-
-                var tags = new TagList();
-                tags.Add("processor.name", this.Name);
-                tags.Add("processor.id", this.Id);
-                tags.Add("processor.otel.connection", this.OtelConnection);
-                tags.Add("subscription.name", subscription.Name);
-                tags.Add("subscription.id", subscription.Id);
-                tags.Add("subscription.connection", subscription.BrokerConnection);
-                tags.Add("rule.name", rule.Name);
-                tags.Add("rule.id", rule.Id);
-                tags.Add("rule.connection", rule.OtelConnection);
-                tags.Add("rule.category", rule.CategoryName);
-                tags.Add("rule.payload_type", rule.PayloadType);
-                this.processorMeter.ProcessingTimeLoggingRule.Record(swTransform.ElapsedTicks + sw.ElapsedTicks, tags);
-                this.processorMeter.LogEntries.Add(1, tags);
             }
 
             return success;

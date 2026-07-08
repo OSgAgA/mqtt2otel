@@ -18,6 +18,7 @@ namespace mqtt2otel.Server
             // Using host builder as currently no web functionality is used.
             // Change to WebApplication if endpoints, dontrollers and so on are needed.
             var builder = Host.CreateApplicationBuilder(args);
+
             builder.Logging.ClearProviders();
             builder.Services.AddHostedService<Mqtt2OtelService>();
 

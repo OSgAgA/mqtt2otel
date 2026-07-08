@@ -16,8 +16,9 @@ namespace mqtt2otel.Tests.Helper
         public static Manifest.Manifest ReadManifestFromString(string yaml, DataStores? dataStores = null)
         {
             var objFactoryLoggerMock = new Mock<ILogger<Manifest.Processor>>();
+            var internalLoggerMock = new Mock<ILogger<string>>();
             var signalStore = new SignalStore();
-            var loggerStore = new LoggerStore(new PayloadParser(), new PayloadTransformation());
+            var loggerStore = new LoggerStore(internalLoggerMock.Object, new PayloadParser(), new PayloadTransformation());
 
             if (dataStores == null)
             {

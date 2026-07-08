@@ -79,6 +79,7 @@ namespace mqtt2otel.InternalLogging
 
             InternalLogFactory.tracerProvider = Sdk.CreateTracerProviderBuilder()
                 .AddSource(InternalLogFactory.MainActivitySource.Name)
+                .SetSampler(new TraceIdRatioBasedSampler(settings.TraceSamplingRatio))
                 .SetResourceBuilder(
                     OpenTelemetry.Resources.ResourceBuilder.CreateDefault()
                         .AddService(settings.Otel.ServiceName, serviceNamespace: settings.Otel.ServiceNamespace))

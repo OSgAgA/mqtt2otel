@@ -43,8 +43,8 @@ namespace mqtt2otel.InternalLogging
             var listener = new ActivityListener
             {
                 ShouldListenTo = source => source.Name == source.Name,
-                Sample = (ref ActivityCreationOptions<ActivityContext> options) =>
-                    ActivitySamplingResult.AllDataAndRecorded,
+                //Sample = (ref ActivityCreationOptions<ActivityContext> options) =>
+                //    ActivitySamplingResult.AllDataAndRecorded,
                 ActivityStarted = activity =>
                 {
                     this.indentCounter += 1;
