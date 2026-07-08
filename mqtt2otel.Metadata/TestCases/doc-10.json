@@ -1,0 +1,37 @@
+{
+  "Setup": {
+    "Id": "doc-10",
+    "Name": "Subscription groups",
+    "Description": "",
+    "Topic": "sensor_1234",
+    "Payload": "{\n  \u0022Time\u0022: \u00222026-04-12T09:07:04\u0022,\n  \u0022ENERGY\u0022: {\n    \u0022Power\u0022: 0.000,\n    \u0022Voltage\u0022: 227,\n    \u0022Current\u0022: 0.000\n  },\n  \u0022ESP32\u0022: {\n    \u0022Temperature\u0022: 37.4\n  }\n}",
+    "Manifest": "SubscriptionGroups:\n  - Name: \u0022Power sensors\u0022\n    Subscriptions:\n      - Name: \u0022Power Sensor washing machine\u0022\n        Topic: \u0022sensor_1234\u0022 \n        Variables:\n          - Key: \u0022SensorName\u0022\n            Value: \u0022WashingMachine\u0022\n      - Name: \u0022Power Sensor dryer\u0022\n        Topic: \u0022sensor_9876\u0022\n        Variables:\n          - Key: \u0022SensorName\u0022\n            Value: \u0022Dryer\u0022\n\nProcessors:\n  - Name: \u0022Power Metrics\u0022\n    Description: \u0022Provides power information from a power sensor.\u0022\n    Mqtt: \n      SubscriptionGroups:\n        - Name: \u0022Power sensors\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Energy_Power_W\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Value: \u0022JSONPATH(\u0027$.ENERGY.Power\u0027)\u0022",
+    "Category": "Documentation",
+    "Tags": [
+      "doc"
+    ],
+    "CreateExample": false,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Energy_Power_W",
+        "OtelServer": "df4131b1-6c2d-45f4-bfdb-43ec7d5239a1",
+        "MeterVersion": "",
+        "Description": "",
+        "Unit": "",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 0,
+            "StartTime": "2026-07-08T19:28:55.2275784+00:00",
+            "EndTime": "2026-07-08T19:28:55.2283429+00:00",
+            "Tags": {}
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}
