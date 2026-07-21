@@ -366,3 +366,4 @@ FodyWeavers.xsd
 /mqtt2otel.Server/Manifest2.yaml
 /mqtt2otel.Server/Manifest-Processors-EnergyMetrics.yaml
 /mqtt2otel.Server/Manifest-Processors-StatusMetrics.yaml
+/mqtt2otel.ManifestExplorer/mqtt2otel.ManifestExplorer/appsettings.Development.json
