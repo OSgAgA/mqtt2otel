@@ -21,38 +21,37 @@ namespace mqtt2otel.Parser
         /// If the regular expression returns more than one match, then the first match is used.
         /// </summary>
         /// <typeparam name="T">Must be string.</typeparam>
-        /// <param name="payload">The payload.</param>
         /// <param name="filter">Will be ignored.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed payload.</returns>
         /// <exception cref="Exception">Thrown if generic return type is not a string.</exception>
-        public T Parse<T>(string input, string filter, ParsingContext context)
+        public T Parse<T>(string filter, ParsingContext context)
         {
             object result = string.Empty;
 
             if (typeof(T) == typeof(int))
             {
-                result = int.Parse(input);
+                result = int.Parse(context.Payload);
             }
             else if (typeof(T) == typeof(float))
             {
-                result = float.Parse(input);
+                result = float.Parse(context.Payload);
             }
             else if (typeof(T) == typeof(double))
             {
-                result = double.Parse(input);
+                result = double.Parse(context.Payload);
             }
             else if (typeof(T) == typeof(long))
             {
-                result = long.Parse(input);
+                result = long.Parse(context.Payload);
             }
             else if (typeof(T) == typeof(decimal))
             {
-                result = decimal.Parse(input);
+                result = decimal.Parse(context.Payload);
             }
             else
             {
-                result = input;
+                result = context.Payload;
             }
 
             return (T)result;

@@ -23,15 +23,14 @@ namespace mqtt2otel.Parser
         /// If the regular expression returns more than one match, then the first match is used.
         /// </summary>
         /// <typeparam name="T">The expected return type.</typeparam>
-        /// <param name="payload">The payload.</param>
         /// <param name="filter">A RegEx expression (see <see cref="https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference"/>) that will be applied to the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed payload.</returns>
-        public T Parse<T>(string input, string filter, ParsingContext context)
+        public T Parse<T>(string filter, ParsingContext context)
         {
             var regex = new Regex(filter);
 
-            var match = regex.Match(input);
+            var match = regex.Match(context.Payload);
 
             if (match.Success)
             {

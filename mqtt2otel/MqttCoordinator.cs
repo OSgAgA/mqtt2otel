@@ -478,7 +478,7 @@ namespace mqtt2otel
                     }
 
 
-                    success = await data.Processor.ProcessSubscriptionPayload(payload, data.Subscription);
+                    success = await data.Processor.ProcessSubscriptionPayload(payload, topic, data.Subscription);
 
                     if (this.OnMessageProcessed != null)
                     {

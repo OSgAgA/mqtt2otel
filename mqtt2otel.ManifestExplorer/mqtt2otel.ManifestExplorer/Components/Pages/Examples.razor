@@ -1,6 +1,7 @@
 ﻿@page "/examples"
 @attribute [StreamRendering]
 @using mqtt2otel.ManifestExplorer.DTOs
+@inject mqtt2otel.ManifestExplorer.Meters.UsageMeter usageMeter
 
 <PageTitle>Examples</PageTitle>
 
@@ -47,7 +48,34 @@ Please choose from a set of predefined examples to get you started using the man
 @code
 {
     /// <summary>
+    /// A guard to test, whether the page is already initialized.
+    /// </summary>
+    private bool isInitialized = false;
+
+    /// <summary>
     /// All available examples.
     /// </summary>
     private Dictionary<string, List<ExampleData>> categoryExampleMappings = ExampleData.GetAllByCategories();
+
+
+    /// <summary>
+    /// Called when the side is initialized. 
+    /// </summary>
+    /// <returns></returns>
+    protected override Task OnInitializedAsync()
+    {
+        if (!this.isInitialized)
+        {
+            this.isInitialized = true;
+
+            var pageTags = new System.Diagnostics.TagList()
+            {
+                { "Page", "Examples"}
+            };
+
+            this.usageMeter.PageRequestedCounter.Add(1, pageTags);
+        }
+
+        return base.OnInitializedAsync();
+    }
 }

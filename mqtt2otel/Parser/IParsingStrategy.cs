@@ -15,10 +15,9 @@ namespace mqtt2otel.Parser
         /// Parses the given input and applies a filter string.
         /// </summary>
         /// <typeparam name="T">The expected result type.</typeparam>
-        /// <param name="payload">The payload.</param>
         /// <param name="filter">The filter that will be applied.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The filtered payload as the given type.</returns>
-        public T Parse<T>(string payload, string filter, ParsingContext context);
+        public T Parse<T>(string filter, ParsingContext context);
     }
 }

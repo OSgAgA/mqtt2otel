@@ -55,12 +55,13 @@ namespace mqtt2otel.Stores
         /// Processes a log message given as a string payload.
         /// </summary>
         /// <param name="payload">The payload representing the log message.</param>
+        /// <param name="topic">The topic, that triggered the subscription.</param>
         /// <param name="rule">The log rule that define how to interpret the payload.</param>
         /// <param name="variables">Variables that can be applied to the payload.</param>
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="combinedAttributes">All attributes that should be applied to the log message.</param>
         /// <returns>A value indicating whether the payload could be processed successfully.</returns>
-        public async Task<bool> ProcessLogMessage(string payload, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<Variable> combinedAttributes)
+        public async Task<bool> ProcessLogMessage(string payload, string topic, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<Variable> combinedAttributes)
         {
             if (rule.Name == null) return false;
 
@@ -68,12 +69,15 @@ namespace mqtt2otel.Stores
             {
                 using (this.internalLogger.StartActivity("Logger rule transformation"))
                 {
-                    payload = await this.payloadTransformation.Apply(rule.Name, payload, rule.Transform, new ParsingContext(variables));
+                    payload = await this.payloadTransformation.Apply(rule.Name, rule.Transform, new ParsingContext(variables, payload, topic));
                 }
             }
 
+            var context = new ParsingContext(variables, payload, topic);
             List<KeyValuePair<string, object?>> attributes = combinedAttributes
-                .Select(attribute => new KeyValuePair<string, object?>(attribute.Key, VariableParser.Expand(attribute.Value.ToString() ?? string.Empty, variables)))
+                .Select(attribute => new KeyValuePair<string, object?>(
+                    EmbeddedExpressionParser.Expand(attribute.Key, context), 
+                    EmbeddedExpressionParser.Expand(attribute.Value.ToString() ?? string.Empty, context)))
                 .ToList();
 
             string? body = string.Empty;

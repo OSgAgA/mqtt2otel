@@ -8,6 +8,7 @@
 @rendermode InteractiveServer
 @inject IHttpClientFactory Factory
 @inject Microsoft.Extensions.Options.IOptions<FeatureToggles> featureToggles
+@inject mqtt2otel.ManifestExplorer.Meters.UsageMeter usageMeter
 
 <PageTitle>mqtt2otel manifest explorer</PageTitle>
 
@@ -94,7 +95,7 @@
                 <CardHeader>
                     <b>Manifest</b>
                 </CardHeader>
-                <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.manifest" rows="26"/>
+                <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.manifest" rows="26" />
             </Card>
         </div>
         <div class="col">
@@ -105,7 +106,7 @@
                             <CardHeader>
                                 <b>Topic</b>
                             </CardHeader>
-                            <InputText @bind-Value="@this.topic"/>
+                            <InputText @bind-Value="@this.topic" />
                         </Card>
                     </div>
                 </div>
@@ -115,7 +116,7 @@
                             <CardHeader>
                                 <b>Payload</b>
                             </CardHeader>
-                            <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.payload" rows="22"/>
+                            <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.payload" rows="22" />
                         </Card>
                     </div>
                 </div>
@@ -271,10 +272,17 @@
     private ApplyPatternToPayloadResult? Result = null;
 
     /// <summary>
+    /// A guard to test, whether the page is already initialized.
+    /// </summary>
+    private bool isInitialized = false;
+
+    /// <summary>
     /// Apply the provided data and set the result tabs.
     /// </summary>
     private async Task Apply()
     {
+        this.usageMeter.ExampleAppliedCounter.Add(1);
+
         var httpClient = Factory.CreateClient("ServerAPI");
 
         var request = new ApplyPatternToPayloadData(this.topic, this.payload, this.manifest);
@@ -341,6 +349,28 @@
     /// <returns></returns>
     protected override Task OnInitializedAsync()
     {
+        if (!this.isInitialized)
+        {
+            this.isInitialized = true;
+
+            var pageTags = new System.Diagnostics.TagList()
+            {
+                { "Page", "Home"}
+            };
+
+            this.usageMeter.PageRequestedCounter.Add(1, pageTags);
+
+            if (this.ExampleId != null)
+            {
+                var exampleTags = new System.Diagnostics.TagList()
+            {
+                { "ExampleId", this.ExampleId}
+            };
+
+                this.usageMeter.ExampleRequestedCounter.Add(1, exampleTags);
+            }
+        }
+
         if (this.ExampleId != null)
         {
             var testCaseData = TestCaseData.GetById(this.ExampleId);

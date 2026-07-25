@@ -22,18 +22,17 @@ namespace mqtt2otel.Transformation
         /// <summary>
         /// Applies the grok pattern to the given payload and returns a structured json.
         /// </summary>
-        /// <param name="payload">The payload to be processed.</param>
         /// <param name="pattern">The grok pattern to be applied. See <see cref="https://www.elastic.co/docs/reference/logstash/plugins/plugins-filters-grok"/></param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed payload as a structured json string.</returns>
-        public string Apply(string payload, string pattern, ParsingContext context)
+        public string Apply(string pattern, ParsingContext context)
         {
             var parser = new DissectParser(pattern);
 
-            var result = parser.Parse(payload);
+            var result = parser.Parse(context.Payload);
 
             var resultAsDict = result.ToDictionary();
-            resultAsDict["original_value"] = payload;
+            resultAsDict["original_value"] = context.Payload;
 
             var resultAsJson = JsonConvert.SerializeObject(resultAsDict);
 

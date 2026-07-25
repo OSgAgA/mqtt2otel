@@ -23,9 +23,9 @@ namespace mqtt2otel.InternalMetrics
             this.meter = new Meter(nameof(ManifestMeter));
 
             this.ManifestReadDuration = this.meter.CreateGauge<double>("mqtt2otel.manifest.processing_duration_in_us", unit: "us", "The time needed for reading, parsing, validating and initializing the manifest file.");
-            this.ProcessorsCount = this.meter.CreateGauge<int>("mqtt2otel.manifest.procesors.count", "The amount of processors read from manifest file.");
-            this.SubscriptionGroupsCount = this.meter.CreateGauge<int>("mqtt2otel.manifest.subscription_groups.count", "The amount of subscription groups read from the manifest file.");
-            this.ManifestUnsuccessfulRead = this.meter.CreateCounter<int>("mqtt2otel.manifest.unsuccessful_read", "Counts the number of times a manifest could not be parsed successfully.");
+            this.ProcessorsCount = this.meter.CreateGauge<int>("mqtt2otel.manifest.procesors.count", description: "The amount of processors read from manifest file.");
+            this.SubscriptionGroupsCount = this.meter.CreateGauge<int>("mqtt2otel.manifest.subscription_groups.count", description: "The amount of subscription groups read from the manifest file.");
+            this.ManifestUnsuccessfulRead = this.meter.CreateCounter<int>("mqtt2otel.manifest.unsuccessful_read", description: "Counts the number of times a manifest could not be parsed successfully.");
         }
 
         /// <summary>

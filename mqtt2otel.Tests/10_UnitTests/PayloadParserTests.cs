@@ -8,7 +8,7 @@ namespace mqtt2otel.Tests._10_UnitTests
         /// <summary>
         /// Provides an empty parsing context for testing purposes.
         /// </summary>
-        private static ParsingContext _emptyContext = new ParsingContext(new List<Variable>());
+        private static ParsingContext _emptyContext = new ParsingContext(new List<Variable>(), string.Empty, string.Empty);
 
         [Fact]
         public async Task ShouldProcessConstantValue()
@@ -17,7 +17,7 @@ namespace mqtt2otel.Tests._10_UnitTests
 
             parser.AutoDetectStrategies();
 
-            var result = await parser.ParseExpression<int>("Test", "123", "CONST('42')", _emptyContext);
+            var result = await parser.ParseExpression<int>("Test", "CONST('42')", _emptyContext);
 
             Assert.Equal(42, result);
         }
@@ -34,7 +34,8 @@ namespace mqtt2otel.Tests._10_UnitTests
             parser.AutoDetectStrategies();
 
             string payload = "{ \"Test\": { ValueA: 42, ValueB: 10, ValueC: { ValueD: 11 } }, ValueE: 23 }";
-            var result = await parser.ParseExpression<int>("Test", payload, $"JSONPATH({pattern})", _emptyContext);
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+            var result = await parser.ParseExpression<int>("Test", $"JSONPATH({pattern})", context);
 
             Assert.Equal(expectedResult, result);
         }
@@ -47,7 +48,8 @@ namespace mqtt2otel.Tests._10_UnitTests
             parser.AutoDetectStrategies();
 
             string payload = "{ \"Test\": { ValueA: 42.2, ValueB: 10, ValueC: { ValueD: 11 } }, ValueE: 23 }";
-            var result = await parser.ParseExpression<float>("Test", payload, "JSONPATH('int', '$.Test.ValueA')", _emptyContext);
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+            var result = await parser.ParseExpression<float>("Test", "JSONPATH('int', '$.Test.ValueA')", context);
 
             Assert.Equal(42, result);
         }
@@ -60,7 +62,9 @@ namespace mqtt2otel.Tests._10_UnitTests
             parser.AutoDetectStrategies();
 
             string payload = "{ \"Test\": { ValueA: 42 } }";
-            var result = await parser.ParseExpression<string>("Test", payload, "PAYLOAD()", _emptyContext);
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+
+            var result = await parser.ParseExpression<string>("Test", "PAYLOAD()", context);
 
             Assert.Equal(payload, result);
         }
@@ -75,7 +79,8 @@ namespace mqtt2otel.Tests._10_UnitTests
             var parser = new PayloadParser();
 
             string payload = string.Empty;
-            var result = await parser.ParseExpression<float>("Test", payload, expression, _emptyContext);
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+            var result = await parser.ParseExpression<float>("Test", expression, context);
 
             Assert.Equal(expectedResult, result);
         }
@@ -91,7 +96,8 @@ namespace mqtt2otel.Tests._10_UnitTests
             parser.AutoDetectStrategies();
 
             string payload = "{ \"Test\": { ValueA: 42 } }";
-            var result = await parser.ParseExpression<DateTime>("Test", payload, expression, _emptyContext);
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+            var result = await parser.ParseExpression<DateTime>("Test", expression, context);
 
             Assert.Equal(DateTime.Parse(expectedResult), result);
         }
@@ -111,7 +117,8 @@ namespace mqtt2otel.Tests._10_UnitTests
             parser.AutoDetectStrategies();
 
             string payload = "{ \"Test\": { ValueA: 42 } }";
-            var result = await parser.ParseExpression<DateTime>("Test", payload, expression, _emptyContext);
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+            var result = await parser.ParseExpression<DateTime>("Test", expression, context);
 
             Assert.Equal(DateTime.Parse(expectedResult), result);
         }
@@ -138,7 +145,8 @@ namespace mqtt2otel.Tests._10_UnitTests
             parser.AutoDetectStrategies();
 
             string payload = string.Empty;
-            var exception = await Assert.ThrowsAsync<ExpressionParsingException>( async () => await parser.ParseExpression<DateTime>("Test", payload, expression, _emptyContext) );
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+            var exception = await Assert.ThrowsAsync<ExpressionParsingException>( async () => await parser.ParseExpression<DateTime>("Test", expression, context) );
 
             Assert.NotNull(exception);
             Assert.NotNull(exception.InnerException);
@@ -168,7 +176,8 @@ namespace mqtt2otel.Tests._10_UnitTests
             parser.AutoDetectStrategies();
 
             string payload = string.Empty;
-            var exception = await Assert.ThrowsAsync<ExpressionParsingException>(async () => await parser.ParseExpression<DateTime>("Test", payload, expression, _emptyContext));
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+            var exception = await Assert.ThrowsAsync<ExpressionParsingException>(async () => await parser.ParseExpression<DateTime>("Test", expression, context));
 
             Assert.NotNull(exception);
             Assert.NotNull(exception.InnerException);
@@ -193,7 +202,8 @@ namespace mqtt2otel.Tests._10_UnitTests
             parser.AutoDetectStrategies();
 
             string payload = string.Empty;
-            var exception = await Assert.ThrowsAsync<ExpressionParsingException>(async () => await parser.ParseExpression<DateTime>("Test", payload, expression, _emptyContext));
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+            var exception = await Assert.ThrowsAsync<ExpressionParsingException>(async () => await parser.ParseExpression<DateTime>("Test", expression, context));
 
             Assert.NotNull(exception);
             Assert.NotNull(exception.InnerException);
@@ -221,7 +231,8 @@ namespace mqtt2otel.Tests._10_UnitTests
             parser.AutoDetectStrategies();
 
             string payload = "  1232134 aA_42 239847";
-            var result = await parser.ParseExpression<string>("test", payload, expression, _emptyContext);
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+            var result = await parser.ParseExpression<string>("test", expression, context);
 
             Assert.Equal(expectedResult, result);
         }
@@ -236,7 +247,8 @@ namespace mqtt2otel.Tests._10_UnitTests
             parser.AutoDetectStrategies();
 
             string payload = "  1232134 aA_42 239847";
-            var result = await parser.ParseExpression<int>("test", payload, expression, _emptyContext);
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+            var result = await parser.ParseExpression<int>("test", expression, context);
 
             Assert.Equal(expectedResult, result);
         }
@@ -251,7 +263,8 @@ namespace mqtt2otel.Tests._10_UnitTests
             parser.AutoDetectStrategies();
 
             string payload = " --2022-02-16--";
-            var result = await parser.ParseExpression<DateTime>("test", payload, expression, _emptyContext);
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+            var result = await parser.ParseExpression<DateTime>("test", expression, context);
 
             Assert.Equal(DateTime.Parse(expectedResult), result);
         }
@@ -266,7 +279,8 @@ namespace mqtt2otel.Tests._10_UnitTests
             parser.AutoDetectStrategies();
 
             string payload = " <root><child>42</child><child>11</child></root>";
-            var result = await parser.ParseExpression<int>("test", payload, expression, _emptyContext);
+            var context = new ParsingContext(new List<Variable>(), payload, string.Empty);
+            var result = await parser.ParseExpression<int>("test", expression, context);
 
             Assert.Equal(expectedResult, result);
         }
@@ -280,8 +294,8 @@ namespace mqtt2otel.Tests._10_UnitTests
 
             string payload = "";
             string expectedResult = "world";
-            var context = new ParsingContext(new List<Variable>() { new Variable() { Key = "hello", Value = expectedResult } });
-            var result = await parser.ParseExpression<string>("test", payload, "VAR('hello')", context);
+            var context = new ParsingContext(new List<Variable>() { new Variable() { Key = "hello", Value = expectedResult } }, payload, string.Empty);
+            var result = await parser.ParseExpression<string>("test", "VAR('hello')", context);
 
             Assert.Equal(expectedResult, result);
         }
@@ -295,8 +309,8 @@ namespace mqtt2otel.Tests._10_UnitTests
 
             string payload = "";
             int expectedResult = 42;
-            var context = new ParsingContext(new List<Variable>() { new Variable() { Key = "answer", Value = expectedResult } });
-            var result = await parser.ParseExpression<int>("test", payload, "VAR('answer')", context);
+            var context = new ParsingContext(new List<Variable>() { new Variable() { Key = "answer", Value = expectedResult } }, payload, string.Empty);
+            var result = await parser.ParseExpression<int>("test", "VAR('answer')", context);
 
             Assert.Equal(expectedResult, result);
         }
@@ -310,8 +324,8 @@ namespace mqtt2otel.Tests._10_UnitTests
 
             string payload = "";
             int expectedResult = 42;
-            var context = new ParsingContext(new List<Variable>() { new Variable() { Key = "answer", Value = expectedResult } });
-            var exception = await Assert.ThrowsAsync<ExpressionParsingException>( async () =>  await parser.ParseExpression<int>("test", payload, "VAR('question')", context));
+            var context = new ParsingContext(new List<Variable>() { new Variable() { Key = "answer", Value = expectedResult } }, payload, string.Empty);
+            var exception = await Assert.ThrowsAsync<ExpressionParsingException>( async () =>  await parser.ParseExpression<int>("test", "VAR('question')", context));
         }
     }
 }

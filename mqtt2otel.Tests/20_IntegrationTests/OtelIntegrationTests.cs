@@ -129,7 +129,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var logRule = manifest.Processors[0].Otel.Logs[0];
 
             var logger = dataStores.LoggerStore.GetLogger(logRule.Id);
-            bool success = await logger.ProcessLogMessage("This is a test message", logRule, new List<Variable>(), internalLogger.Object, logRule.Attributes);
+            bool success = await logger.ProcessLogMessage("This is a test message", "sensors/temperature", logRule, new List<Variable>(), internalLogger.Object, logRule.Attributes);
 
             Assert.Single(exportBuilder.Logs);
             var logEntry = exportBuilder.Logs[0];
@@ -180,7 +180,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var logRule = manifest.Processors[0].Otel.Logs[0];
 
             var logger = dataStores.LoggerStore.GetLogger(logRule.Id);
-            bool success = await logger.ProcessLogMessage("2026-01-31T15:42Z WARN This is a simple log message.", logRule, new List<Variable>(), internalLogger.Object, logRule.Attributes);
+            bool success = await logger.ProcessLogMessage("2026-01-31T15:42Z WARN This is a simple log message.", "sensors/temperature", logRule, new List<Variable>(), internalLogger.Object, logRule.Attributes);
 
             Assert.Single(exportBuilder.Logs);
             var logEntry = exportBuilder.Logs[0];
