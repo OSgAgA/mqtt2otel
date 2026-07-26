@@ -2,6 +2,7 @@
 using mqtt2otel.Parser;
 using MQTTnet;
 using NCalc;
+using NCalc.Handlers;
 using Parlot.Fluent;
 using System;
 using System.Collections.Generic;
@@ -53,25 +54,31 @@ namespace mqtt2otel
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed expression.</returns>
         /// <exception cref="ExpressionParsingException">Thrown if the expression could not be parsed.</exception>
-        public async Task<TResult> ParseExpression<TResult>(string name, string expressionString, ParsingContext context)
+        public TResult ParseExpression<TResult>(string name, string expressionString, ParsingContext context)
         {
             try
             {
-                var expressionContext = new ExpressionContext();
+                var expressionContext = new ExpressionContext(ExpressionOptions.IgnoreCaseAtBuiltInFunctions | ExpressionOptions.CaseInsensitiveStringComparer, CultureInfo.InvariantCulture);
 
-                expressionContext.StaticParameters.Add("PI", Math.PI);
-                expressionContext.StaticParameters.Add("E", Math.E);
+                expressionContext.Functions = new Dictionary<string, ExpressionFunction>(StringComparer.InvariantCultureIgnoreCase);
+                expressionContext.StaticParameters = new Dictionary<string, object?>(StringComparer.InvariantCultureIgnoreCase);
+
+                expressionContext.StaticParameters.Add("pi", Math.PI);
+                expressionContext.StaticParameters.Add("e", Math.E);
+
+                var compare = expressionContext.ComparisonOptions;
 
                 foreach (var strategyName in this.NameStrategyMapping.Keys)
                 {
                     this.ApplyStrategy<TResult>(expressionContext, strategyName, context);
                 }
 
-                var expression = new NCalc.Expression(expressionString, expressionContext);
+
+                var expression = new Expression(expressionString, expressionContext);
 
                 CustomExpressionFunctions.AddTo(expressionContext);
 
-                var result = await expression.EvaluateAsync() ?? throw new Exception();
+                var result = expression.Evaluate() ?? throw new Exception();
 
                 return TypeHelper.ConvertObject<TResult>(result);
             }

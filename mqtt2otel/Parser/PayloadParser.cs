@@ -26,9 +26,9 @@ namespace mqtt2otel.Parser
         }
 
         /// <inheritdoc/>
-        public async Task<T> Parse<T>(string name, string filterDefinition, ParsingContext context)
+        public T Parse<T>(string name, string filterDefinition, ParsingContext context)
         {
-            return await this.ParseExpression<T>(name, filterDefinition, context);
+            return this.ParseExpression<T>(name, filterDefinition, context);
         }
 
         /// <inheritdoc/>

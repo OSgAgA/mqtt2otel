@@ -16,6 +16,6 @@ namespace mqtt2otel.Interfaces
         /// <param name="expression">The expression that should be used for transforming the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The transformed payload</returns>
-        Task<string> Apply(string name, string expression, ParsingContext context);
+        string Apply(string name, string expression, ParsingContext context);
     }
 }

@@ -22,6 +22,6 @@ namespace mqtt2otel.Interfaces
         /// <param name="expression">The expression that should be applied to the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed value.</returns>
-        Task<T> Parse<T>(string name, string expression, ParsingContext context);
+        T Parse<T>(string name, string expression, ParsingContext context);
     }
 }

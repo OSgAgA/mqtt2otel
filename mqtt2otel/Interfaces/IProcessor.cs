@@ -31,7 +31,7 @@ namespace mqtt2otel.Interfaces
         /// <param name="topic">The topic, that triggered the subscription.</param>
         /// <param name="subscription">The subscription that received the payload.</param>
         /// <returns>A value indicating whether the operation has been successful.</returns>
-        Task<bool> ProcessSubscriptionPayload(string payload, string topic, MqttSubscription subscription);
+        bool ProcessSubscriptionPayload(string payload, string topic, MqttSubscription subscription);
 
         /// <summary>
         /// Validates the object.

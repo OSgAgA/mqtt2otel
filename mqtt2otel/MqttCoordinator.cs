@@ -405,7 +405,7 @@ namespace mqtt2otel
 
                     foreach (var brokerSubscriptionId in e.ApplicationMessage.SubscriptionIdentifiers)
                     {
-                        success = success && await ProcessReceivedMessage(brokerSubscriptionId, e.ApplicationMessage.Topic, payload);
+                        success = success && ProcessReceivedMessage(brokerSubscriptionId, e.ApplicationMessage.Topic, payload);
 
                     }
 
@@ -441,7 +441,7 @@ namespace mqtt2otel
             {
                 if (brokerSubscriptionId == null) return false;
 
-                result = result && await ProcessReceivedMessage(brokerSubscriptionId.Value, topic, payload);
+                result = result && ProcessReceivedMessage(brokerSubscriptionId.Value, topic, payload);
             }
 
             return result;
@@ -454,7 +454,7 @@ namespace mqtt2otel
         /// <param name="topic">The mqtt topic.</param>
         /// <param name="payload">The mqtt message payload as a string.</param>
         /// <returns>A value indicating whether processing has been successful.</returns>
-        public async Task<bool> ProcessReceivedMessage(uint brokerSubscriptionId, string topic, string payload)
+        public bool ProcessReceivedMessage(uint brokerSubscriptionId, string topic, string payload)
         {
             this.internalLogger.LogDebug($"Message received. Payload: {payload}");
 
@@ -478,7 +478,7 @@ namespace mqtt2otel
                     }
 
 
-                    success = await data.Processor.ProcessSubscriptionPayload(payload, topic, data.Subscription);
+                    success = data.Processor.ProcessSubscriptionPayload(payload, topic, data.Subscription);
 
                     if (this.OnMessageProcessed != null)
                     {

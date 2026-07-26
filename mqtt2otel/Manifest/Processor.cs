@@ -96,7 +96,7 @@ namespace mqtt2otel.Manifest
         /// <param name="topic">The topic, that triggered the subscription.</param>
         /// <param name="subscription">The subscription that received the payload.</param>
         /// <returns>A value indicating whether the operation has been successful.</returns>
-        public async Task<bool> ProcessSubscriptionPayload(string payload, string topic, MqttSubscription subscription)
+        public bool ProcessSubscriptionPayload(string payload, string topic, MqttSubscription subscription)
         {
             bool success = false;
 
@@ -115,11 +115,11 @@ namespace mqtt2otel.Manifest
             {
                 using (this.internalLogger.StartActivity("Process metrics processors"))
                 {
-                    success = await this.ProcessMetricsSubscription(payload, topic, subscription);
+                    success = this.ProcessMetricsSubscription(payload, topic, subscription);
                 }
                 using (this.internalLogger.StartActivity("Process log processors"))
                 {
-                    success = success && await this.ProcessLogsSubscription(payload, topic, subscription);
+                    success = success && this.ProcessLogsSubscription(payload, topic, subscription);
                 }
             }
             catch
@@ -144,7 +144,7 @@ namespace mqtt2otel.Manifest
         /// <param name="topic">The topic, that triggered the subscription.</param>
         /// <param name="subscription">The settings of the subscription that triggered this processor.</param>
         /// <returns>A value indicating whether processing has been successful.</returns>
-        private async Task<bool> ProcessMetricsSubscription(string payload, string topic, MqttSubscription subscription)
+        private bool ProcessMetricsSubscription(string payload, string topic, MqttSubscription subscription)
         {
 
             foreach (var rule in this.Otel.Metrics)
@@ -157,7 +157,7 @@ namespace mqtt2otel.Manifest
                     sw.Start();
                     var key = subscription.Id + ":" + rule.Id;
                     var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
-                    await this.WriteValueToSignalStore(subscription.Id, rule.Id, this.Otel, rule, payload, topic, combinedVariables);
+                    this.WriteValueToSignalStore(subscription.Id, rule.Id, this.Otel, rule, payload, topic, combinedVariables);
                     sw.Stop();
 
                     var tags = new TagList();
@@ -186,7 +186,7 @@ namespace mqtt2otel.Manifest
         /// <param name="topic">The topic, that triggered the subscription.</param>
         /// <param name="subscriptionId">The subscription id.</param>
         /// <returns>A value indicating whether processing has been successful.</returns>
-        private async Task<bool> ProcessLogsSubscription(string payload, string topic, MqttSubscription subscription)
+        private bool ProcessLogsSubscription(string payload, string topic, MqttSubscription subscription)
         {
             var swTransform = new Stopwatch();
 
@@ -196,7 +196,7 @@ namespace mqtt2otel.Manifest
                 if (subscription.Transform != null)
                 {
                     var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
-                    payload = await this.payloadTransformation.Apply(this.Name, subscription.Transform, new ParsingContext(combinedVariables, payload, topic));
+                    payload = this.payloadTransformation.Apply(this.Name, subscription.Transform, new ParsingContext(combinedVariables, payload, topic));
                 }
                 swTransform.Stop();
             }
@@ -219,7 +219,7 @@ namespace mqtt2otel.Manifest
                     var logger = this.dataStores.LoggerStore.GetLogger(key);
                     var combinedAttributes = rule.Attributes.Combine(this.Otel.Attributes);
 
-                    success = await logger.ProcessLogMessage(payload, topic, rule, subscription.Variables, this.internalLogger, combinedAttributes);
+                    success = logger.ProcessLogMessage(payload, topic, rule, subscription.Variables, this.internalLogger, combinedAttributes);
 
                     sw.Stop();
 
@@ -254,7 +254,7 @@ namespace mqtt2otel.Manifest
         /// <param name="topic">The topic, that triggered the subscription.</param>
         /// <param name="variables">The variables that can be applied to the payload.</param>
         /// <returns></returns>
-        private async Task WriteValueToSignalStore(Guid subscriptionId, Guid ruleId, Otel otelSettings, OtelMetricRule rule, string payload, string topic, IEnumerable<Variable> variables)
+        private void WriteValueToSignalStore(Guid subscriptionId, Guid ruleId, Otel otelSettings, OtelMetricRule rule, string payload, string topic, IEnumerable<Variable> variables)
         {
             if (rule.Name == null) return;
 
@@ -266,25 +266,25 @@ namespace mqtt2otel.Manifest
                 switch (rule.SignalDataType)
                 {
                     case SignalDataType.Float:
-                        await UpdateSignalStoreValue<float>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<float>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
                         break;
                     case SignalDataType.Int:
-                        await UpdateSignalStoreValue<int>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<int>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
                         break;
                     case SignalDataType.Double:
-                        await UpdateSignalStoreValue<double>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<double>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
                         break;
                     case SignalDataType.Long:
-                        await UpdateSignalStoreValue<long>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<long>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
                         break;
                     case SignalDataType.Decimal:
-                        await UpdateSignalStoreValue<decimal>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<decimal>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
                         break;
                     case SignalDataType.String:
-                        await UpdateSignalStoreValue<string>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<string>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
                         break;
                     case SignalDataType.DateTime:
-                        await UpdateSignalStoreValue<DateTime>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<DateTime>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
                         break;
                     default:
                         throw new ExpressionParsingException(new Exception(), rule.Name, $"Signal type {rule.SignalDataType} not supported.");
@@ -312,9 +312,9 @@ namespace mqtt2otel.Manifest
         /// <param name="expandedAttributes">The attributes to be applied to the value.</param>
         /// <param name="variables">The currently active variables.</param>
         /// <returns></returns>
-        private async Task UpdateSignalStoreValue<T>(Guid subscriptionId, Guid ruleId, OtelMetricRule rule, string payload, string topic, IEnumerable<Variable> expandedAttributes, IEnumerable<Variable> variables)
+        private void UpdateSignalStoreValue<T>(Guid subscriptionId, Guid ruleId, OtelMetricRule rule, string payload, string topic, IEnumerable<Variable> expandedAttributes, IEnumerable<Variable> variables)
         {
-            T value = await this.payloadParser.Parse<T>(rule.Name, rule.Value, new ParsingContext(variables, payload, topic));
+            T value = this.payloadParser.Parse<T>(rule.Name, rule.Value, new ParsingContext(variables, payload, topic));
             this.dataStores.SignalStore.UpdateValue(subscriptionId, ruleId, value, expandedAttributes);
         }
 

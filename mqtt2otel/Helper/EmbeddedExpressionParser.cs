@@ -148,7 +148,7 @@ namespace mqtt2otel.Helper
                             if (bracketCount == 0)
                             {
                                 state = EmbeddedExpressionState.Text;
-                                string evaluatedExpression = parser.Parse<string>(string.Empty, expression.ToString(), context).Result;
+                                string evaluatedExpression = parser.Parse<string>(string.Empty, expression.ToString(), context);
                                 result.Append(evaluatedExpression);
                             }
                             else

@@ -34,9 +34,9 @@ namespace mqtt2otel.Transformation
         /// <param name="expression">The expression that should be used for transforming the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The transformed payload</returns>
-        public async Task<string> Apply(string name, string expression, ParsingContext context)
+        public string Apply(string name, string expression, ParsingContext context)
         {
-            return await this.ParseExpression<string>(name, expression, context);
+            return this.ParseExpression<string>(name, expression, context);
         }
 
         /// <summary>

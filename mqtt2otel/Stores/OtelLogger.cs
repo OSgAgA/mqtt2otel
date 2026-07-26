@@ -61,7 +61,7 @@ namespace mqtt2otel.Stores
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="combinedAttributes">All attributes that should be applied to the log message.</param>
         /// <returns>A value indicating whether the payload could be processed successfully.</returns>
-        public async Task<bool> ProcessLogMessage(string payload, string topic, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<Variable> combinedAttributes)
+        public bool ProcessLogMessage(string payload, string topic, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<Variable> combinedAttributes)
         {
             if (rule.Name == null) return false;
 
@@ -69,7 +69,7 @@ namespace mqtt2otel.Stores
             {
                 using (this.internalLogger.StartActivity("Logger rule transformation"))
                 {
-                    payload = await this.payloadTransformation.Apply(rule.Name, rule.Transform, new ParsingContext(variables, payload, topic));
+                    payload = this.payloadTransformation.Apply(rule.Name, rule.Transform, new ParsingContext(variables, payload, topic));
                 }
             }
 
