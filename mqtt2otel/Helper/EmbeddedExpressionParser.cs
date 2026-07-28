@@ -45,17 +45,17 @@ namespace mqtt2otel.Helper
         /// <summary>
         /// Expands all variables in source with the given replacements.
         /// </summary>
-        /// <param name="source">A list of varialbes that should be expanded.</param>
+        /// <param name="attributes">A list of attributes that should be expanded.</param>
         /// <param name="replacements">The replacements that will be used for expanding the source variables.</param>
         /// <param name="payload">The current payload.</param>
         /// <param name="topic">The current topic.</param>
-        /// <returns>A new enumerable of expanded variables.</returns>
-        public static IEnumerable<Variable> Expand(IEnumerable<Variable> source, IEnumerable<Variable> replacements, string payload, string topic)
+        /// <returns>A new enumerable of expanded attributes.</returns>
+        public static IEnumerable<OtelAttribute> Expand(IEnumerable<OtelAttribute> attributes, IEnumerable<Variable> replacements, string payload, string topic)
         {
             var result = new List<Variable>();
             var context = new ParsingContext(replacements, payload, topic);
 
-            return source.Select(variable => new Variable() { 
+            return attributes.Select(variable => new OtelAttribute() { 
                 Key = EmbeddedExpressionParser.Expand(variable.Key, context),
                 Value = EmbeddedExpressionParser.Expand(variable.Value.ToString() ?? string.Empty, context) 
             }).ToList();
@@ -140,6 +140,7 @@ namespace mqtt2otel.Helper
                         if (current == '\'')
                         {
                             state = EmbeddedExpressionState.StringInsideEmbeddedExpression;
+                            plainString = new StringBuilder();
                             expression.Append('\'');
                         }
                         else if (current == ')')

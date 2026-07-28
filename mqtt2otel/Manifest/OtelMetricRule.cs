@@ -31,12 +31,20 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets all attributes that will be applied to the metric.
         /// </summary>
-        public List<Variable> Attributes { get; set; } = new();
+        public List<OtelAttribute> Attributes { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets a <see cref="TopicAttributeParser"/> pattern for parsing a topic into attributes.
+        /// 
+        /// Set to null if no topic parsing should be applied.
+        /// </summary>
+        public string? TopicAttributes { get; set; } = null;
+
 
         /// <summary>
         /// Gets or sets the value of the metric as a parse expression (<see cref="IPayloadParser"/>).
         /// </summary>
-        public string Value { get; set; } = "TEXT()";
+        public string Value { get; set; } = "Payload()";
 
         /// <summary>
         /// Gets or sets the name of the open telemetriy connection to be used for this rule. 

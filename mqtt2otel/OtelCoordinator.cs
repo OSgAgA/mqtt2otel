@@ -281,7 +281,7 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateAsynchronousGauge<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
             meter.CreateObservableGauge<T>(
                 expandedName,
                 () => this.CreateMeasurement<T>(mqttSubscription, otelMetricRule),
@@ -300,7 +300,7 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateGauge<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
             var gauge = meter.CreateGauge<T>(
                 expandedName,
                 unit: otelMetricRule.Unit,
@@ -318,7 +318,7 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateAsynchronousCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
             meter.CreateObservableCounter<T>(
                 expandedName,
                 () => this.CreateMeasurement<T>(mqttSubscription, otelMetricRule),
@@ -336,7 +336,7 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
             var counter = meter.CreateCounter<T>(
                 expandedName,
                 unit: otelMetricRule.Unit,
@@ -354,7 +354,7 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateAsynchronousUpDownCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
             meter.CreateObservableUpDownCounter<T>(
                 expandedName,
                 () => this.CreateMeasurement<T>(mqttSubscription, otelMetricRule),
@@ -372,7 +372,7 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateUpDownCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
             var counter = meter.CreateUpDownCounter<T>(
                 expandedName,
                 unit: otelMetricRule.Unit,
@@ -390,7 +390,7 @@ namespace mqtt2otel
         /// <param name="meter">The meter to which this instrument should be added.</param>
         private void CreateHistogram<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<Variable>()));
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
 
             Histogram<T>? histogram = null;
 

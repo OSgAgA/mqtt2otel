@@ -48,6 +48,7 @@ namespace mqtt2otel.Tests._10_UnitTests
         [InlineData("This is an $(embeddedExpression(sub()))", "embeddedExpression(sub())")]
         [InlineData("This is an $(embeddedExpression(sub(')')))", "embeddedExpression(sub(')'))")]
         [InlineData("This is an $(embeddedExpression('sub()'))", "embeddedExpression('sub()')")]
+        [InlineData("$('5' + '1')", "'5' + '1'")]
         public void ShouldIdentifyCorrectEmbeddedExpressions(string input, string expectedExpression)
         {
             var payloadParserMock = new Mock<IPayloadParser>();

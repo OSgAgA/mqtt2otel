@@ -259,7 +259,18 @@ namespace mqtt2otel.Manifest
             if (rule.Name == null) return;
 
             var combinedAttributes = otelSettings.Attributes.Combine(rule.Attributes);
-            IEnumerable<Variable> expandedAttributes = EmbeddedExpressionParser.Expand(combinedAttributes, variables, payload, topic);
+
+            if (otelSettings.TopicAttributes != null)
+            {
+                combinedAttributes = combinedAttributes.Combine(TopicAttributeParser.Parse(topic, otelSettings.TopicAttributes));
+            }
+
+            if (rule.TopicAttributes != null)
+            {
+                combinedAttributes = combinedAttributes.Combine(TopicAttributeParser.Parse(topic, rule.TopicAttributes));
+            }
+
+            IEnumerable<OtelAttribute> expandedAttributes = EmbeddedExpressionParser.Expand(combinedAttributes, variables, payload, topic);
 
             try
             {
@@ -312,7 +323,7 @@ namespace mqtt2otel.Manifest
         /// <param name="expandedAttributes">The attributes to be applied to the value.</param>
         /// <param name="variables">The currently active variables.</param>
         /// <returns></returns>
-        private void UpdateSignalStoreValue<T>(Guid subscriptionId, Guid ruleId, OtelMetricRule rule, string payload, string topic, IEnumerable<Variable> expandedAttributes, IEnumerable<Variable> variables)
+        private void UpdateSignalStoreValue<T>(Guid subscriptionId, Guid ruleId, OtelMetricRule rule, string payload, string topic, IEnumerable<OtelAttribute> expandedAttributes, IEnumerable<Variable> variables)
         {
             T value = this.payloadParser.Parse<T>(rule.Name, rule.Value, new ParsingContext(variables, payload, topic));
             this.dataStores.SignalStore.UpdateValue(subscriptionId, ruleId, value, expandedAttributes);

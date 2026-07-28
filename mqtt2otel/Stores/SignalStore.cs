@@ -93,7 +93,7 @@ namespace mqtt2otel.Stores
         /// <param name="ruleId">The id of the rule, that generated the message from which the signal is received.</param>
         /// <param name="value">The new value.</param>
         /// <param name="attributes">Attributes that should be added to the metric value.</param>
-        public void UpdateValue<TPayload>(Guid subscriptionId, Guid ruleId, TPayload value, IEnumerable<Variable> attributes)
+        public void UpdateValue<TPayload>(Guid subscriptionId, Guid ruleId, TPayload value, IEnumerable<OtelAttribute> attributes)
         {
             var key = this.GenerateKey(subscriptionId, ruleId);
             var metric = this.GetValue<TPayload>(subscriptionId, ruleId);

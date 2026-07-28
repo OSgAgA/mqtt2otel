@@ -26,7 +26,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets all attributes that should be added to the open telemetry log message.
         /// </summary>
-        public List<Variable> Attributes { get; set; } = new();
+        public List<OtelAttribute> Attributes { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the data type of the payload that will be used to write to the open telemetry logs.

@@ -12,7 +12,14 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets the attributes that will be added to all rules.
         /// </summary>
-        public List<Variable> Attributes { get; set; } = new();
+        public List<OtelAttribute> Attributes { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets a <see cref="TopicAttributeParser"/> pattern for parsing a topic into attributes.
+        /// 
+        /// Set to null if no topic parsing should be applied.
+        /// </summary>
+        public string? TopicAttributes { get; set; } = null;
 
         /// <summary>
         /// Gets or sets the rules for creating open telemetry metrics.

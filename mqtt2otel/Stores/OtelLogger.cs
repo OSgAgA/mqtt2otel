@@ -61,7 +61,7 @@ namespace mqtt2otel.Stores
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="combinedAttributes">All attributes that should be applied to the log message.</param>
         /// <returns>A value indicating whether the payload could be processed successfully.</returns>
-        public bool ProcessLogMessage(string payload, string topic, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<Variable> combinedAttributes)
+        public bool ProcessLogMessage(string payload, string topic, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<OtelAttribute> combinedAttributes)
         {
             if (rule.Name == null) return false;
 

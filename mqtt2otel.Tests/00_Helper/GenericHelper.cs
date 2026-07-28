@@ -37,7 +37,7 @@ namespace mqtt2otel.Tests.Helper
         /// <param name="description">An optional description text.</param>
         /// <param name="unit">An optional unit.</param>
         /// <param name="attributes">Optional open telemetry attributes.</param>
-        public static void WriteMetricToSignalStore<T>(MqttSubscription subscription, OtelMetricRule rule, ISignalStore store, T value, string description = "", string unit = "", IEnumerable<Variable>? attributes = null)
+        public static void WriteMetricToSignalStore<T>(MqttSubscription subscription, OtelMetricRule rule, ISignalStore store, T value, string description = "", string unit = "", IEnumerable<OtelAttribute>? attributes = null)
         {
             if (attributes == null ) attributes = rule.Attributes;
 
