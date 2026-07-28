@@ -8,8 +8,8 @@ namespace mqtt2otel.Parser
     /// <summary>
     /// A static class for parsing mqtt topics to attributes using a simple, but easy to read syntay.
     /// 
-    /// The syntax consists of a path separator character (Default: "/"), a wildcard character (Default: "#") and the any character (Default: "_"). 
-    /// All characters between the start/end/path separator are identified as attribute keys for the part of the path matching the depth.
+    /// The syntax consists of a path separator character (Default: "/"), a wildcard character (Default: "%") and the any character (Default: "_"). 
+    /// All characters between the a separator that is not the wildcard or the any character are identified as attribute keys for the part of the path matching the depth.
     /// 
     /// An attribute key cannot be empty or whitespace only. If this rule is violated, the pattern will not be further processed.
     /// 

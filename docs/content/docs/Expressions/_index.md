@@ -6,13 +6,19 @@ bookCollapseSection: false
 
 # Expressions and transformations
 
-Expressions and transformations are the tools with which a message payload, received from mqtt can be processed. The difference between the two is:
+Expressions and transformations are the tools with which message data (payload, properties, or topics), received from mqtt can be processed. The difference between the two is:
 
 * Expressions are used to extract or calculate a value from a payload
 * Transformations are used to transform a payload into a different format, e.g. from text to json.
 
 Parameters supporting expressions or transformation can be identified by the tag {{< badge style="info" title="supports" value="expressions" >}} or 
 {{< badge style="info" title="supports" value="transformation" >}}.
+
+In fields that supports text input, there is a special syntax for embedding expressions inside a text field. The expression must then be wrapped
+inside a `$(expression)`. So for example to include the payload inside a text, you can use `This is the payload: $(Payload()).`. Parameters supporting
+embedded expressions can be identified by the tag: {{< badge style="info" title="supports" value="embedded expressions" >}}.
+
+All parameters that support embedded expressions support [variables](/docs/manifest/variables) as well.
 
 ## Expressions
 
@@ -58,14 +64,15 @@ This will return the value 42.
 
 ### Available Functions
 
-| Function   | Example                   | Description                                                                                                                                          |
-| ---------- | ------------------------- | ----------------------------------------                                                                                                             |
-| `JSONPATH` | `JSONPATH('$.Root')`      | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax                                                                        |
-| `XPATH`    | `XPATH('/root/child[1]')` | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax                                                                                  |
-| `REGEX`    | `REGEX('[0-9]+')`         | Extracts data using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
-| `VAR`      | `VAR('MyVariable')`       | Returns the variable with the given name. No `$` is needed before the variable name.                                                                 |
-| `PAYLOAD`  | `PAYLOAD()`               | Returns the raw payload                                                                                                                              |
-| `CONST`    | `CONST('42')`             | Returns a constant value                                                                                                                             |
+| Function    | Example                   | Description                                                                                                                                          |
+| ----------  | ------------------------- | ----------------------------------------                                                                                                             |
+| `JsonPath`  | `JsonPath('$.Root')`      | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax                                                                        |
+| `XPath`     | `XPath('/root/child[1]')` | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax                                                                                  |
+| `TopicPath` | `TopicPath('[1]')`        | Extracts data using [TopicPath](./topicpath) syntax                                                                                  |
+| `RegEx`     | `RegEx('[0-9]+')`         | Extracts data using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
+| `Var`       | `Var('MyVariable')`       | Returns the variable with the given name. No `$` is needed before the variable name.                                                                 |
+| `Payload`   | `Payload()`               | Returns the raw payload                                                                                                                              |
+| `Const`     | `Const('42')`             | Returns a constant value                                                                                                                             |
 
 ### Calculations
 

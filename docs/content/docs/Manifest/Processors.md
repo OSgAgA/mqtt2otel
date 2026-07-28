@@ -126,7 +126,8 @@ It consists of the following parameters:
 |-----------------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | Name            | An optional name for the otel configuration.                                                                                            |
 | Description     | An optional description.                                                                                                                |
-| Attributes      | A list of otel attributes that will be added to the otel signal. [{{< badge style="info" title="supports" value="variables" >}}](/docs/manifest/variables)          |
+| Attributes      | A list of otel attributes that will be added to the otel signal. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing)          |
+| TopicAttributes | The (optional) [TopicAttribute expression](/docs/expressions/topicparsing/#the-topicattribute-syntax) that maps topics to attributes.               | 
 | OtelConnection  | The (optional) otel connection name that will be applied to all `Metrics` and `Logs` sections that do not explicitly state the connection name. | 
 | Metrics         | An optional list of `Metrics` that will describe how the payload of a subscription message will be parsed into an otel metric signal. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)   | 
 | Logs            | An optional list of `Logs` that will describe how the payload of a subscription message will be parsed into an otel log message. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)       | 
@@ -141,7 +142,8 @@ It consists of the following parameters:
 |----------------------------|--------------------------------------------------------------------------------------------------------------------------------|
 | Name                       | The name of the created metric that will be send to the open telemetry endpoint.                                               |
 | Description                | The optional description that will be send to the open telemetry endpoint.                                                     |
-| Attributes                 | A list of otel attributes that will be added to the otel metric. [{{< badge style="info" title="supports" value="variables" >}}](/docs/manifest/variables) |
+| Attributes                 | A list of otel attributes that will be added to the otel metric. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing) |
+| TopicAttributes            | The (optional) [TopicAttribute expression](/docs/expressions/topicparsing/#the-topicattribute-syntax) that maps topics to attributes.      | 
 | OtelConnection             | The (optional) otel server connection that will be applied to the metric. If not set the default server is used.               | 
 | Instrument                 | Defines the otel metric instruments to be used. See [otel instruments](#otel-instruments) for details.                         | 
 | SignalDataType             | The data type of the metric. See [otel data types](#otel-data-types) for details.                                              | 
@@ -212,7 +214,7 @@ It consists of the following parameters:
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Name           | The optional name of the log processor.                                                                                                                   |
 | Description    | The optional description.                                                                                                                                 |
-| Attributes     | A list of otel attributes that will be added to the otel log entry. [{{< badge style="info" title="supports" value="variables" >}}](/docs/manifest/variables)                         |
+| Attributes     | A list of otel attributes that will be added to the otel log entry. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing)                         |
 | OtelConnection | The (optional) otel server connection of the otel endpoint where the log entry should be send. If not set the default connection is used.                 | 
 | Filter         | Defines the filter expression that will be applied if the `PayloadType` is set to `Text`. [{{< badge style="info" title="supports" value="expressions" >}}](/docs/expressions/#expressions) | 
 | PayloadType    | The type of the payload, that the processor will process. Must be one of the following: `Text` or `Json`                                                  | 
