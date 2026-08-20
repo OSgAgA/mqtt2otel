@@ -5,7 +5,7 @@ using System.Text;
 
 namespace mqtt2otel.Tests._10_UnitTests
 {
-    public  class TopicPathTests
+    public class TopicPathTests
     {
         [Theory]
         [InlineData("this/is/a/test", "[0]", "this")]
@@ -23,7 +23,7 @@ namespace mqtt2otel.Tests._10_UnitTests
         public void ShouldMatchTopicAndReturnExpectedResult(string topic, string pattern, string expected)
         {
             var topicPathParser = new TopicPathStrategy();
-            var context = new ParsingContext(new List<Variable>(), string.Empty, topic);
+            var context = new ParsingContext(new List<Variable>(), new MqttMessage(topic: topic));
 
             string result = topicPathParser.Parse<string>(pattern, context);
 

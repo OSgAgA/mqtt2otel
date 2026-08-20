@@ -64,15 +64,16 @@ This will return the value 42.
 
 ### Available Functions
 
-| Function    | Example                   | Description                                                                                                                                          |
-| ----------  | ------------------------- | ----------------------------------------                                                                                                             |
-| `JsonPath`  | `JsonPath('$.Root')`      | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax                                                                        |
-| `XPath`     | `XPath('/root/child[1]')` | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax                                                                                  |
-| `TopicPath` | `TopicPath('[1]')`        | Extracts data using [TopicPath](./topicpath) syntax                                                                                  |
-| `RegEx`     | `RegEx('[0-9]+')`         | Extracts data using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
-| `Var`       | `Var('MyVariable')`       | Returns the variable with the given name. No `$` is needed before the variable name.                                                                 |
-| `Payload`   | `Payload()`               | Returns the raw payload                                                                                                                              |
-| `Const`     | `Const('42')`             | Returns a constant value                                                                                                                             |
+| Function       | Example                   | Description                                                                                                                                          |
+| ----------     | ------------------------- | ----------------------------------------                                                                                                             |
+| `JsonPath`     | `JsonPath('$.Root')`      | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax                                                                        |
+| `XPath`        | `XPath('/root/child[1]')` | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax                                                                                  |
+| `TopicPath`    | `TopicPath('[1]')`        | Extracts data using [TopicPath](./topicpath) syntax                                                                                  |
+| `UserProperty` | `UserProperty('Name')`    | Accesses an mqtt user property via its name. If the name exists multiple times, the first match is used. If the name does not exist, the function returns an empty string.                                                                                  |
+| `RegEx`        | `RegEx('[0-9]+')`         | Extracts data using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
+| `Var`          | `Var('MyVariable')`       | Returns the variable with the given name. No `$` is needed before the variable name.                                                                 |
+| `Payload`      | `Payload()`               | Returns the raw payload                                                                                                                              |
+| `Const`        | `Const('42')`             | Returns a constant value                                                                                                                             |
 
 ### Calculations
 

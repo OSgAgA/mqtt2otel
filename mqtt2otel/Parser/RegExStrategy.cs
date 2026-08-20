@@ -30,7 +30,7 @@ namespace mqtt2otel.Parser
         {
             var regex = new Regex(filter);
 
-            var match = regex.Match(context.Payload);
+            var match = regex.Match(context.Message.Payload);
 
             if (match.Success)
             {

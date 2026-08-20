@@ -5,18 +5,19 @@
     "Description": "A simple example on how to parse a xml paylog to create detailed metrics manually.",
     "Topic": "message-topic-2",
     "Payload": "\u003CProcessor\u003E\n  \u003CTemperature\u003E42\u003C/Temperature\u003E\n\u003C/Processor\u003E",
-    "Manifest": "Version: 1.0\n\nMqttConnections:\n  - Name: \u0022My broker\u0022\n\nOtelConnections:\n  - Name: \u0022My Otel server\u0022\n    ServiceName: \u0022my-service\u0022\n    ServiceNamespace: \u0022my-service-namespace\u0022\n\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022message-topic-2\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Attributes:\n            - Key: \u0022test\u0022\n              Value: \u0022value\u0022\n          Value: \u0022XMLPATH(\u0027/Processor/Temperature\u0027)\u0022",
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022message-topic-2\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Attributes:\n            - Key: \u0022test\u0022\n              Value: \u0022value\u0022\n          Value: \u0022XMLPATH(\u0027/Processor/Temperature\u0027)\u0022",
     "Category": "Metrics",
     "Tags": [
       "xml"
     ],
-    "CreateExample": true
+    "CreateExample": true,
+    "ValidateManifestOnly": false
   },
   "ExpectedResult": {
     "Metrics": [
       {
         "Name": "Processor.Temperature",
-        "OtelServer": "My Otel server",
+        "OtelServer": "5bee356b-1737-4c7c-93a2-6b2fca20557c",
         "MeterVersion": "",
         "Description": "The current processor temperature.",
         "Unit": "",
@@ -24,8 +25,8 @@
         "MetricPoints": [
           {
             "Value": 42,
-            "StartTime": "2026-06-30T13:04:39.7774828+00:00",
-            "EndTime": "2026-06-30T13:04:39.7794322+00:00",
+            "StartTime": "2026-07-29T14:43:46.6676625+00:00",
+            "EndTime": "2026-07-29T14:43:46.6772947+00:00",
             "Tags": {
               "test": "value"
             }

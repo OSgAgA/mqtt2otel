@@ -54,14 +54,13 @@ namespace mqtt2otel.Stores
         /// <summary>
         /// Processes a log message given as a string payload.
         /// </summary>
-        /// <param name="payload">The payload representing the log message.</param>
-        /// <param name="topic">The topic, that triggered the subscription.</param>
+        /// <param name="message">The message received from the broker.</param>
         /// <param name="rule">The log rule that define how to interpret the payload.</param>
         /// <param name="variables">Variables that can be applied to the payload.</param>
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="combinedAttributes">All attributes that should be applied to the log message.</param>
         /// <returns>A value indicating whether the payload could be processed successfully.</returns>
-        public bool ProcessLogMessage(string payload, string topic, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<OtelAttribute> combinedAttributes)
+        public bool ProcessLogMessage(MqttMessage message, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<OtelAttribute> combinedAttributes)
         {
             if (rule.Name == null) return false;
 
@@ -69,11 +68,11 @@ namespace mqtt2otel.Stores
             {
                 using (this.internalLogger.StartActivity("Logger rule transformation"))
                 {
-                    payload = this.payloadTransformation.Apply(rule.Name, rule.Transform, new ParsingContext(variables, payload, topic));
+                    message.Payload = this.payloadTransformation.Apply(rule.Name, rule.Transform, new ParsingContext(variables, message));
                 }
             }
 
-            var context = new ParsingContext(variables, payload, topic);
+            var context = new ParsingContext(variables, message);
             List<KeyValuePair<string, object?>> attributes = combinedAttributes
                 .Select(attribute => new KeyValuePair<string, object?>(
                     EmbeddedExpressionParser.Expand(attribute.Key, context), 
@@ -86,10 +85,10 @@ namespace mqtt2otel.Stores
                 switch (rule.PayloadType)
                 {
                     case OtelLoggingPayloadType.Text:
-                        body = payload;
+                        body = message.Payload;
                         break;
                     case OtelLoggingPayloadType.Json:
-                        var obj = Newtonsoft.Json.Linq.JObject.Parse(payload).ToObject<Dictionary<string, object?>>();
+                        var obj = Newtonsoft.Json.Linq.JObject.Parse(message.Payload).ToObject<Dictionary<string, object?>>();
 
                         if (obj == null) return false;
 

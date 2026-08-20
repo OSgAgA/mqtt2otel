@@ -1,11 +1,12 @@
 ﻿using mqtt2otel.ManifestExplorer.DTOs;
+using mqtt2otel.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 using System.Text.Json;
 
-namespace mqtt2otel.Metadata
+namespace mqtt2otel.Shared
 {
     /// <summary>
     /// Represents a test case, including the needed setup and the expected outcome.

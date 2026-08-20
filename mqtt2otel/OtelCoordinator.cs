@@ -193,7 +193,7 @@ namespace mqtt2otel
                     throw new Exception($"Cannot create instrument. No meter exists for metric rule with name: {rulesSettings.Name}.");
                 }
 
-                var context = new ParsingContext(mqttSubscription.Variables, string.Empty, string.Empty);
+                var context = new ParsingContext(mqttSubscription.Variables, new MqttMessage(subscriptionId: 0, topic: "", payload: "", userProperties: new()));
                 string expandedName = EmbeddedExpressionParser.Expand(rulesSettings.Name, context);
 
                 string key = mqttSubscription.Id + ":" + rulesSettings.Id;

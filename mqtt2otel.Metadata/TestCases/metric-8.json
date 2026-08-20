@@ -5,18 +5,19 @@
     "Description": "Converts a radian angle in degrees using the expression syntax.",
     "Topic": "sensor/angle",
     "Payload": "1",
-    "Manifest": "Version: 1.0\n\nMqttConnections:\n  - Name: \u0022My broker\u0022\n\nOtelConnections:\n  - Name: \u0022My Otel server\u0022\n    ServiceName: \u0022my-service\u0022\n    ServiceNamespace: \u0022my-service-namespace\u0022\n\nProcessors:\n  - Name: \u0022Sensor angle\u0022\n    Description: \u0022Provides the current angle of the sensor.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Angle information in radian\u0022\n          Topic: \u0022sensor/angle\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Sensor.AngleInDegrees\u0022          \n          SignalDataType: Float\n          Instrument: Gauge\n          Value: \u0022PAYLOAD() * 180 / [PI]\u0022",
+    "Manifest": "\nProcessors:\n  - Name: \u0022Sensor angle\u0022\n    Description: \u0022Provides the current angle of the sensor.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Angle information in radian\u0022\n          Topic: \u0022sensor/angle\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Sensor.AngleInDegrees\u0022          \n          SignalDataType: Float\n          Instrument: Gauge\n          Value: \u0022PAYLOAD() * 180 / [PI]\u0022",
     "Category": "Metrics",
     "Tags": [
       "text"
     ],
-    "CreateExample": true
+    "CreateExample": true,
+    "ValidateManifestOnly": false
   },
   "ExpectedResult": {
     "Metrics": [
       {
         "Name": "Sensor.AngleInDegrees",
-        "OtelServer": "My Otel server",
+        "OtelServer": "8a27df52-fb06-4a47-8714-0d6f8253171f",
         "MeterVersion": "",
         "Description": "",
         "Unit": "",
@@ -24,8 +25,8 @@
         "MetricPoints": [
           {
             "Value": 57.295780181884766,
-            "StartTime": "2026-06-30T14:11:53.4719701+00:00",
-            "EndTime": "2026-06-30T14:11:53.475068+00:00",
+            "StartTime": "2026-07-29T14:46:24.1183718+00:00",
+            "EndTime": "2026-07-29T14:46:24.1222643+00:00",
             "Tags": {}
           }
         ]

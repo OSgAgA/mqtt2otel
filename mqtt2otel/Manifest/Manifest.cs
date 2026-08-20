@@ -113,6 +113,13 @@ namespace mqtt2otel.Manifest
         }
 
         /// <summary>
+        /// Gets or sets a value indicating, whether attributes should be created from mqtt user properties (true), or not (false), or
+        /// if the default setting should be used (null).
+        /// </summary>
+        [InheritedProperty]
+        public bool? CreateAttributesFromUserProperties { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the manifest version.
         /// </summary>
         public string Version { get; set; } = "";
@@ -141,9 +148,10 @@ namespace mqtt2otel.Manifest
         /// Gets the default otel server connection. That is the first server defined in <see cref="OtelConnections"/> or null, if no otel server
         /// is defined.
         /// </summary>
-        public OtelServerConnection? DefaultOtelConnection
+        [InheritedProperty("OtelConnection")]
+        public string? DefaultOtelConnection
         {
-            get => this.OtelConnections.FirstOrDefault();
+            get => this.OtelConnections.FirstOrDefault()?.Name;
         }
 
         /// <summary>
@@ -155,36 +163,18 @@ namespace mqtt2otel.Manifest
                 return;
 
             ImportEnabledList<NamedIdObject>.InitializeImports(this, this.internalLogger, Manifest.ObjectFactory);
-            this.ApplyOtelConnectionNamesToRules();
+
+            Manifest.SetObjectHierarchy(this);
 
             foreach (var subscriptionGroup in this.SubscriptionGroups)
             {
-                this.ApplyBrokerToSubscriptions(subscriptionGroup);
-                this.ApplyTransformationToSubscriptions(subscriptionGroup);
                 this.ApplyVariablesToSubscriptions(subscriptionGroup.Subscriptions, subscriptionGroup.Variables);
             }
 
             foreach (var processor in this.Processors)
             {
-                this.ApplyBrokerToSubscriptions(processor.Mqtt);
                 this.ApplySubscriptionGroupsToSubscriptions(processor.Mqtt.SubscriptionGroups, processor.Mqtt.Subscriptions);
-                this.ApplyTransformationFromParent(processor.Mqtt.Transform, processor.Mqtt.Subscriptions);
                 this.ApplyVariablesToSubscriptions(processor.Mqtt.Subscriptions, processor.Mqtt.Variables);
-            }
-        }
-
-        /// <summary>
-        /// Applies the broker of the mqtt section (if set) to the subscriptions of the section. It will only be applied if the
-        /// broker is not explicitly set inside a subscription.
-        /// </summary>
-        /// <param name="subscriptionGroup">The mqtt section of a processor.</param>
-        private void ApplyBrokerToSubscriptions(Mqtt mqtt)
-        {
-            if (mqtt.BrokerConnection == null) return;
-
-            foreach (var subscription in mqtt.Subscriptions)
-            {
-                if (subscription.BrokerConnection == null) subscription.BrokerConnection = mqtt.BrokerConnection;
             }
         }
 
@@ -198,36 +188,6 @@ namespace mqtt2otel.Manifest
             foreach (var subscription in subscriptions)
             {
                 subscription.Variables = variables.Combine(subscription.Variables).ToList();
-            }
-        }
-
-        /// <summary>
-        /// Applies the transform pattern of the subscription group (if set) to the subscriptions of the group. It will only be applied if the
-        /// transform pattern is not explicitly set inside a subscription.
-        /// </summary>
-        /// <param name="subscriptionGroup">The subscription group.</param>
-        private void ApplyTransformationToSubscriptions(SubscriptionGroup subscriptionGroup)
-        {
-            if (string.IsNullOrWhiteSpace(subscriptionGroup.Transform)) return;
-
-            foreach (var subscription in subscriptionGroup.Subscriptions)
-            {
-                if (string.IsNullOrWhiteSpace(subscription.Transform)) subscription.Transform = subscriptionGroup.Transform;
-            }
-        }
-
-        /// <summary>
-        /// Applies the broker of the subscription group (if set) to the subscriptions of the group. It will only be applied if the
-        /// broker is not explicitly set inside a subscription.
-        /// </summary>
-        /// <param name="subscriptionGroup">The subscription group.</param>
-        private void ApplyBrokerToSubscriptions(SubscriptionGroup subscriptionGroup)
-        {
-            if (subscriptionGroup.BrokerConnection == null) return;
-
-            foreach (var subscription in subscriptionGroup.Subscriptions)
-            {
-                if (subscription.BrokerConnection == null) subscription.BrokerConnection = subscriptionGroup.BrokerConnection;
             }
         }
 
@@ -252,31 +212,6 @@ namespace mqtt2otel.Manifest
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Applies the open telemetry server connection name down the hierarchy, explicitly setting the default otel server name for 
-        /// null values.
-        /// </summary>
-        private void ApplyOtelConnectionNamesToRules()
-        {
-            if (this.DefaultOtelConnection == null) return;
-
-            foreach (var processor in this.Processors)
-            {
-                if (processor.OtelConnection == null) processor.OtelConnection = this.DefaultOtelConnection.Name;
-
-                foreach (var metricRule in processor.Otel.Metrics)
-                {
-                    if (metricRule.OtelConnection == null) metricRule.OtelConnection = processor.OtelConnection;
-                }
-
-                foreach (var metricRule in processor.Otel.Logs)
-                {
-                    if (metricRule.OtelConnection == null) metricRule.OtelConnection = processor.OtelConnection;
-                }
-
-            }
         }
 
         /// <summary>
@@ -319,20 +254,117 @@ namespace mqtt2otel.Manifest
         }
 
         /// <summary>
-        /// Applies transformations from a parent to the given list of subscriptions.
+        /// Sets the object parent child hierarchy of all <see cref="NamedIdObject"/> properties and sets all inherited attributes.
         /// </summary>
-        /// <param name="parentTransform">The transformation that should be applied to all subscriptions.</param>
-        /// <param name="subscriptions">The list of subscriptions to which the transformation should be applied.</param>
-        private void ApplyTransformationFromParent(string parentTransform, List<MqttSubscription> subscriptions)
+        /// <param name="current">The current object, on which the hierarchy should be set.</param>
+        private static void SetObjectHierarchy(object current)
         {
-            if (string.IsNullOrEmpty(parentTransform)) return;
+            var type = current.GetType();
 
-            foreach (var subscription in subscriptions)
+            foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                if (!string.IsNullOrWhiteSpace(subscription.Transform)) continue;
 
-                subscription.Transform = parentTransform;
+                // Case 1: Property type derives from NamedIdObject
+                if (typeof(NamedIdObject).IsAssignableFrom(prop.PropertyType))
+                {
+                    var child = prop.GetValue(current) as NamedIdObject;
+                    UpdateProperty(current, child);
+                }
+
+                UpdateProperty(current, prop, typeof(ImportEnabledList<>));
+                UpdateProperty(current, prop, typeof(List<>));                
             }
+        }
+
+        /// <summary>
+        /// Updates a list of NamedIdObject instances, by setting the parent to the provided object and setting the inherited
+        /// properties (<see cref="UpdateInheritedProperties(object?, object)"/>.
+        /// </summary>
+        /// <param name="parent">The parent object.</param>
+        /// <param name="prop">The property of the parent object, that contains the child objects. If null, nothing is executed. Must be of
+        /// the provided propType type. If not, then execution is skipped."/></param>
+        /// <param name="listType">The type of the list that should be updated.</param>
+        private static void UpdateProperty(object parent, PropertyInfo prop, Type listType)
+        {
+            var propType = prop.PropertyType;
+
+            if (propType.IsGenericType &&
+                                propType.GetGenericTypeDefinition() == listType)
+            {
+                var genericArg = propType.GetGenericArguments()[0];
+
+                if (!typeof(NamedIdObject).IsAssignableFrom(genericArg)) return;
+
+                var typedList = prop.GetValue(parent) as IEnumerable<object>;
+
+                if (typedList == null) return;
+
+                foreach (var item in typedList)
+                {
+                    var child = item as NamedIdObject;
+                    UpdateProperty(parent, child);
+                }
+            }
+
+            return;
+        }
+
+        /// <summary>
+        /// Updates a NamedIdObject instance, by setting the parent to the provided object and setting the inherited
+        /// properties (<see cref="UpdateInheritedProperties(object?, object)"/>.
+        /// </summary>
+        /// <param name="parent">The parent object.</param>
+        /// <param name="child">The child object. If null, nothing is executed.</param>
+        private static void UpdateProperty(object parent, NamedIdObject? child)
+        {
+            
+            if (child == null) return;
+            child.Parent = parent;
+            Manifest.UpdateInheritedProperties(parent, child);
+            Manifest.SetObjectHierarchy(child);
+            return;
+        }
+
+        /// <summary>
+        /// Updates inherited properties, based on their value.
+        /// 
+        /// If an inherited child property of a <see cref="NamedIdObject"/> is found and the value of the property is null, then
+        /// the value of the parent is written to the child (if an inherted property with the same name and type is found on the parent).
+        /// </summary>
+        /// <param name="parent">The parent object, that may inherit its value to the child.</param>
+        /// <param name="child">The child object, that may inherit a value from the parent.</param>
+        private static void UpdateInheritedProperties(object? parent, object child)
+        {
+            if (child == null || parent == null) return;
+
+            var parentProperties = GetInheritedProperties(parent);
+            var childProperties = GetInheritedProperties(child);
+
+            foreach (var parentProperty in parentProperties)
+            {
+                string parentPropertyName = parentProperty.GetCustomAttribute<InheritedPropertyAttribute>()?.Name ?? parentProperty.Name;
+
+                foreach(var childProperty in childProperties
+                    .Where( childProp => (childProp.GetCustomAttribute<InheritedPropertyAttribute>()?.Name ?? childProp.Name) == parentPropertyName && childProp.PropertyType == parentProperty.PropertyType))
+                {
+                   var childValue = childProperty.GetValue(child);
+
+                    if (childValue == null) childProperty.SetValue(child, parentProperty.GetValue(parent));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get all properties of a given object, that have the <see cref="InheritedPropertyAttribute"/> set.
+        /// </summary>
+        /// <param name="current">The object that should be searched.</param>
+        /// <returns>An enumerable containing all propeties with the given attribute.</returns>
+        private static IEnumerable<PropertyInfo> GetInheritedProperties(object current)
+        {
+            var type = current.GetType();
+
+            return type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                             .Where(p => p.GetCustomAttribute<InheritedPropertyAttribute>() != null);
         }
     }
 }

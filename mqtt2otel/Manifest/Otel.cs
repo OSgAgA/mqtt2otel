@@ -22,6 +22,13 @@ namespace mqtt2otel.Manifest
         public string? TopicAttributes { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets a value indicating, whether attributes should be created from mqtt user properties (true), or not (false), or
+        /// if the default setting should be used (null).
+        /// </summary>
+        [InheritedProperty]
+        public bool? CreateAttributesFromUserProperties { get; set; } = null;
+
+        /// <summary>
         /// Gets or sets the rules for creating open telemetry metrics.
         /// </summary>
         public ImportEnabledList<OtelMetricRule> Metrics { get; set; } = new();
@@ -35,6 +42,7 @@ namespace mqtt2otel.Manifest
         /// Gets or sets the name of the open telemetriy server connection to be used for this rule. 
         /// Set to null for using the default server connection.
         /// </summary>
+        [InheritedProperty]
         public string? OtelConnection { get; set; } = null;
 
         /// <summary>

@@ -5,18 +5,19 @@
     "Description": "A simple example for using subscription groups and applying parent and sub paths.",
     "Topic": "tele/1234/sensor",
     "Payload": "{\n  \u0022Time\u0022: \u00222026-04-12T09:07:04\u0022,\n  \u0022ENERGY\u0022: {\n    \u0022Power\u0022: 0.000,\n    \u0022Voltage\u0022: 227,\n    \u0022Current\u0022: 0.000\n  },\n  \u0022ESP32\u0022: {\n    \u0022Temperature\u0022: 37.4\n  },\n  \u0022Test Information\u0022: \u0022Please change topic to either \u0027tele/1234/sensor\u0027 or \u0027tele/9876/sensor\u0027 and look at the created attributes.\u0022\n}",
-    "Manifest": "Version: 1.0\n\nSubscriptionGroups:\n  - Name: \u0022Power sensors\u0022\n    Subscriptions:\n      - Name: \u0022Power Sensor 1\u0022\n        Topic: \u00221234\u0022\n        Variables:\n          - Key: \u0022SensorName\u0022\n            Value: \u0022WashingMachine\u0022\n      - Name: \u0022Power Sensor 2\u0022\n        Topic: \u00229876\u0022\n        Variables:\n          - Key: \u0022SensorName\u0022\n            Value: \u0022Dryer\u0022\n\nProcessors:\n  - Name: \u0022Power Metrics\u0022\n    Description: \u0022Provides power information from a power sensor.\u0022\n    Mqtt: \n      SubscriptionGroups:\n        - Name: \u0022Power sensors\u0022\n          ParentPath: \u0022tele\u0022\n          SubPath: \u0022sensor\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Energy_Power_W\u0022\n          Description: \u0022The current power consumption at the time of measurement in Watt.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Attributes:\n              - Key: \u0022sensor name\u0022\n                Value: \u0022$SensorName\u0022\n          Value: \u0022JSONPATH(\u0027$.ENERGY.Power\u0027)\u0022",
+    "Manifest": "\nSubscriptionGroups:\n  - Name: \u0022Power sensors\u0022\n    Subscriptions:\n      - Name: \u0022Power Sensor 1\u0022\n        Topic: \u00221234\u0022\n        Variables:\n          - Key: \u0022SensorName\u0022\n            Value: \u0022WashingMachine\u0022\n      - Name: \u0022Power Sensor 2\u0022\n        Topic: \u00229876\u0022\n        Variables:\n          - Key: \u0022SensorName\u0022\n            Value: \u0022Dryer\u0022\n\nProcessors:\n  - Name: \u0022Power Metrics\u0022\n    Description: \u0022Provides power information from a power sensor.\u0022\n    Mqtt: \n      SubscriptionGroups:\n        - Name: \u0022Power sensors\u0022\n          ParentPath: \u0022tele\u0022\n          SubPath: \u0022sensor\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Energy_Power_W\u0022\n          Description: \u0022The current power consumption at the time of measurement in Watt.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Attributes:\n              - Key: \u0022sensor name\u0022\n                Value: \u0022$SensorName\u0022\n          Value: \u0022JSONPATH(\u0027$.ENERGY.Power\u0027)\u0022",
     "Category": "Misc",
     "Tags": [
       "groups"
     ],
-    "CreateExample": true
+    "CreateExample": true,
+    "ValidateManifestOnly": false
   },
   "ExpectedResult": {
     "Metrics": [
       {
         "Name": "Energy_Power_W",
-        "OtelServer": "b94a226d-8b1a-47af-aaca-6b4befafbd15",
+        "OtelServer": "85b34754-5392-417a-8793-549eabea0691",
         "MeterVersion": "",
         "Description": "The current power consumption at the time of measurement in Watt.",
         "Unit": "",
@@ -24,8 +25,8 @@
         "MetricPoints": [
           {
             "Value": 0,
-            "StartTime": "2026-07-01T11:53:56.8586296+00:00",
-            "EndTime": "2026-07-01T11:53:56.8592611+00:00",
+            "StartTime": "2026-07-29T14:49:25.6415608+00:00",
+            "EndTime": "2026-07-29T14:49:25.6422406+00:00",
             "Tags": {
               "sensor name": "WashingMachine"
             }

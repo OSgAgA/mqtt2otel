@@ -1,8 +1,9 @@
 ﻿@page "/{ExampleId?}"
-@using mqtt2otel.ManifestExplorer.DTOs
-@using mqtt2otel.Metadata
 @using System.Text.Json
+@using mqtt2otel.ManifestExplorer.DTOs
 @using mqtt2otel.ManifestExplorer.Settings
+@using mqtt2otel.Metadata
+@using mqtt2otel.Shared
 @inject IJSRuntime JS
 
 @rendermode InteractiveServer
@@ -90,14 +91,7 @@
     </Modal>
 
     <div class="row">
-        <div class="col">
-            <Card>
-                <CardHeader>
-                    <b>Manifest</b>
-                </CardHeader>
-                <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.manifest" rows="26" />
-            </Card>
-        </div>
+
         <div class="col">
             <div class="flex-container">
                 <div class="row">
@@ -111,7 +105,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col">
+                    <div class="col" style="margin-bottom:20px;">
                         <Card>
                             <CardHeader>
                                 <b>Payload</b>
@@ -120,45 +114,101 @@
                         </Card>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="row" style="text-align:center">
-            <div class="col">
-                <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="Apply">Apply</button>
-                @if (featureToggles.Value.ShowCreateJsonButton)
-                {
-                    <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="ShowModal">Create Json</button>
-                }
+
+                <div class="row">
+                    <div class="col">
+                        <Card>
+                            <CardHeader class="d-flex justify-content-between align-items-center">
+                                <b>User properties</b>
+
+                                <div>
+                                    <button class="btn btn-outline-primary me-2" @onclick="AddUserProperty">
+                                        Add
+                                    </button>
+                                </div>
+                            </CardHeader>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Value</th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var property in this.UserProperties)
+                                    {
+                                        <tr>
+                                            <td><InputText class="form-control w-100" @bind-Value="@property.Name" /></td>
+                                            <td><InputText class="form-control w-100" @bind-Value="@property.Value" /></td>
+                                            <td><button class="btn btn-outline-primary me-2" @onclick="() => DeleteUserProperty(property)">Delete</button></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </Card>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-12">
-                <hr />
+        <div class="col">
+            <Card>
+                <CardHeader class="d-flex justify-content-between align-items-center">
+                    <b>Manifest</b>
+
+                    <div>
+                        <button class="btn btn-outline-primary me-2" @onclick="AddServerStubs">
+                            Add server stubs
+                        </button>
+                        <button class="btn btn-outline-primary" @onclick="CopyManifest">
+                            Copy
+                        </button>
+                    </div>
+                </CardHeader>
+                <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.manifest" rows="26" />
+            </Card>
+
+            <div class="row">
+                <div class="col" style="text-align: center">
+                    <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="Apply">Apply</button>
+                    @if (featureToggles.Value.ShowCreateJsonButton)
+                    {
+                        <button class="btn btn-primary" style="margin:20px; width:150px" @onclick="ShowModal">Create Json</button>
+                    }
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="row">
+                <div class="col">
+                    <Card>
+                        <CardHeader>
+                            <b>Result</b>
+                        </CardHeader>
+                        <Tabs @ref="tabs" EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
+                            <Tab @bind-Title="@this.errorTitle" Id="ErrorsTab">
+                                <Content>
+                                    <InputTextArea class="form-control w-100" title="Errors" @bind-Value="@this.errorText" rows="15" />
+                                </Content>
+                            </Tab>
+                            <Tab @bind-Title="@this.metricsTitle" IsActive="true">
+                                <Content>
+                                    <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultMetricsText" rows="15" />
+                                </Content>
+                            </Tab>
+                            <Tab @bind-Title="@this.logsTitle">
+                                <Content>
+                                    <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultLogText" rows="10" />
+                                </Content>
+                            </Tab>
+                        </Tabs>
+                    </Card>
+                </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col">
-                <Tabs @ref="tabs" EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
-                    <Tab @bind-Title="@this.errorTitle" Id="ErrorsTab">
-                        <Content>
-                            <InputTextArea class="form-control w-100" title="Errors" @bind-Value="@this.errorText" rows="15" />
-                        </Content>
-                    </Tab>
-                    <Tab @bind-Title="@this.metricsTitle" IsActive="true">
-                        <Content>
-                            <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultMetricsText" rows="15" />
-                        </Content>
-                    </Tab>
-                    <Tab @bind-Title="@this.logsTitle">
-                        <Content>
-                            <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultLogText" rows="10" />
-                        </Content>
-                    </Tab>
-                </Tabs>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -277,6 +327,11 @@
     private bool isInitialized = false;
 
     /// <summary>
+    /// The mqtt user properties associated with the message.
+    /// </summary>
+    private List<UserProperty> UserProperties = new List<UserProperty>();
+
+    /// <summary>
     /// Apply the provided data and set the result tabs.
     /// </summary>
     private async Task Apply()
@@ -285,7 +340,7 @@
 
         var httpClient = Factory.CreateClient("ServerAPI");
 
-        var request = new ApplyPatternToPayloadData(this.topic, this.payload, this.manifest);
+        var request = new ApplyPatternToPayloadData(this.topic, this.payload, this.manifest, this.UserProperties);
         var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/ApplyPatternToPayload", request);
 
         var result = await response.Content.ReadFromJsonAsync<ApplyPatternToPayloadResult>();
@@ -326,7 +381,7 @@
         {
             var testcase = new TestCaseData()
             {
-                Setup = new ExampleData(this.testCaseId, this.testCaseName, this.testCaseDescription, this.topic, this.payload, this.manifest, this.category, this.tags, this.createExample, this.validateManifestOnly),
+                Setup = new ExampleData(this.testCaseId, this.testCaseName, this.testCaseDescription, this.topic, this.payload, this.UserProperties, this.manifest, this.category, this.tags, this.createExample, this.validateManifestOnly),
                 ExpectedResult = new ExpectedTestResult(this.Result.Metrics, this.Result.Logs)
             };
 
@@ -377,6 +432,7 @@
 
             this.topic = testCaseData.Setup.Topic;
             this.payload = testCaseData.Setup.Payload;
+            this.UserProperties = testCaseData.Setup.UserProperties;
             this.manifest = testCaseData.Setup.Manifest;
 
             this.testCaseId = testCaseData.Setup.Id;
@@ -408,6 +464,46 @@
     }
 
     /// <summary>
+    /// Adds server stubs to the manifest, so that a complete manifest is available that can be used for further processing.
+    /// </summary>
+    private void AddServerStubs()
+    {
+        string serverStub = """
+Version: 1.0
+
+MqttConnections:
+  - Name: "My broker"
+    Endpoint:
+      Port: 1813
+      Protocol: tcp
+      Address: "mymqtt-broker.net"
+      EnableTls: false
+
+OtelConnections:
+  - Name: "My Otel server"
+    ServiceName: "my-service"
+    ServiceNamespace: "my-service-namespace"
+    Endpoint:
+      Protocol: "http"
+      Port: 4317
+      Address: "my-otel-collector.net"
+      EnableTls: false
+
+""";
+
+        this.manifest = serverStub + (this.manifest.StartsWith('\n') ? "" : "\n") + this.manifest;
+    }
+
+    /// <summary>
+    /// Copies the manifest string into the paste buffer.
+    /// </summary>
+    /// <returns></returns>
+    private async Task CopyManifest()
+    {
+        await JS.InvokeVoidAsync("copyToClipboard", this.manifest);
+    }
+
+    /// <summary>
     /// Called when the value of the tag input field has changed.
     /// </summary>
     /// <param name="currentValue">The current value of the tag input field.</param>
@@ -423,6 +519,26 @@
         }
 
         this.tagInput = currentValue;
+        this.StateHasChanged();
+    }
+    /// <summary>
+    /// Adds a new mqtt user property.
+    /// </summary>
+    private void AddUserProperty()
+    {
+        this.UserProperties.Add(new UserProperty());
+
+        this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Deletes an existing user property.
+    /// </summary>
+    /// <param name="property">The property to be deleted.</param>
+    private void DeleteUserProperty(UserProperty property)
+    {
+        this.UserProperties.Remove(property);
+
         this.StateHasChanged();
     }
 }

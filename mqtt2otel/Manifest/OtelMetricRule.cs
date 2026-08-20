@@ -13,6 +13,14 @@ namespace mqtt2otel.Manifest
     /// </summary>
     public class OtelMetricRule : NamedIdObject
     {
+
+        /// <summary>
+        /// Gets or sets a value indicating, whether attributes should be created from mqtt user properties (true), or not (false), or
+        /// if the default setting should be used (null).
+        /// </summary>
+        [InheritedPropertyAttribute]
+        public bool? CreateAttributesFromUserProperties { get; set; } = null;
+
         /// <summary>
         /// Gets or sets the open telemetry instrument that will be used by the rule.
         /// </summary>
@@ -50,6 +58,7 @@ namespace mqtt2otel.Manifest
         /// Gets or sets the name of the open telemetriy connection to be used for this rule. 
         /// Set to null for using the default connection.
         /// </summary>
+        [InheritedProperty]
         public string? OtelConnection { get; set; } = null;
 
         /// <summary>

@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\mqtt2otel.Metadata\mqtt2otel.Metadata.csproj" />
+    <ProjectReference Include="..\..\mqtt2otel.Shared\mqtt2otel.Shared.csproj" />
     <ProjectReference Include="..\..\mqtt2otel\mqtt2otel.csproj" />
     <ProjectReference Include="..\mqtt2otel.ManifestExplorer.Client\mqtt2otel.ManifestExplorer.Client.csproj" />
     <PackageReference Include="Blazor.Bootstrap" Version="3.5.0" />

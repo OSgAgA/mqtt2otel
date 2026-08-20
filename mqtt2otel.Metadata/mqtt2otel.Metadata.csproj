@@ -17,4 +17,8 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\mqtt2otel.Shared\mqtt2otel.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

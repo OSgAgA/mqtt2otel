@@ -14,7 +14,8 @@ namespace mqtt2otel.Tests._10_UnitTests
         public void ShouldParsePlainText()
         {
             var payloadParserMock = new Mock<IPayloadParser>();
-            var context = new Parser.ParsingContext(new List<Variable>(), payload: "", topic: "");
+
+            var context = new Parser.ParsingContext(new List<Variable>(), new MqttMessage());
 
             string result = EmbeddedExpressionParser.Expand("This is a test", context, payloadParserMock.Object);
 
@@ -25,7 +26,7 @@ namespace mqtt2otel.Tests._10_UnitTests
         public void ShouldParseVariable()
         {
             var payloadParserMock = new Mock<IPayloadParser>();
-            var context = new Parser.ParsingContext(new List<Variable>() { new Variable() { Key = "test", Value = "important test" } }, payload: "", topic: "");
+            var context = new Parser.ParsingContext(new List<Variable>() { new Variable() { Key = "test", Value = "important test" } }, new MqttMessage());
 
             string result = EmbeddedExpressionParser.Expand("This is a $test", context, payloadParserMock.Object);
 
@@ -35,7 +36,7 @@ namespace mqtt2otel.Tests._10_UnitTests
         [Fact]
         public void ShouldParseSimpleEmbeddedExpressionUsingDefaultParser()
         {
-            var context = new Parser.ParsingContext(new List<Variable>(), payload: "", topic: "");
+            var context = new Parser.ParsingContext(new List<Variable>(), new MqttMessage());
 
             string result = EmbeddedExpressionParser.Expand("My lucky number is: $(84/2)", context);
 
@@ -52,7 +53,7 @@ namespace mqtt2otel.Tests._10_UnitTests
         public void ShouldIdentifyCorrectEmbeddedExpressions(string input, string expectedExpression)
         {
             var payloadParserMock = new Mock<IPayloadParser>();
-            var context = new Parser.ParsingContext(new List<Variable>(), payload: "", topic: "");
+            var context = new Parser.ParsingContext(new List<Variable>(), new MqttMessage());
 
             EmbeddedExpressionParser.Expand(input, context, payloadParserMock.Object);
 
@@ -67,7 +68,7 @@ namespace mqtt2otel.Tests._10_UnitTests
         public void ShouldIdentifyInCorrectEmbeddedExpressions(string input)
         {
             var payloadParserMock = new Mock<IPayloadParser>();
-            var context = new Parser.ParsingContext(new List<Variable>(), payload: "", topic: "");
+            var context = new Parser.ParsingContext(new List<Variable>(), new MqttMessage());
 
             EmbeddedExpressionParser.Expand(input, context, payloadParserMock.Object);
 

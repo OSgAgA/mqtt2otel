@@ -26,7 +26,7 @@ namespace mqtt2otel.Parser
         public T Parse<T>(string filter, ParsingContext context)
         {
             XmlDocument doc = new XmlDocument();
-            doc.LoadXml(context.Payload);
+            doc.LoadXml(context.Message.Payload);
 
             var result = doc.SelectSingleNode(filter)?.InnerXml;
 

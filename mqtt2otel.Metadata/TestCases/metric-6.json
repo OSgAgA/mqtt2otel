@@ -5,18 +5,19 @@
     "Description": "Parses a simple text payload as an integer signal.",
     "Topic": "message-topic",
     "Payload": "42",
-    "Manifest": "Version: 1.0\n\nMqttConnections:\n  - Name: \u0022My broker\u0022\n\nOtelConnections:\n  - Name: \u0022My Otel server\u0022\n    ServiceName: \u0022my-service\u0022\n    ServiceNamespace: \u0022my-service-namespace\u0022\n\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022message-topic\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Attributes:\n            - Key: \u0022test\u0022\n              Value: \u0022value\u0022\n          Value: \u0022PAYLOAD()\u0022",
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022message-topic\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Attributes:\n            - Key: \u0022test\u0022\n              Value: \u0022value\u0022\n          Value: \u0022PAYLOAD()\u0022",
     "Category": "Metrics",
     "Tags": [
       "text"
     ],
-    "CreateExample": true
+    "CreateExample": true,
+    "ValidateManifestOnly": false
   },
   "ExpectedResult": {
     "Metrics": [
       {
         "Name": "Processor.Temperature",
-        "OtelServer": "My Otel server",
+        "OtelServer": "f0e39fdf-4160-4b83-8549-dcda7c9377cb",
         "MeterVersion": "",
         "Description": "The current processor temperature.",
         "Unit": "",
@@ -24,8 +25,8 @@
         "MetricPoints": [
           {
             "Value": 42,
-            "StartTime": "2026-06-30T13:55:54.435071+00:00",
-            "EndTime": "2026-06-30T13:55:54.4367834+00:00",
+            "StartTime": "2026-07-29T14:45:32.1891085+00:00",
+            "EndTime": "2026-07-29T14:45:32.1902161+00:00",
             "Tags": {
               "test": "value"
             }

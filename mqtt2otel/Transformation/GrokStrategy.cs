@@ -28,10 +28,10 @@ namespace mqtt2otel.Transformation
         {
             var grok = new Grok(pattern);
 
-            var result = grok.Parse(context.Payload);//.ToDictionary();
+            var result = grok.Parse(context.Message.Payload);
 
             var resultAsDict = this.CreateFlatDictionary(result);
-            resultAsDict["original_value"] = context.Payload;
+            resultAsDict["original_value"] = context.Message.Payload;
 
             var resultAsJson = JsonConvert.SerializeObject(resultAsDict);
 

@@ -15,6 +15,11 @@ namespace mqtt2otel.Manifest
         public Guid Id { get; set; } = Guid.NewGuid();
 
         /// <summary>
+        /// Gets or sets the parent object, if existing, or null otherwise.
+        /// </summary>
+        public object? Parent { get; set; } = null;
+
+        /// <summary>
         /// Gets or sets the human readable name of the setting.
         /// </summary>
         public string Name { get; set; } = Guid.NewGuid().ToString();

@@ -5,18 +5,19 @@
     "Description": "Uses a variable value inside an expression.",
     "Topic": "sensor/alert",
     "Payload": "Something went wrong. Please ignore this and use the variable instead.",
-    "Manifest": "Version: 1.0\n\nMqttConnections:\n  - Name: \u0022My broker\u0022\n\nOtelConnections:\n  - Name: \u0022My Otel server\u0022\n    ServiceName: \u0022my-service\u0022\n    ServiceNamespace: \u0022my-service-namespace\u0022\n\nProcessors:\n  - Name: \u0022Alert\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022sensor/alert\u0022\n          Variables:\n                - Key: \u0022SensorId\u0022\n                  Value: 73\n    Otel:\n      Metrics:\n        - Name: \u0022alert.sensor.id\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Int\n          Instrument: Gauge\n          Value: \u0022VAR(\u0027SensorId\u0027)\u0022",
+    "Manifest": "\nProcessors:\n  - Name: \u0022Alert\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022sensor/alert\u0022\n          Variables:\n                - Key: \u0022SensorId\u0022\n                  Value: 73\n    Otel:\n      Metrics:\n        - Name: \u0022alert.sensor.id\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Int\n          Instrument: Gauge\n          Value: \u0022VAR(\u0027SensorId\u0027)\u0022",
     "Category": "Misc",
     "Tags": [
       "var"
     ],
-    "CreateExample": true
+    "CreateExample": true,
+    "ValidateManifestOnly": false
   },
   "ExpectedResult": {
     "Metrics": [
       {
         "Name": "alert.sensor.id",
-        "OtelServer": "My Otel server",
+        "OtelServer": "4e26928c-ff03-4f7f-8ecc-d9121b4594e7",
         "MeterVersion": "",
         "Description": "The current processor temperature.",
         "Unit": "",
@@ -24,8 +25,8 @@
         "MetricPoints": [
           {
             "Value": 73,
-            "StartTime": "2026-06-30T14:51:49.4343481+00:00",
-            "EndTime": "2026-06-30T14:51:49.434662+00:00",
+            "StartTime": "2026-07-29T14:47:56.1270642+00:00",
+            "EndTime": "2026-07-29T14:47:56.1337164+00:00",
             "Tags": {}
           }
         ]

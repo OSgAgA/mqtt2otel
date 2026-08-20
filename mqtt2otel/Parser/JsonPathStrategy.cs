@@ -25,19 +25,19 @@ namespace mqtt2otel.Parser
         /// <returns>The parsed payload.</returns>
         public T Parse<T>(string filter, ParsingContext context)
         {
-           var jsonPayload = JObject.Parse(context.Payload);
+           var jsonPayload = JObject.Parse(context.Message.Payload);
            var token = jsonPayload.SelectToken(filter);
 
             if (token == null)
             {
-                throw new Exception($"Applying filter '{filter}' to payload '{context.Payload}' returned no result.");
+                throw new Exception($"Applying filter '{filter}' to payload '{context.Message.Payload}' returned no result.");
             }
 
             T? result = token.ToObject<T>();
 
             if (result == null)
             {
-                throw new Exception($"Result of applying filter: '{filter}' to payload '{context.Payload}' could not be cast to type {typeof(T).FullName}.");
+                throw new Exception($"Result of applying filter: '{filter}' to payload '{context.Message.Payload}' could not be cast to type {typeof(T).FullName}.");
             }
 
             return result;

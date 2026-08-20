@@ -46,6 +46,7 @@ namespace mqtt2otel.Manifest
         /// Gets or sets the name of the open telemetriy connection to be used for this rule. 
         /// Set to null for using the default connection.
         /// </summary>
+        [InheritedProperty]
         public string? OtelConnection { get; set; } = null;
 
         /// <summary>

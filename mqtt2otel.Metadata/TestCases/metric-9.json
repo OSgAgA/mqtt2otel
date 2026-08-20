@@ -5,7 +5,7 @@
     "Description": "Ignores the payload and returns a constant value.",
     "Topic": "sensor/temperature",
     "Payload": "This payload is ignored.",
-    "Manifest": "Version: 1.0\n\nMqttConnections:\n  - Name: \u0022My broker\u0022\n\nOtelConnections:\n  - Name: \u0022My Otel server\u0022\n    ServiceName: \u0022my-service\u0022\n    ServiceNamespace: \u0022my-service-namespace\u0022\n\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022sensor/temperature\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022constant.value\u0022\n          Description: \u0022Just a constant value.\u0022\n          SignalDataType: Float\n          Instrument: Counter\n          Value: \u0022CONST(\u00271\u0027)\u0022",
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022sensor/temperature\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022constant.value\u0022\n          Description: \u0022Just a constant value.\u0022\n          SignalDataType: Float\n          Instrument: Counter\n          Value: \u0022CONST(\u00271\u0027)\u0022",
     "Category": "Metrics",
     "Tags": [
       "text"
@@ -17,7 +17,7 @@
     "Metrics": [
       {
         "Name": "constant.value",
-        "OtelServer": "My Otel server",
+        "OtelServer": "be41b29a-f16c-4bd6-8077-f6dc7690609c",
         "MeterVersion": "",
         "Description": "Just a constant value.",
         "Unit": "",
@@ -25,8 +25,8 @@
         "MetricPoints": [
           {
             "Value": 1,
-            "StartTime": "2026-07-01T14:36:19.8282792+00:00",
-            "EndTime": "2026-07-01T14:36:19.8301282+00:00",
+            "StartTime": "2026-07-29T14:46:49.2832931+00:00",
+            "EndTime": "2026-07-29T14:46:49.2841201+00:00",
             "Tags": {}
           }
         ]

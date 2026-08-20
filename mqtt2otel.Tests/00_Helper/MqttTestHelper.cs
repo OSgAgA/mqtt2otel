@@ -1,5 +1,6 @@
 ﻿using MQTTnet;
 using MQTTnet.Server;
+using System.Text;
 
 
 namespace mqtt2otel.Server.Helper
@@ -36,8 +37,10 @@ namespace mqtt2otel.Server.Helper
             Assert.True(mqttClient.IsConnected);
         }
 
-        public async Task PublishPayload(string topic, string payload)
+        public async Task PublishPayload(string topic, string payload, List<UserProperty>? userProperties = null)
         {
+            if (userProperties == null) userProperties = new();
+
             if (mqttClient == null)
             {
                 throw new Exception($"{nameof(PublishPayload)} can only be called, when mqttClient is set. Please call {nameof(EnsureServerIsStarted)} first.");
@@ -46,10 +49,15 @@ namespace mqtt2otel.Server.Helper
             var message = new MqttApplicationMessageBuilder()
                                 .WithTopic(topic)
                                 .WithPayload(payload)
-                                .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce)
-                                .Build();
+                                .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce);
 
-            await mqttClient.PublishAsync(message);
+            foreach (var property in userProperties)
+            {
+                ReadOnlyMemory<byte> value = new ReadOnlyMemory<byte>(Encoding.UTF8.GetBytes(property.Value));
+                message.WithUserProperty(property.Name, value);
+            }
+                                
+            await mqttClient.PublishAsync(message.Build());
         }
     }
 }

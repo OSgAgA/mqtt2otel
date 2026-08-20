@@ -17,6 +17,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets the broker to which this subscription is bound. A null value represents the default broker.
         /// </summary>
+        [InheritedProperty]
         public string? BrokerConnection { get; set; } = null;
 
         /// <summary>
@@ -24,6 +25,7 @@ namespace mqtt2otel.Manifest
         /// 
         /// If non empty this transformation will be applied to all messages received via this subscription.
         /// </summary>
+        [InheritedProperty]
         public string? Transform { get; set; } = null;
 
         /// <summary>

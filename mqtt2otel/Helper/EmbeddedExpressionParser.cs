@@ -47,13 +47,12 @@ namespace mqtt2otel.Helper
         /// </summary>
         /// <param name="attributes">A list of attributes that should be expanded.</param>
         /// <param name="replacements">The replacements that will be used for expanding the source variables.</param>
-        /// <param name="payload">The current payload.</param>
-        /// <param name="topic">The current topic.</param>
+        /// <param name="message">The received message.</param>
         /// <returns>A new enumerable of expanded attributes.</returns>
-        public static IEnumerable<OtelAttribute> Expand(IEnumerable<OtelAttribute> attributes, IEnumerable<Variable> replacements, string payload, string topic)
+        public static IEnumerable<OtelAttribute> Expand(IEnumerable<OtelAttribute> attributes, IEnumerable<Variable> replacements, MqttMessage message)
         {
             var result = new List<Variable>();
-            var context = new ParsingContext(replacements, payload, topic);
+            var context = new ParsingContext(replacements, message);
 
             return attributes.Select(variable => new OtelAttribute() { 
                 Key = EmbeddedExpressionParser.Expand(variable.Key, context),

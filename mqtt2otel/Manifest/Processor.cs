@@ -63,19 +63,27 @@ namespace mqtt2otel.Manifest
         }
 
         /// <summary>
-        /// Gets or sets the otel settings for the rule.
+        /// Gets or sets a value indicating, whether attributes should be created from mqtt user properties (true), or not (false), or
+        /// if the default setting should be used (null).
+        /// </summary>
+        [InheritedProperty]
+        public bool? CreateAttributesFromUserProperties { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the otel settings for the processor.
         /// </summary>
         public Otel Otel { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the mqtt settings for the rule.
+        /// Gets or sets the mqtt settings for the processor.
         /// </summary>
         public Mqtt Mqtt { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the name of the open telemetriy connection to be used for all rules in this section. 
+        /// Gets or sets the name of the open telemetriy connection to be used for all processors in this section. 
         /// Set to null for using the default connection.
         /// </summary>
+        [InheritedProperty]
         public string? OtelConnection { get; set; } = null;
 
         /// <summary>
@@ -92,11 +100,10 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Process a subscription payload that was received from the mqtt broker.
         /// </summary>
-        /// <param name="payload">The received payload.</param>
-        /// <param name="topic">The topic, that triggered the subscription.</param>
+        /// <param name="message">The received message.</param>
         /// <param name="subscription">The subscription that received the payload.</param>
         /// <returns>A value indicating whether the operation has been successful.</returns>
-        public bool ProcessSubscriptionPayload(string payload, string topic, MqttSubscription subscription)
+        public bool ProcessSubscriptionPayload(MqttMessage message, MqttSubscription subscription)
         {
             bool success = false;
 
@@ -108,18 +115,17 @@ namespace mqtt2otel.Manifest
             tags.Add("processor.id", this.Id);
             tags.Add("processor.otel.connection", this.OtelConnection);
 
-
             var sw = new Stopwatch();
             sw.Start();
             try
-            {
+            {                
                 using (this.internalLogger.StartActivity("Process metrics processors"))
                 {
-                    success = this.ProcessMetricsSubscription(payload, topic, subscription);
+                    success = this.ProcessMetricsSubscription(message, subscription);
                 }
                 using (this.internalLogger.StartActivity("Process log processors"))
                 {
-                    success = success && this.ProcessLogsSubscription(payload, topic, subscription);
+                    success = success && this.ProcessLogsSubscription(message, subscription);
                 }
             }
             catch
@@ -140,11 +146,10 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Process a subscription message by applying all metric rules..
         /// </summary>
-        /// <param name="payload">The message payload.</param>
-        /// <param name="topic">The topic, that triggered the subscription.</param>
+        /// <param name="message">The received message.</param>
         /// <param name="subscription">The settings of the subscription that triggered this processor.</param>
         /// <returns>A value indicating whether processing has been successful.</returns>
-        private bool ProcessMetricsSubscription(string payload, string topic, MqttSubscription subscription)
+        private bool ProcessMetricsSubscription(MqttMessage message, MqttSubscription subscription)
         {
 
             foreach (var rule in this.Otel.Metrics)
@@ -157,7 +162,7 @@ namespace mqtt2otel.Manifest
                     sw.Start();
                     var key = subscription.Id + ":" + rule.Id;
                     var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
-                    this.WriteValueToSignalStore(subscription.Id, rule.Id, this.Otel, rule, payload, topic, combinedVariables);
+                    this.WriteValueToSignalStore(subscription.Id, rule.Id, this.Otel, rule, message, combinedVariables);
                     sw.Stop();
 
                     var tags = new TagList();
@@ -182,21 +187,20 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Process a subscription message that has been identified as a logging rule.
         /// </summary>
-        /// <param name="payload">The message payload.</param>
-        /// <param name="topic">The topic, that triggered the subscription.</param>
-        /// <param name="subscriptionId">The subscription id.</param>
+        /// <param name="message">The message.</param>
+        /// <param name="subscription">The subscription that triggered the event.</param>
         /// <returns>A value indicating whether processing has been successful.</returns>
-        private bool ProcessLogsSubscription(string payload, string topic, MqttSubscription subscription)
+        private bool ProcessLogsSubscription(MqttMessage message, MqttSubscription subscription)
         {
             var swTransform = new Stopwatch();
 
             using (this.internalLogger.StartActivity("Transform payload"))
             {
                 swTransform.Start();
-                if (subscription.Transform != null)
+                if (!string.IsNullOrWhiteSpace(subscription.Transform))
                 {
                     var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
-                    payload = this.payloadTransformation.Apply(this.Name, subscription.Transform, new ParsingContext(combinedVariables, payload, topic));
+                    message.Payload = this.payloadTransformation.Apply(this.Name, subscription.Transform, new ParsingContext(combinedVariables, message));
                 }
                 swTransform.Stop();
             }
@@ -219,7 +223,7 @@ namespace mqtt2otel.Manifest
                     var logger = this.dataStores.LoggerStore.GetLogger(key);
                     var combinedAttributes = rule.Attributes.Combine(this.Otel.Attributes);
 
-                    success = logger.ProcessLogMessage(payload, topic, rule, subscription.Variables, this.internalLogger, combinedAttributes);
+                    success = logger.ProcessLogMessage(message, rule, subscription.Variables, this.internalLogger, combinedAttributes);
 
                     sw.Stop();
 
@@ -250,52 +254,56 @@ namespace mqtt2otel.Manifest
         /// <param name="ruleId">The id of the rule, that generated the message from which the signal is received.</param>
         /// <param name="otelSettings">The otel settings that should be used to process this signal.</param>
         /// <param name="rule">The otel metric rule settings that should be used to process this signal.</param>
-        /// <param name="payload">The payload that should be processed.</param>
-        /// <param name="topic">The topic, that triggered the subscription.</param>
+        /// <param name="message">The received message.</param>
         /// <param name="variables">The variables that can be applied to the payload.</param>
         /// <returns></returns>
-        private void WriteValueToSignalStore(Guid subscriptionId, Guid ruleId, Otel otelSettings, OtelMetricRule rule, string payload, string topic, IEnumerable<Variable> variables)
+        private void WriteValueToSignalStore(Guid subscriptionId, Guid ruleId, Otel otelSettings, OtelMetricRule rule, MqttMessage message, IEnumerable<Variable> variables)
         {
             if (rule.Name == null) return;
 
             var combinedAttributes = otelSettings.Attributes.Combine(rule.Attributes);
 
+            if (rule.CreateAttributesFromUserProperties.HasValue && rule.CreateAttributesFromUserProperties == true)
+            {
+                combinedAttributes = combinedAttributes.Combine(message.UserProperties.ToOtelAttributes());
+            }
+
             if (otelSettings.TopicAttributes != null)
             {
-                combinedAttributes = combinedAttributes.Combine(TopicAttributeParser.Parse(topic, otelSettings.TopicAttributes));
+                combinedAttributes = combinedAttributes.Combine(TopicAttributeParser.Parse(message.Topic, otelSettings.TopicAttributes));
             }
 
             if (rule.TopicAttributes != null)
             {
-                combinedAttributes = combinedAttributes.Combine(TopicAttributeParser.Parse(topic, rule.TopicAttributes));
+                combinedAttributes = combinedAttributes.Combine(TopicAttributeParser.Parse(message.Topic, rule.TopicAttributes));
             }
 
-            IEnumerable<OtelAttribute> expandedAttributes = EmbeddedExpressionParser.Expand(combinedAttributes, variables, payload, topic);
+            IEnumerable<OtelAttribute> expandedAttributes = EmbeddedExpressionParser.Expand(combinedAttributes, variables, message);
 
             try
             {
                 switch (rule.SignalDataType)
                 {
                     case SignalDataType.Float:
-                        UpdateSignalStoreValue<float>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<float>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
                         break;
                     case SignalDataType.Int:
-                        UpdateSignalStoreValue<int>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<int>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
                         break;
                     case SignalDataType.Double:
-                        UpdateSignalStoreValue<double>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<double>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
                         break;
                     case SignalDataType.Long:
-                        UpdateSignalStoreValue<long>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<long>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
                         break;
                     case SignalDataType.Decimal:
-                        UpdateSignalStoreValue<decimal>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<decimal>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
                         break;
                     case SignalDataType.String:
-                        UpdateSignalStoreValue<string>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<string>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
                         break;
                     case SignalDataType.DateTime:
-                        UpdateSignalStoreValue<DateTime>(subscriptionId, ruleId, rule, payload, topic, expandedAttributes, variables);
+                        UpdateSignalStoreValue<DateTime>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
                         break;
                     default:
                         throw new ExpressionParsingException(new Exception(), rule.Name, $"Signal type {rule.SignalDataType} not supported.");
@@ -318,14 +326,13 @@ namespace mqtt2otel.Manifest
         /// <param name="subscriptionId">The id of the subscription that generated the message from which the signal is received.</param>
         /// <param name="ruleId">The id of the rule, that generated the message from which the signal is received.</param>
         /// <param name="rule">The otel metric rule that should be applied.</param>
-        /// <param name="payload">The payload to be parsed.</param>
-        /// <param name="topic">The topic, that triggered the subscription.</param>
+        /// <param name="message">The message to be parsed.</param>
         /// <param name="expandedAttributes">The attributes to be applied to the value.</param>
         /// <param name="variables">The currently active variables.</param>
         /// <returns></returns>
-        private void UpdateSignalStoreValue<T>(Guid subscriptionId, Guid ruleId, OtelMetricRule rule, string payload, string topic, IEnumerable<OtelAttribute> expandedAttributes, IEnumerable<Variable> variables)
+        private void UpdateSignalStoreValue<T>(Guid subscriptionId, Guid ruleId, OtelMetricRule rule, MqttMessage message, IEnumerable<OtelAttribute> expandedAttributes, IEnumerable<Variable> variables)
         {
-            T value = this.payloadParser.Parse<T>(rule.Name, rule.Value, new ParsingContext(variables, payload, topic));
+            T value = this.payloadParser.Parse<T>(rule.Name, rule.Value, new ParsingContext(variables, message));
             this.dataStores.SignalStore.UpdateValue(subscriptionId, ruleId, value, expandedAttributes);
         }
 

@@ -31,27 +31,27 @@ namespace mqtt2otel.Parser
 
             if (typeof(T) == typeof(int))
             {
-                result = int.Parse(context.Payload);
+                result = int.Parse(context.Message.Payload);
             }
             else if (typeof(T) == typeof(float))
             {
-                result = float.Parse(context.Payload);
+                result = float.Parse(context.Message.Payload);
             }
             else if (typeof(T) == typeof(double))
             {
-                result = double.Parse(context.Payload);
+                result = double.Parse(context.Message.Payload);
             }
             else if (typeof(T) == typeof(long))
             {
-                result = long.Parse(context.Payload);
+                result = long.Parse(context.Message.Payload);
             }
             else if (typeof(T) == typeof(decimal))
             {
-                result = decimal.Parse(context.Payload);
+                result = decimal.Parse(context.Message.Payload);
             }
             else
             {
-                result = context.Payload;
+                result = context.Message.Payload;
             }
 
             return (T)result;

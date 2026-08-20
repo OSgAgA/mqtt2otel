@@ -59,7 +59,7 @@ namespace mqtt2otel.Parser
                 this.patternCache[pattern] = this.ParsePattern(pattern);
             }
 
-            return (T)(object)this.Parse(context.Topic, this.patternCache[pattern]); ;
+            return (T)(object)this.Parse(context.Message.Topic, this.patternCache[pattern]); ;
         }
 
         /// <summary>

@@ -29,10 +29,10 @@ namespace mqtt2otel.Transformation
         {
             var parser = new DissectParser(pattern);
 
-            var result = parser.Parse(context.Payload);
+            var result = parser.Parse(context.Message.Payload);
 
             var resultAsDict = result.ToDictionary();
-            resultAsDict["original_value"] = context.Payload;
+            resultAsDict["original_value"] = context.Message.Payload;
 
             var resultAsJson = JsonConvert.SerializeObject(resultAsDict);
 
