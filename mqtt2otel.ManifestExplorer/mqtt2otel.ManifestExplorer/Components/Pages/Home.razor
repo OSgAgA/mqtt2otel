@@ -1,8 +1,7 @@
 ﻿@page "/{ExampleId?}"
-@using System.Text.Json
+@using mqtt2otel.ManifestExplorer.Components.Controls
 @using mqtt2otel.ManifestExplorer.DTOs
 @using mqtt2otel.ManifestExplorer.Settings
-@using mqtt2otel.Metadata
 @using mqtt2otel.Shared
 @inject IJSRuntime JS
 
@@ -15,82 +14,11 @@
 
 <div class="flex-container">
 
-    <Modal @ref="modal" Title="Enter Json Data" IsVerticallyCentered="true" Size="ModalSize.Large">
-        <BodyTemplate>
-            <div class="row" style="margin-bottom:10px">
-                <div class="col-3">
-                    <label>Id</label>
-                </div>
-                <div class="col-8">
-                    <InputText class="form-control w-100" @bind-Value="@this.testCaseId" />
-                </div>
-            </div>
-
-            <div class="row" style="margin-bottom:10px">
-                <div class="col-3">
-                    <label>Name</label>
-                </div>
-                <div class="col-8">
-                    <InputText class="form-control w-100" @bind-Value="@this.testCaseName" />
-                </div>
-            </div>
-
-            <div class="row" style="margin-bottom:10px">
-                <div class="col-3">
-                    <label>Description</label>
-                </div>
-                <div class="col-8">
-                    <InputTextArea class="form-control w-100" @bind-Value="@this.testCaseDescription" rows="5" />
-                </div>
-            </div>
-
-            <div class="row" style="margin-bottom:10px">
-                <div class="col-3">
-                    <label>Category</label>
-                </div>
-                <div class="col-8">
-                    <InputText class="form-control w-100" @bind-Value="@this.category" />
-                </div>
-            </div>
-
-            <div class="row" style="margin-bottom:10px">
-                <div class="col-3">
-                    <label>Tags</label>
-                </div>
-                <div class="col-8">
-                    <InputText class="form-control w-75" @bind-Value:get="@this.tagInput" @bind-Value:set="@this.OnTagInputChanged" />
-                    @foreach (var tag in this.tags)
-                    {
-                        <Button Color="ButtonColor.Success" Style="margin:10px">@tag</Button>
-                    }
-                </div>
-            </div>
-
-            <div class="row" style="margin-bottom:10px">
-                <div class="col-3">
-                    <label>Create example</label>
-                </div>
-                <div class="col-1">
-                    <CheckboxInput class="form-control w-50" @bind-Value="@this.createExample" />
-                </div>
-            </div>
-
-            <div class="row" style="margin-bottom:10px">
-                <div class="col-3">
-                    <label>Only validate manifest</label>
-                </div>
-                <div class="col-1">
-                    <CheckboxInput class="form-control w-50" @bind-Value="@this.validateManifestOnly" />
-                </div>
-            </div>
-        </BodyTemplate>
-        <FooterTemplate>
-            <Button Color="ButtonColor.Secondary" @onclick="HideModal">Close</Button>
-            <Button Color="ButtonColor.Primary" @onclick="CreateJson">Copy Json to clipboard</Button>
-        </FooterTemplate>
-    </Modal>
+    <CreateJsonDialog @ref="modal" Data="@this.Data" Result="@this.Result" />
 
     <div class="row">
+
+        @* The mqtt part *@
 
         <div class="col">
             <div class="flex-container">
@@ -100,7 +28,7 @@
                             <CardHeader>
                                 <b>Topic</b>
                             </CardHeader>
-                            <InputText @bind-Value="@this.topic" />
+                            <InputText @bind-Value="@this.Data.Setup.Topic" />
                         </Card>
                     </div>
                 </div>
@@ -110,7 +38,7 @@
                             <CardHeader>
                                 <b>Payload</b>
                             </CardHeader>
-                            <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.payload" rows="22" />
+                            <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.Data.Setup.Payload" rows="22" />
                         </Card>
                     </div>
                 </div>
@@ -136,7 +64,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var property in this.UserProperties)
+                                    @foreach (var property in this.Data.Setup.UserProperties)
                                     {
                                         <tr>
                                             <td><InputText class="form-control w-100" @bind-Value="@property.Name" /></td>
@@ -152,6 +80,8 @@
             </div>
         </div>
 
+        @* The mqtt2otel part *@
+
         <div class="col">
             <Card>
                 <CardHeader class="d-flex justify-content-between align-items-center">
@@ -166,8 +96,10 @@
                         </button>
                     </div>
                 </CardHeader>
-                <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.manifest" rows="26" />
+                <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.Data.Setup.Manifest" rows="26" />
             </Card>
+
+            @* The buttons *@
 
             <div class="row">
                 <div class="col" style="text-align: center">
@@ -180,6 +112,8 @@
             </div>
 
             <hr />
+
+            @* The results *@
 
             <div class="row">
                 <div class="col">
@@ -221,7 +155,7 @@
     /// <summary>
     /// The modal dialog used for creating json data.
     /// </summary>
-    Modal modal = new();
+    CreateJsonDialog modal = new();
 
     /// <summary>
     /// The id of the example that should be used to prefill the page. May be null if no example is provided.
@@ -245,57 +179,6 @@
     private string logsTitle = "Logs";
 
     /// <summary>
-    /// The test case id used by the modal dialog.
-    /// </summary>
-    private string testCaseId = string.Empty;
-
-    /// <summary>
-    /// The test case name used by the modal dialog.
-    /// </summary>
-    private string testCaseName = string.Empty;
-
-    /// <summary>
-    /// The test case description used by the modal dialog.
-    /// </summary>
-    private string testCaseDescription = string.Empty;
-
-    /// <summary>
-    /// Indicating whether an example should be created from this data, or only tests.
-    /// </summary>
-    private bool createExample = true;
-
-    /// <summary>
-    /// Indicating whether only the manifest should be validated at testing. All other information, e.g. payload, or results
-    /// are ignored.
-    /// </summary>
-    private bool validateManifestOnly = false;
-
-    /// <summary>
-    /// The current value of the tags input field.
-    /// </summary>
-    private string tagInput = string.Empty;
-
-    /// <summary>
-    /// The category of the example case.
-    /// </summary>
-    private string category = string.Empty;
-
-    /// <summary>
-    /// The parsed tags from the tag input field.
-    /// </summary>
-    private List<string> tags = new();
-
-    /// <summary>
-    /// The simulated mqtt payload.
-    /// </summary>
-    private string payload = string.Empty;
-
-    /// <summary>
-    /// The mqtt2otel manifest data.
-    /// </summary>
-    private string manifest = string.Empty;
-
-    /// <summary>
     /// The text representation of the metric result.
     /// </summary>
     private string resultMetricsText = string.Empty;
@@ -311,11 +194,6 @@
     private string resultLogText = string.Empty;
 
     /// <summary>
-    /// The mqtt topic.
-    /// </summary>
-    private string topic = "message-topic";
-
-    /// <summary>
     /// The result received via the ApplyPatternToPayload request. Maybe null if request is not yet called,
     /// or if not successfull.
     /// </summary>
@@ -327,9 +205,9 @@
     private bool isInitialized = false;
 
     /// <summary>
-    /// The mqtt user properties associated with the message.
+    /// Contains the data used by the explorer for testing different inputs based on incoming messages.
     /// </summary>
-    private List<UserProperty> UserProperties = new List<UserProperty>();
+    private TestCaseData Data = new TestCaseData();
 
     /// <summary>
     /// Apply the provided data and set the result tabs.
@@ -340,7 +218,7 @@
 
         var httpClient = Factory.CreateClient("ServerAPI");
 
-        var request = new ApplyPatternToPayloadData(this.topic, this.payload, this.manifest, this.UserProperties);
+        var request = new ApplyPatternToPayloadData(this.Data.Setup.Topic, this.Data.Setup.Payload, this.Data.Setup.Manifest, this.Data.Setup.UserProperties);
         var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/ApplyPatternToPayload", request);
 
         var result = await response.Content.ReadFromJsonAsync<ApplyPatternToPayloadResult>();
@@ -373,32 +251,6 @@
     }
 
     /// <summary>
-    /// Copy Json into the clipboard.
-    /// </summary>
-    private async Task CreateJson()
-    {
-        if (this.Result != null)
-        {
-            var testcase = new TestCaseData()
-            {
-                Setup = new ExampleData(this.testCaseId, this.testCaseName, this.testCaseDescription, this.topic, this.payload, this.UserProperties, this.manifest, this.category, this.tags, this.createExample, this.validateManifestOnly),
-                ExpectedResult = new ExpectedTestResult(this.Result.Metrics, this.Result.Logs)
-            };
-
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-            };
-
-            var jsonString = JsonSerializer.Serialize(testcase, options);
-
-            await JS.InvokeVoidAsync("copyToClipboard", jsonString);
-
-            await modal.HideAsync();
-        }
-    }
-
-    /// <summary>
     /// Called when the side is initialized. Will load example data if an example id is provided.
     /// </summary>
     /// <returns></returns>
@@ -428,19 +280,8 @@
 
         if (this.ExampleId != null)
         {
-            var testCaseData = TestCaseData.GetById(this.ExampleId);
 
-            this.topic = testCaseData.Setup.Topic;
-            this.payload = testCaseData.Setup.Payload;
-            this.UserProperties = testCaseData.Setup.UserProperties;
-            this.manifest = testCaseData.Setup.Manifest;
-
-            this.testCaseId = testCaseData.Setup.Id;
-            this.testCaseName = testCaseData.Setup.Name;
-            this.testCaseDescription = testCaseData.Setup.Description;
-            this.category = testCaseData.Setup.Category;
-            this.tags = testCaseData.Setup.Tags;
-            this.createExample = testCaseData.Setup.CreateExample;
+            this.Data = TestCaseData.GetById(this.ExampleId);
         }
 
         return base.OnInitializedAsync();
@@ -451,16 +292,7 @@
     /// </summary>
     private async Task ShowModal()
     {
-        await modal.ShowAsync();
-    }
-
-    /// <summary>
-    /// Hides the modal dialog.
-    /// </summary>
-    /// <returns></returns>
-    private async Task HideModal()
-    {
-        await modal.HideAsync();
+        await modal.Show();
     }
 
     /// <summary>
@@ -491,42 +323,15 @@ OtelConnections:
 
 """;
 
-        this.manifest = serverStub + (this.manifest.StartsWith('\n') ? "" : "\n") + this.manifest;
+        this.Data.Setup.Manifest = serverStub + (this.Data.Setup.Manifest.StartsWith('\n') ? "" : "\n") + this.Data.Setup.Manifest;
     }
 
-    /// <summary>
-    /// Copies the manifest string into the paste buffer.
-    /// </summary>
-    /// <returns></returns>
-    private async Task CopyManifest()
-    {
-        await JS.InvokeVoidAsync("copyToClipboard", this.manifest);
-    }
-
-    /// <summary>
-    /// Called when the value of the tag input field has changed.
-    /// </summary>
-    /// <param name="currentValue">The current value of the tag input field.</param>
-    private void OnTagInputChanged(string currentValue)
-    {
-        this.tags = new();
-
-        var split = currentValue.Split(' ');
-
-        foreach (var tag in split)
-        {
-            this.tags.Add(tag);
-        }
-
-        this.tagInput = currentValue;
-        this.StateHasChanged();
-    }
     /// <summary>
     /// Adds a new mqtt user property.
     /// </summary>
     private void AddUserProperty()
     {
-        this.UserProperties.Add(new UserProperty());
+        this.Data.Setup.UserProperties.Add(new UserProperty());
 
         this.StateHasChanged();
     }
@@ -537,8 +342,18 @@ OtelConnections:
     /// <param name="property">The property to be deleted.</param>
     private void DeleteUserProperty(UserProperty property)
     {
-        this.UserProperties.Remove(property);
+        this.Data.Setup.UserProperties.Remove(property);
 
         this.StateHasChanged();
     }
+
+    /// <summary>
+    /// Copies the manifest string into the paste buffer.
+    /// </summary>
+    /// <returns></returns>
+    private async Task CopyManifest()
+    {
+        await JS.InvokeVoidAsync("copyToClipboard", this.Data.Setup.Manifest);
+    }
+
 }
