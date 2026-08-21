@@ -15,7 +15,7 @@ namespace mqtt2otel.Helper
         /// </summary>
         /// <param name="properties">A list of mqtt user properties.</param>
         /// <returns>The converted properties as a list.</returns>
-        public static List<UserProperty> Convert(this List<MqttUserProperty> properties)
+        public static List<UserProperty> ToUserProperties(this List<MqttUserProperty> properties)
         {
             var result = new List<UserProperty>();
 

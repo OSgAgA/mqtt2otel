@@ -396,7 +396,7 @@ namespace mqtt2otel
 
                     foreach (var brokerSubscriptionId in e.ApplicationMessage.SubscriptionIdentifiers)
                     {
-                        var message = new MqttMessage(brokerSubscriptionId, e.ApplicationMessage.Topic, payload, e.ApplicationMessage.UserProperties.Convert());
+                        var message = new MqttMessage(brokerSubscriptionId, e.ApplicationMessage.Topic, payload, e.ApplicationMessage.UserProperties.ToUserProperties());
                         success = success && ProcessReceivedMessage(message);
                     }
 

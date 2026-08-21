@@ -160,7 +160,6 @@ namespace mqtt2otel.Manifest
 
                     var sw = new Stopwatch();
                     sw.Start();
-                    var key = subscription.Id + ":" + rule.Id;
                     var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
                     this.WriteValueToSignalStore(subscription.Id, rule.Id, this.Otel, rule, message, combinedVariables);
                     sw.Stop();
