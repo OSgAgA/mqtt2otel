@@ -222,6 +222,11 @@ namespace mqtt2otel.Manifest
                     var logger = this.dataStores.LoggerStore.GetLogger(key);
                     var combinedAttributes = rule.Attributes.Combine(this.Otel.Attributes);
 
+                    if (rule.CreateAttributesFromUserProperties.HasValue && rule.CreateAttributesFromUserProperties == true)
+                    {
+                        combinedAttributes = combinedAttributes.Combine(message.UserProperties.ToOtelAttributes());
+                    }
+
                     success = logger.ProcessLogMessage(message, rule, subscription.Variables, this.internalLogger, combinedAttributes);
 
                     sw.Stop();

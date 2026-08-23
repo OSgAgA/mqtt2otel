@@ -50,6 +50,13 @@ namespace mqtt2otel.Manifest
         public string? OtelConnection { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets a value indicating, whether attributes should be created from mqtt user properties (true), or not (false), or
+        /// if the default setting should be used (null).
+        /// </summary>
+        [InheritedProperty]
+        public bool? CreateAttributesFromUserProperties { get; set; } = true;
+
+        /// <summary>
         /// The key for structured payloads (e.g. json) to be used to identify the message body.
         /// </summary>
         public string MessageKey { get; set; } = "otel_message";
