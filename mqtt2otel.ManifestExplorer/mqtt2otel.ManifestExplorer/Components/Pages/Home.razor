@@ -21,6 +21,7 @@
         @* The mqtt part *@
 
         <div class="col">
+            <h2>MQTT</h2>
             <div class="flex-container">
                 <div class="row">
                     <div class="col" style="margin-bottom:20px;">
@@ -80,9 +81,14 @@
             </div>
         </div>
 
+        <div class="col-auto d-flex align-items-center">
+            <img src="images/play_no_circle.png" style="width:80px" />
+        </div>
+
         @* The mqtt2otel part *@
 
         <div class="col">
+            <h2>to Open Telemetry</h2>
             <Card>
                 <CardHeader class="d-flex justify-content-between align-items-center">
                     <b>Manifest</b>
@@ -96,7 +102,7 @@
                         </button>
                     </div>
                 </CardHeader>
-                <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.Data.Setup.Manifest" rows="26" />
+                <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.Data.Setup.Manifest" rows="24" />
             </Card>
 
             @* The buttons *@

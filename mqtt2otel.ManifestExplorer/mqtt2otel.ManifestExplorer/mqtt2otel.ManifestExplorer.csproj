@@ -7,6 +7,7 @@
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
 
+
   <ItemGroup>
     <ProjectReference Include="..\..\mqtt2otel.Metadata\mqtt2otel.Metadata.csproj" />
     <ProjectReference Include="..\..\mqtt2otel.Shared\mqtt2otel.Shared.csproj" />

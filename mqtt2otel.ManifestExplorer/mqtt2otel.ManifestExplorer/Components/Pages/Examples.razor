@@ -8,7 +8,7 @@
 <h1>Examples</h1>
 
 <p>
-Please choose from a set of predefined examples to get you started using the manifest explorer.
+    Please choose from a set of predefined examples to get you started using the manifest explorer.
 </p>
 
 @foreach (var categoryExampleMapping in this.categoryExampleMappings)
@@ -34,11 +34,16 @@ Please choose from a set of predefined examples to get you started using the man
                             }
                         </div>
                     </CardTitle>
-                    <hr style="margin-left: 0px; margin-right: 0px; margin-top:0px; margin-bottom:10px;"/>
-                    <CardText>@example.Description</CardText>
-                    <div class="mt-auto text-center">
-                        <Button Color="ButtonColor.Light" To="@("/" + @example.Id)" Type="ButtonType.Link">Go</Button>
-                    </div>
+                    <hr style="margin-left: 0px; margin-right: 0px; margin-top:0px; margin-bottom:10px;" />
+                    <CardText>
+                        @example.Description
+                        <div class="mt-auto text-center" style="margin:0px">
+                            <a href="@("/" + @example.Id)">
+                                <img src="images/play.png" style="width:80px" />
+                            </a>
+                            @* <Button Color="ButtonColor.Light" To="@("/" + @example.Id)" Type="ButtonType.Link">Go</Button> *@
+                        </div>
+                    </CardText>
                 </CardBody>
             </Card>
         }
@@ -59,7 +64,7 @@ Please choose from a set of predefined examples to get you started using the man
 
 
     /// <summary>
-    /// Called when the side is initialized. 
+    /// Called when the side is initialized.
     /// </summary>
     /// <returns></returns>
     protected override Task OnInitializedAsync()
