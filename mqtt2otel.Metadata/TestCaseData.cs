@@ -14,11 +14,6 @@ namespace mqtt2otel.Shared
     public class TestCaseData
     {
         /// <summary>
-        /// Caches the loaded test case data for further use.
-        /// </summary>
-        private static List<TestCaseData>? cache = null;
-
-        /// <summary>
         /// Gets or sets the setup , that is needed to execute the test successfully.
         /// </summary>
         public ExampleData Setup { get; set; } = new();
@@ -68,9 +63,7 @@ namespace mqtt2otel.Shared
         /// <exception cref="Exception">Thrown if directory with json files describing the test cases is not found.</exception>
         public static List<TestCaseData> LoadAll()
         {
-            if (cache != null) return cache;
-
-            cache = new List<TestCaseData>();
+            var result = new List<TestCaseData>();
 
             var directories = Directory.GetDirectories("./", "TestCases", SearchOption.AllDirectories);
 
@@ -83,11 +76,11 @@ namespace mqtt2otel.Shared
                     try
                     {
                         var json = File.ReadAllText(file);
-                        var result = JsonSerializer.Deserialize<TestCaseData>(json);
+                        var jsonResult = JsonSerializer.Deserialize<TestCaseData>(json);
 
-                        if (result != null)
+                        if (jsonResult != null)
                         {
-                            cache.Add(result);
+                            result.Add(jsonResult);
                         }
                     }
                     catch (Exception ex)
@@ -101,7 +94,7 @@ namespace mqtt2otel.Shared
                 throw new Exception($"Searching for TestCase directory returned {directories?.Length} results. Exactly one result has been expected.");
             }
 
-            return cache;
+            return result;
         }
 
         /// <summary>
