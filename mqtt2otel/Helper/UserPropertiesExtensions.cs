@@ -30,7 +30,9 @@ namespace mqtt2otel.Helper
         }
 
         /// <summary>
-        /// Converts the given mqtt user properties to open telemetry attributes.
+        /// Converts the given mqtt user properties to open telemetry attributes. Ignores empty name attributes. An attribute is empty, 
+        /// if its name is null, empty, or only consists of whitespace.
+        /// 
         /// </summary>
         /// <param name="properties">The source user properties.</param>
         /// <returns>The converted attributes.</returns>
@@ -40,7 +42,7 @@ namespace mqtt2otel.Helper
 
             properties.ForEach(prop => result.Add(new OtelAttribute(prop.Name, prop.Value)));
 
-            return result;
+            return result.Where(prop => !string.IsNullOrWhiteSpace(prop.Key)).ToList();
         }
 
         /// <summary>
