@@ -37,18 +37,25 @@ namespace mqtt2otel.Stores
         private readonly ILogger internalLogger;
 
         /// <summary>
+        /// The parser for parsing texts containing embedded expressions.
+        /// </summary>
+        public IEmbeddedExpressionParser embeddedExpressionParser;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OtelLogger"/> class.
         /// </summary>
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="logger">The logger to log to open telemetry.</param>
         /// <param name="payloadParser">The payload parser used for parsing mqtt payloads.</param>
         /// <param name="payloadTransformation">The payload transformation parser used for transforming mqtt payloads.</param>
-        public OtelLogger(ILogger internalLogger, ILogger logger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation)
+        /// <param name="embeddedExpressionParser">The parser for parsing texts containing embedded expressions.</param>
+        public OtelLogger(ILogger internalLogger, ILogger logger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IEmbeddedExpressionParser embeddedExpressionParser)
         {
             this.logger = logger;
             this.payloadParser = payloadParser;
             this.payloadTransformation = payloadTransformation;
             this.internalLogger = internalLogger;
+            this.embeddedExpressionParser = embeddedExpressionParser;
         }
 
         /// <summary>
@@ -75,8 +82,8 @@ namespace mqtt2otel.Stores
             var context = new ParsingContext(variables, message);
             List<KeyValuePair<string, object?>> attributes = combinedAttributes
                 .Select(attribute => new KeyValuePair<string, object?>(
-                    EmbeddedExpressionParser.Expand(attribute.Key, context), 
-                    EmbeddedExpressionParser.Expand(attribute.Value.ToString() ?? string.Empty, context)))
+                    this.embeddedExpressionParser.Expand(attribute.Key, context), 
+                    this.embeddedExpressionParser.Expand(attribute.Value.ToString() ?? string.Empty, context)))
                 .ToList();
 
             string? body = string.Empty;

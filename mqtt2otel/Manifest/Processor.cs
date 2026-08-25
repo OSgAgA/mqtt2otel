@@ -46,6 +46,11 @@ namespace mqtt2otel.Manifest
         private ProcessorMeter processorMeter;
 
         /// <summary>
+        /// The parser used for parsing expressions embedded in a subscription.
+        /// </summary>
+        private IEmbeddedExpressionParser embeddedExpressionParser;
+
+        /// <summary>
         /// Creates a new instance of the <see cref="Processor"/> type.
         /// </summary>
         /// <param name="internalLogger">The logger used internaly for logging.</param>
@@ -53,13 +58,15 @@ namespace mqtt2otel.Manifest
         /// <param name="payloadTransformation">The object used for processing payload transformations.</param>
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
         /// <param name="meter">The meter for recording internal metrics.</param>
-        public Processor(ILogger internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores, ProcessorMeter meter)
+        /// <param name="embeddedExpressionParser">The parser used for parsing expressions embedded in a subscription.</param>
+        public Processor(ILogger internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores, ProcessorMeter meter, IEmbeddedExpressionParser embeddedExpressionParser)
         {
             this.processorMeter = meter;
             this.internalLogger = internalLogger;
             this.payloadParser = payloadParser;
             this.payloadTransformation = payloadTransformation;
             this.dataStores = dataStores;
+            this.embeddedExpressionParser = embeddedExpressionParser;
         }
 
         /// <summary>
@@ -161,7 +168,7 @@ namespace mqtt2otel.Manifest
                     var sw = new Stopwatch();
                     sw.Start();
                     var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
-                    this.WriteValueToSignalStore(subscription.Id, rule.Id, this.Otel, rule, message, combinedVariables);
+                    this.WriteValueToSignalStore(subscription, rule, this.Otel, message, combinedVariables);
                     sw.Stop();
 
                     var tags = new TagList();
@@ -254,14 +261,13 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Stores a metric signal in the signal store.
         /// </summary>
-        /// <param name="subscriptionId">The id of the subscription that generated the message from which the signal is received.</param>
-        /// <param name="ruleId">The id of the rule, that generated the message from which the signal is received.</param>
-        /// <param name="otelSettings">The otel settings that should be used to process this signal.</param>
+        /// <param name="subscription">The subscription that generated the message from which the signal is received.</param>
         /// <param name="rule">The otel metric rule settings that should be used to process this signal.</param>
+        /// <param name="otelSettings">The otel settings that should be used to process this signal.</param>
         /// <param name="message">The received message.</param>
         /// <param name="variables">The variables that can be applied to the payload.</param>
         /// <returns></returns>
-        private void WriteValueToSignalStore(Guid subscriptionId, Guid ruleId, Otel otelSettings, OtelMetricRule rule, MqttMessage message, IEnumerable<Variable> variables)
+        private void WriteValueToSignalStore(MqttSubscription subscription, OtelMetricRule rule, Otel otelSettings, MqttMessage message, IEnumerable<Variable> variables)
         {
             if (rule.Name == null) return;
 
@@ -282,32 +288,32 @@ namespace mqtt2otel.Manifest
                 combinedAttributes = combinedAttributes.Combine(TopicAttributeParser.Parse(message.Topic, rule.TopicAttributes));
             }
 
-            IEnumerable<OtelAttribute> expandedAttributes = EmbeddedExpressionParser.Expand(combinedAttributes, variables, message);
+            IEnumerable<OtelAttribute> expandedAttributes = this.embeddedExpressionParser.Expand(combinedAttributes, variables, message);
 
             try
             {
                 switch (rule.SignalDataType)
                 {
                     case SignalDataType.Float:
-                        UpdateSignalStoreValue<float>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
+                        UpdateSignalStoreValue<float>(subscription, rule, message, expandedAttributes, variables);
                         break;
                     case SignalDataType.Int:
-                        UpdateSignalStoreValue<int>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
+                        UpdateSignalStoreValue<int>(subscription, rule, message, expandedAttributes, variables);
                         break;
                     case SignalDataType.Double:
-                        UpdateSignalStoreValue<double>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
+                        UpdateSignalStoreValue<double>(subscription, rule, message, expandedAttributes, variables);
                         break;
                     case SignalDataType.Long:
-                        UpdateSignalStoreValue<long>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
+                        UpdateSignalStoreValue<long>(subscription, rule, message, expandedAttributes, variables);
                         break;
                     case SignalDataType.Decimal:
-                        UpdateSignalStoreValue<decimal>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
+                        UpdateSignalStoreValue<decimal>(subscription, rule, message, expandedAttributes, variables);
                         break;
                     case SignalDataType.String:
-                        UpdateSignalStoreValue<string>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
+                        UpdateSignalStoreValue<string>(subscription, rule, message, expandedAttributes, variables);
                         break;
                     case SignalDataType.DateTime:
-                        UpdateSignalStoreValue<DateTime>(subscriptionId, ruleId, rule, message, expandedAttributes, variables);
+                        UpdateSignalStoreValue<DateTime>(subscription, rule, message, expandedAttributes, variables);
                         break;
                     default:
                         throw new ExpressionParsingException(new Exception(), rule.Name, $"Signal type {rule.SignalDataType} not supported.");
@@ -327,17 +333,17 @@ namespace mqtt2otel.Manifest
         /// Updates a value in the signal store.
         /// </summary>
         /// <typeparam name="T">The type of the value inside the store.</typeparam>
-        /// <param name="subscriptionId">The id of the subscription that generated the message from which the signal is received.</param>
-        /// <param name="ruleId">The id of the rule, that generated the message from which the signal is received.</param>
+        /// <param name="subscription">The subscription that generated the message from which the signal is received.</param>
         /// <param name="rule">The otel metric rule that should be applied.</param>
         /// <param name="message">The message to be parsed.</param>
         /// <param name="expandedAttributes">The attributes to be applied to the value.</param>
         /// <param name="variables">The currently active variables.</param>
         /// <returns></returns>
-        private void UpdateSignalStoreValue<T>(Guid subscriptionId, Guid ruleId, OtelMetricRule rule, MqttMessage message, IEnumerable<OtelAttribute> expandedAttributes, IEnumerable<Variable> variables)
+        private void UpdateSignalStoreValue<T>(MqttSubscription subscription, OtelMetricRule rule, MqttMessage message, IEnumerable<OtelAttribute> expandedAttributes, IEnumerable<Variable> variables)
         {
-            T value = this.payloadParser.Parse<T>(rule.Name, rule.Value, new ParsingContext(variables, message));
-            this.dataStores.SignalStore.UpdateValue(subscriptionId, ruleId, value, expandedAttributes);
+            var context = new ParsingContext(variables, message);
+            T value = this.payloadParser.Parse<T>(rule.Name, rule.Value, context);
+            this.dataStores.SignalStore.UpdateValue(subscription, rule, context, value, expandedAttributes);
         }
 
     }

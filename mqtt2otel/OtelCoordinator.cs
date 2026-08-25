@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using mqtt2otel.Manifest;
 using mqtt2otel.Helper;
+using mqtt2otel.Interfaces;
 using mqtt2otel.InternalLogging;
+using mqtt2otel.InternalMetrics;
+using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using OpenTelemetry;
@@ -11,16 +13,16 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Parlot.Fluent;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
-using mqtt2otel.Interfaces;
-using mqtt2otel.InternalMetrics;
 
 namespace mqtt2otel
 {
@@ -75,18 +77,26 @@ namespace mqtt2otel
         private OtelMeter otelMeter;
 
         /// <summary>
+        /// The parser used for parsing expressions embedded in a subscription.
+        /// </summary>
+        private IEmbeddedExpressionParser embeddedExpressionParser;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OtelCoordinator"/> class.
         /// </summary>
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="exporterBuilder">The exporter builder for creating open telemetry exporters.</param>
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
         /// <param name="meter">The meter for reporting internal metrics.</param>
-        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IOtelExporterBuilder exporterBuilder, IDataStores dataStores, OtelMeter meter)
+        /// <param name="embeddedExpressionParser">The parser used for parsing expressions embedded in a subscription.</param>
+        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IOtelExporterBuilder exporterBuilder, IDataStores dataStores, OtelMeter meter, IEmbeddedExpressionParser embeddedExpressionParser)
         {
             this.otelMeter = meter;
             this.internalLogger = internalLogger;
             this.exporterBuilder = exporterBuilder;
             this.dataStores = dataStores;
+            this.dataStores.SignalStore.SignalCreator = this.CreateInstrument;
+            this.embeddedExpressionParser = embeddedExpressionParser;
         }
 
         /// <summary>
@@ -149,15 +159,6 @@ namespace mqtt2otel
                 this.MeterConnectionMap[otelConnection.Name] = meter;
             }
 
-            // Create all instruments
-            foreach (var processor in manifest.Processors)
-            {
-                foreach (var subscriptionSettings in processor.Mqtt.Subscriptions)
-                {
-                    this.CreateInstruments(processor, subscriptionSettings);
-                }
-            }
-
             // Create meter providers
             foreach (var otelConnection in manifest.OtelConnections)
             {
@@ -176,60 +177,53 @@ namespace mqtt2otel
         }
 
         /// <summary>
-        /// Create and store all otel meter instruments based on the given rules.
+        /// Creates and store the otel meter instrument based on the given rule and subscription.
         /// </summary>
-        /// <param name="processor">The processor defining how the meter is created.</param>
         /// <param name="mqttSubscription">The mqtt subscription with which the meter is connected.</param>
+        /// <param name="rule">The metric rule that contains information about the to be created instrument.</param>
+        /// <param name="parsingContext">The current parsing context.</param>
         /// <exception cref="ArgumentNullException">Thrown if a subscription rule is defined without a name.</exception>
         /// <exception cref="Exception">Thrown if instrument does not exist.</exception>
-        private void CreateInstruments(Processor processor, MqttSubscription mqttSubscription)
+        private void CreateInstrument(MqttSubscription mqttSubscription, OtelMetricRule rule, ParsingContext parsingContext)
         {
-            foreach (var rulesSettings in processor.Otel.Metrics)
+            if (rule.Name == null) throw new ArgumentNullException(nameof(rule));
+
+            if (rule.OtelConnection == null || !this.MeterConnectionMap.ContainsKey(rule.OtelConnection))
             {
-                if (rulesSettings.Name == null) throw new ArgumentNullException(nameof(rulesSettings));
-
-                if (rulesSettings.OtelConnection == null || !this.MeterConnectionMap.ContainsKey(rulesSettings.OtelConnection))
-                {
-                    throw new Exception($"Cannot create instrument. No meter exists for metric rule with name: {rulesSettings.Name}.");
-                }
-
-                var context = new ParsingContext(mqttSubscription.Variables, new MqttMessage(subscriptionId: 0, topic: "", payload: "", userProperties: new()));
-                string expandedName = EmbeddedExpressionParser.Expand(rulesSettings.Name, context);
-
-                string key = mqttSubscription.Id + ":" + rulesSettings.Id;
-
-                string instrumentCreationMethodName = string.Empty;
-
-                switch (rulesSettings.Instrument)
-                {
-                    case OtelMetricInstrument.Gauge:
-                        instrumentCreationMethodName = nameof(CreateGauge);
-                        break;
-                    case OtelMetricInstrument.AsynchronousGauge:
-                        instrumentCreationMethodName = nameof(CreateAsynchronousGauge);
-                        break;
-                    case OtelMetricInstrument.Counter:
-                        instrumentCreationMethodName = nameof(CreateCounter);
-                        break;
-                    case OtelMetricInstrument.AsynchronousCounter:
-                        instrumentCreationMethodName = nameof(CreateAsynchronousCounter);
-                        break;
-                    case OtelMetricInstrument.UpDownCounter:
-                        instrumentCreationMethodName = nameof(CreateUpDownCounter);
-                        break;
-                    case OtelMetricInstrument.AsynchronousUpDownCounter:
-                        instrumentCreationMethodName = nameof(CreateAsynchronousUpDownCounter);
-                        break;
-                    case OtelMetricInstrument.Histogram:
-                        instrumentCreationMethodName = nameof(CreateHistogram);
-                        break;
-                    default:
-                        throw new Exception($"Unsupported otel metric type: '{rulesSettings.Instrument.ToString()}' for metric {processor.Name}.");
-                }
-
-                var meter = this.MeterConnectionMap[rulesSettings.OtelConnection];
-                TypeHelper.CallMethodWithGenericType(this, rulesSettings.SignalDataType, instrumentCreationMethodName, new object[] { rulesSettings, mqttSubscription, key, meter, expandedName });
+                throw new Exception($"Cannot create instrument. No meter exists for metric rule with name: {rule.Name}.");
             }
+
+            var meter = this.MeterConnectionMap[rule.OtelConnection];
+            string instrumentCreationMethodName = string.Empty;
+
+            switch (rule.Instrument)
+            {
+                case OtelMetricInstrument.Gauge:
+                    instrumentCreationMethodName = nameof(CreateGauge);
+                    break;
+                case OtelMetricInstrument.AsynchronousGauge:
+                    instrumentCreationMethodName = nameof(CreateAsynchronousGauge);
+                    break;
+                case OtelMetricInstrument.Counter:
+                    instrumentCreationMethodName = nameof(CreateCounter);
+                    break;
+                case OtelMetricInstrument.AsynchronousCounter:
+                    instrumentCreationMethodName = nameof(CreateAsynchronousCounter);
+                    break;
+                case OtelMetricInstrument.UpDownCounter:
+                    instrumentCreationMethodName = nameof(CreateUpDownCounter);
+                    break;
+                case OtelMetricInstrument.AsynchronousUpDownCounter:
+                    instrumentCreationMethodName = nameof(CreateAsynchronousUpDownCounter);
+                    break;
+                case OtelMetricInstrument.Histogram:
+                    instrumentCreationMethodName = nameof(CreateHistogram);
+                    break;
+                default:
+                    throw new Exception($"Unsupported otel metric type: '{rule.Instrument.ToString()}' for metric {rule.Name}.");
+            }
+
+            TypeHelper.CallMethodWithGenericType(this, rule.SignalDataType, instrumentCreationMethodName, new object[] { rule, mqttSubscription, parsingContext, meter });
         }
 
         /// <summary>
@@ -277,16 +271,25 @@ namespace mqtt2otel
         /// <typeparam name="T">The type of the signal stored.</typeparam>
         /// <param name="otelMetricRule">The rule defining the metric.</param>
         /// <param name="mqttSubscription">The subscription for connecting the instrument with the subscription.</param>
-        /// <param name="key">The key under which the value will be stored in the signal store.</param>
+        /// <param name="context">The current parsing context.</param>
         /// <param name="meter">The meter to which this instrument should be added.</param>
-        private void CreateAsynchronousGauge<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
+        private void CreateAsynchronousGauge<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, ParsingContext context, Meter meter) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
+            var metric = new OtelMetric<T>(
+                                default(T),
+                                this.embeddedExpressionParser.Expand(otelMetricRule.Description, context),
+                                this.embeddedExpressionParser.Expand(otelMetricRule.Unit, context),
+                                new List<OtelAttribute>());
+
+            var name = this.embeddedExpressionParser.Expand(otelMetricRule.Name, context);
+
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription, otelMetricRule, name, metric);
+
             meter.CreateObservableGauge<T>(
-                expandedName,
-                () => this.CreateMeasurement<T>(mqttSubscription, otelMetricRule),
-                unit: otelMetricRule.Unit,
-                description: otelMetricRule.Description);
+                name,
+                () => this.CreateMeasurement<T>(mqttSubscription, otelMetricRule, name),
+                metric.Unit,
+                metric.Description);
         }
 
         /// <summary>
@@ -295,17 +298,23 @@ namespace mqtt2otel
         /// <typeparam name="T">The type of the signal stored.</typeparam>
         /// <param name="otelMetricRule">The rule defining the metric.</param>
         /// <param name="mqttSubscription">The subscription for connecting the instrument with the subscription.</param>
+        /// <param name="context">The current parsing context.</param>
         /// <param name="expandedName">The name that will identify the gauge. The name should already have all variables expanded.</param>
-        /// <param name="key">The key under which the value will be stored in the signal store.</param>
         /// <param name="meter">The meter to which this instrument should be added.</param>
-        private void CreateGauge<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
+        private void CreateGauge<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, ParsingContext context, Meter meter) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
-            var gauge = meter.CreateGauge<T>(
-                expandedName,
-                unit: otelMetricRule.Unit,
-                description: otelMetricRule.Description);
-            this.dataStores.SignalStore.RegisterCallback(mqttSubscription.Id, otelMetricRule.Id, signalStoreKey => this.RecordAttributedValue<T>(mqttSubscription, otelMetricRule, (value, attributes) => gauge.Record(value, attributes)));
+            var metric = new OtelMetric<T>(
+                    default(T),
+                    this.embeddedExpressionParser.Expand(otelMetricRule.Description, context),
+                    this.embeddedExpressionParser.Expand(otelMetricRule.Unit, context),
+                    new List<OtelAttribute>());
+
+            var name = this.embeddedExpressionParser.Expand(otelMetricRule.Name, context);
+
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription, otelMetricRule, name, metric);
+
+            var gauge = meter.CreateGauge<T>(name, metric.Unit, metric.Description);
+            this.dataStores.SignalStore.RegisterCallback(mqttSubscription.Id, otelMetricRule.Id, name, () => this.RecordAttributedValue<T>(mqttSubscription, otelMetricRule, name, (value, attributes) => gauge.Record(value, attributes)));
         }
 
         /// <summary>
@@ -314,16 +323,24 @@ namespace mqtt2otel
         /// <typeparam name="T">The type of the signal stored.</typeparam>
         /// <param name="otelMetricRule">The rule defining the metric.</param>
         /// <param name="mqttSubscription">The subscription for connecting the instrument with the subscription.</param>
-        /// <param name="key">The key under which the value will be stored in the signal store.</param>
+        /// <param name="context">The current parsing context.</param>
         /// <param name="meter">The meter to which this instrument should be added.</param>
-        private void CreateAsynchronousCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
+        private void CreateAsynchronousCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, ParsingContext context, Meter meter) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
+            var metric = new OtelMetric<T>(
+                    default(T),
+                    this.embeddedExpressionParser.Expand(otelMetricRule.Description, context),
+                    this.embeddedExpressionParser.Expand(otelMetricRule.Unit, context),
+                    new List<OtelAttribute>());
+
+            var name = this.embeddedExpressionParser.Expand(otelMetricRule.Name, context);
+
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription, otelMetricRule, name, metric);
             meter.CreateObservableCounter<T>(
-                expandedName,
-                () => this.CreateMeasurement<T>(mqttSubscription, otelMetricRule),
-                unit: otelMetricRule.Unit,
-                description: otelMetricRule.Description);
+                name,
+                () => this.CreateMeasurement<T>(mqttSubscription, otelMetricRule, name),
+                metric.Unit,
+                metric.Description);
         }
 
         /// <summary>
@@ -332,16 +349,21 @@ namespace mqtt2otel
         /// <typeparam name="T">The type of the signal stored.</typeparam>
         /// <param name="otelMetricRule">The rule defining the metric.</param>
         /// <param name="mqttSubscription">The subscription for connecting the instrument with the subscription.</param>
-        /// <param name="key">The key under which the value will be stored in the signal store.</param>
+        /// <param name="context">The current parsing context.</param>
         /// <param name="meter">The meter to which this instrument should be added.</param>
-        private void CreateCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
+        private void CreateCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, ParsingContext context, Meter meter) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
-            var counter = meter.CreateCounter<T>(
-                expandedName,
-                unit: otelMetricRule.Unit,
-                description: otelMetricRule.Description);
-            this.dataStores.SignalStore.RegisterCallback(mqttSubscription.Id, otelMetricRule.Id, signalStoreKey => this.RecordAttributedValue<T>(mqttSubscription, otelMetricRule, (value, attributes) => counter.Add(value, attributes)));
+            var metric = new OtelMetric<T>(
+                    default(T),
+                    this.embeddedExpressionParser.Expand(otelMetricRule.Description, context),
+                    this.embeddedExpressionParser.Expand(otelMetricRule.Unit, context),
+                    new List<OtelAttribute>());
+
+            var name = this.embeddedExpressionParser.Expand(otelMetricRule.Name, context);
+
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription, otelMetricRule, name, metric);
+            var counter = meter.CreateCounter<T>(name, metric.Unit, metric.Description);
+            this.dataStores.SignalStore.RegisterCallback(mqttSubscription.Id, otelMetricRule.Id, name, () => this.RecordAttributedValue<T>(mqttSubscription, otelMetricRule, name, (value, attributes) => counter.Add(value, attributes)));
         }
 
         /// <summary>
@@ -350,16 +372,24 @@ namespace mqtt2otel
         /// <typeparam name="T">The type of the signal stored.</typeparam>
         /// <param name="otelMetricRule">The rule settings defining the metric.</param>
         /// <param name="mqttSubscription">The subscription settings for connecting the instrument with the subscription.</param>
-        /// <param name="key">The key under which the value will be stored in the signal store.</param>
+        /// <param name="context">The current parsing context.</param>
         /// <param name="meter">The meter to which this instrument should be added.</param>
-        private void CreateAsynchronousUpDownCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
+        private void CreateAsynchronousUpDownCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, ParsingContext context, Meter meter) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
+            var metric = new OtelMetric<T>(
+                    default(T),
+                    this.embeddedExpressionParser.Expand(otelMetricRule.Description, context),
+                    this.embeddedExpressionParser.Expand(otelMetricRule.Unit, context),
+                    new List<OtelAttribute>());
+
+            var name = this.embeddedExpressionParser.Expand(otelMetricRule.Name, context);
+
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription, otelMetricRule, name, metric);
             meter.CreateObservableUpDownCounter<T>(
-                expandedName,
-                () => this.CreateMeasurement<T>(mqttSubscription, otelMetricRule),
-                unit: otelMetricRule.Unit,
-                description: otelMetricRule.Description);
+                name,
+                () => this.CreateMeasurement<T>(mqttSubscription, otelMetricRule, name),
+                metric.Unit,
+                metric.Description);
         }
 
         /// <summary>
@@ -368,16 +398,21 @@ namespace mqtt2otel
         /// <typeparam name="T">The type of the signal stored.</typeparam>
         /// <param name="otelMetricRule">The rule defining the metric.</param>
         /// <param name="mqttSubscription">The subscription for connecting the instrument with the subscription.</param>
-        /// <param name="key">The key under which the value will be stored in the signal store.</param>
+        /// <param name="context">The current parsing context.</param>
         /// <param name="meter">The meter to which this instrument should be added.</param>
-        private void CreateUpDownCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
+        private void CreateUpDownCounter<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, ParsingContext context, Meter meter) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
-            var counter = meter.CreateUpDownCounter<T>(
-                expandedName,
-                unit: otelMetricRule.Unit,
-                description: otelMetricRule.Description);
-            this.dataStores.SignalStore.RegisterCallback(mqttSubscription.Id, otelMetricRule.Id, signalStoreKey => this.RecordAttributedValue<T>(mqttSubscription, otelMetricRule, (value, attributes) => counter.Add(value, attributes)));
+            var metric = new OtelMetric<T>(
+                    default(T),
+                    this.embeddedExpressionParser.Expand(otelMetricRule.Description, context),
+                    this.embeddedExpressionParser.Expand(otelMetricRule.Unit, context),
+                    new List<OtelAttribute>());
+
+            var name = this.embeddedExpressionParser.Expand(otelMetricRule.Name, context);
+
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription, otelMetricRule, name, metric);
+            var counter = meter.CreateUpDownCounter<T>(name, metric.Unit, metric.Description);
+            this.dataStores.SignalStore.RegisterCallback(mqttSubscription.Id, otelMetricRule.Id, name, () => this.RecordAttributedValue<T>(mqttSubscription, otelMetricRule, name, (value, attributes) => counter.Add(value, attributes)));
         }
 
         /// <summary>
@@ -386,11 +421,19 @@ namespace mqtt2otel
         /// <typeparam name="T">The type of the signal stored.</typeparam>
         /// <param name="otelMetricRule">The rule defining the metric.</param>
         /// <param name="mqttSubscription">The subscription for connecting the instrument with the subscription.</param>
-        /// <param name="key">The key under which the value will be stored in the signal store.</param>
+        /// <param name="context">The current parsing context.</param>
         /// <param name="meter">The meter to which this instrument should be added.</param>
-        private void CreateHistogram<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, string key, Meter meter, string expandedName) where T : struct
+        private void CreateHistogram<T>(OtelMetricRule otelMetricRule, MqttSubscription mqttSubscription, ParsingContext context, Meter meter) where T : struct
         {
-            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription.Id, otelMetricRule.Id, new OtelMetric<T>(default(T), description: otelMetricRule.Description, otelMetricRule.Unit, new List<OtelAttribute>()));
+            var metric = new OtelMetric<T>(
+                    default(T),
+                    this.embeddedExpressionParser.Expand(otelMetricRule.Description, context),
+                    this.embeddedExpressionParser.Expand(otelMetricRule.Unit, context),
+                    new List<OtelAttribute>());
+
+            var name = this.embeddedExpressionParser.Expand(otelMetricRule.Name, context);
+
+            this.dataStores.SignalStore.StoreValue<T>(mqttSubscription, otelMetricRule, name, metric);
 
             Histogram<T>? histogram = null;
 
@@ -399,23 +442,16 @@ namespace mqtt2otel
                 var list = TypeHelper.Parse<T>(otelMetricRule.HistogramBucketBoundaries);
                 var readonlyList = list.AsReadOnly<T>();
                 var advice = new InstrumentAdvice<T>() { HistogramBucketBoundaries = readonlyList };
-                histogram = meter.CreateHistogram<T>(
-                    expandedName,
-                    unit: otelMetricRule.Unit,
-                    description: otelMetricRule.Description,
-                    advice: advice);
+                histogram = meter.CreateHistogram<T>(name, metric.Unit, metric.Description, advice: advice);
             }
             else
             {
-                histogram = meter.CreateHistogram<T>(
-                    expandedName,
-                    unit: otelMetricRule.Unit,
-                    description: otelMetricRule.Description);
+                histogram = meter.CreateHistogram<T>(name, metric.Unit, metric.Description);
             }
 
             if (histogram != null)
             {
-                this.dataStores.SignalStore.RegisterCallback(mqttSubscription.Id, otelMetricRule.Id, signalStoreKey => this.RecordAttributedValue<T>(mqttSubscription, otelMetricRule, (value, attributes) => histogram.Record(value, attributes)));
+                this.dataStores.SignalStore.RegisterCallback(mqttSubscription.Id, otelMetricRule.Id, name, () => this.RecordAttributedValue<T>(mqttSubscription, otelMetricRule, name, (value, attributes) => histogram.Record(value, attributes)));
             }
         }
 
@@ -425,10 +461,11 @@ namespace mqtt2otel
         /// <typeparam name="TPayload">The type of the value.</typeparam>
         /// <param name="mqttSubscription">The subscription for connecting the instrument with the subscription.</param>
         /// <param name="otelMetricRule">The rule defining the metric.</param>
+        /// <param name="name">The name of the metric</param>
         /// <returns>The created measurement.</returns>
-        private Measurement<TPayload> CreateMeasurement<TPayload>(MqttSubscription mqttSubscription, OtelMetricRule otelMetricRule) where TPayload : struct
+        private Measurement<TPayload> CreateMeasurement<TPayload>(MqttSubscription mqttSubscription, OtelMetricRule otelMetricRule, string name) where TPayload : struct
         {
-            var metric = this.dataStores.SignalStore.GetValue<TPayload>(mqttSubscription.Id, otelMetricRule.Id);
+            var metric = this.dataStores.SignalStore.GetValue<TPayload>(mqttSubscription.Id, otelMetricRule.Id, name);
 
             this.internalLogger.LogDebug($"Providing measurement ({metric.Value}) with attributes ({string.Join(",", metric.Attributes.Select(attribute => attribute.Key + ": " + attribute.Value))}).");
 
@@ -439,15 +476,16 @@ namespace mqtt2otel
         }
 
         /// <summary>
-        /// Record a value stored in the signal store via an instrument including alll provided attributes.
+        /// Record a value stored in the signal store via an instrument including all provided attributes.
         /// </summary>
         /// <typeparam name="TPayload">The type of the value stored.</typeparam>
         /// <param name="mqttSubscription">The subscription for connecting the instrument with the subscription.</param>
         /// <param name="otelMetricRule">The rule defining the metric.</param>
+        /// <param name="name">The instrument name.</param>
         /// <param name="record">An action that will record the payload and the provided attributes to the instrument.</param>
-        private void RecordAttributedValue<TPayload>(MqttSubscription mqttSubscription, OtelMetricRule otelMetricRule, Action<TPayload, TagList> record) where TPayload : struct
+        private void RecordAttributedValue<TPayload>(MqttSubscription mqttSubscription, OtelMetricRule otelMetricRule, string name, Action<TPayload, TagList> record) where TPayload : struct
         {
-            var metric = this.dataStores.SignalStore.GetValue<TPayload>(mqttSubscription.Id, otelMetricRule.Id);
+            var metric = this.dataStores.SignalStore.GetValue<TPayload>(mqttSubscription.Id, otelMetricRule.Id, name);
 
             this.internalLogger.LogDebug($"Providing measurement ({metric.Value}) with attributes ({string.Join(",", metric.Attributes.Select(attribute => attribute.Key + ": " + attribute.Value))}).");
 

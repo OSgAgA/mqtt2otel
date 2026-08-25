@@ -6,6 +6,7 @@ using mqtt2otel.Helper;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Manifest;
 using mqtt2otel.Metadata;
+using mqtt2otel.Parser;
 using mqtt2otel.Server.Helper;
 using mqtt2otel.Shared;
 using mqtt2otel.Tests.Helper;
@@ -39,10 +40,13 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             // Arrange
 
+            var payloadParser = new PayloadParser();
+            var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
+
             using var mqttHelper = new MqttTestHelper();
             await mqttHelper.EnsureServerIsStarted();
 
-            var dataStores = GenericHelper.GetDataStores();
+            var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
             var manifest = ManifestHelper.ReadManifestFromString(testCase.Setup.Manifest, dataStores);
 
             if (string.IsNullOrWhiteSpace(manifest.Version)) manifest.Version = "1.0";
@@ -83,7 +87,7 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var exportBuilder = new OtelTestExporterBuilder();
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter());
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter(), embeddedExpressionParser);
             otelCoordinator.Connect(manifest);
 
             this._output.WriteLine($"{DateTime.UtcNow}: Arrange completed.");

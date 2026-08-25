@@ -1,6 +1,7 @@
 ﻿using Moq;
 using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
+using mqtt2otel.Parser;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,10 +15,11 @@ namespace mqtt2otel.Tests._10_UnitTests
         public void ShouldParsePlainText()
         {
             var payloadParserMock = new Mock<IPayloadParser>();
+            var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParserMock.Object);
 
             var context = new Parser.ParsingContext(new List<Variable>(), new MqttMessage());
 
-            string result = EmbeddedExpressionParser.Expand("This is a test", context, payloadParserMock.Object);
+            string result = embeddedExpressionParser.Expand("This is a test", context);
 
             Assert.Equal("This is a test", result);
         }
@@ -26,9 +28,10 @@ namespace mqtt2otel.Tests._10_UnitTests
         public void ShouldParseVariable()
         {
             var payloadParserMock = new Mock<IPayloadParser>();
+            var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParserMock.Object);
             var context = new Parser.ParsingContext(new List<Variable>() { new Variable() { Key = "test", Value = "important test" } }, new MqttMessage());
 
-            string result = EmbeddedExpressionParser.Expand("This is a $test", context, payloadParserMock.Object);
+            string result = embeddedExpressionParser.Expand("This is a $test", context);
 
             Assert.Equal("This is a important test", result);
         }
@@ -36,9 +39,12 @@ namespace mqtt2otel.Tests._10_UnitTests
         [Fact]
         public void ShouldParseSimpleEmbeddedExpressionUsingDefaultParser()
         {
+            var payloadParser = new PayloadParser();
+            var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
+
             var context = new Parser.ParsingContext(new List<Variable>(), new MqttMessage());
 
-            string result = EmbeddedExpressionParser.Expand("My lucky number is: $(84/2)", context);
+            string result = embeddedExpressionParser.Expand("My lucky number is: $(84/2)", context);
 
             Assert.Equal("My lucky number is: 42", result);
         }
@@ -53,9 +59,10 @@ namespace mqtt2otel.Tests._10_UnitTests
         public void ShouldIdentifyCorrectEmbeddedExpressions(string input, string expectedExpression)
         {
             var payloadParserMock = new Mock<IPayloadParser>();
+            var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParserMock.Object);
             var context = new Parser.ParsingContext(new List<Variable>(), new MqttMessage());
 
-            EmbeddedExpressionParser.Expand(input, context, payloadParserMock.Object);
+            embeddedExpressionParser.Expand(input, context);
 
             payloadParserMock.Verify( parser => parser.Parse<string>(It.IsAny<string>(), expectedExpression, context));
         }
@@ -68,9 +75,10 @@ namespace mqtt2otel.Tests._10_UnitTests
         public void ShouldIdentifyInCorrectEmbeddedExpressions(string input)
         {
             var payloadParserMock = new Mock<IPayloadParser>();
+            var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParserMock.Object);
             var context = new Parser.ParsingContext(new List<Variable>(), new MqttMessage());
 
-            EmbeddedExpressionParser.Expand(input, context, payloadParserMock.Object);
+            embeddedExpressionParser.Expand(input, context);
 
             payloadParserMock.Verify(parser => parser.Parse<string>(It.IsAny<string>(), It.IsAny<string>(), context), Times.Never);
         }

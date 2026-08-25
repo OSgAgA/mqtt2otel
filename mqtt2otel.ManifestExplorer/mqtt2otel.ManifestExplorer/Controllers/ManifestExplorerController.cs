@@ -57,14 +57,16 @@ namespace mqtt2otel.ManifestExplorer.Controllers
                                 });
 
             IPayloadParser payloadParser = new PayloadParser();
+            IEmbeddedExpressionParser embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
+
             IPayloadTransformation payloadTransformation = new PayloadTransformation();
-            ISignalStore signalStore = new SignalStore();
+            ISignalStore signalStore = new SignalStore(embeddedExpressionParser);
             var internalLogger = new Mock<ILogger<string>>();
-            ILoggerStore loggerStore = new LoggerStore(internalLogger.Object, payloadParser, payloadTransformation);
+            ILoggerStore loggerStore = new LoggerStore(internalLogger.Object, payloadParser, payloadTransformation, embeddedExpressionParser);
             IDataStores dataStores = new DataStores(signalStore, loggerStore);
             ProcessorMeter meter = new ProcessorMeter();
 
-            Manifest.Manifest.ObjectFactory = new mqtt2otel.Manifest.ObjectFactory(logger.Object, payloadParser, payloadTransformation, dataStores, meter);
+            Manifest.Manifest.ObjectFactory = new mqtt2otel.Manifest.ObjectFactory(logger.Object, payloadParser, payloadTransformation, dataStores, meter, embeddedExpressionParser);
 
             Manifest.Manifest manifest;
 
@@ -109,7 +111,7 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             ILogger<OtelCoordinator> otelLogger = new Logger<OtelCoordinator>(new LoggerFactory());
             var exportBuilder = new OtelTestExporterBuilder();
-            var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelMeter());
+            var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelMeter(), embeddedExpressionParser);
             otel.Connect(manifest);
 
             var message = new MqttMessage(subscriptionId: 0, topic: request.Topic, payload: request.Payload, userProperties: request.UserProperties);

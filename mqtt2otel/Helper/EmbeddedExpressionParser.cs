@@ -11,9 +11,12 @@ namespace mqtt2otel.Helper
     /// <summary>
     /// A helper class for parsing embedded expressions in strings.
     /// </summary>
-    public static class EmbeddedExpressionParser
+    public class EmbeddedExpressionParser(IPayloadParser _parser) : IEmbeddedExpressionParser
     {
-        private static IPayloadParser parser = new PayloadParser();
+        /// <summary>
+        /// The internally used payload parser for embedded expressions.
+        /// </summary>
+        private IPayloadParser parser = _parser;
 
         /// <summary>
         /// Expand all embedded expressions that are found in a string.
@@ -26,20 +29,11 @@ namespace mqtt2otel.Helper
         /// <example>text = "My constant is $(CONST('Hello \'world\'')"                              => result = "My constant is Hello 'world'"</example>
         /// <example>text = "My constant is $(CONST('Hello \\world\\')"                              => result = "My constant is Hello \world\"</example>
         /// <param name="text">The text that will be expanded.</param>
-        /// <param name="variables">The variables that should be applied.</param>
-        /// <param name="payload">The current payload.</param>
-        /// <param name="topic">The current topic.</param>
+        /// <param name="context">The parsing context.</param>
         /// <returns>The expanded text.</returns>
-        public static string Expand(string text, ParsingContext context, IPayloadParser? parser = null)
+        public string Expand(string text, ParsingContext context)
         {
-            if (parser != null)
-            {
-                return Evaluate(text, context, parser);
-            }
-            else
-            {
-                return Evaluate(text, context, EmbeddedExpressionParser.parser);
-            }
+            return this.Evaluate(text, context);
         }
 
         /// <summary>
@@ -49,14 +43,15 @@ namespace mqtt2otel.Helper
         /// <param name="replacements">The replacements that will be used for expanding the source variables.</param>
         /// <param name="message">The received message.</param>
         /// <returns>A new enumerable of expanded attributes.</returns>
-        public static IEnumerable<OtelAttribute> Expand(IEnumerable<OtelAttribute> attributes, IEnumerable<Variable> replacements, MqttMessage message)
+        public IEnumerable<OtelAttribute> Expand(IEnumerable<OtelAttribute> attributes, IEnumerable<Variable> replacements, MqttMessage message)
         {
             var result = new List<Variable>();
             var context = new ParsingContext(replacements, message);
 
-            return attributes.Select(variable => new OtelAttribute() { 
-                Key = EmbeddedExpressionParser.Expand(variable.Key, context),
-                Value = EmbeddedExpressionParser.Expand(variable.Value.ToString() ?? string.Empty, context) 
+            return attributes.Select(variable => new OtelAttribute()
+            {
+                Key = this.Expand(variable.Key, context),
+                Value = this.Expand(variable.Value.ToString() ?? string.Empty, context)
             }).ToList();
         }
 
@@ -74,7 +69,7 @@ namespace mqtt2otel.Helper
         /// <param name="context">The parsing context used by the payload parser for further processing embedded expressions.</param>
         /// <param name="parser">A payload parser used for evaluating embedded expressions.</param>
         /// <returns>The evaluated expression as a string.</returns>
-        private static string Evaluate(string text, ParsingContext context, IPayloadParser parser)
+        private string Evaluate(string text, ParsingContext context)
         {
             var state = EmbeddedExpressionState.Text;
             var variableDict = new Dictionary<string, object>();
@@ -148,7 +143,7 @@ namespace mqtt2otel.Helper
                             if (bracketCount == 0)
                             {
                                 state = EmbeddedExpressionState.Text;
-                                string evaluatedExpression = parser.Parse<string>(string.Empty, expression.ToString(), context);
+                                string evaluatedExpression = this.parser.Parse<string>(string.Empty, expression.ToString(), context);
                                 result.Append(evaluatedExpression);
                             }
                             else

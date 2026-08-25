@@ -30,6 +30,11 @@ namespace mqtt2otel.Stores
         private readonly IPayloadTransformation payloadTransformation;
 
         /// <summary>
+        /// The parser for parsing texts containing embedded expressions.
+        /// </summary>
+        private IEmbeddedExpressionParser embeddedExpressionParser;
+
+        /// <summary>
         /// The logger used for internal logging.
         /// </summary>
         private readonly ILogger internalLogger;
@@ -40,11 +45,13 @@ namespace mqtt2otel.Stores
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="payloadParser">A payload parser that will be provided to all stored loggers.</param>
         /// <param name="payloadTransformation">The payload transformation parser.</param>
-        public LoggerStore(ILogger<string> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation)
+        /// <param name="embeddedExpressionParser">The parser for parsing texts containing embedded expressions.</param>
+        public LoggerStore(ILogger<string> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IEmbeddedExpressionParser embeddedExpressionParser)
         {
             this.payloadParser = payloadParser;
             this.payloadTransformation = payloadTransformation;
             this.internalLogger = internalLogger;
+            this.embeddedExpressionParser = embeddedExpressionParser;
         }
 
         /// <summary>
@@ -58,7 +65,7 @@ namespace mqtt2otel.Stores
             if (this.store.ContainsKey(key))
                 throw new Mqtt2OtelException($"Cannot add logger with key {key} to store, as the key allready exists.");
 
-            this.store[key] = new OtelLogger(this.internalLogger, logger, payloadParser, payloadTransformation);
+            this.store[key] = new OtelLogger(this.internalLogger, logger, payloadParser, payloadTransformation, embeddedExpressionParser);
         }
 
         /// <summary>

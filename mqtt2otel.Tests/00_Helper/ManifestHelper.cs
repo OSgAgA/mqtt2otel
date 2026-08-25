@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using mqtt2otel.Helper;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
@@ -17,15 +18,19 @@ namespace mqtt2otel.Tests.Helper
         {
             var objFactoryLoggerMock = new Mock<ILogger<Manifest.Processor>>();
             var internalLoggerMock = new Mock<ILogger<string>>();
-            var signalStore = new SignalStore();
-            var loggerStore = new LoggerStore(internalLoggerMock.Object, new PayloadParser(), new PayloadTransformation());
+
+            var payloadParser = new PayloadParser();
+            var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
             if (dataStores == null)
             {
+                var signalStore = new SignalStore(embeddedExpressionParser);
+                var loggerStore = new LoggerStore(internalLoggerMock.Object, payloadParser, new PayloadTransformation(), embeddedExpressionParser);
+
                 dataStores = new DataStores(signalStore, loggerStore);
             }
 
-            Manifest.Manifest.ObjectFactory = new Manifest.ObjectFactory(objFactoryLoggerMock.Object, new PayloadParser(), new PayloadTransformation(), dataStores, new ProcessorMeter());
+            Manifest.Manifest.ObjectFactory = new Manifest.ObjectFactory(objFactoryLoggerMock.Object, payloadParser, new PayloadTransformation(), dataStores, new ProcessorMeter(), embeddedExpressionParser);
 
             var loggerMock = new Mock<ILogger>();
 
