@@ -4,6 +4,7 @@ using mqtt2otel.ManifestExplorer.Components;
 using mqtt2otel.ManifestExplorer.Meters;
 using mqtt2otel.ManifestExplorer.Settings;
 using OpenTelemetry;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 
 namespace mqtt2otel.ManifestExplorer
@@ -49,6 +50,7 @@ namespace mqtt2otel.ManifestExplorer
                                  options.Endpoint = new Uri(otelSettings.Endpoint.Uri);
                                  options.Protocol = otelSettings.OtlpExportProtocol;
                                  options.ExportProcessorType = otelSettings.ExportProcessorType;
+                                 options.Headers = otelSettings.Headers;
                              });
                          });
             }

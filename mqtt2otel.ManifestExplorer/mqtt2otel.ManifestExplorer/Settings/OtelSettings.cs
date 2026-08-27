@@ -32,5 +32,10 @@ namespace mqtt2otel.ManifestExplorer.Settings
         /// Gets or sets the open telemetry export processor type.
         /// </summary>
         public ExportProcessorType ExportProcessorType { get; set; } = ExportProcessorType.Batch;
+
+        /// <summary>
+        /// Gets or sets the headers that will be send via the otel exporter.
+        /// </summary>
+        public string? Headers { get; set; } = null;
     }
 }
