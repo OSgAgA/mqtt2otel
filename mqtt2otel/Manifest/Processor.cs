@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Text;
+using System.Xml.Linq;
 
 namespace mqtt2otel.Manifest
 {
@@ -125,7 +126,7 @@ namespace mqtt2otel.Manifest
             var sw = new Stopwatch();
             sw.Start();
             try
-            {                
+            {
                 using (this.internalLogger.StartActivity("Process metrics processors"))
                 {
                     success = this.ProcessMetricsSubscription(message, subscription);
@@ -292,31 +293,26 @@ namespace mqtt2otel.Manifest
 
             try
             {
-                switch (rule.SignalDataType)
+                var context = new ParsingContext(variables, message);
+
+                switch (rule.ParseAs)
                 {
-                    case SignalDataType.Float:
-                        UpdateSignalStoreValue<float>(subscription, rule, message, expandedAttributes, variables);
+                    case ParseAsOptions.Undefined:
+                        string name = this.embeddedExpressionParser.Expand(rule.Name, context);
+                        SignalDataType type = rule.SignalDataType;
+                        CallUpdateSignalStoreValueWithType(subscription, rule, name, type, null, context, expandedAttributes);
                         break;
-                    case SignalDataType.Int:
-                        UpdateSignalStoreValue<int>(subscription, rule, message, expandedAttributes, variables);
-                        break;
-                    case SignalDataType.Double:
-                        UpdateSignalStoreValue<double>(subscription, rule, message, expandedAttributes, variables);
-                        break;
-                    case SignalDataType.Long:
-                        UpdateSignalStoreValue<long>(subscription, rule, message, expandedAttributes, variables);
-                        break;
-                    case SignalDataType.Decimal:
-                        UpdateSignalStoreValue<decimal>(subscription, rule, message, expandedAttributes, variables);
-                        break;
-                    case SignalDataType.String:
-                        UpdateSignalStoreValue<string>(subscription, rule, message, expandedAttributes, variables);
-                        break;
-                    case SignalDataType.DateTime:
-                        UpdateSignalStoreValue<DateTime>(subscription, rule, message, expandedAttributes, variables);
+                    case ParseAsOptions.Json:
+                        foreach (var item in JsonFlattener.Flatten(message.Payload))
+                        {
+                            if (item.Value != null)
+                            {
+                                CallUpdateSignalStoreValueWithType(subscription, rule, item.Key, TypeHelper.ConvertTypeToSignalDataType(item.Value.GetType()), item.Value, context, expandedAttributes);
+                            }
+                        }
                         break;
                     default:
-                        throw new ExpressionParsingException(new Exception(), rule.Name, $"Signal type {rule.SignalDataType} not supported.");
+                        break;
                 }
             }
             catch (ExpressionParsingException ex)
@@ -330,20 +326,67 @@ namespace mqtt2otel.Manifest
         }
 
         /// <summary>
+        /// Calls <see cref="UpdateSignalStoreValue{T}(MqttSubscription, OtelMetricRule, string, SignalDataType, ParsingContext, IEnumerable{OtelAttribute})"/> with the correct type.
+        /// </summary>
+        /// <typeparam name="T">The type of the value inside the store.</typeparam>
+        /// <param name="subscription">The subscription that generated the message from which the signal is received.</param>
+        /// <param name="rule">The otel metric rule that should be applied.</param>
+        /// <param name="name">The instrument name.</param>
+        /// <param name="type">The signal type.</param>
+        /// <param name="value">The value that should be stored. If null the rule value will be used.</param>
+        /// <param name="context">The current parsing context..</param>
+        /// <param name="expandedAttributes">The attributes to be applied to the value.</param>
+        private void CallUpdateSignalStoreValueWithType(MqttSubscription subscription, OtelMetricRule rule, string name, SignalDataType type, object? value, ParsingContext context, IEnumerable<OtelAttribute> expandedAttributes)
+        {
+            switch (type)
+            {
+                case SignalDataType.Float:
+                    float floatValue = value != null ? (float)value : this.payloadParser.Parse<float>(rule.Name, rule.Value, context);
+                    UpdateSignalStoreValue<float>(subscription, rule, name, type, floatValue, context, expandedAttributes);
+                    break;
+                case SignalDataType.Int:
+                    int intValue = value != null ? (int)value : this.payloadParser.Parse<int>(rule.Name, rule.Value, context);
+                    UpdateSignalStoreValue<int>(subscription, rule, name, type, intValue, context, expandedAttributes);
+                    break;
+                case SignalDataType.Double:
+                    double doubleValue = value != null ? (double)value : this.payloadParser.Parse<double>(rule.Name, rule.Value, context);
+                    UpdateSignalStoreValue<double>(subscription, rule, name, type, doubleValue, context, expandedAttributes);
+                    break;
+                case SignalDataType.Long:
+                    long longValue = value != null ? (long)value : this.payloadParser.Parse<long>(rule.Name, rule.Value, context);
+                    UpdateSignalStoreValue<long>(subscription, rule, name, type, longValue, context, expandedAttributes);
+                    break;
+                case SignalDataType.Decimal:
+                    decimal decimalValue = value != null ? (decimal)value : this.payloadParser.Parse<decimal>(rule.Name, rule.Value, context);
+                    UpdateSignalStoreValue<decimal>(subscription, rule, name, type, decimalValue, context, expandedAttributes);
+                    break;
+                case SignalDataType.String:
+                    string stringValue = value != null ? (string)value : this.payloadParser.Parse<string>(rule.Name, rule.Value, context);
+                    UpdateSignalStoreValue<string>(subscription, rule, name, type, stringValue, context, expandedAttributes);
+                    break;
+                case SignalDataType.DateTime:
+                    DateTime dateTimeValue = value != null ? (DateTime)value : this.payloadParser.Parse<DateTime>(rule.Name, rule.Value, context);
+                    UpdateSignalStoreValue<DateTime>(subscription, rule, name, type, dateTimeValue, context, expandedAttributes);
+                    break;
+                default:
+                    throw new ExpressionParsingException(new Exception(), rule.Name, $"Signal type {rule.SignalDataType} not supported.");
+            }
+        }
+
+        /// <summary>
         /// Updates a value in the signal store.
         /// </summary>
         /// <typeparam name="T">The type of the value inside the store.</typeparam>
         /// <param name="subscription">The subscription that generated the message from which the signal is received.</param>
         /// <param name="rule">The otel metric rule that should be applied.</param>
-        /// <param name="message">The message to be parsed.</param>
+        /// <param name="instrumentName">The instrument name.</param>
+        /// <param name="signalType">The signal type.</param>
+        /// <param name="value">The value that should be stored.</param>
+        /// <param name="context">The current parsing context..</param>
         /// <param name="expandedAttributes">The attributes to be applied to the value.</param>
-        /// <param name="variables">The currently active variables.</param>
-        /// <returns></returns>
-        private void UpdateSignalStoreValue<T>(MqttSubscription subscription, OtelMetricRule rule, MqttMessage message, IEnumerable<OtelAttribute> expandedAttributes, IEnumerable<Variable> variables)
+        private void UpdateSignalStoreValue<T>(MqttSubscription subscription, OtelMetricRule rule, string instrumentName, SignalDataType signalType, T value, ParsingContext context, IEnumerable<OtelAttribute> expandedAttributes)
         {
-            var context = new ParsingContext(variables, message);
-            T value = this.payloadParser.Parse<T>(rule.Name, rule.Value, context);
-            this.dataStores.SignalStore.UpdateValue(subscription, rule, context, value, expandedAttributes);
+            this.dataStores.SignalStore.UpdateValue(subscription, rule, instrumentName, signalType, context, value, expandedAttributes);
         }
 
     }

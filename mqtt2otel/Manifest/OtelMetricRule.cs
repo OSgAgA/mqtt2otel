@@ -48,6 +48,11 @@ namespace mqtt2otel.Manifest
         /// </summary>
         public string? TopicAttributes { get; set; } = null;
 
+        /// <summary>
+        /// Gets or sets a value identifying, whether and how a payload can be automatically parsed.
+        /// </summary>
+        public ParseAsOptions ParseAs { get; set; } = ParseAsOptions.Undefined;
+
 
         /// <summary>
         /// Gets or sets the value of the metric as a parse expression (<see cref="IPayloadParser"/>).

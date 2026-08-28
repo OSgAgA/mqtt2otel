@@ -64,13 +64,14 @@ namespace mqtt2otel.Interfaces
         /// <param name="rule">The rule, that generated the message from which the signal is received.</param>
         /// <param name="context">The current parsing context.</param>
         /// <param name="signalName">The name of the signal that will be created (if not allready existing).</param>
+        /// <param name="signalType">The type of the signal.</param>
         /// <param name="value">The new value.</param>
         /// <param name="attributes">Attributes that should be added to the metric value.</param>
-        public void UpdateValue<TPayload>(MqttSubscription subscription, OtelMetricRule rule, ParsingContext context, TPayload value, IEnumerable<OtelAttribute> attributes);
+        public void UpdateValue<TPayload>(MqttSubscription subscription, OtelMetricRule rule, string signalName, SignalDataType signalType, ParsingContext context, TPayload value, IEnumerable<OtelAttribute> attributes);
 
         /// <summary>
         /// This action is called when no signal is found and a new signal for the given parameters must be created.
         /// </summary>
-        public Action<MqttSubscription, OtelMetricRule, ParsingContext>? SignalCreator { get; set; }
+        public Action<MqttSubscription, OtelMetricRule, string, SignalDataType, ParsingContext>? SignalCreator { get; set; }
     }
 }

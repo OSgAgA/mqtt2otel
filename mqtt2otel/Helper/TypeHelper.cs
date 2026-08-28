@@ -102,6 +102,15 @@ namespace mqtt2otel.Helper
             return TypeHelper.TypeMap[dataType];
         }
 
+        public static SignalDataType ConvertTypeToSignalDataType(Type type)
+        {
+            var resultQuery = SignalTypeMap.Where(map => map.Value == type);
+
+            if (!resultQuery.Any()) throw new Exception($"Cannot convert {type} to a signal data type.");
+
+            return resultQuery.First().Key;
+        }
+
         /// <summary>
         /// Maps <see cref="SignalDataType"/> to a system type.
         /// </summary>

@@ -54,7 +54,7 @@ namespace mqtt2otel.Tests.Helper
             if (attributes == null ) attributes = rule.Attributes;
 
             var expectedMetric = new OtelMetric<T>(value, description, unit, attributes);
-            store.UpdateValue<T>(subscription, rule, new ParsingContext(new List<Variable>(), new MqttMessage()), value, attributes);
+            store.UpdateValue<T>(subscription, rule, name, rule.SignalDataType, new ParsingContext(new List<Variable>(), new MqttMessage()), value, attributes);
         }
     }
 }
