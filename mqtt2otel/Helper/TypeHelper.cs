@@ -62,7 +62,7 @@ namespace mqtt2otel.Helper
             var method = instance.GetType()
                              .GetMethod(
                                  methodName,
-                                 BindingFlags.Instance | BindingFlags.NonPublic
+                                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic 
                              )?
                              .MakeGenericMethod(genericType);
 
@@ -123,6 +123,7 @@ namespace mqtt2otel.Helper
             [SignalDataType.String] = typeof(string),
             [SignalDataType.Long] = typeof(long),
             [SignalDataType.DateTime] = typeof(DateTime),
+            [SignalDataType.Default] = typeof(float),
         };
 
         /// <summary>

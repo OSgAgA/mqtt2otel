@@ -30,12 +30,13 @@ namespace mqtt2otel.Helper
         /// Processor.TemperatureB = 23
         /// </summary>
         /// <param name="json">The original json string.</param>
+        /// <param name="separator">The separator used for combining names of different levels.</param>
         /// <returns>The json as a flattened dicrtionary.</returns>
-        public static Dictionary<string, object?> Flatten(string json)
+        public static Dictionary<string, object?> Flatten(string json, string separator)
         {
             var root = JObject.Parse(json);
             var result = new Dictionary<string, object?>();
-            FlattenToken(root, result, prefix: "");
+            FlattenToken(root, result, prefix: "", separator);
             return result;
         }
 
@@ -45,7 +46,8 @@ namespace mqtt2otel.Helper
         /// <param name="token">The token to be parsed.</param>
         /// <param name="result">The already produced result.</param>
         /// <param name="prefix">The current prefix.</param>
-        private static void FlattenToken(JToken token, Dictionary<string, object?> result, string prefix)
+        /// <param name="separator">The separator used for combining names of different levels.</param>
+        private static void FlattenToken(JToken token, Dictionary<string, object?> result, string prefix, string separator)
         {
             switch (token.Type)
             {
@@ -54,9 +56,9 @@ namespace mqtt2otel.Helper
                     {
                         var childPrefix = string.IsNullOrEmpty(prefix)
                             ? prop.Name
-                            : $"{prefix}.{prop.Name}";
+                            : $"{prefix}{separator}{prop.Name}";
 
-                        FlattenToken(prop.Value, result, childPrefix);
+                        FlattenToken(prop.Value, result, childPrefix, separator);
                     }
                     break;
 
@@ -64,7 +66,7 @@ namespace mqtt2otel.Helper
                     int index = 0;
                     foreach (var item in token.Children())
                     {
-                        FlattenToken(item, result, $"{prefix}.{index}");
+                        FlattenToken(item, result, $"{prefix}{separator}{index}", separator);
                         index++;
                     }
                     break;

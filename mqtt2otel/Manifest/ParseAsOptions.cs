@@ -17,6 +17,11 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Payload is a Json.
         /// </summary>
-        Json
+        Json,
+
+        /// <summary>
+        /// Payload as XML.
+        /// </summary>
+        Xml
     }
 }

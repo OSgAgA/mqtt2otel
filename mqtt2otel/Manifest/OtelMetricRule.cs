@@ -29,7 +29,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets the data type of the payload, that will be send to the otel endpoint.
         /// </summary>
-        public SignalDataType SignalDataType { get; set; } = SignalDataType.Float;
+        public SignalDataType SignalDataType { get; set; } = SignalDataType.Default;
 
         /// <summary>
         /// Gets or sets information about the unit of the <see cref="Value"/>.
@@ -51,8 +51,23 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets a value identifying, whether and how a payload can be automatically parsed.
         /// </summary>
-        public ParseAsOptions ParseAs { get; set; } = ParseAsOptions.Undefined;
+        public ParseAsData ParseAs { get; set; } = new ParseAsData();
 
+        /// <summary>
+        /// Gets or sets the formatter used for formatting a given key. Set to null to use original key.
+        /// </summary>
+        public string? NameFormatter { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the converter used for converting a given value. Set to null to use original value.
+        /// </summary>
+        public string? ValueConverter { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets a list of rules that should be applied to the data after the payload parser is run, but before the value converter,
+        /// or type formatter are applied.
+        /// </summary>
+        public List<ConditionalAction> Transformations { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the value of the metric as a parse expression (<see cref="IPayloadParser"/>).
@@ -96,6 +111,17 @@ namespace mqtt2otel.Manifest
                     result.AddError($"{context}/({this.Name})/{nameof(Value)}: Expression is \"{this.Value}\". {expression.Error}");
                 }
             }
+        }
+
+        /// <summary>
+        /// Provides a shallow clonw of the rule.
+        /// </summary>
+        /// <returns>The cloned object.</returns>
+        public OtelMetricRule Clone()
+        {
+            var result = this.MemberwiseClone();
+
+            return result as OtelMetricRule ?? new OtelMetricRule();
         }
     }
 }

@@ -66,6 +66,11 @@ namespace mqtt2otel
                 expressionContext.StaticParameters.Add("pi", Math.PI);
                 expressionContext.StaticParameters.Add("e", Math.E);
 
+                foreach (var internVar in context.InternalVariables)
+                {
+                    expressionContext.StaticParameters.Add(internVar.Key, internVar.Value);
+                }
+
                 var compare = expressionContext.ComparisonOptions;
 
                 foreach (var strategyName in this.NameStrategyMapping.Keys)
