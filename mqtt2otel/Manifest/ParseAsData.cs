@@ -18,5 +18,12 @@ namespace mqtt2otel.Manifest
         /// Gets or sets the separator for flattening key names.
         /// </summary>
         public string Separator { get; set; } = ".";
+
+        /// <summary>
+        /// Gets or sets a value indicating whether only the name of a property should be returned without any hierarchical prefix.
+        /// 
+        /// If true, then data.Temperature.DeviceA will be returned as DeviceA.
+        /// </summary>
+        public bool NameOnly { get; set; } = false; 
     }
 }

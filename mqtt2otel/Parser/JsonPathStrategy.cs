@@ -19,11 +19,10 @@ namespace mqtt2otel.Parser
         /// <summary>
         /// Parses the input as a json string.
         /// </summary>
-        /// <typeparam name="T">The expected return type.</typeparam>
         /// <param name="filter">A JsonPath expression (see <see cref="https://www.rfc-editor.org/rfc/rfc9535"/>) that will be applied to the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed payload.</returns>
-        public T Parse<T>(string filter, ParsingContext context)
+        public object? Parse(string filter, ParsingContext context)
         {
            var jsonPayload = JObject.Parse(context.Message.Payload);
            var token = jsonPayload.SelectToken(filter);
@@ -33,11 +32,11 @@ namespace mqtt2otel.Parser
                 throw new Exception($"Applying filter '{filter}' to payload '{context.Message.Payload}' returned no result.");
             }
 
-            T? result = token.ToObject<T>();
+            object? result = ((JValue)token).Value;
 
             if (result == null)
             {
-                throw new Exception($"Result of applying filter: '{filter}' to payload '{context.Message.Payload}' could not be cast to type {typeof(T).FullName}.");
+                throw new Exception($"Result of applying filter: '{filter}' to payload '{context.Message.Payload}' could not be read.");
             }
 
             return result;

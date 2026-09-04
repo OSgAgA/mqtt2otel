@@ -14,17 +14,16 @@ namespace mqtt2otel.Parser
         /// <summary>
         /// Returns the value of a variable with the given name.
         /// </summary>
-        /// <typeparam name="T">The expected return type.</typeparam>
         /// <param name="variableName">The variable name.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed payload.</returns>
-        public T Parse<T>(string variableName, ParsingContext context)
+        public object? Parse(string variableName, ParsingContext context)
         {
             var query = context.Variables.Where(variable => variable.Key == variableName);
 
             if (!query.Any()) throw new Exception($"Could not find variable '{variableName}'.");
 
-            return Helper.TypeHelper.Parse<T>(query.First().Value.ToString() ?? string.Empty);
+            return query.First().Value;
         }
     }
 }

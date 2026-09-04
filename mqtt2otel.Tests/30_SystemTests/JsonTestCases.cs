@@ -77,7 +77,7 @@ namespace mqtt2otel.Tests._30_SystemTests
             var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
             int tcsCount = 1;
-            int expectedCount = testCase.ExpectedResult.Metrics.Count + testCase.ExpectedResult.Logs.Count;
+            int expectedCount = 1;
             mqttCoordinator.OnMessageProcessed += (sender, args) =>
             {
                 if (expectedCount == tcsCount++) tcs.SetResult(args);

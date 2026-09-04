@@ -45,21 +45,18 @@ namespace mqtt2otel.Parser
         /// <summary>
         /// Parses the topic by applying the provided pattern.
         /// </summary>
-        /// <typeparam name="T">The expected return type: Must be string.</typeparam>
         /// <param name="pattern">The pattern to be applied. <see cref="TopicPathStrategy"/></param>
         /// <param name="context">The parsing context.</param>
         /// <returns>The interpreted topic, or an empty string, if pattern could not be applied.</returns>
         /// <exception cref="ArgumentException">When return type is not a string.</exception>
-        public T Parse<T>(string pattern, ParsingContext context)
+        public object? Parse(string pattern, ParsingContext context)
         {
-            if (typeof(T) != typeof(string)) throw new ArgumentException("TopicPath parser must return a string.");
-
             if (!this.patternCache.ContainsKey(pattern))
             {
                 this.patternCache[pattern] = this.ParsePattern(pattern);
             }
 
-            return (T)(object)this.Parse(context.Message.Topic, this.patternCache[pattern]); ;
+            return this.Parse(context.Message.Topic, this.patternCache[pattern]); ;
         }
 
         /// <summary>

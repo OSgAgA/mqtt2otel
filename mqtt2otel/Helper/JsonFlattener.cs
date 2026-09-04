@@ -31,12 +31,13 @@ namespace mqtt2otel.Helper
         /// </summary>
         /// <param name="json">The original json string.</param>
         /// <param name="separator">The separator used for combining names of different levels.</param>
+        /// <param name="nameOnly">A value indicating whether only the name, without the hierarchy should be returned.</param>
         /// <returns>The json as a flattened dicrtionary.</returns>
-        public static Dictionary<string, object?> Flatten(string json, string separator)
+        public static Dictionary<string, object?> Flatten(string json, string separator, bool nameOnly)
         {
             var root = JObject.Parse(json);
             var result = new Dictionary<string, object?>();
-            FlattenToken(root, result, prefix: "", separator);
+            FlattenToken(root, result, prefix: "", separator, nameOnly);
             return result;
         }
 
@@ -47,7 +48,8 @@ namespace mqtt2otel.Helper
         /// <param name="result">The already produced result.</param>
         /// <param name="prefix">The current prefix.</param>
         /// <param name="separator">The separator used for combining names of different levels.</param>
-        private static void FlattenToken(JToken token, Dictionary<string, object?> result, string prefix, string separator)
+        /// <param name="nameOnly">A value indicating whether only the name, without the hierarchy should be returned.</param>
+        private static void FlattenToken(JToken token, Dictionary<string, object?> result, string prefix, string separator, bool nameOnly)
         {
             switch (token.Type)
             {
@@ -56,9 +58,9 @@ namespace mqtt2otel.Helper
                     {
                         var childPrefix = string.IsNullOrEmpty(prefix)
                             ? prop.Name
-                            : $"{prefix}{separator}{prop.Name}";
+                            : (nameOnly ? prop.Name : $"{prefix}{separator}{prop.Name}");
 
-                        FlattenToken(prop.Value, result, childPrefix, separator);
+                        FlattenToken(prop.Value, result, childPrefix, separator, nameOnly);
                     }
                     break;
 
@@ -66,7 +68,7 @@ namespace mqtt2otel.Helper
                     int index = 0;
                     foreach (var item in token.Children())
                     {
-                        FlattenToken(item, result, $"{prefix}{separator}{index}", separator);
+                        FlattenToken(item, result, $"{prefix}{separator}{index}", separator, nameOnly);
                         index++;
                     }
                     break;

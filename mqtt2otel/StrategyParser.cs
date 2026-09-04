@@ -48,13 +48,12 @@ namespace mqtt2otel
         /// <summary>
         /// Parses a payload by applying a NCalc expression.
         /// </summary>
-        /// <typeparam name="TResult">The expected result type.</typeparam>
         /// <param name="name">The rule name to identify the settings in case of an error.</param>
         /// <param name="expressionString">The NCalc expression that will be applied to the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed expression.</returns>
         /// <exception cref="ExpressionParsingException">Thrown if the expression could not be parsed.</exception>
-        public TResult ParseExpression<TResult>(string name, string expressionString, ParsingContext context)
+        public object ParseExpression(string name, string expressionString, ParsingContext context)
         {
             try
             {
@@ -75,7 +74,7 @@ namespace mqtt2otel
 
                 foreach (var strategyName in this.NameStrategyMapping.Keys)
                 {
-                    this.ApplyStrategy<TResult>(expressionContext, strategyName, context);
+                    this.ApplyStrategy(expressionContext, strategyName, context);
                 }
 
 
@@ -85,11 +84,34 @@ namespace mqtt2otel
 
                 var result = expression.Evaluate() ?? throw new Exception();
 
-                return TypeHelper.ConvertObject<TResult>(result);
+                return result;
             }
             catch (Exception ex)
             {
                 throw new ExpressionParsingException(ex, name, expressionString);
+            }
+        }
+
+        /// <summary>
+        /// Parses a payload by applying a NCalc expression.
+        /// </summary>
+        /// <typeparam name="TResult">The expected result type.</typeparam>
+        /// <param name="name">The rule name to identify the settings in case of an error.</param>
+        /// <param name="expressionString">The NCalc expression that will be applied to the payload.</param>
+        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
+        /// <returns>The parsed expression.</returns>
+        /// <exception cref="ExpressionParsingException">Thrown if the expression could not be parsed.</exception>
+        public TResult ParseExpression<TResult>(string name, string expressionString, ParsingContext context)
+        {
+            var result = this.ParseExpression(name, expressionString, context);
+
+            try
+            {
+                return TypeHelper.ConvertObject<TResult>(result);
+            }
+            catch(Exception ex)
+            {
+                throw new Exception($"{name}: {expressionString} => Result is of type {result.GetType()} and could not be cast to expected type {typeof(TResult)}.", ex);
             }
         }
 
@@ -101,22 +123,15 @@ namespace mqtt2otel
         /// <param name="strategyName">The name of the strategy that should be used for parsing the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <exception cref="InvalidArgumentCountException"></exception>
-        private void ApplyStrategy<TResult>(NCalc.ExpressionContext expressionContext, string strategyName, ParsingContext context)
+        private void ApplyStrategy(NCalc.ExpressionContext expressionContext, string strategyName, ParsingContext context)
         {
             expressionContext.Functions[strategyName] = (args) =>
             {
                 if (this.NameStrategyMapping.ContainsKey(strategyName))
                 {
                     string? pattern = null;
-                    string returnType = TypeHelper.GetTypeRepresentation(typeof(TResult));
 
-                    if (args.Count() == 2)
-                    {
-                        returnType = CustomExpressionFunctions.GetArgument<string>(strategyName, expressionContext, 0, args);
-                        pattern = CustomExpressionFunctions.GetArgument<string>(strategyName, expressionContext, 1, args);
-
-                    }
-                    else if (args.Count() == 1)
+                    if (args.Count() == 1)
                     {
                         pattern = CustomExpressionFunctions.GetArgument<string>(strategyName, expressionContext, 0, args);
                     }
@@ -125,7 +140,7 @@ namespace mqtt2otel
                         pattern = string.Empty;
                     }
 
-                    if (pattern != null) return TypeHelper.CallMethodWithGenericType(this, returnType, nameof(this.ApplyStrategy), new object[] { this.NameStrategyMapping[strategyName], pattern, context });
+                    if (pattern != null) return this.ApplyStrategy(this.NameStrategyMapping[strategyName], pattern, context);
                 }
 
                 throw new InvalidArgumentCountException(strategyName, 0, 2, args.Count());
@@ -135,12 +150,11 @@ namespace mqtt2otel
         /// <summary>
         /// An abstract method that needs to be overridden in derived classes. Will define how a strategy of the given type can be applied.
         /// </summary>
-        /// <typeparam name="TResult">The expected result type.</typeparam>
         /// <param name="strategy">The strategy that should be applied.</param>
         /// <param name="pattern">The pattern describing how the payload should be processed.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parse result.</returns>
-        protected abstract TResult ApplyStrategy<TResult>(T strategy, string pattern, ParsingContext context);
+        protected abstract object? ApplyStrategy(T strategy, string pattern, ParsingContext context);
 
         /// <summary>
         /// Detects all types that derive from <see cref="T"/>. These can then be added as strategies to the instance.

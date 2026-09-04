@@ -32,11 +32,15 @@ namespace mqtt2otel.Parser
         }
 
         /// <inheritdoc/>
-        protected override TResult ApplyStrategy<TResult>(IParsingStrategy strategy, string pattern, ParsingContext context)
+        public object Parse(string name, string filterDefinition, ParsingContext context)
         {
-            {
-                return strategy.Parse<TResult>(pattern, context);
-            }
+            return this.ParseExpression(name, filterDefinition, context);
+        }
+
+        /// <inheritdoc/>
+        protected override object? ApplyStrategy(IParsingStrategy strategy, string pattern, ParsingContext context)
+        {
+            return strategy.Parse(pattern, context);
         }
     }
 }

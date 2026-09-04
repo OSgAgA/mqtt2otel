@@ -67,7 +67,7 @@ namespace mqtt2otel.Manifest
         /// Gets or sets a list of rules that should be applied to the data after the payload parser is run, but before the value converter,
         /// or type formatter are applied.
         /// </summary>
-        public List<ConditionalAction> Transformations { get; set; } = new();
+        public List<ConditionalAction> Actions { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the value of the metric as a parse expression (<see cref="IPayloadParser"/>).

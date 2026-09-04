@@ -74,6 +74,13 @@ This will return the value 42.
 | `Var`          | `Var('MyVariable')`       | Returns the variable with the given name. No `$` is needed before the variable name.                                                                 |
 | `Payload`      | `Payload()`               | Returns the raw payload                                                                                                                              |
 | `Const`        | `Const('42')`             | Returns a constant value                                                                                                                             |
+| `ToLower`      | `ToLower('My Signal')` => my signal        | Returns lower case value                                                                                                                             |
+| `ToUpper`      | `ToUpper('My Signal')` => MY SIGNAL        | Returns upper case value                                                                                                                             |
+| `ToPascalCase` | `ToPascalCase('My Signal')` => MySignal    | Returns pascal case value                                                                                                                             |
+| `ToCamelCase`  | `ToCamelCase('My Signal')` => mySignal     | Returns camel case value                                                                                                                             |
+| `ToSnakeCase`  | `ToSnakeCase('My Signal')` => my_signal    | Returns snake case value                                                                                                                             |
+| `ToKebabCase`  | `ToKebabCase('My Signal')` => my-signal    | Returns kebab or hyphen case value                                                                                                                             |
+| `ToTrainCase`  | `ToTrainCase('My Signal')` => My-Signal    | Returns train case value                                                                                                                             |
 
 ### Calculations
 

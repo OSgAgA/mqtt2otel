@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,7 +17,7 @@ namespace mqtt2otel.Parser
         public string Key => "PAYLOAD";
 
         /// <summary>
-        /// Parses the payload via returning it as plain text.
+        /// Parses the payload and tries to infer its datatype.
         /// 
         /// If the regular expression returns more than one match, then the first match is used.
         /// </summary>
@@ -25,36 +26,14 @@ namespace mqtt2otel.Parser
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed payload.</returns>
         /// <exception cref="Exception">Thrown if generic return type is not a string.</exception>
-        public T Parse<T>(string filter, ParsingContext context)
+        public object? Parse(string filter, ParsingContext context)
         {
-            object result = string.Empty;
+            if (long.TryParse(context.Message.Payload, out var i)) return i;
+            if (double.TryParse(context.Message.Payload, out var d)) return d;
+            if (bool.TryParse(context.Message.Payload, out var b)) return b;
+            if (DateTime.TryParse(context.Message.Payload, out var dt)) return dt;
 
-            if (typeof(T) == typeof(int))
-            {
-                result = int.Parse(context.Message.Payload);
-            }
-            else if (typeof(T) == typeof(float))
-            {
-                result = float.Parse(context.Message.Payload);
-            }
-            else if (typeof(T) == typeof(double))
-            {
-                result = double.Parse(context.Message.Payload);
-            }
-            else if (typeof(T) == typeof(long))
-            {
-                result = long.Parse(context.Message.Payload);
-            }
-            else if (typeof(T) == typeof(decimal))
-            {
-                result = decimal.Parse(context.Message.Payload);
-            }
-            else
-            {
-                result = context.Message.Payload;
-            }
-
-            return (T)result;
+            return context.Message.Payload; 
         }
     }
 }

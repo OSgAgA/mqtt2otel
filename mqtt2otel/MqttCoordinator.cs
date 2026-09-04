@@ -11,6 +11,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace mqtt2otel
 {
@@ -469,13 +470,13 @@ namespace mqtt2otel
 
                     success = data.Processor.ProcessSubscriptionPayload(message, data.Subscription);
 
-                    if (this.OnMessageProcessed != null)
-                    {
-                        this.OnMessageProcessed(this, new MqttMessageReceivedEventArgs(message, data.Subscription, data.Processor));
-                    }
-
                     if (!success) this.internalLogger.LogError($"Could not process message. See previous errors. Message skipped. Payload: {message.Payload}");
                 }
+            }
+
+            if (this.OnMessageProcessed != null)
+            {
+                this.OnMessageProcessed(this, new MqttMessageReceivedEventArgs(message, null, null));
             }
 
             return true;

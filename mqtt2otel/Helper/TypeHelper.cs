@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Xml.Linq;
 
 namespace mqtt2otel.Helper
 {
@@ -62,7 +63,7 @@ namespace mqtt2otel.Helper
             var method = instance.GetType()
                              .GetMethod(
                                  methodName,
-                                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic 
+                                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
                              )?
                              .MakeGenericMethod(genericType);
 
@@ -79,7 +80,14 @@ namespace mqtt2otel.Helper
         /// <returns></returns>
         public static TResult ConvertObject<TResult>(object value)
         {
-            return (TResult)System.Convert.ChangeType(value, typeof(TResult));
+            try
+            {
+                return (TResult)System.Convert.ChangeType(value, typeof(TResult));
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Value '{value}' is of type {value.GetType()} and could not be cast to expected type {typeof(TResult)}.", ex);
+            }
         }
 
         /// <summary>
@@ -204,7 +212,7 @@ namespace mqtt2otel.Helper
         {
             var type = typeof(T);
             object result = 0;
-            
+
             if (type == typeof(int)) result = int.Parse(input, CultureInfo.InvariantCulture);
             if (type == typeof(float)) result = float.Parse(input, CultureInfo.InvariantCulture);
             if (type == typeof(string)) result = input;

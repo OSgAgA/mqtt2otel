@@ -25,7 +25,7 @@ namespace mqtt2otel.Tests._10_UnitTests
             var topicPathParser = new TopicPathStrategy();
             var context = new ParsingContext(new List<Variable>(), new MqttMessage(topic: topic));
 
-            string result = topicPathParser.Parse<string>(pattern, context);
+            object? result = topicPathParser.Parse(pattern, context);
 
             Assert.Equal(expected, result);
         }

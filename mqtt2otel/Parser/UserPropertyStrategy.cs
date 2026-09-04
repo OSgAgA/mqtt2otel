@@ -19,23 +19,20 @@ namespace mqtt2otel.Parser
         /// Returns the value of the first mqtt user property of the message that has the given name or an empty string if no user
         /// property with the given name is found.
         /// </summary>
-        /// <typeparam name="T">Must be string or an excpetion will be thrown.</typeparam>
         /// <param name="name">The mqtt user property name.</param>
         /// <param name="context">The parsing context.</param>
         /// <returns>The value of the first property with the given name or an empty string.</returns>
         /// <exception cref="ArgumentException">Thrown if T is not string.</exception>
-        public T Parse<T>(string name, ParsingContext context)
+        public object? Parse(string name, ParsingContext context)
         {
-            if (typeof(T) != typeof(string)) throw new ArgumentException("UserProperty parser must return a string.");
-
             var query = context.Message.UserProperties.Where(prop => prop.Name == name);
 
             if (query.Any())
             {
-                return (T)(object)query.First().Value;
+                return query.First().Value;
             }
 
-            return (T)(object)string.Empty;
+            return string.Empty;
         }
     }
 }

@@ -151,6 +151,9 @@ It consists of the following parameters:
 | Instrument                         | Defines the otel metric instruments to be used. See [otel instruments](#otel-instruments) for details.                         | 
 | SignalDataType                     | The data type of the metric. See [otel data types](#otel-data-types) for details.                                              | 
 | Unit                               | The optional unit that will be sent to the open telemetry endpoint as part of the metric.                                      | 
+| ValueConverter                     | The optional converter pattern, that will be used to convert a value. See [Converter](/docs/expressions/converter-and-formatter). | 
+| NameFormatter                      | The optional formatter pattern that will be used to format the name of the signal. See [Converter](/docs/expressions/converter-and-formatter).| 
+| ParseAs                            | This optional parameter tells the processor to automaticall detect the signals based on the payload type. Available values: Json and XML. See [ParseAs](/docs/expressions/converter-and-formatter).                                     | 
 | Value                              | The value of the metric. Must be of type `SignalDataType`. [{{< badge style="info" title="supports" value="expressions" >}}](/docs/expressions/#expressions)     | 
 | HistogramBucketBoundaries          | A list of bucket values for the `Histogram` instrument. See [histogram bucket boundaries](#histogram-bucket-boundaries).       | 
 
@@ -189,7 +192,34 @@ The otel processor supports the following metric data types:
 * Double
 * Long
 * Decimal
-* String
+
+### ParseAs
+
+The `ParseAs` property tells the metrics processor to interpret the payload as the provided type and tries to automatically parse it.
+
+It consists of:
+
+* Type: The payload type. Can be either Json or Xml.
+* Separator: The separator for hierarchical names. Optional. "." will be used if no other value is set.
+
+When using a json type to parse the following payload:
+
+```json
+{
+   MachineA:
+   {
+      Temperature: 42,
+      Pressure: 10
+   }
+}
+```
+
+Two metrics will be created:
+
+* MachineA.Temperature: 42
+* MachineA.Pressure: 10
+
+You can convert the values using a `ValueConverter` and format the signal name using a `NameFormatter`.
 
 ### Histogram bucket boundaries
 

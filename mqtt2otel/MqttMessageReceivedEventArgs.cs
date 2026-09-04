@@ -12,7 +12,7 @@ namespace mqtt2otel
     /// <param name="message">The received message.</param>
     /// <param name="subscription">The subscription that triggered the message.</param>
     /// <param name="processor">The processor that is processing the message.</param>
-    public class MqttMessageReceivedEventArgs(MqttMessage message, MqttSubscription subscription, Processor processor) 
+    public class MqttMessageReceivedEventArgs(MqttMessage message, MqttSubscription? subscription, Processor? processor) 
     {
         /// <summary>
         /// Gets the payload of the message.
@@ -22,11 +22,11 @@ namespace mqtt2otel
         /// <summary>
         /// Gets the subscription that triggered the message.
         /// </summary>
-        public MqttSubscription Subscription{ get; private set; } = subscription;
+        public MqttSubscription? Subscription{ get; private set; } = subscription;
 
         /// <summary>
         /// Gets the processor of the message.
         /// </summary>
-        public Processor Processor { get; private set; } = processor;
+        public Processor? Processor { get; private set; } = processor;
     }
 }

@@ -22,11 +22,10 @@ namespace mqtt2otel.Parser
         /// 
         /// If the regular expression returns more than one match, then the first match is used.
         /// </summary>
-        /// <typeparam name="T">The expected return type.</typeparam>
         /// <param name="filter">A RegEx expression (see <see cref="https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference"/>) that will be applied to the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed payload.</returns>
-        public T Parse<T>(string filter, ParsingContext context)
+        public object? Parse(string filter, ParsingContext context)
         {
             var regex = new Regex(filter);
 
@@ -41,14 +40,10 @@ namespace mqtt2otel.Parser
                     valueAsString = match.Groups[1].Value;
                 }
 
-                return TypeHelper.Parse<T>(valueAsString);
+                return valueAsString;
             }
 
-            var result = default(T);
-
-            if (result != null) return result;
-
-            throw new Exception($"Could not process regex expression {filter}.");
+            return string.Empty;
         }
     }
 }

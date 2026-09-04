@@ -1,0 +1,71 @@
+{
+  "Setup": {
+    "Id": "metric-12",
+    "Name": "Manipulate data via actions",
+    "Description": "Parse data automatically from json and convert the data afterwards by using actions.",
+    "Topic": "sensors/device_a",
+    "Payload": "{\n   data:\n   {\n      Temperature: 42,\n      Temperature_B: 39,\n      Pressure: 12,\n      TemperatureUnit: \u0022F\u0022\n   }\n}",
+    "UserProperties": [],
+    "Manifest": "Processors:\n  - Name: \u0022Action demo\u0022\n    Description: \u0022Sets the unit to all temperature values and converts \u00B0F in \u00B0C if needed.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022#\u0022\n    Otel:\n      Metrics:\n        - Instrument: Gauge\n          ParseAs: \n             Type: Json\n             NameOnly: true\n          Actions:\n              -  Name: \u0022Convert to Celsius if Fahrenheit is reported and name contains Temp.\u0022\n                 When:\n                    - \u0022JsonPath(\u0027$.data.TemperatureUnit\u0027) == \u0027F\u0027 \u0022\n                    - \u0022 Contains([Name], \u0027Temp\u0027) \u0022\n                 Then:\n                    ValueConverter: \u0022([Value] -32) * 5.0/9.0\u0022\n              -  Name: \u0022Set unit to Celsius for all signals with the term Temp in its name\u0022\n                 When:\n                    - \u0022 Contains([Name], \u0027Temp\u0027) \u0022\n                 Then:\n                    Unit: \u0022C\u0022",
+    "Category": "Metrics",
+    "Tags": [
+      "json",
+      "actions"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Temperature",
+        "OtelServer": "2207bf81-52e8-4915-8ff9-f986760c4ae0",
+        "MeterVersion": "",
+        "Description": "",
+        "Unit": "C",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 5.555555555555555,
+            "StartTime": "2026-09-04T17:30:05.6114287+00:00",
+            "EndTime": "2026-09-04T17:30:05.6255659+00:00",
+            "Tags": {}
+          }
+        ]
+      },
+      {
+        "Name": "Temperature_B",
+        "OtelServer": "2207bf81-52e8-4915-8ff9-f986760c4ae0",
+        "MeterVersion": "",
+        "Description": "",
+        "Unit": "C",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 3.888888888888889,
+            "StartTime": "2026-09-04T17:30:05.6155244+00:00",
+            "EndTime": "2026-09-04T17:30:05.6256476+00:00",
+            "Tags": {}
+          }
+        ]
+      },
+      {
+        "Name": "Pressure",
+        "OtelServer": "2207bf81-52e8-4915-8ff9-f986760c4ae0",
+        "MeterVersion": "",
+        "Description": "",
+        "Unit": "",
+        "MetricType": 42,
+        "MetricPoints": [
+          {
+            "Value": 12,
+            "StartTime": "2026-09-04T17:30:05.6181339+00:00",
+            "EndTime": "2026-09-04T17:30:05.6256486+00:00",
+            "Tags": {}
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

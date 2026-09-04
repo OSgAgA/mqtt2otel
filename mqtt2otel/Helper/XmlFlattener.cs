@@ -26,14 +26,15 @@ namespace mqtt2otel.Helper
         /// </summary>
         /// <param name="xml">The original XML string.</param>
         /// <param name="separator">The separator used for combining names of different levels.</param>
+        /// <param name="nameOnly">A value indicating whether only the name, without the hierarchy should be returned.</param>
         /// <returns>The XML as a flattened dictionary.</returns>
-        public static Dictionary<string, object?> Flatten(string xml, string separator)
+        public static Dictionary<string, object?> Flatten(string xml, string separator, bool nameOnly)
         {
             var root = XDocument.Parse(xml).Root
                 ?? throw new ArgumentException("XML does not contain a root element.", nameof(xml));
 
             var result = new Dictionary<string, object?>();
-            FlattenNode(root, result, prefix: root.Name.LocalName, separator);
+            FlattenNode(root, result, prefix: root.Name.LocalName, separator, nameOnly, root.Name.LocalName);
             return result;
         }
 
@@ -44,19 +45,37 @@ namespace mqtt2otel.Helper
         /// <param name="result">The already produced result.</param>
         /// <param name="prefix">The current prefix.</param>
         /// <param name="separator">The separator used for combining names of different levels.</param>
-        private static void FlattenNode(XElement node, Dictionary<string, object?> result, string prefix, string separator)
+        /// <param name="nameOnly">A value indicating whether only the name, without the hierarchy should be returned.</param>
+        /// <param name="parentName">The name of the parent element.</param>
+        private static void FlattenNode(XElement node, Dictionary<string, object?> result, string prefix, string separator, bool nameOnly, string parentName)
         {
             // Attributes
             foreach (var attr in node.Attributes())
             {
                 var key = $"{prefix}{separator}@{attr.Name.LocalName}";
-                result[key] = ConvertValue(attr.Value);
+
+                if (nameOnly)
+                {
+                    result[attr.Name.LocalName] = ConvertValue(attr.Value); 
+                }
+                else
+                {
+                    result[key] = ConvertValue(attr.Value);
+                }
+                
             }
 
             // Leaf node → store value
             if (!node.HasElements)
             {
-                result[prefix] = ConvertValue(node.Value);
+                if (nameOnly)
+                {
+                    result[parentName] = ConvertValue(node.Value);
+                }
+                else
+                {
+                    result[prefix] = ConvertValue(node.Value);
+                }
                 return;
             }
 
@@ -64,7 +83,7 @@ namespace mqtt2otel.Helper
             foreach (var child in node.Elements())
             {
                 var childPrefix = $"{prefix}{separator}{child.Name.LocalName}";
-                FlattenNode(child, result, childPrefix, separator);
+                FlattenNode(child, result, childPrefix, separator, nameOnly, child.Name.LocalName);
             }
         }
 

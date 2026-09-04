@@ -13,7 +13,7 @@ namespace mqtt2otel
     /// <param name="description">A human readable description of the metric.</param>
     /// <param name="unit">The units used.</param>
     /// <param name="attributes">Attributes associated with this metric.</param>
-    public class OtelMetric<TPayload>(TPayload value, string description, string unit, IEnumerable<OtelAttribute> attributes)
+    public class OtelMetric<TPayload>(TPayload? value, string description, string unit, IEnumerable<OtelAttribute> attributes)
     {
         /// <summary>
         /// Gets or sets the metric description.
@@ -33,6 +33,6 @@ namespace mqtt2otel
         /// <summary>
         /// Gets or sets the metric payload value.
         /// </summary>
-        public TPayload Value { get; set; } = value;
+        public TPayload? Value { get; set; } = value;
     }
 }

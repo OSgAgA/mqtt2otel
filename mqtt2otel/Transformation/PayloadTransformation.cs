@@ -47,9 +47,9 @@ namespace mqtt2otel.Transformation
         /// <param name="pattern">The pattern that will be passed to the strategy for performing the transformation.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The transformed payload.</returns>
-        protected override TResult ApplyStrategy<TResult>(ITransformationStrategy strategy, string pattern, ParsingContext context)
+        protected override object? ApplyStrategy(ITransformationStrategy strategy, string pattern, ParsingContext context)
         {
-            return TypeHelper.ConvertObject<TResult>(strategy.Apply(pattern, context));
+            return strategy.Apply(pattern, context);
         }
     }
 }

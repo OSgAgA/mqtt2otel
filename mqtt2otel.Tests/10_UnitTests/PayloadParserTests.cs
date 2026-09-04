@@ -41,20 +41,6 @@ namespace mqtt2otel.Tests._10_UnitTests
         }
 
         [Fact]
-        public async Task ShouldUseAnExplicitTypeForAParsingStrategy()
-        {
-            var parser = new PayloadParser();
-
-            parser.AutoDetectStrategies();
-
-            string payload = "{ \"Test\": { ValueA: 42.2, ValueB: 10, ValueC: { ValueD: 11 } }, ValueE: 23 }";
-            var context = new ParsingContext(new List<Variable>(), new MqttMessage(payload: payload));
-            var result = parser.ParseExpression<float>("Test", "JSONPATH('int', '$.Test.ValueA')", context);
-
-            Assert.Equal(42, result);
-        }
-
-        [Fact]
         public async Task ShouldReturnThePayloadWhenTextStrategyIsApplied()
         {
             var parser = new PayloadParser();
