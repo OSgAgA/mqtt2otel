@@ -153,7 +153,8 @@ It consists of the following parameters:
 | Unit                               | The optional unit that will be sent to the open telemetry endpoint as part of the metric.                                      | 
 | ValueConverter                     | The optional converter pattern, that will be used to convert a value. See [Converter](/docs/expressions/converter-and-formatter). | 
 | NameFormatter                      | The optional formatter pattern that will be used to format the name of the signal. See [Converter](/docs/expressions/converter-and-formatter).| 
-| ParseAs                            | This optional parameter tells the processor to automaticall detect the signals based on the payload type. Available values: Json and XML. See [ParseAs](/docs/expressions/converter-and-formatter).                                     | 
+| ParseAs                            | This optional parameter tells the processor to automaticall detect the signals based on the payload type. Available values: Json and XML. See [ParseAs](#parseas).                                     | 
+| Actions                            | This optional parameter provides conditional actions that can be applied to a signal. See [Actions](/docs/expressions/actions).                                     | 
 | Value                              | The value of the metric. Must be of type `SignalDataType`. [{{< badge style="info" title="supports" value="expressions" >}}](/docs/expressions/#expressions)     | 
 | HistogramBucketBoundaries          | A list of bucket values for the `Histogram` instrument. See [histogram bucket boundaries](#histogram-bucket-boundaries).       | 
 
@@ -201,6 +202,8 @@ It consists of:
 
 * Type: The payload type. Can be either Json or Xml.
 * Separator: The separator for hierarchical names. Optional. "." will be used if no other value is set.
+* NameOnly: The created name will usually reflect the full hierarchy (e.g. data.Temperature). If this is not wanted and only
+  the name of the property (e.g. Temperature) should be used, then this value must be set to true.
 
 When using a json type to parse the following payload:
 
@@ -216,8 +219,8 @@ When using a json type to parse the following payload:
 
 Two metrics will be created:
 
-* MachineA.Temperature: 42
-* MachineA.Pressure: 10
+* MachineA.Temperature: 42 (or Temperature: 42 if NameOnly is true)
+* MachineA.Pressure: 10 (or Pressure: 10 if NameOnly is true)
 
 You can convert the values using a `ValueConverter` and format the signal name using a `NameFormatter`.
 

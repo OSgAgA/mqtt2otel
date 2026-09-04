@@ -64,23 +64,37 @@ This will return the value 42.
 
 ### Available Functions
 
-| Function       | Example                   | Description                                                                                                                                          |
-| ----------     | ------------------------- | ----------------------------------------                                                                                                             |
-| `JsonPath`     | `JsonPath('$.Root')`      | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax                                                                        |
-| `XPath`        | `XPath('/root/child[1]')` | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax                                                                                  |
-| `TopicPath`    | `TopicPath('[1]')`        | Extracts data using [TopicPath](./topicpath) syntax                                                                                  |
-| `UserProperty` | `UserProperty('Name')`    | Accesses an mqtt user property via its name. If the name exists multiple times, the first match is used. If the name does not exist, the function returns an empty string.                                                                                  |
-| `RegEx`        | `RegEx('[0-9]+')`         | Extracts data using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
-| `Var`          | `Var('MyVariable')`       | Returns the variable with the given name. No `$` is needed before the variable name.                                                                 |
-| `Payload`      | `Payload()`               | Returns the raw payload                                                                                                                              |
-| `Const`        | `Const('42')`             | Returns a constant value                                                                                                                             |
-| `ToLower`      | `ToLower('My Signal')` => my signal        | Returns lower case value                                                                                                                             |
-| `ToUpper`      | `ToUpper('My Signal')` => MY SIGNAL        | Returns upper case value                                                                                                                             |
-| `ToPascalCase` | `ToPascalCase('My Signal')` => MySignal    | Returns pascal case value                                                                                                                             |
-| `ToCamelCase`  | `ToCamelCase('My Signal')` => mySignal     | Returns camel case value                                                                                                                             |
-| `ToSnakeCase`  | `ToSnakeCase('My Signal')` => my_signal    | Returns snake case value                                                                                                                             |
-| `ToKebabCase`  | `ToKebabCase('My Signal')` => my-signal    | Returns kebab or hyphen case value                                                                                                                             |
-| `ToTrainCase`  | `ToTrainCase('My Signal')` => My-Signal    | Returns train case value                                                                                                                             |
+| Function          | Example                                           | Description                                                                                                                                          |
+| ------------------| ------------------------------------------------- | ----------------------------------------                                                                                                             |
+| `JsonPath`        | `JsonPath('$.Root')`                              | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax                                                                        |
+| `XPath`           | `XPath('/root/child[1]')`                         | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax                                                                                  |
+| `TopicPath`       | `TopicPath('[1]')`                                | Extracts data using [TopicPath](./topicpath) syntax                                                                                  |
+| `UserProperty`    | `UserProperty('Name')`                            | Accesses an mqtt user property via its name. If the name exists multiple times, the first match is used. If the name does not exist, the function returns an empty string.                                                                                  |
+| `RegEx`           | `RegEx('[0-9]+')`                                 | Extracts data using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
+| `Var`             | `Var('MyVariable')`                               | Returns the variable with the given name. No `$` is needed before the variable name.                                                                 |
+| `Payload`         | `Payload()`                                       | Returns the raw payload                                                                                                                              |
+| `Const`           | `Const('42')`                                     | Returns a constant value                                                                                                                             |
+| `ToLower`         | `ToLower('My Signal')` => my signal               | Returns lower case value                                                                                                                             |
+| `ToUpper`         | `ToUpper('My Signal')` => MY SIGNAL               | Returns upper case value                                                                                                                             |
+| `ToPascalCase`    | `ToPascalCase('My Signal')` => MySignal           | Returns pascal case value                                                                                                                             |
+| `ToCamelCase`     | `ToCamelCase('My Signal')` => mySignal            | Returns camel case value                                                                                                                             |
+| `ToSnakeCase`     | `ToSnakeCase('My Signal')` => my_signal           | Returns snake case value                                                                                                                             |
+| `ToKebabCase`     | `ToKebabCase('My Signal')` => my-signal           | Returns kebab or hyphen case value                                                                                                                             |
+| `ToTrainCase`     | `ToTrainCase('My Signal')` => My-Signal           | Returns train case value                                                                                                                             |
+| `Trim`            | `Trim('    Test  ')` => "Test"                    | Removes leading and trailing whitespace                                                                                                                            |
+| `TrimStart`       | `TrimStart('  Test  ')` => "Test  "               | Removes leading whitespace                                                                                                                             |
+| `TrimEnd`         | `TrimEnd('  Test  ')` => "  Test"                 | Remove trailing whitespace                                                                                                                             |
+| `StartsWith`      | `StartsWith('MyValue', 'My')` => true             | Tests, whether a string starts with the provided pattern.                                                                                                                             |
+| `EndsWith`        | `StartsWith('MyValue', 'Value')` => true          | Tests, whether a string ends with the provided pattern.                                                                                            |
+| `Contains`        | `Contains('MyValue', 'Val')` => true              | Tests, whether a string contains the provided pattern.                                                                                                                             |
+| `Replace`         | `Replace('Test', 'e', 'ee')` => Teest             | Replaces strings inside a string.                                                                                                                             |
+| `MatchesWildcard` | `MatchesWildcard('My Signal', '*Signal')` => true | Tests, whether a string matches a wildcard pattern.                                                                                                                             |
+| `MatchesRegEx`    | `MatchesRegEx('My Signal', '.*')` => true         | Tests, whether a string matches a regular expression.                                                                                                                              |
+| `ToInt`           | `ToInt(42.1)` => 42                               | Converts a value to integer        |
+| `ToLong`          | `ToLong(42.1)` => 42L                             | Converts a value to a long integer |
+| `ToFloat`         | `ToInt(42)` => 42.0                               | Converts a value to float          |
+| `ToDouble`        | `ToInt(42)` => 42.00                              | Converts a value to double         |
+| `ToString`        | `ToInt(42)` => "42"                               | Converts a value to string         |
 
 ### Calculations
 

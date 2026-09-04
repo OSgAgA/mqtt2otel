@@ -1,12 +1,12 @@
 ---
-title: "Metric Transformations"
+title: "Metric Actions"
 weight: 70
 bookCollapseSection: false
 ---
 
-# Metric transformations
+# Metric actions
 
-Metric processors support the concept of transformations, that can interfere with how (and if) a signal is created.. 
+Metric processors support the concept of actions, that can interfere with how (and if) a signal is created.
 A transformation consists of two parts:
 
 1. The condition (`When`) - Checks whether a generated metric signal matches certain conditions
@@ -16,14 +16,13 @@ Transformations will be executed after the signal is generated, but before a val
 
 ## The condition
 
-A condition consists of the following parameters, that must be all true to match the condition. An parameter that is not
-set will allways be true.
+A condition consists of an expression that must evaluate to true to pass the test. The expression gets the following variables set:
 
-| Parameter                          | Description                                                                                |
+| Variable                           | Description                                                                                |
 |------------------------------------|--------------------------------------------------------------------------------------------|
-| Name                               | The name of the created signal. Can use `*` as a wildcard parameter       				  |
-| SignalDataType                     | The signal data type, must be an exact match.											  |
-| IgnoreCase                         | If set to true, then the `Name` parameter will ignore the case when matching the condition.|
+| Name                               | The signal name, that has been evaluated in the previous step               				  |
+| Value                              | The signal value, that has been evaluated in the previous step     						  |
+| Type                               | The signal type, that has been evaluated in the previous step                             .|
 
 ## The action
 
@@ -38,7 +37,17 @@ It consists of the following properties, properties that are not set, will keep 
 | NameFormatter  | The name formatter.                                                        |
 | ValueConverter | The value converter.                                                       |
 | SignalDataType | The signal data type.                                                      |
+| Instrument     | The otel instrument.                                                       |
 | Ignore         | If set to true, then the signal will be skipped and not further processed. |
 
 ## Example
 
+Let's have a look at the following example. We get a message that contains different information from different kind of sensors and 
+additionaly a unit for the temperature measurement:
+
+{{< exampleCode id="metric-12" field="Payload" lang="yaml">}}
+
+We want this to be automatically parsed using a `ParseAs` command, but we want all temperatures to be in °C. So we set the unit accordingly.
+In case the temperature unit is reported as °F we will convert the value to °C using a `ValueConverter`:
+
+{{< exampleCode id="metric-12" field="Manifest" lang="yaml">}}
