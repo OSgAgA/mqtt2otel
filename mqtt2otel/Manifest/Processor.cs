@@ -416,6 +416,16 @@ namespace mqtt2otel.Manifest
                 if (checkResult)
                 {
                     (instrumentName, signalType, ignore, rule) = action.Then.Apply(rule, instrumentName, signalType);
+
+                    if (action.Then.Output != null)
+                    {
+                        using (this.internalLogger.BeginScope(action.Then.Output.Attributes))
+                        {
+                            var message = this.embeddedExpressionParser.Expand(action.Then.Output.Message, context);
+                            this.internalLogger.Log(action.Then.Output.Level, message);
+                        }
+                    }
+
                     if (ignore) return;
                 }
             }

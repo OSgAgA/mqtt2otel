@@ -1,4 +1,6 @@
-﻿using mqtt2otel.Manifest;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Configuration;
+using mqtt2otel.Manifest;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -49,6 +51,8 @@ namespace mqtt2otel
         /// Gets or sets the metric instrument. Set to null to keep the original value.
         /// </summary>
         public OtelMetricInstrument? Instrument { get; set; }
+
+        public OutputData? Output { get; set; } = null;
 
         /// <summary>
         /// Applies the action on a given rule.
