@@ -76,7 +76,8 @@ namespace mqtt2otel.Parser
         {
             try
             {
-                return (TResult)(args[index].Evaluate(context) ?? throw new Exception());
+                var raw = new NCalc.Expression(args[index].ToExpressionString(), context).Evaluate();
+                return (TResult)(raw ?? throw new Exception());
             }
             catch (NCalcFunctionNotFoundException ex)
             {

@@ -57,20 +57,29 @@ namespace mqtt2otel
         {
             try
             {
-                var expressionContext = new ExpressionContext(ExpressionOptions.IgnoreCaseAtBuiltInFunctions | ExpressionOptions.CaseInsensitiveStringComparer, CultureInfo.InvariantCulture);
+                var expressionContext = new ExpressionContext
+                (
+                    functions: new Dictionary<string, ExpressionFunction>(StringComparer.InvariantCultureIgnoreCase),
+                    parameters: new Dictionary<string, object?>(StringComparer.InvariantCultureIgnoreCase)
+                    {
+                        { "pi", Math.PI },
+                        { "e", Math.E }
+                    }
+                );
 
-                expressionContext.Functions = new Dictionary<string, ExpressionFunction>(StringComparer.InvariantCultureIgnoreCase);
-                expressionContext.StaticParameters = new Dictionary<string, object?>(StringComparer.InvariantCultureIgnoreCase);
+                var configuration = new ExpressionConfiguration
+                {
+                    Evaluation = new ExpressionEvaluationOptions
+                    {
+                        IgnoreCaseAtBuiltInFunctions = true,
+                    }
+                };
 
-                expressionContext.StaticParameters.Add("pi", Math.PI);
-                expressionContext.StaticParameters.Add("e", Math.E);
 
                 foreach (var internVar in context.InternalVariables)
                 {
-                    expressionContext.StaticParameters.Add(internVar.Key, internVar.Value);
+                    expressionContext.Parameters.Add(internVar.Key, internVar.Value);
                 }
-
-                var compare = expressionContext.ComparisonOptions;
 
                 foreach (var strategyName in this.NameStrategyMapping.Keys)
                 {
@@ -78,7 +87,7 @@ namespace mqtt2otel
                 }
 
 
-                var expression = new Expression(expressionString, expressionContext);
+                var expression = new Expression(expression: expressionString, context: expressionContext, configuration: configuration);
 
                 CustomExpressionFunctions.AddTo(expressionContext);
 
@@ -109,7 +118,7 @@ namespace mqtt2otel
             {
                 return TypeHelper.ConvertObject<TResult>(result);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception($"{name}: {expressionString} => Result is of type {result.GetType()} and could not be cast to expected type {typeof(TResult)}.", ex);
             }
