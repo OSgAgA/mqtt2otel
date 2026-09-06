@@ -1,0 +1,41 @@
+{
+  "Setup": {
+    "Id": "misc-07",
+    "Name": "TopicAttribute",
+    "Description": "Creates attributes based on the mqtt topic.",
+    "Topic": "sensor/germany/1234/data",
+    "Payload": "42",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Create attributes from the mqtt topic.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/\u002B/data\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Sensor.$(TopicPath(\u0027[2]\u0027)).Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          Instrument: Gauge\n          TopicAttributes: \u0022_/location/device.Id/_\u0022\n          Value: \u0022PAYLOAD()\u0022",
+    "Category": "Misc",
+    "Tags": [
+      "topic"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Sensor.1234.Temperature",
+        "OtelServer": "3c24ce02-d386-4d41-878e-af5791111c7e",
+        "MeterVersion": "",
+        "Description": "The current processor temperature.",
+        "Unit": "",
+        "MetricType": 42,
+        "MetricPoints": [
+          {
+            "Value": 42,
+            "StartTime": "2026-09-06T12:30:53.5074302+00:00",
+            "EndTime": "2026-09-06T12:30:53.5074682+00:00",
+            "Tags": {
+              "device.Id": "1234",
+              "location": "germany"
+            }
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

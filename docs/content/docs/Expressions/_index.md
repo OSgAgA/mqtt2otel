@@ -64,16 +64,22 @@ This will return the value 42.
 
 ### Available Functions
 
+**Mqtt message parsing**
+
 | Function          | Example                                           | Description                                                                                                                                          |
 | ------------------| ------------------------------------------------- | ----------------------------------------                                                                                                             |
 | `JsonPath`        | `JsonPath('$.Root')`                              | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax                                                                        |
 | `XPath`           | `XPath('/root/child[1]')`                         | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax                                                                                  |
 | `TopicPath`       | `TopicPath('[1]')`                                | Extracts data using [TopicPath](./topicpath) syntax                                                                                  |
 | `UserProperty`    | `UserProperty('Name')`                            | Accesses an mqtt user property via its name. If the name exists multiple times, the first match is used. If the name does not exist, the function returns an empty string.                                                                                  |
-| `RegEx`           | `RegEx('[0-9]+')`                                 | Extracts data using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
+| `RegEx`           | `RegEx('[0-9]+')`                                 | Extracts data from payload using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
 | `Var`             | `Var('MyVariable')`                               | Returns the variable with the given name. No `$` is needed before the variable name.                                                                 |
 | `Payload`         | `Payload()`                                       | Returns the raw payload                                                                                                                              |
-| `Const`           | `Const('42')`                                     | Returns a constant value                                                                                                                             |
+
+**String functions**
+
+| Function          | Example                                           | Description                                                                                                                                          |
+| ------------------| ------------------------------------------------- | ----------------------------------------                                                                                                             |
 | `ToLower`         | `ToLower('My Signal')` => my signal               | Returns lower case value                                                                                                                             |
 | `ToUpper`         | `ToUpper('My Signal')` => MY SIGNAL               | Returns upper case value                                                                                                                             |
 | `ToPascalCase`    | `ToPascalCase('My Signal')` => MySignal           | Returns pascal case value                                                                                                                             |
@@ -90,6 +96,11 @@ This will return the value 42.
 | `Replace`         | `Replace('Test', 'e', 'ee')` => Teest             | Replaces strings inside a string.                                                                                                                             |
 | `MatchesWildcard` | `MatchesWildcard('My Signal', '*Signal')` => true | Tests, whether a string matches a wildcard pattern.                                                                                                                             |
 | `MatchesRegEx`    | `MatchesRegEx('My Signal', '.*')` => true         | Tests, whether a string matches a regular expression.                                                                                                                              |
+
+**Type conversion**
+
+| Function          | Example                                           | Description                                                                                                                                          |
+| ------------------| ------------------------------------------------- | ----------------------------------------                                                                                                             |
 | `ToInt`           | `ToInt(42.1)` => 42                               | Converts a value to integer        |
 | `ToLong`          | `ToLong(42.1)` => 42L                             | Converts a value to a long integer |
 | `ToFloat`         | `ToInt(42)` => 42.0                               | Converts a value to float          |

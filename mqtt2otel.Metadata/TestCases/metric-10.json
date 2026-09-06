@@ -3,10 +3,10 @@
     "Id": "metric-10",
     "Name": "Create dynamic metrics",
     "Description": "Create metrics with name, unit and description based on the message received.",
-    "Topic": "message-topic",
+    "Topic": "sensor/1234/temp",
     "Payload": "{\n   Processor:\n   {\n      Temperature: 42,\n      Unit: \u0022C\u0022\n   }\n}",
     "UserProperties": [],
-    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022message-topic\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature_In_$(JsonPath(\u0027$.Processor.Unit\u0027))\u0022\n          Description: \u0022The current processor temperature in $(JsonPath(\u0027$.Processor.Unit\u0027)).\u0022\n          SignalDataType: Float\n          Unit: \u0022$(JsonPath(\u0027$.Processor.Unit\u0027))\u0022\n          Instrument: Gauge\n          Value: \u0022JSONPATH(\u0027$.Processor.Temperature\u0027)\u0022",
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/temp\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature_In_$(JsonPath(\u0027$.Processor.Unit\u0027))\u0022\n          Description: \u0022The current processor temperature in $(JsonPath(\u0027$.Processor.Unit\u0027)).\u0022\n          Unit: \u0022$(JsonPath(\u0027$.Processor.Unit\u0027))\u0022\n          Instrument: Gauge\n          Value: \u0022JSONPATH(\u0027$.Processor.Temperature\u0027)\u0022",
     "Category": "Metrics",
     "Tags": [
       "json"
@@ -18,16 +18,16 @@
     "Metrics": [
       {
         "Name": "Processor.Temperature_In_C",
-        "OtelServer": "3b335c12-1c2c-46bc-8702-02a880523f2e",
+        "OtelServer": "0775fa37-53de-4ba7-a415-e603345d7c45",
         "MeterVersion": "",
         "Description": "The current processor temperature in C.",
         "Unit": "C",
-        "MetricType": 45,
+        "MetricType": 42,
         "MetricPoints": [
           {
             "Value": 42,
-            "StartTime": "2026-08-25T19:11:13.1445368+00:00",
-            "EndTime": "2026-08-25T19:11:13.1506278+00:00",
+            "StartTime": "2026-09-06T11:44:45.0433966+00:00",
+            "EndTime": "2026-09-06T11:44:45.0434282+00:00",
             "Tags": {}
           }
         ]

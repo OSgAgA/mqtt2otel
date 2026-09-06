@@ -13,7 +13,7 @@ See [Installation](../../installation) overview.
 
 The mapping between MQTT and Otel is configured via a file called `Manifest.yaml`. Here's an example of a simple configuration file that connects to an MQTT broker at `http://mymqtt-broker.net:32007` and an OpenTelemetry collector at `http://my-otel-collector.net:32014`:
 
-{{< exampleCode id="doc-1" field="Manifest" lang="yaml">}}
+{{< exampleCode id="doc-01" field="Manifest" lang="yaml">}}
 
 This assumes no credentials are required to log into the broker or the Otel collector. For further configuration options, see [Configure MQTT Broker](todo) and [Configure Otel Server](todo).
 
@@ -37,12 +37,12 @@ Now that we have connected to the MQTT broker and Otel server, let's subscribe t
 
 Suppose the server sends messages to the topic `{{< exampleData id="doc-2" field="Topic">}}` in the following JSON format:
 
-{{< exampleCode id="doc-2" field="Payload" lang="yaml" hl_lines="4">}}
+{{< exampleCode id="doc-02" field="Payload" lang="yaml" hl_lines="4">}}
 
 To extract the temperature, we will use the [JSONPath](https://www.rfc-editor.org/rfc/rfc9535) syntax `$.Processor.Temperature`.
 The corresponding YAML would look like this:
 
-{{< exampleCode id="doc-2" field="Manifest" lang="yaml">}}
+{{< exampleCode id="doc-02" field="Manifest" lang="yaml">}}
 
 This configuration subscribes to the MQTT topic `{{< exampleData id="doc-2" field="Topic">}}` and creates an Otel metric called `Processor.Temperature` with 
 a `float` data type and a `Gauge` instrument. Every time a message is received for the topic `{{< exampleData id="doc-2" field="Topic">}}`, the temperature value 
@@ -68,7 +68,7 @@ The syntax is as following:
 
 Subscriptions can have variables, which can be used later in the rules section. Here’s an example of how to define variables:
 
-{{< exampleCode id="doc-3" field="Manifest" lang="yaml" hl_lines="7-9">}}
+{{< exampleCode id="doc-03" field="Manifest" lang="yaml" hl_lines="7-9">}}
 
 You can access variables in Otel rules by prefixing them with a `$` sign. For example, to access the `SensorName`, you would use
 `$SensorName`.
@@ -76,7 +76,7 @@ You can access variables in Otel rules by prefixing them with a `$` sign. For ex
 Otel rules can also include attributes, which are added to the Otel signal for filtering or grouping. You can use variables
 inside attributes where needed. Here’s an example of how to add attributes:
 
-{{< exampleCode id="doc-4" field="Manifest" lang="yaml" hl_lines="4-8 12-14">}}
+{{< exampleCode id="doc-04" field="Manifest" lang="yaml" hl_lines="4-8 12-14">}}
 
 The attributes directly added under the Metrics section will be added to all metrics. The attributes added to the 
 "Processor.Temperature" metric will only be added to this metric. 
@@ -95,7 +95,7 @@ The attributes directly added under the Metrics section will be added to all met
 We’ve already used an expression to parse the payload with `JSONPATH('$.Processor.Temperature')`. However, you can also perform 
 mathematical transformations. For example, to convert the temperature from Celsius to Fahrenheit, you can use this expression:
 
-{{< exampleCode id="doc-5" field="Description" lang="yaml">}}
+{{< exampleCode id="doc-05" field="Description" lang="yaml">}}
 
 Standard mathematical operations like `+`, `-`, `*`, `/`, and functions such as `SQRT`, `Sin`, `Cos`, `Tan`, and constants 
 like `[Pi]` are supported.
@@ -117,12 +117,12 @@ For more details, please refer to the [documentation](/docs/expressions).
 
 Log messages work similarly to metrics. Let's say you receive a log message payload in the following format from MQTT:
 
-{{< exampleCode id="doc-6" field="Payload" lang="dissect">}}
+{{< exampleCode id="doc-06" field="Payload" lang="dissect">}}
 
 Rather than sending the raw message to Otel, we can transform it into a structured log format using an extended 
 [DISSECT](https://github.com/OSgAgA/Dissect.Extended.Net) expression:
 
-{{< exampleCode id="doc-6" field="Description" lang="yaml">}}
+{{< exampleCode id="doc-06" field="Description" lang="yaml">}}
 
 This can be read as:
 
@@ -136,7 +136,7 @@ This can be read as:
 
 This expression can then be used in a `Transform` expression inside the `Logs` section:
 
-{{< exampleCode id="doc-6" field="Manifest" lang="yaml" hl_lines="14-15">}}
+{{< exampleCode id="doc-06" field="Manifest" lang="yaml" hl_lines="14-15">}}
 
 You should notice, that we are using the `Logs` keyword now in the otel section to identify log messages. The `Transform` 
 expression will convert the log into a JSON structure like this:
@@ -166,14 +166,14 @@ under the same topic structure but need to handle them differently in your rules
 Let’s say you have a device that sends both power consumption metrics (like current, power, voltage) and status information 
 (like the microcontroller core temperature) in the same MQTT message. The message payload is structured as follows:
 
-{{< exampleCode id="doc-7" field="Payload" lang="json">}}
+{{< exampleCode id="doc-07" field="Payload" lang="json">}}
 
 You want to treat power metrics separately from the microcontroller status. To achieve this, you can group the subscriptions 
 into a `SubscriptionGroup` for reuse:
 
 ### Defining a Subscription Group
 
-{{< exampleCode id="doc-7" field="Description" lang="yaml">}}
+{{< exampleCode id="doc-07" field="Description" lang="yaml">}}
 
 Here, we define a **Subscription Group** called `Power sensors`, which includes two subscriptions: 
 one for a washing machine and another for a dryer. Both subscriptions have associated variables that can be used later in the 
@@ -183,7 +183,7 @@ metrics or logs.
 
 Once you’ve created the `Power sensors` group, you can refer to it in your **metrics** or **logs** as follows:
 
-{{< exampleCode id="doc-7" field="Manifest" lang="yaml" hl_lines="22-23 38-39">}}
+{{< exampleCode id="doc-07" field="Manifest" lang="yaml" hl_lines="22-23 38-39">}}
 
 In this example:
 
@@ -209,7 +209,7 @@ and **SubPath** to correctly target the topics.
 
 ### Defining Subscription Groups with ParentPath and SubPath
 
-{{< exampleCode id="doc-8" field="Manifest" lang="yaml" hl_lines="15-16 30-31">}}
+{{< exampleCode id="doc-08" field="Manifest" lang="yaml" hl_lines="15-16 30-31">}}
 
 ### Explanation:
 
@@ -230,4 +230,4 @@ and scalable. Grouping devices and topics this way allows you to handle complex 
 
 Here is a complete minimal example manifest using logs, and metrics:
 
-{{< exampleCode id="doc-9" field="Manifest" lang="yaml">}}
+{{< exampleCode id="doc-09" field="Manifest" lang="yaml">}}

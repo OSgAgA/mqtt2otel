@@ -38,7 +38,7 @@ The structure of the file is as following
 
 As a starting point, this is an example manifest using logs, and metrics:
 
-{{< exampleCode id="doc-9" field="Manifest" lang="yaml">}}
+{{< exampleCode id="doc-09" field="Manifest" lang="yaml">}}
 
 ## General settings
 

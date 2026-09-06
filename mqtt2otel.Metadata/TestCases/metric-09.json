@@ -1,0 +1,38 @@
+{
+  "Setup": {
+    "Id": "metric-09",
+    "Name": "Constant value",
+    "Description": "Ignores the payload and returns a constant value.",
+    "Topic": "sensor/666/error",
+    "Payload": "This payload is ignored.",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides a constant value\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/error\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022sensor.errors\u0022\n          Description: \u0022Counts all sensor errors.\u0022\n          Instrument: Counter\n          Value: \u00221\u0022",
+    "Category": "Metrics",
+    "Tags": [
+      "text"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "sensor.errors",
+        "OtelServer": "44b161f0-6cde-4bac-b64c-839e0414c000",
+        "MeterVersion": "",
+        "Description": "Counts all sensor errors.",
+        "Unit": "",
+        "MetricType": 26,
+        "MetricPoints": [
+          {
+            "Value": 1,
+            "StartTime": "2026-09-06T11:52:48.4211009+00:00",
+            "EndTime": "2026-09-06T11:52:48.4211728+00:00",
+            "Tags": {}
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

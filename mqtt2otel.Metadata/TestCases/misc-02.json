@@ -5,7 +5,8 @@
     "Description": "Uses a variable value inside an expression.",
     "Topic": "sensor/alert",
     "Payload": "Something went wrong. Please ignore this and use the variable instead.",
-    "Manifest": "\nProcessors:\n  - Name: \u0022Alert\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022sensor/alert\u0022\n          Variables:\n                - Key: \u0022SensorId\u0022\n                  Value: 73\n    Otel:\n      Metrics:\n        - Name: \u0022alert.sensor.id\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Int\n          Instrument: Gauge\n          Value: \u0022VAR(\u0027SensorId\u0027)\u0022",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Alert\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/alert\u0022\n          Variables:\n                - Key: \u0022SensorId\u0022\n                  Value: 73\n    Otel:\n      Metrics:\n        - Name: \u0022alert.sensor.id\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Int\n          Instrument: Gauge\n          Value: \u0022VAR(\u0027SensorId\u0027)\u0022",
     "Category": "Misc",
     "Tags": [
       "var"
@@ -17,7 +18,7 @@
     "Metrics": [
       {
         "Name": "alert.sensor.id",
-        "OtelServer": "4e26928c-ff03-4f7f-8ecc-d9121b4594e7",
+        "OtelServer": "403a60c8-5551-42ad-ac0c-2a31e422e8e6",
         "MeterVersion": "",
         "Description": "The current processor temperature.",
         "Unit": "",
@@ -25,8 +26,8 @@
         "MetricPoints": [
           {
             "Value": 73,
-            "StartTime": "2026-07-29T14:47:56.1270642+00:00",
-            "EndTime": "2026-07-29T14:47:56.1337164+00:00",
+            "StartTime": "2026-09-06T11:54:59.9643857+00:00",
+            "EndTime": "2026-09-06T11:54:59.9650292+00:00",
             "Tags": {}
           }
         ]

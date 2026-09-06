@@ -19,7 +19,7 @@
     "Metrics": [
       {
         "Name": "Temperature",
-        "OtelServer": "2207bf81-52e8-4915-8ff9-f986760c4ae0",
+        "OtelServer": "009ce9c7-30e5-4ad0-a17f-a017a6f00b5e",
         "MeterVersion": "",
         "Description": "",
         "Unit": "C",
@@ -27,15 +27,15 @@
         "MetricPoints": [
           {
             "Value": 5.555555555555555,
-            "StartTime": "2026-09-04T17:30:05.6114287+00:00",
-            "EndTime": "2026-09-04T17:30:05.6255659+00:00",
+            "StartTime": "2026-09-06T11:48:46.2957792+00:00",
+            "EndTime": "2026-09-06T11:48:46.2963381+00:00",
             "Tags": {}
           }
         ]
       },
       {
         "Name": "Temperature_B",
-        "OtelServer": "2207bf81-52e8-4915-8ff9-f986760c4ae0",
+        "OtelServer": "009ce9c7-30e5-4ad0-a17f-a017a6f00b5e",
         "MeterVersion": "",
         "Description": "",
         "Unit": "C",
@@ -43,15 +43,15 @@
         "MetricPoints": [
           {
             "Value": 3.888888888888889,
-            "StartTime": "2026-09-04T17:30:05.6155244+00:00",
-            "EndTime": "2026-09-04T17:30:05.6256476+00:00",
+            "StartTime": "2026-09-06T11:48:46.2960683+00:00",
+            "EndTime": "2026-09-06T11:48:46.2963387+00:00",
             "Tags": {}
           }
         ]
       },
       {
         "Name": "Pressure",
-        "OtelServer": "2207bf81-52e8-4915-8ff9-f986760c4ae0",
+        "OtelServer": "009ce9c7-30e5-4ad0-a17f-a017a6f00b5e",
         "MeterVersion": "",
         "Description": "",
         "Unit": "",
@@ -59,8 +59,8 @@
         "MetricPoints": [
           {
             "Value": 12,
-            "StartTime": "2026-09-04T17:30:05.6181339+00:00",
-            "EndTime": "2026-09-04T17:30:05.6256486+00:00",
+            "StartTime": "2026-09-06T11:48:46.2963034+00:00",
+            "EndTime": "2026-09-06T11:48:46.2963388+00:00",
             "Tags": {}
           }
         ]

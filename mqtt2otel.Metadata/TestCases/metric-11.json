@@ -3,10 +3,10 @@
     "Id": "metric-11",
     "Name": "Automatically parse Json",
     "Description": "A simple example on how to parse a json automatically.",
-    "Topic": "message-topic",
-    "Payload": "{\r\n   Processor:\r\n   {\r\n      Temperature: 42\r\n   }\r\n}",
+    "Topic": "sensor/1234/data",
+    "Payload": "{\n   Processor:\n   {\n      Temperature: 42,\n      Angle: 32\n   }\n}",
     "UserProperties": [],
-    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022message-topic\u0022\n    Otel:\n      Metrics:\n        - Instrument: Gauge\n          ParseAs: \n             Type: Json\n             Separator: \u0022_\u0022",
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Automatically parses a Json payload.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/data\u0022\n    Otel:\n      Metrics:\n        - Instrument: Gauge\n          ParseAs: \n             Type: Json",
     "Category": "Metrics",
     "Tags": [
       "Json"
@@ -17,8 +17,8 @@
   "ExpectedResult": {
     "Metrics": [
       {
-        "Name": "Processor_Temperature",
-        "OtelServer": "839ee0f1-8ec7-45c9-8c98-ae46ec0c69d7",
+        "Name": "Processor.Temperature",
+        "OtelServer": "1c1ad657-7abc-4438-8729-0ee6a6467de5",
         "MeterVersion": "",
         "Description": "",
         "Unit": "",
@@ -26,8 +26,24 @@
         "MetricPoints": [
           {
             "Value": 42,
-            "StartTime": "2026-09-01T15:35:31.8207439+00:00",
-            "EndTime": "2026-09-01T15:35:31.8236005+00:00",
+            "StartTime": "2026-09-06T11:47:42.5850437+00:00",
+            "EndTime": "2026-09-06T11:47:42.5851183+00:00",
+            "Tags": {}
+          }
+        ]
+      },
+      {
+        "Name": "Processor.Angle",
+        "OtelServer": "1c1ad657-7abc-4438-8729-0ee6a6467de5",
+        "MeterVersion": "",
+        "Description": "",
+        "Unit": "",
+        "MetricType": 42,
+        "MetricPoints": [
+          {
+            "Value": 32,
+            "StartTime": "2026-09-06T11:47:42.5850991+00:00",
+            "EndTime": "2026-09-06T11:47:42.585119+00:00",
             "Tags": {}
           }
         ]

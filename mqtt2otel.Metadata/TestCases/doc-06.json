@@ -1,10 +1,11 @@
 {
   "Setup": {
-    "Id": "doc-6",
+    "Id": "doc-06",
     "Name": "Quickstart Document 5",
     "Description": "%{otel_timestamp:DateTime} [%{otel_loglevel}] [%{server_name}] %{otel_message}",
     "Topic": "message-log-topic",
     "Payload": "2026-02-26T10:28:34Z [Info] [ServerA] Temperature value read successfully.",
+    "UserProperties": [],
     "Manifest": "Processors:\n  - Name: \u0022Server logs\u0022\n    Description: \u0022Collect all log messages from the server.\u0022\n    Mqtt:\n      Subscriptions:\n        - Name: \u0022Server logs\u0022\n          Topic: \u0022message-log-topic\u0022\n    Otel:\n      Attributes:\n        - Key: Location\n          Value: MainServerRoom\n      Logs:\n        - Name: \u0022Logging\u0022\n          PayloadType: Json\n          Transform: \u0022DISSECT(\u0027%{otel_timestamp} [%{otel_loglevel}] [%{server_name}] %{otel_message}\u0027)\u0022",
     "Category": "Documentation",
     "Tags": [
@@ -28,8 +29,8 @@
           "server_name": "ServerA",
           "original_value": "2026-02-26T10:28:34Z [Info] [ServerA] Temperature value read successfully."
         },
-        "SpanId": "db30b87981c506c3",
-        "TraceId": "84528274f539a9636c8778751a69a370",
+        "SpanId": "e26685ffd49dc7f0",
+        "TraceId": "38b85043ef2b8a0d96f4467c0bee1d84",
         "TraceState": null,
         "TraceFlags": 0
       }

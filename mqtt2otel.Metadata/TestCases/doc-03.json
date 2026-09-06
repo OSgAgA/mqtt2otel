@@ -1,10 +1,11 @@
 {
   "Setup": {
-    "Id": "doc-3",
+    "Id": "doc-03",
     "Name": "Quickstart Document 3",
     "Description": "",
     "Topic": "metric/sensor_1234",
     "Payload": "{\n    \u0022Processor\u0022: \n    {\n        \u0022Temperature\u0022: 42.5\n    },\n    \u0022TempUnit\u0022: \u0022C\u0022\n}",
+    "UserProperties": [],
     "Manifest": "Processors:\n    - Name: \u0022Processor 1\u0022\n      Mqtt:\n        Subscriptions:\n          - Name: \u0022Processor information\u0022\n            Topic: \u0022metric/sensor_1234\u0022\n            Variables:\n              - Key: \u0022SensorName\u0022\n                Value: \u0022ProcessorServerA\u0022",
     "Category": "Documentation",
     "Tags": [

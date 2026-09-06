@@ -1,11 +1,12 @@
 {
   "Setup": {
-    "Id": "metric-4",
+    "Id": "metric-04",
     "Name": "Advanced XPath",
     "Description": "An advanced example on how to parse an xml paylog using child indices to create detailed metrics manually.",
-    "Topic": "message-topic-4",
+    "Topic": "sensor/1234/data",
     "Payload": "\u003CProcessors\u003E\n  \u003CProcessor\u003E\n      \u003CName\u003EProcessor A\u003C/Name\u003E\n      \u003CTemperature\u003E42\u003C/Temperature\u003E\n  \u003C/Processor\u003E\n  \u003CProcessor\u003E\n      \u003CName\u003EProcessor B\u003C/Name\u003E\n      \u003CTemperature\u003E52\u003C/Temperature\u003E\n  \u003C/Processor\u003E\n\u003C/Processors\u003E",
-    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022message-topic-4\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Attributes:\n            - Key: \u0022test\u0022\n              Value: \u0022value\u0022\n          Value: \u0022XMLPATH(\u0027/Processors/Processor[1]/Temperature\u0027)\u0022",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Read only the second value of an array using XmlPath\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/data\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          Instrument: Gauge\n          Unit: \u0022C\u0022\n          Attributes:\n            - Key: \u0022test\u0022\n              Value: \u0022value\u0022\n          Value: \u0022XMLPATH(\u0027/Processors/Processor[2]/Temperature\u0027)\u0022",
     "Category": "Metrics",
     "Tags": [
       "xml"
@@ -17,16 +18,16 @@
     "Metrics": [
       {
         "Name": "Processor.Temperature",
-        "OtelServer": "5f17e225-51b1-413e-b957-41c5f8ac5c29",
+        "OtelServer": "b6a24f88-a891-49eb-8bd8-cafa02f33fb4",
         "MeterVersion": "",
         "Description": "The current processor temperature.",
-        "Unit": "",
-        "MetricType": 45,
+        "Unit": "C",
+        "MetricType": 42,
         "MetricPoints": [
           {
-            "Value": 42,
-            "StartTime": "2026-07-29T14:44:31.5373882+00:00",
-            "EndTime": "2026-07-29T14:44:31.5395875+00:00",
+            "Value": 52,
+            "StartTime": "2026-09-06T11:35:00.1134611+00:00",
+            "EndTime": "2026-09-06T11:35:00.1135266+00:00",
             "Tags": {
               "test": "value"
             }

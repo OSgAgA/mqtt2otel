@@ -1,0 +1,38 @@
+{
+  "Setup": {
+    "Id": "metric-07",
+    "Name": "Convert \u00B0C in \u00B0F",
+    "Description": "Converts a value from \u00B0C in \u00B0F using the expression syntax.",
+    "Topic": "sensor/temperature",
+    "Payload": "42",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Converts a value from \u00B0C to \u00B0F.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/temperature\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          Instrument: Gauge\n          Value: \u0022(PAYLOAD()* 1.8) \u002B 32.0\u0022",
+    "Category": "Metrics",
+    "Tags": [
+      "text"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Processor.Temperature",
+        "OtelServer": "8be541ab-9168-45f6-8f33-583bd4e7e821",
+        "MeterVersion": "",
+        "Description": "The current processor temperature.",
+        "Unit": "",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 107.60000000000001,
+            "StartTime": "2026-09-06T11:37:48.9398997+00:00",
+            "EndTime": "2026-09-06T11:37:48.9421133+00:00",
+            "Tags": {}
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

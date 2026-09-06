@@ -1,10 +1,11 @@
 {
   "Setup": {
-    "Id": "doc-9",
+    "Id": "doc-09",
     "Name": "Quickstart complete example",
     "Description": "",
     "Topic": "message-topic",
     "Payload": "{\n    \u0022Processor\u0022: \n    {\n        \u0022Temperature\u0022: 42.5\n    },\n    \u0022TempUnit\u0022: \u0022C\u0022\n}",
+    "UserProperties": [],
     "Manifest": "Version: 1.0\n\nMqttConnections:\n  - Name: \u0022My broker\u0022\n    Endpoint:\n      Port: 32007\n      Address: \u0022mymqtt-broker.net\u0022\n      EnableTls: false\n\nOtelConnections:\n  - Name: \u0022My Otel server\u0022\n    ServiceName: \u0022my-service\u0022\n    ServiceNamespace: \u0022my-service-namespace\u0022\n    Endpoint:\n      Protocol: \u0022http\u0022\n      Port: 32014\n      Address: \u0022my-otel-collector.net\u0022\n      EnableTls: false\n\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022message-topic\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Value: \u0022JSONPATH(\u0027$.Processor.Temperature\u0027)\u0022\n\n  - Name: \u0022Server logs\u0022\n    Description: \u0022Collect all log messages from the server.\u0022\n    Mqtt:\n      Subscriptions:\n        - Name: \u0022Server logs\u0022\n          Topic: \u0022message-log-topic\u0022\n    Otel:\n      Attributes:\n        - Key: Location\n          Value: MainServerRoom\n      Logs:\n        - Name: \u0022Logging\u0022\n          PayloadType: Json\n          Transform: \u0022DISSECT(\u0027%{otel_timestamp:DateTime} [%{otel_loglevel}] [{server_name}] %{otel_message}\u0027)\u0022",
     "Category": "Documentation",
     "Tags": [
@@ -25,8 +26,8 @@
         "MetricPoints": [
           {
             "Value": 42.5,
-            "StartTime": "2026-07-01T20:43:15.7164709+00:00",
-            "EndTime": "2026-07-01T20:43:15.757098+00:00",
+            "StartTime": "2026-09-06T12:08:43.5491286+00:00",
+            "EndTime": "2026-09-06T12:08:43.5491514+00:00",
             "Tags": {}
           }
         ]

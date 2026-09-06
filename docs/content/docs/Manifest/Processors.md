@@ -207,7 +207,7 @@ It consists of:
 
 When using a json type to parse the following payload:
 
-```json
+```yaml
 {
    MachineA:
    {

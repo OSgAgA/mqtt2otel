@@ -1,10 +1,11 @@
 {
   "Setup": {
-    "Id": "doc-5",
+    "Id": "doc-05",
     "Name": "Convert \u00B0C in \u00B0F",
     "Description": " Value: \u0022(JSONPATH(\u0027$.Processor.Temperature\u0027)* 1.8) \u002B 32.0\u0022",
     "Topic": "sensor/temperature",
     "Payload": "{\n    \u0022Processor\u0022: \n    {\n        \u0022Temperature\u0022: 42.5\n    },\n    \u0022TempUnit\u0022: \u0022C\u0022\n}",
+    "UserProperties": [],
     "Manifest": "Processors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Name: \u0022Processor information\u0022\n          Topic: \u0022sensor/temperature\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Value: \u0022(JSONPATH(\u0027$.Processor.Temperature\u0027)* 1.8) \u002B 32.0\u0022",
     "Category": "Documentation",
     "Tags": [
@@ -17,7 +18,7 @@
     "Metrics": [
       {
         "Name": "Processor.Temperature",
-        "OtelServer": "86306aeb-fc6b-44cb-9fab-5335e0b70e2e",
+        "OtelServer": "1eb4d78c-c19d-4d07-9d0f-75945aab2ec0",
         "MeterVersion": "",
         "Description": "The current processor temperature.",
         "Unit": "",
@@ -25,8 +26,8 @@
         "MetricPoints": [
           {
             "Value": 108.5,
-            "StartTime": "2026-07-01T20:16:44.1142676+00:00",
-            "EndTime": "2026-07-01T20:16:44.1240754+00:00",
+            "StartTime": "2026-09-06T12:06:45.4450478+00:00",
+            "EndTime": "2026-09-06T12:06:45.445152+00:00",
             "Tags": {}
           }
         ]

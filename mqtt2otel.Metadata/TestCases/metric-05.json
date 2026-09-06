@@ -1,0 +1,39 @@
+{
+  "Setup": {
+    "Id": "metric-05",
+    "Name": "Use regular expression",
+    "Description": "A simple example on how to parse a text paylog using regular expressions to create detailed metrics manually.",
+    "Topic": "sensor/1234/data",
+    "Payload": "Temperature: 42",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Read a plain value using regular expressions.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/data\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          SignalDataType: Float\n          Instrument: Gauge\n          Value: \u0022REGEX(\u0027Temperature: ([0-9]*)\u0027)\u0022",
+    "Category": "Metrics",
+    "Tags": [
+      "text",
+      "regex"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Processor.Temperature",
+        "OtelServer": "25a93d3d-1ea9-47cb-bedb-068487655fdd",
+        "MeterVersion": "",
+        "Description": "The current processor temperature.",
+        "Unit": "",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 42,
+            "StartTime": "2026-09-06T11:31:08.3416364+00:00",
+            "EndTime": "2026-09-06T11:31:08.3416852+00:00",
+            "Tags": {}
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

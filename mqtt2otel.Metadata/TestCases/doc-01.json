@@ -1,10 +1,11 @@
 {
   "Setup": {
-    "Id": "doc-1",
+    "Id": "doc-01",
     "Name": "Quckstart connections",
     "Description": "",
-    "Topic": "message-topic",
+    "Topic": "sensor/1234/data",
     "Payload": "",
+    "UserProperties": [],
     "Manifest": "Version: 1.0\n\nMqttConnections:\n  - Name: \u0022My broker\u0022\n    Endpoint:\n      Port: 32007\n      Address: \u0022mymqtt-broker.net\u0022\n      EnableTls: false\n\nOtelConnections:\n  - Name: \u0022My Otel server\u0022\n    ServiceName: \u0022my-service\u0022\n    ServiceNamespace: \u0022my-service-namespace\u0022\n    Endpoint:\n      Protocol: \u0022http\u0022\n      Port: 32014\n      Address: \u0022my-otel-collector.net\u0022\n      EnableTls: false",
     "Category": "Documentation",
     "Tags": [
