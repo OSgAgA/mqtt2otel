@@ -76,9 +76,9 @@ namespace mqtt2otel.Manifest
         {
             var result = new ValidationResult();
 
-            string supportedVersions = "Supported versions are: [1.0].";
+            string supportedVersions = "Supported versions are: [1.0], [1.1].";
             if (string.IsNullOrEmpty(this.Version)) return result.AddError($"No or empty Version property in file. Version must allways be set! {supportedVersions}");
-            if (this.Version != "1.0") return result.AddError($"Provided version {this.Version} is not supported. {supportedVersions}");
+            if (this.Version != "1.0" && this.Version != "1.1") return result.AddError($"Provided version {this.Version} is not supported. {supportedVersions}");
 
             this.MqttConnections.ForEach(broker => broker.Validate(result));
             this.OtelConnections.ForEach(connection => connection.Validate(result));

@@ -14,7 +14,7 @@ The structure of the file is as following
 
 {{% steps %}}
 1. ## Version
-   The version must be set and must be the first line of the file. If not set, or not being on the first line, the file will be declined. Currently the following versions are supported: `1.0`.
+   The version must be set and must be the first line of the file. If not set, or not being on the first line, the file will be declined. Currently the following versions are supported: `1.0`, `1.1`.
 
 2. ## General settings
    General setting that will be applied to the full manifest.
@@ -44,6 +44,6 @@ As a starting point, this is an example manifest using logs, and metrics:
 
 The Manifest supports the following general settings:
 
-| Parameter                          | Description                                                                                                  |
-|------------------------------------|--------------------------------------------------------------------------------------------------------------|
-| CreateAttributesFromUserProperties | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings. |
+| Parameter                                                                                | Description                                                                                                  |
+|------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| CreateAttributesFromUserProperties {{< badge style="info" title="version" value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings. |

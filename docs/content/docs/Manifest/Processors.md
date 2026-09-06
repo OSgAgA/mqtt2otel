@@ -58,7 +58,7 @@ The Processor consists of the following parameters:
 | Name                               | An optional name for the processor.                                                                          |
 | Description                        | An optional description of the processor.                                                                    |
 | OtelConnection                     | A reference to an otel connection, if not set the default connection will be used.                           |
-| CreateAttributesFromUserProperties | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings. |
+| CreateAttributesFromUserProperties {{< badge style="info" title="version" value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings. |
 | Mqtt                               | A section containing mqtt relevant parameters. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)  |           
 | Otel                               | A section containint open telemetry relevant parameters. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize) |   
 
@@ -123,16 +123,16 @@ A simple example for the Otel would look like this:
 
 It consists of the following parameters:
 
-| Parameter                          | Description                                                                                                                             |
-|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| Name                               | An optional name for the otel configuration.                                                                                            |
-| Description                        | An optional description.                                                                                                                |
-| Attributes                         | A list of otel attributes that will be added to the otel signal. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing)          |
-| TopicAttributes                    | The (optional) [TopicAttribute expression](/docs/expressions/topicparsing/#the-topicattribute-syntax) that maps topics to attributes.               | 
-| CreateAttributesFromUserProperties | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings. |
-| OtelConnection                     | The (optional) otel connection name that will be applied to all `Metrics` and `Logs` sections that do not explicitly state the connection name. | 
-| Metrics                            | An optional list of `Metrics` that will describe how the payload of a subscription message will be parsed into an otel metric signal. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)   | 
-| Logs                               | An optional list of `Logs` that will describe how the payload of a subscription message will be parsed into an otel log message. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)       | 
+| Parameter                                                                                | Description                                                                                                                                                                                                      |
+|------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Name                                                                                     | An optional name for the otel configuration.                                                                                                                                                                     |
+| Description                                                                              | An optional description.                                                                                                                                                                                         |
+| Attributes                                                                               | A list of otel attributes that will be added to the otel signal. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing)                       |
+| TopicAttributes {{< badge style="info" title="version" value="1.1">}}                    | The (optional) [TopicAttribute expression](/docs/expressions/topicparsing/#the-topicattribute-syntax) that maps topics to attributes.                                                                            |  
+| CreateAttributesFromUserProperties {{< badge style="info" title="version" value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings.                                                                                        |
+| OtelConnection                                                                           | The (optional) otel connection name that will be applied to all `Metrics` and `Logs` sections that do not explicitly state the connection name.                                                                  | 
+| Metrics                                                                                  | An optional list of `Metrics` that will describe how the payload of a subscription message will be parsed into an otel metric signal. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize) | 
+| Logs                                                                                     | An optional list of `Logs` that will describe how the payload of a subscription message will be parsed into an otel log message. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)      | 
 
 ## The Otel metrics section
 
@@ -140,23 +140,23 @@ When a mqtt message payload is received and a `Metric` section exists it will cr
 
 It consists of the following parameters:
 
-| Parameter                          | Description                                                                                                                    |
-|------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| Name                               | The name of the created metric that will be send to the open telemetry endpoint.                                               |
-| Description                        | The optional description that will be send to the open telemetry endpoint.                                                     |
-| Attributes                         | A list of otel attributes that will be added to the otel metric. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing) |
-| TopicAttributes                    | The (optional) [TopicAttribute expression](/docs/expressions/topicparsing/#the-topicattribute-syntax) that maps topics to attributes.      | 
-| CreateAttributesFromUserProperties | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings. |
-| OtelConnection                     | The (optional) otel server connection that will be applied to the metric. If not set the default server is used.               | 
-| Instrument                         | Defines the otel metric instruments to be used. See [otel instruments](#otel-instruments) for details.                         | 
-| SignalDataType                     | The data type of the metric. See [otel data types](#otel-data-types) for details.                                              | 
-| Unit                               | The optional unit that will be sent to the open telemetry endpoint as part of the metric.                                      | 
-| ValueConverter                     | The optional converter pattern, that will be used to convert a value. See [Converter](/docs/expressions/converter-and-formatter). | 
-| NameFormatter                      | The optional formatter pattern that will be used to format the name of the signal. See [Converter](/docs/expressions/converter-and-formatter).| 
-| ParseAs                            | This optional parameter tells the processor to automaticall detect the signals based on the payload type. Available values: Json and XML. See [ParseAs](#parseas).                                     | 
-| Actions                            | This optional parameter provides conditional actions that can be applied to a signal. See [Actions](/docs/expressions/actions).                                     | 
-| Value                              | The value of the metric. Must be of type `SignalDataType`. [{{< badge style="info" title="supports" value="expressions" >}}](/docs/expressions/#expressions)     | 
-| HistogramBucketBoundaries          | A list of bucket values for the `Histogram` instrument. See [histogram bucket boundaries](#histogram-bucket-boundaries).       | 
+| Parameter                                                                                | Description                                                                                                                                                                                                         |
+|------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Name                                                                                     | The name of the created metric that will be send to the open telemetry endpoint. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing)          |
+| Description                                                                              | The optional description that will be send to the open telemetry endpoint. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing)                |
+| Attributes                                                                               | A list of otel attributes that will be added to the otel metric. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing)                          |
+| TopicAttributes {{< badge style="info" title="version" value="1.1">}}                    | The (optional) [TopicAttribute expression](/docs/expressions/topicparsing/#the-topicattribute-syntax) that maps topics to attributes.                                                                               | 
+| CreateAttributesFromUserProperties {{< badge style="info" title="version" value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings.                                                                                           |
+| OtelConnection                                                                           | The (optional) otel server connection that will be applied to the metric. If not set the default server is used.                                                                                                    | 
+| Instrument                                                                               | Defines the otel metric instruments to be used. See [otel instruments](#otel-instruments) for details.                                                                                                              | 
+| SignalDataType                                                                           | The data type of the metric. See [otel data types](#otel-data-types) for details.                                                                                                                                   | 
+| Unit                                                                                     | The optional unit that will be sent to the open telemetry endpoint as part of the metric. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing) | 
+| ValueConverter {{< badge style="info" title="version" value="1.1">}}                     | The optional converter pattern, that will be used to convert a value. See [Converter](/docs/expressions/converter-and-formatter).                                                                                   | 
+| NameFormatter {{< badge style="info" title="version" value="1.1">}}                      | The optional formatter pattern that will be used to format the name of the signal. See [Converter](/docs/expressions/converter-and-formatter).                                                                      | 
+| ParseAs {{< badge style="info" title="version" value="1.1">}}                            | This optional parameter tells the processor to automaticall detect the signals based on the payload type. Available values: Json and XML. See [ParseAs](#parseas).                                                  | 
+| Actions {{< badge style="info" title="version" value="1.1">}}                            | This optional parameter provides conditional actions that can be applied to a signal. See [Actions](/docs/expressions/actions).                                                                                     | 
+| Value                                                                                    | The value of the metric. Must be of type `SignalDataType`. [{{< badge style="info" title="supports" value="expressions" >}}](/docs/expressions/#expressions)                                                        | 
+| HistogramBucketBoundaries                                                                | A list of bucket values for the `Histogram` instrument. See [histogram bucket boundaries](#histogram-bucket-boundaries).                                                                                            | 
 
 ### Example:
 
@@ -246,19 +246,19 @@ When a mqtt message payload is received and a `Logs` section exists it will crea
 
 It consists of the following parameters:
 
-| Parameter                          | Description                                                                                                                                               |
-|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Name                               | The optional name of the log processor.                                                                                                                   |
-| Description                        | The optional description.                                                                                                                                 |
-| Attributes                         | A list of otel attributes that will be added to the otel log entry. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing)                         |
-| CreateAttributesFromUserProperties | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings. |
-| OtelConnection                     | The (optional) otel server connection of the otel endpoint where the log entry should be send. If not set the default connection is used.                 | 
-| Filter                             | Defines the filter expression that will be applied if the `PayloadType` is set to `Text`. [{{< badge style="info" title="supports" value="expressions" >}}](/docs/expressions/#expressions) | 
-| PayloadType                        | The type of the payload, that the processor will process. Must be one of the following: `Text` or `Json`                                                  | 
-| CategoryName                       | The category name, that will be send with the open telemetry log entry. Default is `mqtt2otel`                                                            | 
-| Transform                          | An optional transform expression that will be applied to the message payloads. [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformations)            | 
-| MessageKey                         | If `PayloadType`is `Json` this is the key that will be used for identifying the message body. Default is: `otel_message`                                  | 
-| LogLevelKey                        | If `PayloadType`is `Json` this is the key that will be used for identifying the log level. Default is: `otel_loglevel`                                    | 
+| Parameter                                                                                | Description                                                                                                                                                                                   |
+|------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Name                                                                                     | The optional name of the log processor.                                                                                                                                                       |
+| Description                                                                              | The optional description.                                                                                                                                                                     |
+| Attributes                                                                               | A list of otel attributes that will be added to the otel log entry. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing) |
+| CreateAttributesFromUserProperties {{< badge style="info" title="version" value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings.                                                                     |
+| OtelConnection                                                                           | The (optional) otel server connection of the otel endpoint where the log entry should be send. If not set the default connection is used.                                                     | 
+| Filter                                                                                   | Defines the filter expression that will be applied if the `PayloadType` is set to `Text`. [{{< badge style="info" title="supports" value="expressions" >}}](/docs/expressions/#expressions)   | 
+| PayloadType                                                                              | The type of the payload, that the processor will process. Must be one of the following: `Text` or `Json`                                                                                      | 
+| CategoryName                                                                             | The category name, that will be send with the open telemetry log entry. Default is `mqtt2otel`                                                                                                | 
+| Transform                                                                                | An optional transform expression that will be applied to the message payloads. [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformations)      | 
+| MessageKey                                                                               | If `PayloadType`is `Json` this is the key that will be used for identifying the message body. Default is: `otel_message`                                                                      | 
+| LogLevelKey                                                                              | If `PayloadType`is `Json` this is the key that will be used for identifying the log level. Default is: `otel_loglevel`                                                                        | 
 
 ### Example:
 
