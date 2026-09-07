@@ -1,0 +1,38 @@
+{
+  "Setup": {
+    "Id": "doc-15",
+    "Name": "Change time zone",
+    "Description": "Parses a log using the dissect parser and interprets the provided timestamp as a given time zone.",
+    "Topic": "sensor/1234/log",
+    "Payload": "2026-01-31 15:42 [INFO] This is a test.",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Server logs\u0022\n    Description: \u0022Collect all log messages from the server and interpret timestamp as timezone europe/berlin.\u0022\n    Mqtt:\n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/log\u0022\n    Otel:\n      Attributes:\n        - Key: Location\n          Value: MainServerRoom\n      Logs:\n        - PayloadType: Json\n          Transform: \u0022DISSECT(\u0027%{otel_timestamp:DateTime[Europe/Berlin]} [%{otel_loglevel}] %{otel_message}\u0027)\u0022",
+    "Category": "Documentation",
+    "Tags": [
+      "dissect"
+    ],
+    "CreateExample": false,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [],
+    "Logs": [
+      {
+        "Timestamp": "2026-01-31T14:42:00Z",
+        "LogLevel": 2,
+        "Body": "This is a test.",
+        "CategoryName": "mqtt2otel",
+        "Attributes": {
+          "Location": "MainServerRoom",
+          "otel_timestamp": "2026-01-31T14:42:00Z",
+          "otel_loglevel": "INFO",
+          "original_value": "2026-01-31 15:42 [INFO] This is a test."
+        },
+        "SpanId": "778fabc5de09ed82",
+        "TraceId": "c417cde6b9642f92142965b5aa2a42ea",
+        "TraceState": null,
+        "TraceFlags": 0
+      }
+    ]
+  }
+}

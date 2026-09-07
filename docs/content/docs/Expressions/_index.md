@@ -50,14 +50,14 @@ To access the temperature we use the [JSONPATH](https://www.rfc-editor.org/rfc/r
 parameter inside the `Processor` parameter. To do this we have to use a function called `JSONPATH`:
 
 ```yaml
-Value: "JSONPATH('$.Processor.Temperature')"
+Value: "JsonPath('$.Processor.Temperature')"
 ```
 
 That will return the value 42.5. The data type returned will be the data type defined in `Processors.Otel.Metrics.Metric.SignalDataType`. If you want to
 change the data type to e.g. `int` you can add another parameter to the function stating the data type:
 
 ```yaml
-Value: "JSONPATH('int', '$.Processor.Temperature')"
+Value: "ToInt(JsonPath('$.Processor.Temperature'))"
 ```
 
 This will return the value 42.
@@ -68,9 +68,9 @@ This will return the value 42.
 
 | Function          | Example                                           | Description                                                                                                                                          |
 | ------------------| ------------------------------------------------- | ----------------------------------------                                                                                                             |
-| `JsonPath`        | `JsonPath('$.Root')`                              | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax                                                                        |
-| `XPath`           | `XPath('/root/child[1]')`                         | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax                                                                                  |
-| `TopicPath`       | `TopicPath('[1]')`                                | Extracts data using [TopicPath](./topicpath) syntax                                                                                  |
+| `JsonPath`        | `JsonPath('$.Root')`                              | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax from a json payload.                                                   |
+| `XPath`           | `XPath('/root/child[1]')`                         | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax from a xml payload                                                               |
+| `TopicPath`       | `TopicPath('[1]')`                                | Extracts data using [TopicPath](./topicpath) syntax from the message topic.                                                                          |
 | `UserProperty`    | `UserProperty('Name')`                            | Accesses an mqtt user property via its name. If the name exists multiple times, the first match is used. If the name does not exist, the function returns an empty string.                                                                                  |
 | `RegEx`           | `RegEx('[0-9]+')`                                 | Extracts data from payload using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
 | `Var`             | `Var('MyVariable')`                               | Returns the variable with the given name. No `$` is needed before the variable name.                                                                 |
@@ -109,7 +109,7 @@ This will return the value 42.
 
 ### Calculations
 
-We’ve already used an expression to parse the payload with `JSONPATH('$.Processor.Temperature')`. However, you can also perform 
+We’ve already used an expression to parse the payload with `JsonPath('$.Processor.Temperature')`. However, you can also perform 
 mathematical calculations. For example, to convert the temperature from Celsius to Fahrenheit, you can use this expression:
 
 ```yaml
@@ -176,3 +176,4 @@ The usage is similar to expressions:
 | ---------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------|
 | `DISSECT`  | `DISSECT('%{otel_message}')`         | Converts a payload to json using [Exgtended dissect](https://github.com/OSgAgA/Dissect.Extended.Net) syntax                   |                                
 | `GROK`     | `GROK('%{GREEDYDATA:otel_message}')` | Converts a payload to json using [GROK](https://www.elastic.co/docs/reference/logstash/plugins/plugins-filters-grok) syntax   |
+ 
