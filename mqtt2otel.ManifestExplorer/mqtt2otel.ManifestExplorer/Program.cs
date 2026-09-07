@@ -13,7 +13,16 @@ namespace mqtt2otel.ManifestExplorer
     {
         public static void Main(string[] args)
         {
+            
+
             var builder = WebApplication.CreateBuilder(args);
+
+            string configFileName = "/config/appsettings.json";
+            if (File.Exists(configFileName))
+            {
+                builder.Configuration.Sources.Clear(); // remove default appsettings.json
+                builder.Configuration.AddJsonFile(configFileName, optional: false, reloadOnChange: true);
+            }
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
