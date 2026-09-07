@@ -22,27 +22,29 @@ A condition consists of an expression that must evaluate to true to pass the tes
 |------------------------------------|--------------------------------------------------------------------------------------------|
 | Name                               | The signal name, that has been evaluated in the previous step               				  |
 | Value                              | The signal value, that has been evaluated in the previous step     						  |
-| Type                               | The signal type, that has been evaluated in the previous step                             .|
+| Type                               | The signal type, that has been evaluated in the previous step                              |
 
 ## The action
 
 The transformation action, will set properties on the signal, when the condition returned true. 
 It consists of the following properties, properties that are not set, will keep their original state:
 
-| Parameter         | Description                                                                          |
-|-------------------|--------------------------------------------------------------------------------------|
-| Name              | The name of the created signal.                                                      |
-| Unit              | The unit.											                                |
-| Description       | The description.                                                                     |
-| NameFormatter     | The name formatter.                                                                  |
-| ValueConverter    | The value converter.                                                                 |
-| SignalDataType    | The signal data type.                                                                |
-| Instrument        | The otel instrument.                                                                 |
-| Ignore            | If set to true, then the signal will be skipped and not further processed.           |
-| Output            | An output message that will be written to the standard log.                          |
-| Output.Message    | The message that should be written                                                   |
-| Output.Level      | The log level of the message: Debug, Trace, Information, Warninbg, Error, Critical   |
-| Output.Attributes | A dictionary of additional attributes that will be added to the log message.         |
+| Parameter         | Description                                                                                                                                      |
+|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| Name              | The name of the created signal.                                                                                                                  |
+| Unit              | The unit.											                                                                                               |
+| Description       | The description.                                                                                                                                 |
+| NameFormatter     | The name formatter.                                                                                                                              |
+| ValueConverter    | The value converter.                                                                                                                             |
+| SignalDataType    | The signal data type.                                                                                                                            |
+| Instrument        | The otel instrument.                                                                                                                             |
+| Ignore            | If set to true, then the signal will be skipped and not further processed.                                                                       |
+| AddAttributes     | Adds the provided attributes to the signal. {{< badge style="info" title="supports" value="embedded expressions" >}}.                            |
+| RemoveAttributes  | A list of attribute keys, that should be removed. If the key is not found it is ignored. Attributes are removed before new attributes are added. |
+| Output            | An output message that will be written to the standard log.                                                                                      |
+| Output.Message    | The message that should be written                                                                                                               |
+| Output.Level      | The log level of the message: Debug, Trace, Information, Warninbg, Error, Critical                                                               |
+| Output.Attributes | A dictionary of additional attributes that will be added to the log message.                                                                     |
 
 ## Example
 

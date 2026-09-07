@@ -415,7 +415,7 @@ namespace mqtt2otel.Manifest
 
                 if (checkResult)
                 {
-                    (instrumentName, signalType, ignore, rule) = action.Then.Apply(rule, instrumentName, signalType);
+                    (instrumentName, signalType, ignore, expandedAttributes, rule) = action.Then.Apply(rule, instrumentName, signalType, expandedAttributes, this.embeddedExpressionParser, context);
 
                     if (action.Then.Output != null)
                     {
@@ -444,7 +444,7 @@ namespace mqtt2otel.Manifest
                 nameContext.InternalVariables["Name"] = instrumentName;
                 instrumentName = this.payloadParser.Parse<string>(this.Name, rule.NameFormatter, nameContext);
             }
-
+            
             //Then write the data.
             if (value != null)
             {

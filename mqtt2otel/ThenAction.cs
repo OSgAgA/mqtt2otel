@@ -1,8 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
+using mqtt2otel.Helper;
 using mqtt2otel.Manifest;
+using mqtt2otel.Parser;
 using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata;
 using System.Text;
 
 namespace mqtt2otel
@@ -52,7 +55,22 @@ namespace mqtt2otel
         /// </summary>
         public OtelMetricInstrument? Instrument { get; set; }
 
+        /// <summary>
+        /// Gets or sets the output that should be created. Set to null to not prduce any output.
+        /// </summary>
         public OutputData? Output { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets a list of open telemetry attributes that should be added to the signal. Attributes are added
+        /// after <see cref="RemoveAttributes"/> have been removed. The attributes will be provided verbatim and will not be parsed.
+        /// </summary>
+        public List<OtelAttribute> AddAttributes { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets a list of attribute keys, that should be removed from the original message. If the key is not found
+        /// on the original message, the key is ignored. Key matching is case sensitive.
+        /// </summary>
+        public List<string> RemoveAttributes { get; set; } = new();
 
         /// <summary>
         /// Applies the action on a given rule.
@@ -60,8 +78,9 @@ namespace mqtt2otel
         /// <param name="rule">The rule to which the action should be applied.</param>
         /// <param name="name">The name of the signal</param>
         /// <param name="signalType">The type of the signal</param>
-        /// <returns>The new name, the data type, the ignored flag and the newly created rule.</returns>
-        public Tuple<string, SignalDataType, bool, OtelMetricRule> Apply(OtelMetricRule rule, string name, SignalDataType signalType)
+        /// <param name="expandedAttributes">The allready expanded attributes.</param>
+        /// <returns>The new name, the data type, the ignored flag, the expandedAttributes and the newly created rule.</returns>
+        public Tuple<string, SignalDataType, bool, IEnumerable<OtelAttribute>, OtelMetricRule> Apply(OtelMetricRule rule, string name, SignalDataType signalType, IEnumerable<OtelAttribute> expandedAttributes, IEmbeddedExpressionParser parser, ParsingContext context)
         {
             var result = rule.Clone();
 
@@ -70,8 +89,36 @@ namespace mqtt2otel
             result.ValueConverter = this.ValueConverter ?? rule.ValueConverter;
             result.Description = this.Description ?? rule.Description;
             result.Instrument = this.Instrument ?? rule.Instrument;
+            var attributes = new List<OtelAttribute>();
 
-            return new Tuple<string, SignalDataType, bool, OtelMetricRule> (this.Name ?? name, this.SignalDataType ?? signalType, this.Ignore, result);
+            foreach (var attribute in expandedAttributes)
+            {
+                if (!this.RemoveAttributes.Contains(attribute.Key))
+                {
+                    attributes.Add(attribute);
+                }
+            }
+
+            foreach (var attribute in this.AddAttributes)
+            {
+                OtelAttribute expandedAttribute;
+
+                if (attribute.Value != null)
+                {
+                    if (attribute.Value is string stringValue)
+                    {
+                        expandedAttribute = new OtelAttribute(attribute.Key, parser.Expand(stringValue, context));
+                    }
+                    else
+                    {
+                        expandedAttribute = new OtelAttribute(attribute.Key, attribute.Value);
+                    }
+
+                    attributes.Add(expandedAttribute);
+                }
+            }
+
+            return new Tuple<string, SignalDataType, bool, IEnumerable<OtelAttribute>, OtelMetricRule>(this.Name ?? name, this.SignalDataType ?? signalType, this.Ignore, attributes, result);
         }
     }
 }
