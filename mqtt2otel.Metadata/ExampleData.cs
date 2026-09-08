@@ -125,9 +125,9 @@ namespace mqtt2otel.ManifestExplorer.DTOs
 
             var result = new Dictionary<string, List<ExampleData>>();
 
-            foreach (var category in ExampleData.categories)
+            foreach (var category in ExampleData.categories.Order())
             {
-                result[category] = ExampleData.GetAll().Where( example => example.Category == category).ToList();
+                result[category] = ExampleData.GetAll().Where( example => example.Category == category).OrderBy( example => example.Id ).ToList();
             }
 
             return result;
