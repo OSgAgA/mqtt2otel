@@ -3,7 +3,7 @@ title: "mqtt2otel"
 layout: landing
 ---
 
-<div style="text-align:center;">
+<div class="shadowCard" style="text-align:center;">
 
   ![logo](/logo.png)
 

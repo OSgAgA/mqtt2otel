@@ -1,0 +1,31 @@
+
+.book-page .book-card {
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    background: var(--body-background);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    /* Fluent shadow */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+.mermaid {
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    background: var(--body-background);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    /* Fluent shadow */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+.shadowCard {
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    background: var(--body-background);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    /* Fluent shadow */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
