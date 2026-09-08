@@ -70,41 +70,83 @@ it to different otel endpoints that are optimized for different use cases.
 
 # Get started
 
-{{% columns %}}
-- {{< card >}}
-  ![two_worlds](/Tools.png)
+<p/>
 
-  ## Installation
-  Installation instructions can be found in the [documentation](https://mqtt2otel.org/docs/installation/).
+{{% columns ratio="3:1" %}}
+- {{< card >}}
+
+  ### **Documentation**
+  
+  Want to learn more? mqtt2otel has an extensive documentation available. Useful starting points are:
+
+    - The official [documentation](/docs/introduction).
+    - The [quickstart](/docs/introduction/quickstart) guide.
+    - [Installation instructions](https://mqtt2otel.org/docs/installation/)
+
+  For further questions, please have a look at [GitHub](https://github.com/OSgAgA/mqtt2otel/issues).
 
   {{< /card >}}
 
 - {{< card >}}
   ![sphere](/Book.png)
 
-  ## Documentation
-  Please refer to the official [documentation](/docs/introduction) for further info.
+  {{< /card >}}
 
+{{% /columns %}}
+
+{{% columns ratio="1:3" %}}
+- {{< card >}}
+  ![explorer](/logo.png)
+
+  {{< /card >}}
+
+- {{< card >}}
+
+  ### **mqtt2otel explorer**
+  Reading documentation tends to get boring? No worries. We got you covered.
+
+  [mqtt2otel explorer](https://explorer.mqtt2otel.org) lets you simulate incoming messages and play around with the processing manifests.
+
+  The explorer also contains a lot of [examples](https://explorer.mqtt2otel.org/examples) to get started.  
+
+  {{< /card >}}
+{{% /columns %}}
+
+
+{{% columns ratio="3:1" %}}
+- {{< card >}}
+
+  ### **Further information**
+  mqtt2otel is open source. Feel free to have a deeper look. The source code is available on [GitHub](https://github.com/OSgAgA/mqtt2otel).
+
+  **Feedback**
+
+  If you would like to report an issue or propose an enhancement, you can do this on [GitHub](https://github.com/OSgAgA/mqtt2otel/issues).
+
+  If you would like to join or start a discussion, or ask a question then welcome to our [discussions page](https://github.com/OSgAgA/mqtt2otel/discussions).
   {{< /card >}}
 
 - {{< card >}}
   ![dashboard](/Gears.png)
 
-  ## Source code
-  mqtt2otel is open source. The source code is available on [GitHub](https://github.com/OSgAgA/mqtt2otel).
+  {{< /card >}}
+
+{{% /columns %}}
+
+{{% columns ratio="1:3" %}}
+- {{< card >}}
+  ![tools](/tools.png)
+
+  {{< /card >}}
+
+- {{< card >}}
+
+  ### **Background**
+
+  To learn more about the underlying technologies, check out the following resources:
+
+    * [Official OpenTelemetry page](https://opentelemetry.io/)
+    * [Official MQTT page](https://mqtt.org/)
 
   {{< /card >}}
 {{% /columns %}}
-
-# Background
-
-To learn more about the underlying technologies, check out the following resources:
-
-* [Official OpenTelemetry page](https://opentelemetry.io/)
-* [Official MQTT page](https://mqtt.org/)
-
-# Feedback
-
-If you would like to report an issue or propose an enhancement, you can do this on [GitHub](https://github.com/OSgAgA/mqtt2otel/issues).
-
-If you would like to join or start a discussion, or ask a question then welcome to our [discussions page](https://github.com/OSgAgA/mqtt2otel/discussions).

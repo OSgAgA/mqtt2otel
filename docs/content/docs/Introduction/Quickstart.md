@@ -65,6 +65,13 @@ The syntax works as follows:
       - `Separator`: Defines the separator for hierarchy levels.  
         For example, `_` turns `Data.Temperature` into `Data_Temperature`.
 
+{{% hint info %}}
+  **Did you know?**
+
+  Have you noticed the explorer icon on the upper right corner of the example code? If you click on it, you will be redirected to the
+  **[mqtt2otel explorer](https://explorer.mqtt2otel.org/)**, where you can play around with the examples and inspect the generated output.
+{{% /hint %}}
+
 You can further adjust names using `NameFormatter`, and you can convert values—for example, to a different unit.
 
 Given the following payload:

@@ -6,8 +6,10 @@
 {{ $opts := dict "hl_lines" $hl }}
 
 {{ range hugo.Data.examples }}
-    {{ if eq .Setup.Id $id }}
+{{ if eq .Setup.Id $id }}
+    <div class="code-meta" data-id="{{ $id }}">
         {{ highlight (index .Setup $field) $lang $opts }}
-        {{ break }}
-    {{ end }}
+    </div>
+{{ break }}
+{{ end }}
 {{ end }}

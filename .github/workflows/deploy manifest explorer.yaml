@@ -12,7 +12,7 @@ permissions:
 # Only executed on pushes to the main branch.
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
     paths:
       - 'mqtt2otel.ManifestExplorer/**'
       - '.github/workflows/deploy manifest explorer.yaml'
@@ -188,6 +188,17 @@ jobs:
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
           cache-from: type=registry,ref=osgaga/mqtt2otel.manifestexplorer:cache
           cache-to: type=registry,ref=osgaga/mqtt2otel.manifestexplorer:cache,mode=max
+
+      # Trigger deployment via Sliplane API
+      - name: Deploy service via Sliplane
+        run: |
+          curl 'https://ctrl.sliplane.io/v0/projects/project_wzhepp0765zf/services/service_04hxchp5agat/deploy' \
+            --request POST \
+            --header 'Content-Type: application/json' \
+            --header "Authorization: Bearer ${{ secrets.SLIPLANE_TOKEN }}" \
+            --data "{
+              \"tag\": \"${{ steps.version.outputs.version }}\"
+            }"
 
       # Create a git tag with the version number. This tag is then used, next time the workflow is triggered
       # to create a new version number.
