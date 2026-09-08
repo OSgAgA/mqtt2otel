@@ -12,7 +12,7 @@ permissions:
 # Only executed on pushes to the main branch.
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
     paths:
       - 'mqtt2otel.ManifestExplorer/**'
       - '.github/workflows/deploy manifest explorer.yaml'
