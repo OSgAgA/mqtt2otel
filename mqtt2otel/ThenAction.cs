@@ -61,6 +61,12 @@ namespace mqtt2otel
         public OutputData? Output { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets a value indicating whether the open telemetry attributes should be cleared. This is executed before any new attribute
+        /// is added via <see cref="AddAttributes"/>.
+        /// </summary>
+        public bool ClearAttributes { get; set; } = false;
+
+        /// <summary>
         /// Gets or sets a list of open telemetry attributes that should be added to the signal. Attributes are added
         /// after <see cref="RemoveAttributes"/> have been removed. The attributes will be provided verbatim and will not be parsed.
         /// </summary>
@@ -84,18 +90,21 @@ namespace mqtt2otel
         {
             var result = rule.Clone();
 
-            result.Unit = this.Unit ?? rule.Unit;
+            result.Unit = this.Unit == null ? rule.Unit : parser.Expand(this.Unit, context);
             result.NameFormatter = this.NameFormatter ?? rule.NameFormatter;
             result.ValueConverter = this.ValueConverter ?? rule.ValueConverter;
-            result.Description = this.Description ?? rule.Description;
+            result.Description = this.Description == null ? rule.Description : parser.Expand(this.Description, context);
             result.Instrument = this.Instrument ?? rule.Instrument;
             var attributes = new List<OtelAttribute>();
 
-            foreach (var attribute in expandedAttributes)
+            if (!this.ClearAttributes)
             {
-                if (!this.RemoveAttributes.Contains(attribute.Key))
+                foreach (var attribute in expandedAttributes)
                 {
-                    attributes.Add(attribute);
+                    if (!this.RemoveAttributes.Contains(attribute.Key))
+                    {
+                        attributes.Add(attribute);
+                    }
                 }
             }
 
@@ -118,7 +127,12 @@ namespace mqtt2otel
                 }
             }
 
-            return new Tuple<string, SignalDataType, bool, IEnumerable<OtelAttribute>, OtelMetricRule>(this.Name ?? name, this.SignalDataType ?? signalType, this.Ignore, attributes, result);
+            return new Tuple<string, SignalDataType, bool, IEnumerable<OtelAttribute>, OtelMetricRule>(
+                this.Name == null ? name : parser.Expand(this.Name, context), 
+                this.SignalDataType ?? signalType, 
+                this.Ignore, 
+                attributes, 
+                result);
         }
     }
 }
