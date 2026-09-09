@@ -48,16 +48,15 @@ It has the following parameters:
 
 ## The export processor type
 
-{{% hint info %}}
-**ExportProcessorType**  
-
-It's important to understand the differences in the processor types to ensure the system behaves as you would expect:
-
-* The batch type will collect messages in a batch and then send them together to the otel endpoint. This reduces network traffic, but increases
-  latency. This is typically a good choice if you don`t need realtime data.
-* The simple type will send the messages directly to the server. This may produce a lot of network traffic, but has a low latency. This may be 
-  your best choice if you need real time data.
-{{% /hint %}}
+> [!NOTE]
+> **ExportProcessorType**  
+> 
+> It's important to understand the differences in the processor types to ensure the system behaves as you would expect:
+> 
+> * The batch type will collect messages in a batch and then send them together to the otel endpoint. This reduces network traffic, but increases
+>   latency. This is typically a good choice if you don`t need realtime data.
+> * The simple type will send the messages directly to the server. This may produce a lot of network traffic, but has a low latency. This may be 
+>   your best choice if you need real time data.
 
 ## Using multiple connections
 

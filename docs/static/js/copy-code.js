@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
         explorerBtn.classList.add("explorer-button");
         explorerBtn.innerHTML = `
       <span class="explorer-icon">
-        <img src="/logo-new.png" style="width: 25px;"/>
+        <img src="/logo.png" style="width: 25px;"/>
       </span>
       <span class="explorer-text"></span>
     `;
@@ -86,6 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Insert both buttons
         //
         wrapper.insertBefore(copyBtn, container);
-        wrapper.insertBefore(explorerBtn, container);
+        if (id) wrapper.insertBefore(explorerBtn, container);
     });
 });

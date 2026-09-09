@@ -14,7 +14,7 @@ When working with topics, you can choose between two different parsers:
 The TopicPath syntax is meant for complex scenarios, where you need detailed control over what is happening, or when mixing different sources, 
 like payload and topic information. For simpler use cases please use the TopicAttribute.
 
-# The TopicAttribute syntax
+## The TopicAttribute syntax
 
 Metrics and otel processors support the 'TopicAttribute' parameter, that is able to map topics to open telemetry attributes. 
 
@@ -40,7 +40,7 @@ This usually becomes clearer when looking at some examples:
 | "logs/sensor/1234"                    | "\_/\_/Device/\_"      |  <NONE> 						 | Ignore the first two segments, read next as Device, then ignore next segment, which does not exist, so an empty string is returned.
 | "logs/sensor/1234/temperature"        | "\_/\  /Device/\_"     |  <NONE> 						 | Ignore the first segment, then read the next segment as an attribute that only contains whitespace -> this is not allowed, so an empty string is returned.
 
-# The TopicPath syntax
+## The TopicPath syntax
 
 The topic path pattern consists of two possible token:
 
@@ -69,3 +69,25 @@ This usually becomes clearer when looking at some examples:
 | "this/is/a/test" | "is/[1]"        | "test"	 | Skips the first segment that has the key "is", skips one segment and reads the following segment.
 | "this/is/is/test"| "is"            | "is"		 | Skips the first segment that has the key "is" and reads the following segment.
 | "this/is/is/test"| "[2]/is"        | "test"	 | Skips the first two segments and then skips the first segment that has the key "is" and reads the following segment.
+
+## Example
+
+This example sets attributes based on the provided topic using `TopicAttributes` and sets the name of the signal to the id that is part of
+the topic using `TopicPath`syntax.
+
+The topic is looks like this.
+
+{{< exampleCode id="doc-16" field="Topic" lang="yaml">}}
+
+It will be processed using the following processor:
+
+{{< exampleCode id="doc-16" field="Manifest" lang="yaml">}}
+
+As a result the following attributes will be added to the signal:
+
+| Key                | Value
+|--------------------|-------------------|
+| location           | germany           |
+| device.Id          | 1234              |
+
+The signal will get the name: `Sensor.1234.Temperature`.

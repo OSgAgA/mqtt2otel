@@ -10,16 +10,21 @@ After a metric is prepared, it is possible to convert the created value (e.g. to
 
 To do this the Otel.Metric section inside a processor has two properties:
 
-* ValueConverter: Used to convert a metric value.
-* NameFormatter: Formats a metric name.
+* **ValueConverter**: Used to convert a metric value.
+* **NameFormatter**: Formats a metric name.
 
-These properties use [expressions](/docs/expressions) to fullfill there needs. Additional to the usual functions a variable containing the 
-current value (either \[Name\] or \[Value\]) is provided.
+> [!NOTE]
+> ## Additional expression context
+>
+> These properties use [expressions](/docs/expressions) to fulfill their purpose and can access all details of the MQTT
+> message. In addition to the usual functions and constants, a constant containing the current value — either `[Name]` for `NameFormatter` or `[Value]` 
+> for `ValueConverter`—
+> is available.
 
 Often these functions are used in the context of `ParseAs` methods, as these are able to parse e.g. a full json and automatically create 
 metrics out of them, but you may want to interfere with the naming of your signals, or convert values to other units.
 
-## Converter
+## ValueConverter
 
 A converter is meant to take a metric value and convert it to another value (typically another unit). The converter is executed, after the
 expression of the Value property is executed.

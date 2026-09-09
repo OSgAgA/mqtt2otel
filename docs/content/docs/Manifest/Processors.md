@@ -160,15 +160,13 @@ It consists of the following parameters:
 
 ### Example:
 
-```yaml
-      Metrics:
-        - Name: "Energy_Power_W"
-          Description: "The current power consumption at the time of measurement in Watt."
-          SignalDataType: Float
-          Instrument: Gauge
-          Unit: "W"
-          Value: "JSONPATH('$.ENERGY.Power')"
-```
+Given the following payload:
+
+{{< exampleCode id="doc-17" field="Payload" lang="yaml">}}
+
+We can process this via the following processor:
+
+{{< exampleCode id="doc-17" field="Manifest" lang="yaml">}}
 
 ### Otel instruments
 
@@ -205,24 +203,32 @@ It consists of:
 * NameOnly: The created name will usually reflect the full hierarchy (e.g. data.Temperature). If this is not wanted and only
   the name of the property (e.g. Temperature) should be used, then this value must be set to true.
 
+> [!CAUTION]
+> ## Be careful
+>
+> When the `ParseAs` property is used, the `Name` value of the signal will be overridden, even if it is explicitly set.
+> The `SignalDataType` will be detected automatically. However, if a data type is explicitly defined in the `Otel`
+> section, that explicit data type will be used for all signals.
+>
+> When a signal has the signal data type string, it will be ignored, silently!
+
 When using a json type to parse the following payload:
 
-```yaml
-{
-   MachineA:
-   {
-      Temperature: 42,
-      Pressure: 10
-   }
-}
-```
+{{< exampleCode id="doc-18" field="Payload" lang="yaml">}}
 
 Two metrics will be created:
 
 * MachineA.Temperature: 42 (or Temperature: 42 if NameOnly is true)
 * MachineA.Pressure: 10 (or Pressure: 10 if NameOnly is true)
 
-You can convert the values using a `ValueConverter` and format the signal name using a `NameFormatter`.
+> [!Note]
+> ## Interacting with the created names and values
+>
+> You can interact with the `ParseAs`results by convert the values using a [`ValueConverter`](/docs/expressions/converter-and-formatter/#valueconverter)) and 
+> formatting the signal name using a [`NameFormatter`](/docs/expressions/converter-and-formatter/#nameformatter).
+
+
+
 
 ### Histogram bucket boundaries
 
@@ -262,16 +268,11 @@ It consists of the following parameters:
 
 ### Example:
 
-```yaml {hl_lines=[3,4]}
-      Logs:
-        - Name: "Logging"
-          PayloadType: Json
-          Transform: "GROK('%{TIME:otel_timestamp} %{WORD:category}: %{GREEDYDATA:otel_message}')"
-```
+{{< exampleCode id="doc-19" field="Manifest" lang="yaml" hl_lines="[10,11]">}}
 
 ### PayloadType Json
 
-Whe using the payload type `Json` the created json parameters will be interpreted as attributes, that are added to the log message. Some parameters (starting
+When using the payload type `Json` the created json parameters will be interpreted as attributes, that are added to the log message. Some parameters (starting
 with `otel_`) have a special meaning and are not treated as attributes:
 
 | Parameter       | Description                                                                                              |

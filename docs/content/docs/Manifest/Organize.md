@@ -43,10 +43,9 @@ file `OtelServers.yaml`.
     EnableTls: false
 ```
 
-{{% hint info %}}
-Please be aware, that the import files are lists. Even if you want to only import one object, you have to provide it as a list and not a single
-object. So the `-` are important!
-{{% /hint %}}
+> [!NOTE]
+> Please be aware, that the import files are lists. Even if you want to only import one object, you have to provide it as a list and not a single
+> object. So the `-` are important!
 
 ## Additional functions
 

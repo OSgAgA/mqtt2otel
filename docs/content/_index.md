@@ -105,9 +105,13 @@ it to different otel endpoints that are optimized for different use cases.
   ### **mqtt2otel explorer**
   Reading documentation tends to get boring? No worries. We got you covered.
 
-  [mqtt2otel explorer](https://explorer.mqtt2otel.org) lets you simulate incoming messages and play around with the processing manifests.
-
-  The explorer also contains a lot of [examples](https://explorer.mqtt2otel.org/examples) to get started.  
+  [mqtt2otel explorer](https://explorer.mqtt2otel.org) lets you simulate MQTT messages, experiment with processors, and instantly see how your data 
+  is transformed. 
+  
+  The Explorer also includes an [example library](https://explorer.mqtt2otel.org/examples) full of ready‑to‑use patterns and ideas. 
+  
+  Wherever the [documentation](/docs/introduction) contains an example, you can jump directly into the Explorer via the integrated button and inspect 
+  the example interactively.
 
   {{< /card >}}
 {{% /columns %}}
@@ -117,7 +121,7 @@ it to different otel endpoints that are optimized for different use cases.
 - {{< card >}}
 
   ### **Further information**
-  mqtt2otel is open source. Feel free to have a deeper look. The source code is available on [GitHub](https://github.com/OSgAgA/mqtt2otel).
+  mqtt2otel is open source. Feel free to have a deeper look into the code. The source code is available on [GitHub](https://github.com/OSgAgA/mqtt2otel).
 
   **Feedback**
 
@@ -127,7 +131,7 @@ it to different otel endpoints that are optimized for different use cases.
   {{< /card >}}
 
 - {{< card >}}
-  ![dashboard](/Gears.png)
+  ![gears](/Gears.png)
 
   {{< /card >}}
 

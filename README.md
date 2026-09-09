@@ -1,6 +1,6 @@
 <div style="text-align:center;">
 
-  ![logo](docs/static/logo_small.png)
+  ![logo](docs/static/logo.png)
 
 </div>
 
@@ -11,23 +11,30 @@
 and infrastructure monitoring. The tool can subscribe to MQTT broker topics, process and enrich messages with 
 additional information, and then generate Otel metrics or logs for further analysis using standard tools.
 
-# Architecture
-
-mqtt2otel does not include an embedded MQTT broker or OpenTelemetry Collector. These components must be provided externally (this may change in future versions).
-
-A typical setup looks like this:
+# Overview
 
 ```mermaid
+---
+config:
+  flowchart:
+    curve: stepBefore
+---
+
 flowchart LR
-    IoT1(IoT device) -->|Publish| broker(Mqtt broker)
-    IoT2(IoT device) -->|Publish| broker
-    IoT3(IoT device) -->|Publish| broker
-    mqtt2otel(mqtt2otel server) --> |Subscribe| broker
-    broker --> |Send| mqtt2otel(mqtt2otel server)
-    mqtt2otel -->|send| otel(Open telemetry endpoint<br/>e.g. an otel collector)
-    otel -->|retrieve| mqtt2otel
-    otel -->|send| dashboard(Dashboard tool)
-    dashboard-->|retrieve| otel
+  mqttBroker[mqtt broker]
+  subgraph mqtt2otel
+    mqtt2otelmetric[metric<br/>attributes:<br/> device = 'sensor A'<br/>temp = 42°C]
+    mqtt2otellog[log<br/>attributes:<br/> device = 'sensor A'<br/>timestamp = 10:23:15<br/>loglevel = Info<br/> message = 'operation completed']
+  end
+  otelCollector[otelCollector]
+  metricsDashboard[metrics dashboard]
+  logDashboard[log dashboard]
+  
+  mqttBroker -->|temp: 107.6°F| mqtt2otelmetric
+  mqttBroker -->|10:23:15 Info operation completed| mqtt2otellog
+  mqtt2otel -->|logs| logDashboard
+  mqtt2otel -->|metrics| metricsDashboard
+  mqtt2otel -->|metrics and logs| otelCollector
 ```
 
 # Homepage
