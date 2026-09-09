@@ -52,7 +52,7 @@ jobs:
 
       # Run tests and generate TestResults file.
       - name: Test
-        run: dotnet test --report-xunit-nunit --report-xunit-nunit-filename "TestResults.xml"
+        run: pwd; dotnet test --report-xunit-nunit --report-xunit-nunit-filename "TestResults.xml"
 
       # Publish the test report.
       - name: Publish Test Report
@@ -63,7 +63,7 @@ jobs:
         if: failure() || success() 
         with:
           name: .NET Tests
-          path: TestResults/TestResults.xml
+          path: mqtt2otel/TestResults/TestResults.xml
           reporter: dotnet-nunit
 
       # Upload test results as artifacts.
