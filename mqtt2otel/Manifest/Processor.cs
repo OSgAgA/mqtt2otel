@@ -346,7 +346,6 @@ namespace mqtt2otel.Manifest
             {
                 case SignalDataType.Default:
                     object objValue = value != null ? value : this.payloadParser.Parse(rule.Name, rule.Value, context);
-                    if (objValue.GetType() == typeof(string)) break;
                     UpdateSignalStoreValue( subscription, rule, name, type, objValue, context, expandedAttributes );
                     break;
                 case SignalDataType.Float:
@@ -370,6 +369,8 @@ namespace mqtt2otel.Manifest
                     UpdateSignalStoreValue(subscription, rule, name, type, decimalValue, context, expandedAttributes);
                     break;
                 case SignalDataType.String:
+                    string stringValue = value != null ? (value.ToString() ?? string.Empty) : this.payloadParser.Parse<string>(rule.Name, rule.Value, context);
+                    UpdateSignalStoreValue(subscription, rule, name, type, stringValue, context, expandedAttributes);
                     break;
                 case SignalDataType.DateTime:
                     DateTime dateTimeValue = value != null ? (DateTime)value : this.payloadParser.Parse<DateTime>(rule.Name, rule.Value, context);
@@ -449,11 +450,15 @@ namespace mqtt2otel.Manifest
             if (value != null)
             {
                 signalType = rule.SignalDataType == SignalDataType.Default ? TypeHelper.ConvertTypeToSignalDataType(value.GetType()) : rule.SignalDataType;
-                TypeHelper.CallMethodWithGenericType(
-                    this.dataStores.SignalStore,
-                    signalType,
-                    "UpdateValue",
-                    new object[] { subscription, rule, instrumentName, signalType, context, value, expandedAttributes });
+
+                if (signalType != SignalDataType.String)
+                {
+                    TypeHelper.CallMethodWithGenericType(
+                        this.dataStores.SignalStore,
+                        signalType,
+                        "UpdateValue",
+                        new object[] { subscription, rule, instrumentName, signalType, context, value, expandedAttributes });
+                }
             }
         }
 
