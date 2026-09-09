@@ -52,7 +52,7 @@ jobs:
 
       # Run tests and generate TestResults file.
       - name: Test
-        run: dotnet test --logger "trx;LogFileName=TestResults.trx"
+        run: dotnet test --report-trx --report-trx-filename "TestResults.trx"
 
       # Publish the test report.
       - name: Publish Test Report
