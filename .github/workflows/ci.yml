@@ -63,7 +63,7 @@ jobs:
         if: failure() || success() 
         with:
           name: .NET Tests
-          path: mqtt2otel.Tests/TestResults/TestResults.xml
+          path: TestResults/TestResults.xml
           reporter: dotnet-nunit
 
       # Upload test results as artifacts.
