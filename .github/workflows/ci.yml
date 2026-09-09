@@ -52,9 +52,8 @@ jobs:
 
       # Run tests and generate TestResults file.
       - name: Test
-        run: dotnet test --use-microsoft-testing-platform \
-            --report-trx \
-            --report-trx-filename "TestResults.trx"
+        run: dotnet test --report-json --report-json-filename "TestResults.json"
+
 
       # Publish the test report.
       - name: Publish Test Report
@@ -65,8 +64,8 @@ jobs:
         if: failure() || success() 
         with:
           name: .NET Tests
-          path: mqtt2otel.Tests/TestResults/TestResults.trx
-          reporter: dotnet-trx
+          path: mqtt2otel.Tests/TestResults/TestResults.json
+          reporter: dotnet-json
 
       # Upload test results as artifacts.
       - name: Upload Test Results
