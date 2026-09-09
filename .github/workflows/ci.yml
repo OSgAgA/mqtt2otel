@@ -52,8 +52,7 @@ jobs:
 
       # Run tests and generate TestResults file.
       - name: Test
-        run: dotnet test --report-json --report-json-filename "TestResults.json"
-
+        run: dotnet test --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json"
 
       # Publish the test report.
       - name: Publish Test Report
@@ -72,4 +71,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: TestResults/TestResults.trx
+          path: TestResults/TestResults.json
