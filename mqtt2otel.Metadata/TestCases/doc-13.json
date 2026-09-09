@@ -1,0 +1,38 @@
+{
+  "Setup": {
+    "Id": "doc-13",
+    "Name": "Use NameFormatter and ValueConverter",
+    "Description": "A simple example on how to use a NameFormatter and a ValueConverter when parsing a json document.",
+    "Topic": "sensor/temperature/1234",
+    "Payload": "{\n   Processor:\n   {\n      Temperature: 212\n   }\n}",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Use name formatter and value converter\u0022\n    Description: \u0022Renames the signal name be using camel case and converts the value from fahrenheit to celsius.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/temperature/\u002B\u0022\n    Otel:\n      Metrics:\n        - Instrument: Gauge\n          NameFormatter: \u0022ToCamelCase([Name])\u0022\n          ValueConverter: \u0022([Value] -32) * 5/9\u0022\n          ParseAs: \n             Type: Json",
+    "Category": "Documentation",
+    "Tags": [
+      "Json"
+    ],
+    "CreateExample": false,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "processorTemperature",
+        "OtelServer": "0a912524-e756-46ff-907d-2bcc7b45d4f3",
+        "MeterVersion": "",
+        "Description": "",
+        "Unit": "",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 100,
+            "StartTime": "2026-09-07T18:16:57.5650528+00:00",
+            "EndTime": "2026-09-07T18:16:57.5677262+00:00",
+            "Tags": {}
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

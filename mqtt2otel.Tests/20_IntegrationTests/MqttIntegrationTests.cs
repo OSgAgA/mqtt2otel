@@ -68,10 +68,10 @@ namespace mqtt2otel.Tests._20_IntegrationTests
 
             var result = await tcs.Task;
 
-            Assert.Equal(topic, result.Topic);
-            Assert.Equal(payload, result.Payload);
-            Assert.Equal("Temperature", result.Subscription.Name);
-            Assert.Equal("Test processor", result.Processor.Name);
+            Assert.Equal(topic, result?.Message.Topic);
+            Assert.Equal(payload, result?.Message.Payload);
+            Assert.Equal("Temperature", result?.Subscription?.Name);
+            Assert.Equal("Test processor", result?.Processor?.Name);
         }
 
         [Fact]
@@ -123,10 +123,10 @@ namespace mqtt2otel.Tests._20_IntegrationTests
 
             var result = await tcs.Task;
 
-            Assert.Equal(topic, result.Topic);
-            Assert.Equal(payload, result.Payload);
-            Assert.Equal("Temperature", result.Subscription.Name);
-            Assert.Equal("Test processor", result.Processor.Name);
+            Assert.Equal(topic, result.Message.Topic);
+            Assert.Equal(payload, result.Message.Payload);
+            Assert.Equal("Temperature", result?.Subscription?.Name);
+            Assert.Equal("Test processor", result?.Processor?.Name);
         }
 
         [Fact]
@@ -182,10 +182,10 @@ namespace mqtt2otel.Tests._20_IntegrationTests
 
             var result = await tcs.Task;
 
-            Assert.Equal(topic, result.Topic);
-            Assert.Equal(payload, result.Payload);
-            Assert.Equal("Temperature", result.Subscription.Name);
-            Assert.Equal("Test processor", result.Processor.Name);
+            Assert.Equal(topic, result.Message.Topic);
+            Assert.Equal(payload, result.Message.Payload);
+            Assert.Equal("Temperature", result?.Subscription?.Name);
+            Assert.Equal("Test processor", result?.Processor?.Name);
         }
 
         [Fact]
@@ -249,15 +249,15 @@ namespace mqtt2otel.Tests._20_IntegrationTests
 
             Assert.Equal(2, results.Count);
 
-            Assert.Equal(topic, results[0].Topic);
-            Assert.Equal(payload, results[0].Payload);
-            Assert.Equal("Temperature", results[0].Subscription.Name);
-            Assert.Equal("First processor", results[0].Processor.Name);
+            Assert.Equal(topic, results[0].Message.Topic);
+            Assert.Equal(payload, results[0].Message.Payload);
+            Assert.Equal("Temperature", results[0]?.Subscription?.Name);
+            Assert.Equal("First processor", results[0]?.Processor?.Name);
 
-            Assert.Equal(topic, results[1].Topic);
-            Assert.Equal(payload, results[1].Payload);
-            Assert.Equal("Temperature", results[1].Subscription.Name);
-            Assert.Equal("Second processor", results[1].Processor.Name);
+            Assert.Equal(topic, results[1].Message.Topic);
+            Assert.Equal(payload, results[1].Message.Payload);
+            Assert.Equal("Temperature", results[1]?.Subscription?.Name);
+            Assert.Equal("Second processor", results[1]?.Processor?.Name);
 
         }
     }

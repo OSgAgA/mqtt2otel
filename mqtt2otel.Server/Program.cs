@@ -1,3 +1,4 @@
+using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
 using mqtt2otel.InternalLogging;
 using mqtt2otel.InternalMetrics;
@@ -28,6 +29,7 @@ namespace mqtt2otel.Server
             builder.Services.AddSingleton<ILoggerStore, LoggerStore>();
             builder.Services.AddSingleton<IPayloadParser, PayloadParser>();
             builder.Services.AddSingleton<IPayloadTransformation, PayloadTransformation>();
+            builder.Services.AddSingleton<IEmbeddedExpressionParser, EmbeddedExpressionParser>();
             builder.Services.AddSingleton<IObjectFactory, Manifest.ObjectFactory>();
             builder.Services.AddSingleton<IManifestCoordinator, ManifestCoordinator>();
             builder.Services.AddSingleton<IOtelCoordinator, OtelCoordinator>();

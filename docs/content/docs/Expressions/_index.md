@@ -6,13 +6,19 @@ bookCollapseSection: false
 
 # Expressions and transformations
 
-Expressions and transformations are the tools with which a message payload, received from mqtt can be processed. The difference between the two is:
+Expressions and transformations are the tools with which message data (payload, properties, or topics), received from mqtt can be processed. The difference between the two is:
 
 * Expressions are used to extract or calculate a value from a payload
 * Transformations are used to transform a payload into a different format, e.g. from text to json.
 
 Parameters supporting expressions or transformation can be identified by the tag {{< badge style="info" title="supports" value="expressions" >}} or 
 {{< badge style="info" title="supports" value="transformation" >}}.
+
+In fields that supports text input, there is a special syntax for embedding expressions inside a text field. The expression must then be wrapped
+inside a `$(expression)`. So for example to include the payload inside a text, you can use `This is the payload: $(Payload()).`. Parameters supporting
+embedded expressions can be identified by the tag: {{< badge style="info" title="supports" value="embedded expressions" >}}.
+
+All parameters that support embedded expressions support [variables](/docs/manifest/variables) as well.
 
 ## Expressions
 
@@ -44,32 +50,89 @@ To access the temperature we use the [JSONPATH](https://www.rfc-editor.org/rfc/r
 parameter inside the `Processor` parameter. To do this we have to use a function called `JSONPATH`:
 
 ```yaml
-Value: "JSONPATH('$.Processor.Temperature')"
+Value: "JsonPath('$.Processor.Temperature')"
 ```
 
 That will return the value 42.5. The data type returned will be the data type defined in `Processors.Otel.Metrics.Metric.SignalDataType`. If you want to
 change the data type to e.g. `int` you can add another parameter to the function stating the data type:
 
 ```yaml
-Value: "JSONPATH('int', '$.Processor.Temperature')"
+Value: "ToInt(JsonPath('$.Processor.Temperature'))"
 ```
 
 This will return the value 42.
 
+> [!Note]
+> **Important**
+>
+> The name of functions is case-insensitive.
+
 ### Available Functions
 
-| Function   | Example                   | Description                                                                                                                                          |
-| ---------- | ------------------------- | ----------------------------------------                                                                                                             |
-| `JSONPATH` | `JSONPATH('$.Root')`      | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax                                                                        |
-| `XPATH`    | `XPATH('/root/child[1]')` | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax                                                                                  |
-| `REGEX`    | `REGEX('[0-9]+')`         | Extracts data using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
-| `VAR`      | `VAR('MyVariable')`       | Returns the variable with the given name. No `$` is needed before the variable name.                                                                 |
-| `PAYLOAD`  | `PAYLOAD()`               | Returns the raw payload                                                                                                                              |
-| `CONST`    | `CONST('42')`             | Returns a constant value                                                                                                                             |
+**Mqtt message parsing**
+
+| Function          | Example                                           | Description                                                                                                                                          |
+| ------------------| ------------------------------------------------- | ----------------------------------------                                                                                                             |
+| `JsonPath`        | `JsonPath('$.Root')`                              | Extracts data using [JSONPATH](https://www.rfc-editor.org/rfc/rfc9535) syntax from a json payload.                                                   |
+| `XPath`           | `XPath('/root/child[1]')`                         | Extracts data using [XPath](https://www.w3.org/TR/xpath-31/) syntax from a xml payload                                                               |
+| `TopicPath`       | `TopicPath('[1]')`                                | Extracts data using [TopicPath](/docs/expressions/topicparsing/#the-topicpath-syntax) syntax from the message topic.                                                                          |
+| `UserProperty`    | `UserProperty('Name')`                            | Accesses an mqtt user property via its name. If the name exists multiple times, the first match is used. If the name does not exist, the function returns an empty string.                                                                                  |
+| `RegEx`           | `RegEx('[0-9]+')`                                 | Extracts data from payload using a [regular expression](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference). If the regular expression returns more than one match, then the first match is used. |
+| `Var`             | `Var('MyVariable')`                               | Returns the variable with the given name. No `$` is needed before the variable name.                                                                 |
+| `Payload`         | `Payload()`                                       | Returns the raw payload                                                                                                                              |
+
+**String functions**
+
+| Function          | Example                                           | Description                                                                                                                                          |
+| ------------------| ------------------------------------------------- | ----------------------------------------                                                                                                             |
+| `ToLower`         | `ToLower('My Signal')` => my signal               | Returns lower case value                                                                                                                             |
+| `ToUpper`         | `ToUpper('My Signal')` => MY SIGNAL               | Returns upper case value                                                                                                                             |
+| `ToPascalCase`    | `ToPascalCase('My Signal')` => MySignal           | Returns pascal case value                                                                                                                             |
+| `ToCamelCase`     | `ToCamelCase('My Signal')` => mySignal            | Returns camel case value                                                                                                                             |
+| `ToSnakeCase`     | `ToSnakeCase('My Signal')` => my_signal           | Returns snake case value                                                                                                                             |
+| `ToKebabCase`     | `ToKebabCase('My Signal')` => my-signal           | Returns kebab or hyphen case value                                                                                                                             |
+| `ToTrainCase`     | `ToTrainCase('My Signal')` => My-Signal           | Returns train case value                                                                                                                             |
+| `Trim`            | `Trim('    Test  ')` => "Test"                    | Removes leading and trailing whitespace                                                                                                                            |
+| `TrimStart`       | `TrimStart('  Test  ')` => "Test  "               | Removes leading whitespace                                                                                                                             |
+| `TrimEnd`         | `TrimEnd('  Test  ')` => "  Test"                 | Remove trailing whitespace                                                                                                                             |
+| `StartsWith`      | `StartsWith('MyValue', 'My')` => true             | Tests, whether a string starts with the provided pattern.                                                                                                                             |
+| `EndsWith`        | `StartsWith('MyValue', 'Value')` => true          | Tests, whether a string ends with the provided pattern.                                                                                            |
+| `Contains`        | `Contains('MyValue', 'Val')` => true              | Tests, whether a string contains the provided pattern.                                                                                                                             |
+| `Replace`         | `Replace('Test', 'e', 'ee')` => Teest             | Replaces strings inside a string.                                                                                                                             |
+| `MatchesWildcard` | `MatchesWildcard('My Signal', '*Signal')` => true | Tests, whether a string matches a wildcard pattern.                                                                                                                             |
+| `MatchesRegEx`    | `MatchesRegEx('My Signal', '.*')` => true         | Tests, whether a string matches a regular expression.                                                                                                                              |
+
+**Type conversion**
+
+| Function          | Example                                           | Description                                                                                                                                          |
+| ------------------| ------------------------------------------------- | ----------------------------------------                                                                                                             |
+| `ToInt`           | `ToInt(42.1)` => 42                               | Converts a value to integer        |
+| `ToLong`          | `ToLong(42.1)` => 42L                             | Converts a value to a long integer |
+| `ToFloat`         | `ToInt(42)` => 42.0                               | Converts a value to float          |
+| `ToDouble`        | `ToInt(42)` => 42.00                              | Converts a value to double         |
+| `ToString`        | `ToInt(42)` => "42"                               | Converts a value to string         |
+
+### Constants
+
+Some constants are always available when evaluating an expression. They are enclosed in \[\], e.g. [Pi].
+
+> [!Note]
+> **Important**
+>
+> The name of constants is case-insensitive.
+
+The following constants are allways available:
+
+| Constant | Example         | Description
+|----------|-----------------|---------------------------------
+| Pi       | [Pi] => 3.14... | The mathematical constant pi
+| e        | [e] => 2.718... | the euler number
+
+In some contexts additional constants may be available, e.g. in a `NameFormatter` or in a `ValueConverter`.
 
 ### Calculations
 
-We’ve already used an expression to parse the payload with `JSONPATH('$.Processor.Temperature')`. However, you can also perform 
+We’ve already used an expression to parse the payload with `JsonPath('$.Processor.Temperature')`. However, you can also perform 
 mathematical calculations. For example, to convert the temperature from Celsius to Fahrenheit, you can use this expression:
 
 ```yaml
@@ -123,16 +186,12 @@ With that the payload will be transformed in a log message that looks like this:
 This message can than be passed to the log processor. Be careful to set `PayloadType: Json` for getting the expected results.
 The usage is similar to expressions:
 
-```yaml {hl_lines=[3,4]}
-      Logs:
-        - Name: "Logging"
-          PayloadType: Json
-          Transform: "DISSECT('%{otel_timestamp:DateTime} [%{otel_loglevel}] [{server_name}] %{otel_message}')"
-```
+{{< exampleCode id="doc-19" field="Manifest" lang="yaml" hl_lines="[10,11]">}}
 
 ### Available Functions
 
 | Function   | Example                              | Description                                                                                                                   |
 | ---------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------|
-| `DISSECT`  | `DISSECT('%{otel_message}')`         | Converts a payload to json using [Exgtended dissect](https://github.com/OSgAgA/Dissect.Extended.Net) syntax                   |                                
+| `DISSECT`  | `DISSECT('%{otel_message}')`         | Converts a payload to json using [Extended dissect](https://github.com/OSgAgA/Dissect.Extended.Net) syntax                   |                                
 | `GROK`     | `GROK('%{GREEDYDATA:otel_message}')` | Converts a payload to json using [GROK](https://www.elastic.co/docs/reference/logstash/plugins/plugins-filters-grok) syntax   |
+ 

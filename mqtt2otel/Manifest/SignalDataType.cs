@@ -21,6 +21,8 @@ namespace mqtt2otel.Manifest
 
         String = 5,
 
-        DateTime = 6
+        DateTime = 6,
+
+        Default = 99,
     }
 }

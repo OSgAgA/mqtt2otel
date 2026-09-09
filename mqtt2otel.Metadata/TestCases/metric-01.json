@@ -1,0 +1,40 @@
+{
+  "Setup": {
+    "Id": "metric-01",
+    "Name": "Use Json path",
+    "Description": "A simple example on how to parse a json paylog to create detailed metrics manually.",
+    "Topic": "sensor/1234/data",
+    "Payload": "{\r\n   Processor:\r\n   {\r\n      Temperature: 42\r\n   }\r\n}",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Read Json payload\u0022\n    Description: \u0022Read a single metric from a json payload.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/data\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          Instrument: Gauge\n          Unit: \u0022C\u0022\n          Attributes:\n            - Key: \u0022test\u0022\n              Value: \u0022value\u0022\n          Value: \u0022JSONPATH(\u0027$.Processor.Temperature\u0027)\u0022",
+    "Category": "Metrics",
+    "Tags": [
+      "Json"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Processor.Temperature",
+        "OtelServer": "967b4042-57ce-453a-8a08-17ea6f2d3ae0",
+        "MeterVersion": "",
+        "Description": "The current processor temperature.",
+        "Unit": "C",
+        "MetricType": 42,
+        "MetricPoints": [
+          {
+            "Value": 42,
+            "StartTime": "2026-09-06T11:33:21.6193192+00:00",
+            "EndTime": "2026-09-06T11:33:21.6274364+00:00",
+            "Tags": {
+              "test": "value"
+            }
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

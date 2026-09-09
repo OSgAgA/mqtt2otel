@@ -1,0 +1,54 @@
+{
+  "Setup": {
+    "Id": "doc-12",
+    "Name": "Automatically parse Json",
+    "Description": "A simple example on how to parse a json automatically.",
+    "Topic": "sensor/1234/data",
+    "Payload": "{\n   Data:\n   {\n      Temperature: 42,\n      Angle: 32\n   }\n}",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Automatically parses a Json payload.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/data\u0022\n    Otel:\n      Metrics:\n        - Instrument: Gauge\n          ParseAs: \n             Type: Json",
+    "Category": "Documentation",
+    "Tags": [
+      "Json"
+    ],
+    "CreateExample": false,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Data.Temperature",
+        "OtelServer": "3142486d-196c-4646-b2f0-5742a8472fdf",
+        "MeterVersion": "",
+        "Description": "",
+        "Unit": "",
+        "MetricType": 42,
+        "MetricPoints": [
+          {
+            "Value": 42,
+            "StartTime": "2026-09-07T18:40:58.344447+00:00",
+            "EndTime": "2026-09-07T18:40:58.3523696+00:00",
+            "Tags": {}
+          }
+        ]
+      },
+      {
+        "Name": "Data.Angle",
+        "OtelServer": "3142486d-196c-4646-b2f0-5742a8472fdf",
+        "MeterVersion": "",
+        "Description": "",
+        "Unit": "",
+        "MetricType": 42,
+        "MetricPoints": [
+          {
+            "Value": 32,
+            "StartTime": "2026-09-07T18:40:58.3471375+00:00",
+            "EndTime": "2026-09-07T18:40:58.3524986+00:00",
+            "Tags": {}
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

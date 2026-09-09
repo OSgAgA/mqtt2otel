@@ -1,6 +1,7 @@
 ﻿using BlazorBootstrap;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Moq;
 using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
@@ -56,14 +57,16 @@ namespace mqtt2otel.ManifestExplorer.Controllers
                                 });
 
             IPayloadParser payloadParser = new PayloadParser();
+            IEmbeddedExpressionParser embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
+
             IPayloadTransformation payloadTransformation = new PayloadTransformation();
-            ISignalStore signalStore = new SignalStore();
+            ISignalStore signalStore = new SignalStore(embeddedExpressionParser);
             var internalLogger = new Mock<ILogger<string>>();
-            ILoggerStore loggerStore = new LoggerStore(internalLogger.Object, payloadParser, payloadTransformation);
+            ILoggerStore loggerStore = new LoggerStore(internalLogger.Object, payloadParser, payloadTransformation, embeddedExpressionParser);
             IDataStores dataStores = new DataStores(signalStore, loggerStore);
             ProcessorMeter meter = new ProcessorMeter();
 
-            Manifest.Manifest.ObjectFactory = new mqtt2otel.Manifest.ObjectFactory(logger.Object, payloadParser, payloadTransformation, dataStores, meter);
+            Manifest.Manifest.ObjectFactory = new mqtt2otel.Manifest.ObjectFactory(logger.Object, payloadParser, payloadTransformation, dataStores, meter, embeddedExpressionParser);
 
             Manifest.Manifest manifest;
 
@@ -73,7 +76,6 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             }
             catch (YamlException ex)
             {
-                var message = $"({ex.Start.ToString()}) - ({ex.End.ToString()}): {ex.Message}";
                 return new ApplyPatternToPayloadResult(new ErrorTestData(ex.Message, new Metadata.Position(ex.Start.Line, ex.Start.Column), new Metadata.Position(ex.End.Line, ex.End.Column)));
             }
             catch (Exception ex)
@@ -109,10 +111,11 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             ILogger<OtelCoordinator> otelLogger = new Logger<OtelCoordinator>(new LoggerFactory());
             var exportBuilder = new OtelTestExporterBuilder();
-            var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelMeter());
+            var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelMeter(), embeddedExpressionParser);
             otel.Connect(manifest);
 
-            bool success = await mqtt.SimulateOnMqttMessageReceived(request.Topic, request.Payload);
+            var message = new MqttMessage(subscriptionId: 0, topic: request.Topic, payload: request.Payload, userProperties: request.UserProperties);
+            bool success = await mqtt.SimulateOnMqttMessageReceived(message);
 
             otel.FlushMeters();
 

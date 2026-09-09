@@ -1,0 +1,45 @@
+{
+  "Setup": {
+    "Id": "misc-06",
+    "Name": "Customizing user properties",
+    "Description": "Customize the creation of setting attributes via user properties.",
+    "Topic": "sensor/1234/data",
+    "Payload": "42",
+    "UserProperties": [
+      {
+        "Name": "Category",
+        "Value": "Critical"
+      }
+    ],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Create attributes from user properties manually. Here the attribute key \u0027Category\u0027 is changed to \u0027Criticality\u0027.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/data\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          CreateAttributesFromUserProperties: false\n          Instrument: Gauge\n          Attributes:\n            - Key: \u0022Criticality\u0022\n              Value: \u0022$(UserProperty(\u0027Category\u0027))\u0022\n          Value: \u0022PAYLOAD()\u0022",
+    "Category": "Misc",
+    "Tags": [
+      "user_properties"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Processor.Temperature",
+        "OtelServer": "cb2f30e3-352a-43de-9dad-4e66c02ace5a",
+        "MeterVersion": "",
+        "Description": "The current processor temperature.",
+        "Unit": "",
+        "MetricType": 42,
+        "MetricPoints": [
+          {
+            "Value": 42,
+            "StartTime": "2026-09-06T12:00:54.5260401+00:00",
+            "EndTime": "2026-09-06T12:00:54.5260992+00:00",
+            "Tags": {
+              "Criticality": "Critical"
+            }
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

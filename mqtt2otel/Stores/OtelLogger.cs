@@ -37,30 +37,37 @@ namespace mqtt2otel.Stores
         private readonly ILogger internalLogger;
 
         /// <summary>
+        /// The parser for parsing texts containing embedded expressions.
+        /// </summary>
+        public IEmbeddedExpressionParser embeddedExpressionParser;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OtelLogger"/> class.
         /// </summary>
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="logger">The logger to log to open telemetry.</param>
         /// <param name="payloadParser">The payload parser used for parsing mqtt payloads.</param>
         /// <param name="payloadTransformation">The payload transformation parser used for transforming mqtt payloads.</param>
-        public OtelLogger(ILogger internalLogger, ILogger logger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation)
+        /// <param name="embeddedExpressionParser">The parser for parsing texts containing embedded expressions.</param>
+        public OtelLogger(ILogger internalLogger, ILogger logger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IEmbeddedExpressionParser embeddedExpressionParser)
         {
             this.logger = logger;
             this.payloadParser = payloadParser;
             this.payloadTransformation = payloadTransformation;
             this.internalLogger = internalLogger;
+            this.embeddedExpressionParser = embeddedExpressionParser;
         }
 
         /// <summary>
         /// Processes a log message given as a string payload.
         /// </summary>
-        /// <param name="payload">The payload representing the log message.</param>
+        /// <param name="message">The message received from the broker.</param>
         /// <param name="rule">The log rule that define how to interpret the payload.</param>
         /// <param name="variables">Variables that can be applied to the payload.</param>
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="combinedAttributes">All attributes that should be applied to the log message.</param>
         /// <returns>A value indicating whether the payload could be processed successfully.</returns>
-        public async Task<bool> ProcessLogMessage(string payload, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<Variable> combinedAttributes)
+        public bool ProcessLogMessage(MqttMessage message, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<OtelAttribute> combinedAttributes)
         {
             if (rule.Name == null) return false;
 
@@ -68,12 +75,15 @@ namespace mqtt2otel.Stores
             {
                 using (this.internalLogger.StartActivity("Logger rule transformation"))
                 {
-                    payload = await this.payloadTransformation.Apply(rule.Name, payload, rule.Transform, new ParsingContext(variables));
+                    message.Payload = this.payloadTransformation.Apply(rule.Name, rule.Transform, new ParsingContext(variables, message));
                 }
             }
 
+            var context = new ParsingContext(variables, message);
             List<KeyValuePair<string, object?>> attributes = combinedAttributes
-                .Select(attribute => new KeyValuePair<string, object?>(attribute.Key, VariableParser.Expand(attribute.Value.ToString() ?? string.Empty, variables)))
+                .Select(attribute => new KeyValuePair<string, object?>(
+                    this.embeddedExpressionParser.Expand(attribute.Key, context), 
+                    this.embeddedExpressionParser.Expand(attribute.Value.ToString() ?? string.Empty, context)))
                 .ToList();
 
             string? body = string.Empty;
@@ -82,10 +92,10 @@ namespace mqtt2otel.Stores
                 switch (rule.PayloadType)
                 {
                     case OtelLoggingPayloadType.Text:
-                        body = payload;
+                        body = message.Payload;
                         break;
                     case OtelLoggingPayloadType.Json:
-                        var obj = Newtonsoft.Json.Linq.JObject.Parse(payload).ToObject<Dictionary<string, object?>>();
+                        var obj = Newtonsoft.Json.Linq.JObject.Parse(message.Payload).ToObject<Dictionary<string, object?>>();
 
                         if (obj == null) return false;
 

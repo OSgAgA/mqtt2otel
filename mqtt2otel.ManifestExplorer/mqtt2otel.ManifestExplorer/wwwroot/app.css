@@ -76,3 +76,19 @@ h1:focus {
 .top-row {
     background-color: #f0f0f0 !important;
 }
+
+.card {
+    border-radius: 10px;
+    background: var(--body-background);
+    /* Fluent shadow */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+.sidebar {
+    border-radius: 10px;
+    background: var(--body-background);
+    /* Fluent shadow */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}

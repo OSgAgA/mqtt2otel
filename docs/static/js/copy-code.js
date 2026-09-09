@@ -1,32 +1,32 @@
 document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll("pre > code").forEach((codeBlock) => {
-    const pre = codeBlock.parentNode;
+    document.querySelectorAll("pre > code").forEach((codeBlock) => {
+        const pre = codeBlock.parentNode;
 
-    // Find the outermost highlight container
-    let container = pre;
-    while (container && container.classList && !container.classList.contains("highlight")) {
-      container = container.parentNode;
-    }
+        // Find the outermost highlight container
+        let container = pre;
+        while (container && container.classList && !container.classList.contains("highlight")) {
+            container = container.parentNode;
+        }
 
-    // If no highlight container found, fallback to <pre>
-    if (!container) container = pre;
+        if (!container) container = pre;
+        if (!container.parentNode) return;
 
-    if (!container.parentNode) return;
+        // Find metadata wrapper (added in shortcode)
+        const meta = container.closest(".code-meta");
+        const id = meta?.dataset.id;
+        const field = meta?.dataset.field;
 
-    // Create wrapper
-    const wrapper = document.createElement("div");
-    wrapper.classList.add("code-wrapper");
+        // Create wrapper
+        const wrapper = document.createElement("div");
+        wrapper.classList.add("code-wrapper");
 
-    // Insert wrapper before container
-    container.parentNode.insertBefore(wrapper, container);
+        container.parentNode.insertBefore(wrapper, container);
+        wrapper.appendChild(container);
 
-    // Move container inside wrapper
-    wrapper.appendChild(container);
-
-    // Create button
-    const button = document.createElement("button");
-    button.classList.add("copy-button");
-    button.innerHTML = `
+        // Copy button
+        const copyBtn = document.createElement("button");
+        copyBtn.classList.add("copy-button");
+        copyBtn.innerHTML = `
       <span class="copy-icon">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" 
              viewBox="0 0 24 24" fill="none" stroke="blue" 
@@ -40,37 +40,52 @@ document.addEventListener("DOMContentLoaded", () => {
       <span class="copy-text"></span>
     `;
 
-    button.addEventListener("click", () => {
-      let text = "";
-    
-      // Hugo/Chroma with line numbers uses tables
-      const table = container.querySelector("table");
-    
-      if (table) {
-        // grab only code cells (skip line numbers)
-        const codeCells = table.querySelectorAll("td:last-child code");
-    
-        text = Array.from(codeCells)
-          .map(cell => cell.innerText);
-      } else {
-        // fallback (no line numbers)
-        text = codeBlock.innerText;
-      }
-    
-      text = text.toString().replaceAll("\n\n", "\n");
-  
-      navigator.clipboard.writeText(text).then(() => {
-        button.classList.add("copied");
-        button.querySelector(".copy-text").innerText = "Copied";
-    
-        setTimeout(() => {
-          button.classList.remove("copied");
-          button.querySelector(".copy-text").innerText = "";
-        }, 1500);
-      });
+        copyBtn.addEventListener("click", () => {
+            let text = "";
+
+            const table = container.querySelector("table");
+            if (table) {
+                const codeCells = table.querySelectorAll("td:last-child code");
+                text = Array.from(codeCells).map(cell => cell.innerText);
+            } else {
+                text = codeBlock.innerText;
+            }
+
+            text = text.toString().replaceAll("\n\n", "\n");
+
+            navigator.clipboard.writeText(text).then(() => {
+                copyBtn.classList.add("copied");
+                copyBtn.querySelector(".copy-text").innerText = "Copied";
+
+                setTimeout(() => {
+                    copyBtn.classList.remove("copied");
+                    copyBtn.querySelector(".copy-text").innerText = "";
+                }, 1500);
+            });
+        });
+
+        // Explorer button
+        const explorerBtn = document.createElement("button");
+        explorerBtn.classList.add("copy-button");
+        explorerBtn.classList.add("explorer-button");
+        explorerBtn.innerHTML = `
+      <span class="explorer-icon">
+        <img src="/logo.png" style="width: 25px;"/>
+      </span>
+      <span class="explorer-text"></span>
+    `;
+
+        explorerBtn.addEventListener("click", () => {
+            if (!id) return;
+
+            const url = `https://explorer.mqtt2otel.org/${id}${field ? "#" + field : ""}`;
+            window.open(url, "_blank");
+        });
+
+        //
+        // Insert both buttons
+        //
+        wrapper.insertBefore(copyBtn, container);
+        if (id) wrapper.insertBefore(explorerBtn, container);
     });
-
-    wrapper.insertBefore(button, container);
-  });
 });
-

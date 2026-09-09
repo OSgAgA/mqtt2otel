@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
@@ -50,6 +51,11 @@ namespace mqtt2otel.Manifest
         private ProcessorMeter processorMeter;
 
         /// <summary>
+        /// The parser for parsing expressions embedded inside a text field.
+        /// </summary>
+        private IEmbeddedExpressionParser embeddedExpressionParser;
+
+        /// <summary>
         /// Creates a new instance of the <see cref="ObjectFactory"/> class.
         /// </summary>
         /// <param name="signalStore">The store used for storing data for otel signals.</param>
@@ -58,7 +64,8 @@ namespace mqtt2otel.Manifest
         /// <param name="payloadTransformation">The object used for processing payload transformations.</param>
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
         /// <param name="meter">The processor meter for recording internal processor metrics.</param>
-        public ObjectFactory(ILogger<Processor> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores, ProcessorMeter meter)
+        /// <param name="embeddedExpressionParser">The parser for parsing expressions embedded inside a text field.</param>
+        public ObjectFactory(ILogger<Processor> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores, ProcessorMeter meter, IEmbeddedExpressionParser embeddedExpressionParser)
         {
             this.processorMeter = meter;
             fallback = new DefaultObjectFactory();
@@ -66,6 +73,7 @@ namespace mqtt2otel.Manifest
             this.payloadParser = payloadParser;
             this.payloadTransformation = payloadTransformation;
             this.dataStores = dataStores;
+            this.embeddedExpressionParser = embeddedExpressionParser;
         }
 
         /// <summary>
@@ -77,7 +85,7 @@ namespace mqtt2otel.Manifest
         {
             if (type == typeof(Processor))
             {
-                return new Processor(this.internalLogger, this.payloadParser, this.payloadTransformation, this.dataStores, this.processorMeter);
+                return new Processor(this.internalLogger, this.payloadParser, this.payloadTransformation, this.dataStores, this.processorMeter, this.embeddedExpressionParser);
             }
 
             return fallback.Create(type);

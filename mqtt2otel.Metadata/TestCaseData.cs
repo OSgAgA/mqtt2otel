@@ -1,22 +1,18 @@
 ﻿using mqtt2otel.ManifestExplorer.DTOs;
+using mqtt2otel.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 using System.Text.Json;
 
-namespace mqtt2otel.Metadata
+namespace mqtt2otel.Shared
 {
     /// <summary>
     /// Represents a test case, including the needed setup and the expected outcome.
     /// </summary>
     public class TestCaseData
     {
-        /// <summary>
-        /// Caches the loaded test case data for further use.
-        /// </summary>
-        private static List<TestCaseData>? cache = null;
-
         /// <summary>
         /// Gets or sets the setup , that is needed to execute the test successfully.
         /// </summary>
@@ -67,9 +63,7 @@ namespace mqtt2otel.Metadata
         /// <exception cref="Exception">Thrown if directory with json files describing the test cases is not found.</exception>
         public static List<TestCaseData> LoadAll()
         {
-            if (cache != null) return cache;
-
-            cache = new List<TestCaseData>();
+            var result = new List<TestCaseData>();
 
             var directories = Directory.GetDirectories("./", "TestCases", SearchOption.AllDirectories);
 
@@ -82,11 +76,11 @@ namespace mqtt2otel.Metadata
                     try
                     {
                         var json = File.ReadAllText(file);
-                        var result = JsonSerializer.Deserialize<TestCaseData>(json);
+                        var jsonResult = JsonSerializer.Deserialize<TestCaseData>(json);
 
-                        if (result != null)
+                        if (jsonResult != null)
                         {
-                            cache.Add(result);
+                            result.Add(jsonResult);
                         }
                     }
                     catch (Exception ex)
@@ -100,7 +94,7 @@ namespace mqtt2otel.Metadata
                 throw new Exception($"Searching for TestCase directory returned {directories?.Length} results. Exactly one result has been expected.");
             }
 
-            return cache;
+            return result;
         }
 
         /// <summary>

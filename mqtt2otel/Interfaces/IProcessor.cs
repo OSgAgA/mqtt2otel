@@ -27,10 +27,10 @@ namespace mqtt2otel.Interfaces
         /// <summary>
         /// Process a subscription payload that was received from the mqtt broker.
         /// </summary>
-        /// <param name="payload">The received payload.</param>
+        /// <param name="message">The received message.</param>
         /// <param name="subscription">The subscription that received the payload.</param>
         /// <returns>A value indicating whether the operation has been successful.</returns>
-        Task<bool> ProcessSubscriptionPayload(string payload, MqttSubscription subscription);
+        bool ProcessSubscriptionPayload(MqttMessage message, MqttSubscription subscription);
 
         /// <summary>
         /// Validates the object.

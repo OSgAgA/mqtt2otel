@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,46 +17,23 @@ namespace mqtt2otel.Parser
         public string Key => "PAYLOAD";
 
         /// <summary>
-        /// Parses the payload via returning it as plain text.
+        /// Parses the payload and tries to infer its datatype.
         /// 
         /// If the regular expression returns more than one match, then the first match is used.
         /// </summary>
         /// <typeparam name="T">Must be string.</typeparam>
-        /// <param name="payload">The payload.</param>
         /// <param name="filter">Will be ignored.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed payload.</returns>
         /// <exception cref="Exception">Thrown if generic return type is not a string.</exception>
-        public T Parse<T>(string input, string filter, ParsingContext context)
+        public object? Parse(string filter, ParsingContext context)
         {
-            object result = string.Empty;
+            if (long.TryParse(context.Message.Payload, out var i)) return i;
+            if (double.TryParse(context.Message.Payload, out var d)) return d;
+            if (bool.TryParse(context.Message.Payload, out var b)) return b;
+            if (DateTime.TryParse(context.Message.Payload, out var dt)) return dt;
 
-            if (typeof(T) == typeof(int))
-            {
-                result = int.Parse(input);
-            }
-            else if (typeof(T) == typeof(float))
-            {
-                result = float.Parse(input);
-            }
-            else if (typeof(T) == typeof(double))
-            {
-                result = double.Parse(input);
-            }
-            else if (typeof(T) == typeof(long))
-            {
-                result = long.Parse(input);
-            }
-            else if (typeof(T) == typeof(decimal))
-            {
-                result = decimal.Parse(input);
-            }
-            else
-            {
-                result = input;
-            }
-
-            return (T)result;
+            return context.Message.Payload; 
         }
     }
 }

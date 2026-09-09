@@ -1,0 +1,38 @@
+{
+  "Setup": {
+    "Id": "metric-08",
+    "Name": "Convert radian in degree",
+    "Description": "Converts a radian angle in degrees using the expression syntax.",
+    "Topic": "sensor/9876/angle",
+    "Payload": "1",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Sensor angle\u0022\n    Description: \u0022Converts a radiant in degree using internal constant Pi.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/angle\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Sensor.AngleInDegrees\u0022          \n          Instrument: Gauge\n          Value: \u0022PAYLOAD() * 180.0 / [PI]\u0022",
+    "Category": "Metrics",
+    "Tags": [
+      "text"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Sensor.AngleInDegrees",
+        "OtelServer": "d7330def-c61c-4053-bbe4-f1962d196fab",
+        "MeterVersion": "",
+        "Description": "",
+        "Unit": "",
+        "MetricType": 45,
+        "MetricPoints": [
+          {
+            "Value": 57.29577951308232,
+            "StartTime": "2026-09-06T11:39:18.0871357+00:00",
+            "EndTime": "2026-09-06T11:39:18.0871719+00:00",
+            "Tags": {}
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

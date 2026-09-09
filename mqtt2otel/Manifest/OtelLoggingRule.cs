@@ -26,7 +26,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets all attributes that should be added to the open telemetry log message.
         /// </summary>
-        public List<Variable> Attributes { get; set; } = new();
+        public List<OtelAttribute> Attributes { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the data type of the payload that will be used to write to the open telemetry logs.
@@ -46,7 +46,15 @@ namespace mqtt2otel.Manifest
         /// Gets or sets the name of the open telemetriy connection to be used for this rule. 
         /// Set to null for using the default connection.
         /// </summary>
+        [InheritedProperty]
         public string? OtelConnection { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets a value indicating, whether attributes should be created from mqtt user properties (true), or not (false), or
+        /// if the default setting should be used (null).
+        /// </summary>
+        [InheritedProperty]
+        public bool? CreateAttributesFromUserProperties { get; set; } = true;
 
         /// <summary>
         /// The key for structured payloads (e.g. json) to be used to identify the message body.

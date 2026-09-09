@@ -1,0 +1,38 @@
+{
+  "Setup": {
+    "Id": "misc-3",
+    "Name": "Wildcard subscriptions",
+    "Description": "Demonstrates the use of wildcards in mqtt subscriptions.",
+    "Topic": "sensor/1234/temperature",
+    "Payload": "42",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Provides the current processor temperature.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/temperature\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          Instrument: Gauge\n          Value: \u0022PAYLOAD()\u0022",
+    "Category": "Misc",
+    "Tags": [
+      "text"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Processor.Temperature",
+        "OtelServer": "4e8f7b2c-4d7a-42cf-987d-a62c91d266dc",
+        "MeterVersion": "",
+        "Description": "The current processor temperature.",
+        "Unit": "",
+        "MetricType": 42,
+        "MetricPoints": [
+          {
+            "Value": 42,
+            "StartTime": "2026-09-06T11:56:15.4270224+00:00",
+            "EndTime": "2026-09-06T11:56:15.4270709+00:00",
+            "Tags": {}
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

@@ -6,7 +6,7 @@ bookCollapseSection: false
 
 <div style="text-align:center;">
 
-  ![logo](/logo_small.png)
+  ![logo](/logo.png)
 
 </div>
 

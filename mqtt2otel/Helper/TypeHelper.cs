@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Xml.Linq;
 
 namespace mqtt2otel.Helper
 {
@@ -62,7 +63,7 @@ namespace mqtt2otel.Helper
             var method = instance.GetType()
                              .GetMethod(
                                  methodName,
-                                 BindingFlags.Instance | BindingFlags.NonPublic
+                                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
                              )?
                              .MakeGenericMethod(genericType);
 
@@ -79,7 +80,14 @@ namespace mqtt2otel.Helper
         /// <returns></returns>
         public static TResult ConvertObject<TResult>(object value)
         {
-            return (TResult)System.Convert.ChangeType(value, typeof(TResult));
+            try
+            {
+                return (TResult)System.Convert.ChangeType(value, typeof(TResult));
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Value '{value}' is of type {value.GetType()} and could not be cast to expected type {typeof(TResult)}.", ex);
+            }
         }
 
         /// <summary>
@@ -102,6 +110,15 @@ namespace mqtt2otel.Helper
             return TypeHelper.TypeMap[dataType];
         }
 
+        public static SignalDataType ConvertTypeToSignalDataType(Type type)
+        {
+            var resultQuery = SignalTypeMap.Where(map => map.Value == type);
+
+            if (!resultQuery.Any()) throw new Exception($"Cannot convert {type} to a signal data type.");
+
+            return resultQuery.First().Key;
+        }
+
         /// <summary>
         /// Maps <see cref="SignalDataType"/> to a system type.
         /// </summary>
@@ -114,6 +131,7 @@ namespace mqtt2otel.Helper
             [SignalDataType.String] = typeof(string),
             [SignalDataType.Long] = typeof(long),
             [SignalDataType.DateTime] = typeof(DateTime),
+            [SignalDataType.Default] = typeof(float),
         };
 
         /// <summary>
@@ -194,7 +212,7 @@ namespace mqtt2otel.Helper
         {
             var type = typeof(T);
             object result = 0;
-            
+
             if (type == typeof(int)) result = int.Parse(input, CultureInfo.InvariantCulture);
             if (type == typeof(float)) result = float.Parse(input, CultureInfo.InvariantCulture);
             if (type == typeof(string)) result = input;

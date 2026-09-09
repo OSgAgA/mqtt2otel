@@ -12,7 +12,7 @@ namespace mqtt2otel.Helper
     public static class VariableExtensions
     {
         /// <summary>
-        /// Converts an <see cref="IEnumerable{Variable}"/> to an <see cref="IEnumerable{KeaValuepair{String, Object}}"/>.
+        /// Converts an <see cref="IEnumerable{Variable}"/> to an <see cref="IEnumerable{KeyValuePair{String, Object}}"/>.
         /// </summary>
         /// <param name="source">the source.</param>
         /// <returns>The converted enumerable.</returns>

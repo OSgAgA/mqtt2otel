@@ -1,0 +1,40 @@
+{
+  "Setup": {
+    "Id": "metric-03",
+    "Name": "Advanced json path",
+    "Description": "An advanced example on how to parse a json paylog using child indices to create detailed metrics manually.",
+    "Topic": "sensor/1234/data",
+    "Payload": "{\n   Processors:\n   [ \n       { \n           Name: \u0022Processor A\u0022,\n           Temperature: 42\n       },\n       { \n           Name: \u0022Processor B\u0022,\n           Temperature: 54\n       }\n   ]\n}",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Read only the second value of an array using JsonPath.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/data\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022ProcessorB.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          Instrument: Gauge\n          Unit: \u0022C\u0022\n          Attributes:\n            - Key: \u0022test\u0022\n              Value: \u0022value\u0022\n          Value: \u0022JSONPATH(\u0027$.Processors[1].Temperature\u0027)\u0022",
+    "Category": "Metrics",
+    "Tags": [
+      "json"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "ProcessorB.Temperature",
+        "OtelServer": "e6185bb5-db78-4c6c-88ff-42b354d61625",
+        "MeterVersion": "",
+        "Description": "The current processor temperature.",
+        "Unit": "C",
+        "MetricType": 42,
+        "MetricPoints": [
+          {
+            "Value": 54,
+            "StartTime": "2026-09-06T11:34:19.4987601+00:00",
+            "EndTime": "2026-09-06T11:34:19.4988263+00:00",
+            "Tags": {
+              "test": "value"
+            }
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

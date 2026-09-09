@@ -1,13 +1,14 @@
 ﻿@page "/examples"
 @attribute [StreamRendering]
 @using mqtt2otel.ManifestExplorer.DTOs
+@inject mqtt2otel.ManifestExplorer.Meters.UsageMeter usageMeter
 
 <PageTitle>Examples</PageTitle>
 
 <h1>Examples</h1>
 
 <p>
-Please choose from a set of predefined examples to get you started using the manifest explorer.
+    Please choose from a set of predefined examples to get you started using the manifest explorer.
 </p>
 
 @foreach (var categoryExampleMapping in this.categoryExampleMappings)
@@ -33,11 +34,16 @@ Please choose from a set of predefined examples to get you started using the man
                             }
                         </div>
                     </CardTitle>
-                    <hr style="margin-left: 0px; margin-right: 0px; margin-top:0px; margin-bottom:10px;"/>
-                    <CardText>@example.Description</CardText>
-                    <div class="mt-auto text-center">
-                        <Button Color="ButtonColor.Light" To="@("/" + @example.Id)" Type="ButtonType.Link">Go</Button>
-                    </div>
+                    <hr style="margin-left: 0px; margin-right: 0px; margin-top:0px; margin-bottom:10px;" />
+                    <CardText>
+                        @example.Description
+                        <div class="mt-auto text-center" style="margin:0px">
+                            <a href="@("/" + @example.Id)">
+                                <img src="images/play.png" style="width:80px" />
+                            </a>
+                            @* <Button Color="ButtonColor.Light" To="@("/" + @example.Id)" Type="ButtonType.Link">Go</Button> *@
+                        </div>
+                    </CardText>
                 </CardBody>
             </Card>
         }
@@ -47,7 +53,34 @@ Please choose from a set of predefined examples to get you started using the man
 @code
 {
     /// <summary>
+    /// A guard to test, whether the page is already initialized.
+    /// </summary>
+    private bool isInitialized = false;
+
+    /// <summary>
     /// All available examples.
     /// </summary>
     private Dictionary<string, List<ExampleData>> categoryExampleMappings = ExampleData.GetAllByCategories();
+
+
+    /// <summary>
+    /// Called when the side is initialized.
+    /// </summary>
+    /// <returns></returns>
+    protected override Task OnInitializedAsync()
+    {
+        if (!this.isInitialized)
+        {
+            this.isInitialized = true;
+
+            var pageTags = new System.Diagnostics.TagList()
+            {
+                { "Page", "Examples"}
+            };
+
+            this.usageMeter.PageRequestedCounter.Add(1, pageTags);
+        }
+
+        return base.OnInitializedAsync();
+    }
 }

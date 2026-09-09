@@ -1,0 +1,40 @@
+{
+  "Setup": {
+    "Id": "metric-02",
+    "Name": "Use XPath",
+    "Description": "A simple example on how to parse a xml paylog to create detailed metrics manually.",
+    "Topic": "sensor/1234/data",
+    "Payload": "\u003CProcessor\u003E\n  \u003CTemperature\u003E42\u003C/Temperature\u003E\n\u003C/Processor\u003E",
+    "UserProperties": [],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Read a single value from a xml payload.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/data\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          Instrument: Gauge\n          Unit: \u0022C\u0022\n          Attributes:\n            - Key: \u0022test\u0022\n              Value: \u0022value\u0022\n          Value: \u0022XMLPATH(\u0027/Processor/Temperature\u0027)\u0022",
+    "Category": "Metrics",
+    "Tags": [
+      "xml"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResult": {
+    "Metrics": [
+      {
+        "Name": "Processor.Temperature",
+        "OtelServer": "e4914c4a-5d1c-478c-bbe6-ce7b6a60e58b",
+        "MeterVersion": "",
+        "Description": "The current processor temperature.",
+        "Unit": "C",
+        "MetricType": 42,
+        "MetricPoints": [
+          {
+            "Value": 42,
+            "StartTime": "2026-09-06T11:33:48.4496997+00:00",
+            "EndTime": "2026-09-06T11:33:48.4497911+00:00",
+            "Tags": {
+              "test": "value"
+            }
+          }
+        ]
+      }
+    ],
+    "Logs": []
+  }
+}

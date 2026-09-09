@@ -1,0 +1,169 @@
+﻿@using System.Text.Json
+@using mqtt2otel.ManifestExplorer.DTOs
+@using mqtt2otel.Metadata
+@using mqtt2otel.Shared
+@inject IJSRuntime JS
+
+<Modal @ref="modal" Title="Enter Json Data" IsVerticallyCentered="true" Size="ModalSize.Large">
+    <BodyTemplate>
+        <div class="row" style="margin-bottom:10px">
+            <div class="col-3">
+                <label>Id</label>
+            </div>
+            <div class="col-8">
+                <InputText class="form-control w-100" @bind-Value="@this.Data.Setup.Id" />
+            </div>
+        </div>
+
+        <div class="row" style="margin-bottom:10px">
+            <div class="col-3">
+                <label>Name</label>
+            </div>
+            <div class="col-8">
+                <InputText class="form-control w-100" @bind-Value="@this.Data.Setup.Name" />
+            </div>
+        </div>
+
+        <div class="row" style="margin-bottom:10px">
+            <div class="col-3">
+                <label>Description</label>
+            </div>
+            <div class="col-8">
+                <InputTextArea class="form-control w-100" @bind-Value="@this.Data.Setup.Description" rows="5" />
+            </div>
+        </div>
+
+        <div class="row" style="margin-bottom:10px">
+            <div class="col-3">
+                <label>Category</label>
+            </div>
+            <div class="col-8">
+                <InputText class="form-control w-100" @bind-Value="@this.Data.Setup.Category" />
+            </div>
+        </div>
+
+        <div class="row" style="margin-bottom:10px">
+            <div class="col-3">
+                <label>Tags</label>
+            </div>
+            <div class="col-8">
+                <InputText class="form-control w-75" @bind-Value:get="@this.tagInput" @bind-Value:set="@this.OnTagInputChanged" />
+                @foreach (var tag in this.Data.Setup.Tags)
+                {
+                    <Button Color="ButtonColor.Success" Style="margin:10px">@tag</Button>
+                }
+            </div>
+        </div>
+
+        <div class="row" style="margin-bottom:10px">
+            <div class="col-3">
+                <label>Create example</label>
+            </div>
+            <div class="col-1">
+                <CheckboxInput class="form-control w-50" @bind-Value="@this.Data.Setup.CreateExample" />
+            </div>
+        </div>
+
+        <div class="row" style="margin-bottom:10px">
+            <div class="col-3">
+                <label>Only validate manifest</label>
+            </div>
+            <div class="col-1">
+                <CheckboxInput class="form-control w-50" @bind-Value="@this.Data.Setup.ValidateManifestOnly" />
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="HideModal">Close</Button>
+        <Button Color="ButtonColor.Primary" @onclick="CreateJson">Copy Json to clipboard</Button>
+    </FooterTemplate>
+</Modal>
+
+@code {
+
+    /// <summary>
+    /// Contains the data used by the explorer for testing different inputs based on incoming messages.
+    /// </summary>
+    [Parameter]
+    public TestCaseData Data { get; set; } = new TestCaseData();
+
+    /// <summary>
+    /// The result received via the ApplyPatternToPayload request. Maybe null if request is not yet called,
+    /// or if not successfull.
+    /// </summary>
+    [Parameter]
+    public ApplyPatternToPayloadResult? Result { get; set; } = null;
+
+    /// <summary>
+    /// The current value of the tags input field. Used by the modal dialog.
+    /// </summary>
+    private string tagInput = string.Empty;
+
+    /// <summary>
+    /// The modal dialog used for creating json data.
+    /// </summary>
+    Modal modal = new();
+
+    /// <summary>
+    /// Copy Json into the clipboard.
+    /// </summary>
+    private async Task CreateJson()
+    {
+        if (this.Result != null)
+        {
+            var testcase = new TestCaseData()
+            {
+                Setup = new ExampleData(this.Data.Setup.Id, this.Data.Setup.Name, this.Data.Setup.Description, this.Data.Setup.Topic, this.Data.Setup.Payload, this.Data.Setup.UserProperties, this.Data.Setup.Manifest, this.Data.Setup.Category, 
+                    this.Data.Setup.Tags, this.Data.Setup.CreateExample, this.Data.Setup.ValidateManifestOnly),
+                ExpectedResult = new ExpectedTestResult(this.Result.Metrics, this.Result.Logs)
+            };
+
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+            };
+
+            var jsonString = JsonSerializer.Serialize(testcase, options);
+
+            await JS.InvokeVoidAsync("copyToClipboard", jsonString);
+
+            await modal.HideAsync();
+        }
+    }
+
+    /// <summary>
+    /// Shows the modal dialog.
+    /// </summary>
+    public async Task Show()
+    {
+        await modal.ShowAsync();
+    }
+
+    /// <summary>
+    /// Hides the modal dialog.
+    /// </summary>
+    /// <returns></returns>
+    private async Task HideModal()
+    {
+        await modal.HideAsync();
+    }
+
+    /// <summary>
+    /// Called when the value of the tag input field has changed.
+    /// </summary>
+    /// <param name="currentValue">The current value of the tag input field.</param>
+    private void OnTagInputChanged(string currentValue)
+    {
+        this.Data.Setup.Tags = new();
+
+        var split = currentValue.Split(' ');
+
+        foreach (var tag in split)
+        {
+            this.Data.Setup.Tags.Add(tag);
+        }
+
+        this.tagInput = currentValue;
+        this.StateHasChanged();
+    }
+}

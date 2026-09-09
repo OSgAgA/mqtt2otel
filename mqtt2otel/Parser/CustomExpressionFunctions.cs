@@ -1,12 +1,16 @@
-﻿using NCalc;
+﻿using Microsoft.VisualBasic;
+using mqtt2otel.Helper;
+using NCalc;
 using NCalc.Exceptions;
 using NCalc.Extensions;
 using NCalc.Handlers;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO.Enumeration;
 using System.Linq.Expressions;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace mqtt2otel.Parser
 {
@@ -31,6 +35,32 @@ namespace mqtt2otel.Parser
             AddDateTimeFunction(context, "AddSeconds", (date, increment) => date.AddSeconds(increment));
 
             AddConvertTimeZoneFunction(context, "ConvertTimezone");
+
+            AddStringConversion(context, "ToLower", input => input.ToLower());
+            AddStringConversion(context, "ToUpper", input => input.ToUpper());
+            AddStringConversion(context, "Trim", input => input.Trim());
+            AddStringConversion(context, "TrimStart", input => input.TrimStart());
+            AddStringConversion(context, "TrimEnd", input => input.TrimEnd());
+
+            AddStringCheck(context, "StartsWith", (text, condition) => text.StartsWith(condition));
+            AddStringCheck(context, "EndsWith", (text, condition) => text.EndsWith(condition));
+            AddStringCheck(context, "Contains", (text, condition) => text.Contains(condition));
+
+            AddReplace(context, "Replace");
+            AddStringCheck(context, "MatchesWildcard", (text, condition) => FileSystemName.MatchesSimpleExpression(text, condition));
+            AddStringCheck(context, "MatchesRegEx", (text, condition) => new Regex(condition).IsMatch(text));
+
+            AddCaseFunction(context, "ToPascalCase", string.Empty, firstIsLower: false, restIsLower: false);
+            AddCaseFunction(context, "ToCamelCase", string.Empty, firstIsLower: true, restIsLower: false);
+            AddCaseFunction(context, "ToSnakeCase", "_", firstIsLower: true, restIsLower: true);
+            AddCaseFunction(context, "ToKebabCase", "-", firstIsLower: true, restIsLower: true);
+            AddCaseFunction(context, "ToTrainCase", "-", firstIsLower: false, restIsLower: false);
+
+            AddTypeConverter<int>(context, "ToInt");
+            AddTypeConverter<long>(context, "ToLong");
+            AddTypeConverter<float>(context, "ToFloat");
+            AddTypeConverter<double>(context, "ToDouble");
+            AddTypeConverter<string>(context, "ToString");
         }
 
         /// <summary>
@@ -46,13 +76,14 @@ namespace mqtt2otel.Parser
         {
             try
             {
-                return (TResult)(args[index].Evaluate(context) ?? throw new Exception());
+                var raw = new NCalc.Expression(args[index].ToExpressionString(), context).Evaluate();
+                return (TResult)(raw ?? throw new Exception());
             }
             catch (NCalcFunctionNotFoundException ex)
             {
                 throw new FunctionNotFoundException(ex.FunctionName);
             }
-            catch 
+            catch
             {
                 throw new ArgumentTypeException(functionName, index, typeof(TResult), args[index]?.ToExpressionString() ?? string.Empty);
             }
@@ -154,7 +185,7 @@ namespace mqtt2otel.Parser
         /// <param name="func">The function that should be called on the date argument.</param>
         /// <exception cref="InvalidArgumentCountException">Thrown if the argument has not exactly 2 arguments.</exception>
 
-        private static void AddDateTimeFunction(NCalc.ExpressionContext context, string functionName, Func<DateTime, int,  DateTime> func)
+        private static void AddDateTimeFunction(NCalc.ExpressionContext context, string functionName, Func<DateTime, int, DateTime> func)
         {
             context.Functions[functionName] = (args) =>
             {
@@ -167,6 +198,202 @@ namespace mqtt2otel.Parser
                 }
 
                 throw new InvalidArgumentCountException(functionName, 2, 2, args.Count());
+            };
+        }
+
+        /// <summary>
+        /// Adds a function that will convert a given string using the provided function.
+        /// 
+        /// Usage:
+        ///    functionName( parameter ) => converted parameter.
+        ///    
+        /// Examples:
+        ///    ToLower( "Hello World" ) => "hello world"
+        /// </summary>
+        /// <param name="context">The expression context, where the function should be added.</param>
+        /// <param name="functionName">The function name.</param>
+        /// <param name="func">The function that will be called.</param>
+        /// <exception cref="InvalidArgumentCountException">Thrown if the argument has not exactly 1 arguments.</exception>
+        private static void AddStringConversion(NCalc.ExpressionContext context, string functionName, Func<string, string> func)
+        {
+            context.Functions[functionName] = (args) =>
+            {
+                if (args.Count() == 1)
+                {
+                    return func(GetArgument<string>(functionName, context, 0, args));
+                }
+
+                throw new InvalidArgumentCountException(functionName, 1, 1, args.Count());
+            };
+        }
+
+        /// <summary>
+        /// Adds a function that replace substrings inside a string with a given replacement.
+        /// 
+        /// Usage:
+        ///    functionName( source, old, replacement )
+        ///    
+        /// Examples:
+        ///    functionName( "Hello_world", "_", " " ) => "Hello world"
+        /// </summary>
+        /// <param name="context">The expression context, where the function should be added.</param>
+        /// <param name="functionName">The function name.</param>
+        /// <exception cref="InvalidArgumentCountException">Thrown if the argument has not exactly 3 arguments.</exception>
+        private static void AddReplace(NCalc.ExpressionContext context, string functionName)
+        {
+            context.Functions[functionName] = (args) =>
+            {
+                if (args.Count() == 3)
+                {
+                    var src = GetArgument<string>(functionName, context, 0, args);
+                    var old = GetArgument<string>(functionName, context, 1, args);
+                    var replacement = GetArgument<string>(functionName, context, 2, args);
+
+                    return src.Replace(old, replacement);
+                }
+
+                throw new InvalidArgumentCountException(functionName, 3, 3, args.Count());
+            };
+        }
+
+        /// <summary>
+        /// Adds a string testing function that checks whether a string fullfills a condition.
+        /// 
+        /// Usage:
+        ///    functionName( source, condition [, caseSensitve] )
+        ///    
+        /// Examples:
+        ///    functionName( "Hello_world", "hello*", false ) 
+        /// </summary>
+        /// <param name="context">The expression context, where the function should be added.</param>
+        /// <param name="functionName">The function name.</param>
+        /// <param name="stringCheck">The string testing function, that will accept the string under test as the first argument and the test condition as the second.</param>
+        /// <exception cref="InvalidArgumentCountException">Thrown if the argument has not exactly 3 arguments.</exception>
+        private static void AddStringCheck(NCalc.ExpressionContext context, string functionName, Func<string, string, bool> stringCheck)
+        {
+            context.Functions[functionName] = (args) =>
+            {
+                if (args.Count() == 2)
+                {
+                    var src = GetArgument<string>(functionName, context, 0, args);
+                    var check = GetArgument<string>(functionName, context, 1, args);
+
+                    return stringCheck(src, check);
+                }
+
+                if (args.Count() == 3)
+                {
+                    var src = GetArgument<string>(functionName, context, 0, args);
+                    var check = GetArgument<string>(functionName, context, 1, args);
+                    var caseSensitive = GetArgument<bool>(functionName, context, 2, args);
+
+                    if (!caseSensitive)
+                    {
+                        src = src.ToLower();
+                        check = check.ToLower();
+                    }
+
+                    return stringCheck(src, check);
+                }
+
+                throw new InvalidArgumentCountException(functionName, 1, 2, args.Count());
+            };
+        }
+
+        /// <summary>
+        /// Adds a function that will convert a string using the specified casing converter.
+        /// 
+        /// Therefor the string is split using the following split characters: ' ', '_', '-', '.'
+        /// 
+        /// The it is reconstructed separating the different paths with the provided separator and the provided lower, or
+        /// uppercasing function is applied to the first character of each part.
+        /// </summary>
+        /// <param name="context">The expression context, where the function should be added.</param>
+        /// <param name="functionName">The function name.</param>
+        /// <param name="source">The source string that should be converted.</param>
+        /// <param name="separator">The separator that will connect the different parts.</param>
+        /// <param name="firstIsLower">A value indicating whether the first character of the first part should be put to lowercaes (true) or uppercase (false).</param>
+        /// <param name="restIsLower">A value indicating whether the first character of the second and following parts should be put to lowercaes (true) or uppercase (false).</param>
+        /// <returns>The converted source string.</returns>
+        private static void AddCaseFunction(NCalc.ExpressionContext context, string functionName, string separator, bool firstIsLower, bool restIsLower)
+        {
+            context.Functions[functionName] = (args) =>
+            {
+                if (args.Count() == 1)
+                {
+                    string src = GetArgument<string>(functionName, context, 0, args).ToLower();
+                    return CaseConverter(src, separator, firstIsLower, restIsLower);
+                }
+
+                throw new InvalidArgumentCountException(functionName, 1, 1, args.Count());
+            };
+        }
+
+        /// <summary>
+        /// Converts a string using the specified casing converter.
+        /// 
+        /// Therefor the string is split using the following split characters: ' ', '_', '-', '.'
+        /// 
+        /// The it is reconstructed separating the different paths with the provided separator and the provided lower, or
+        /// uppercasing function is applied to the first character of each part.
+        /// </summary>
+        /// <param name="source">The source string that should be converted.</param>
+        /// <param name="separator">The separator that will connect the different parts.</param>
+        /// <param name="firstIsLower">A value indicating whether the first character of the first part should be put to lowercaes (true) or uppercase (false).</param>
+        /// <param name="restIsLower">A value indicating whether the first character of the second and following parts should be put to lowercaes (true) or uppercase (false).</param>
+        /// <returns>The converted source string.</returns>
+        private static string CaseConverter(string source, string separator, bool firstIsLower, bool restIsLower)
+        {
+            var parts = source.Split(new char[] { ' ', '_', '-', '.' });
+
+            bool isFirst = true;
+            StringBuilder result = new StringBuilder();
+            char firstChar;
+
+            foreach (var part in parts)
+            {
+                if (isFirst)
+                {
+                    firstChar = firstIsLower ? char.ToLower(part[0]) : char.ToUpper(part[0]);
+                    isFirst = false;
+                }
+                else
+                {
+                    result.Append(separator);
+                    firstChar = restIsLower ? char.ToLower(part[0]) : char.ToUpper(part[0]);
+                }
+
+                result.Append(firstChar);
+                result.Append(part[1..]);
+            }
+
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// Adds a function that converts a type into a target type.
+        /// </summary>
+        /// <param name="context">The expression context, where the function should be added.</param>
+        /// <param name="functionName">The function name.</param>
+        /// <returns>The converted value.</returns>
+        private static void AddTypeConverter<T>(NCalc.ExpressionContext context, string functionName)
+        {
+            context.Functions[functionName] = (args) =>
+            {
+                if (args.Count() == 1)
+                {
+                    object value = GetArgument<object>(functionName, context, 0, args);
+
+                    if (typeof(T) != typeof(string))
+                    {
+                        var result = TypeHelper.ConvertObject<T>(value);
+                        return TypeHelper.ConvertObject<T>(value);
+                    }
+
+                    return value.ToString();
+                }
+
+                throw new InvalidArgumentCountException(functionName, 1, 1, args.Count());
             };
         }
     }

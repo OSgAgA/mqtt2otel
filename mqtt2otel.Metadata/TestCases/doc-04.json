@@ -1,0 +1,21 @@
+{
+  "Setup": {
+    "Id": "doc-04",
+    "Name": "Quickstart Document 4",
+    "Description": "",
+    "Topic": "metric/sensor_1234",
+    "Payload": "{\n    \u0022Processor\u0022: \n    {\n        \u0022Temperature\u0022: 42.5\n    },\n    \u0022TempUnit\u0022: \u0022C\u0022\n}",
+    "UserProperties": [],
+    "Manifest": "Processors:\n      - Name: \u0022Processor 1\u0022\n        Otel:\n          Attributes:\n            - Key: SensorName\n              Value: $SensorName\n            - Key: Location\n              Value: \u0022Main server room\u0022\n          Metrics:\n            - Name: \u0022Processor.Temperature\u0022\n              Description: \u0022The current processor temperature.\u0022\n              Attributes:\n                - Key: MeasurementQuality\n                  Value: 10\n              Instrument: Gauge\n              Value: \u0022JSONPATH(\u0027$.Processor.Temperature\u0027)\u0022",
+    "Category": "Documentation",
+    "Tags": [
+      "doc"
+    ],
+    "CreateExample": false,
+    "ValidateManifestOnly": true
+  },
+  "ExpectedResult": {
+    "Metrics": [],
+    "Logs": []
+  }
+}

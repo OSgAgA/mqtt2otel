@@ -2,6 +2,7 @@
 using Moq;
 using mqtt2otel.Helper;
 using mqtt2otel.InternalMetrics;
+using mqtt2otel.Parser;
 using mqtt2otel.Server.Helper;
 using mqtt2otel.Tests.Helper;
 using System;
@@ -70,7 +71,11 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var exportBuilder = new OtelTestExporterBuilder();
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter());
+
+            var payloadParser = new PayloadParser();
+            var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
+
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter(), embeddedExpressionParser);
             otelCoordinator.Connect(manifest);
 
             string topic = "sensors/temperature";
@@ -162,7 +167,10 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var exportBuilder = new OtelTestExporterBuilder();
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter());
+            var payloadParser = new PayloadParser();
+            var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
+
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter(), embeddedExpressionParser);
             otelCoordinator.Connect(manifest);
 
             string topic = "sensors/logEntry";
