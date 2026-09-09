@@ -87,7 +87,7 @@ it to different otel endpoints that are optimized for different use cases.
 
   {{< /card >}}
 
-- {{< card >}}
+- {{< card class="hide-on-mobile" >}}
   ![sphere](/Book.png)
 
   {{< /card >}}
@@ -95,7 +95,7 @@ it to different otel endpoints that are optimized for different use cases.
 {{% /columns %}}
 
 {{% columns ratio="1:3" %}}
-- {{< card >}}
+- {{< card class="hide-on-mobile" >}}
   ![explorer](/logo.png)
 
   {{< /card >}}
@@ -130,7 +130,7 @@ it to different otel endpoints that are optimized for different use cases.
   If you would like to join or start a discussion, or ask a question then welcome to our [discussions page](https://github.com/OSgAgA/mqtt2otel/discussions).
   {{< /card >}}
 
-- {{< card >}}
+- {{< card class="hide-on-mobile" >}}
   ![gears](/Gears.png)
 
   {{< /card >}}
@@ -138,7 +138,7 @@ it to different otel endpoints that are optimized for different use cases.
 {{% /columns %}}
 
 {{% columns ratio="1:3" %}}
-- {{< card >}}
+- {{< card class="hide-on-mobile" >}}
   ![tools](/Tools.png)
 
   {{< /card >}}

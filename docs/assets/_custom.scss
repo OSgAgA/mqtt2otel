@@ -29,3 +29,9 @@
     transform: translateY(-1px);
 }
 
+/* Hide image cards on mobile */
+@media (max-width: 768px) {
+    .hide-on-mobile {
+        display: none !important;
+    }
+}
