@@ -139,7 +139,7 @@ it to different otel endpoints that are optimized for different use cases.
 
 {{% columns ratio="1:3" %}}
 - {{< card >}}
-  ![tools](/tools.png)
+  ![tools](/Tools.png)
 
   {{< /card >}}
 
