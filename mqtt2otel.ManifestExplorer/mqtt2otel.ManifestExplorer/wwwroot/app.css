@@ -92,3 +92,30 @@ h1:focus {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.06);
     transform: translateY(-1px);
 }
+
+@media (max-width: 768px) {
+    .hide-on-mobile {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .add-top-margin-on-mobile {
+        margin-top: 100px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Always show the menu */
+    .nav-scrollable {
+        display: block !important;
+        max-height: none !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    /* Hide the burger toggle entirely */
+    .navbar-toggler {
+        display: none !important;
+    }
+}
