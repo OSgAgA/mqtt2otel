@@ -1,0 +1,62 @@
+﻿@using mqtt2otel.Metadata
+@if (this.Metrics != null)
+{
+    @foreach (var metric in this.Metrics)
+    {
+        <Card class="overflow-x-auto" style="margin:10px;">
+            <CardHeader class="d-flex align-items-center">
+                <div><b>@metric.Name</b></div>
+                <div class="ms-auto d-flex flex-wrap justify-content-end">
+                    <b>@metric.MetricType</b>
+                </div>
+            </CardHeader>
+            <CardBody>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td style="width: 1%"><b>Description: </b></td>
+                            <td>@metric.Description</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table class="table">
+                    <thead>
+                        <th>Value</th>
+                        <th>StartTime</th>
+                        <th>EndTime</th>
+                        <th>Attribute</th>
+                    </thead>
+                    <tbody>
+                        @foreach (var metricPoint in metric.MetricPoints)
+                        {
+                            <tr>
+                                <td>@metricPoint.Value @metric.Unit</td>
+                                <td>@metricPoint.StartTime</td>
+                                <td>@metricPoint.EndTime</td>
+                                <td>
+                                    @foreach (var tag in metricPoint.Tags)
+                                    {
+                                        <Card style="margin-bottom: 5px;">
+                                            <div style="padding-left: 10px; padding-right:10px; padding-top: 4px; padding-bottom:4px;"><b>@tag.Key: </b>@tag.Value</div>
+                                        </Card>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </CardBody>
+
+        </Card>
+    }
+}
+
+@code 
+{
+    /// <summary>
+    /// Gets or sets the metrics that should be shown by this viewer.
+    /// </summary>
+    [Parameter]
+    public List<MetricTestData>? Metrics { get; set; }
+}
