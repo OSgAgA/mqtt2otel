@@ -1,4 +1,6 @@
 ﻿@page "/examples"
+@rendermode InteractiveServer
+
 @attribute [StreamRendering]
 @using mqtt2otel.ManifestExplorer.DTOs
 @inject mqtt2otel.ManifestExplorer.Meters.UsageMeter usageMeter
@@ -11,47 +13,123 @@
     Please choose from a set of predefined examples to get you started using the manifest explorer.
 </p>
 
+<div class="view-switcher" style="padding: 13px;">
+    <span class="view-label @(showTable ? "" : "active")">
+        <i class="bi bi-grid-3x3-gap"></i>
+        Cards
+    </span>
+
+    <Switch @bind-Value="showTable" />
+
+    <span class="view-label @(showTable ? "active" : "")">
+        <i class="bi bi-table"></i>
+        Table
+    </span>
+</div>
+
+<div class="view-switcher" style="padding:8px; margin-left: 20px;">
+    <label>Filter</label><TextInput @bind-Value="this.activeFilter" />
+</div>
+
 @foreach (var categoryExampleMapping in this.categoryExampleMappings)
 {
     <h3 style="margin-top:30px">@categoryExampleMapping.Key</h3>
     <hr />
 
-    <div class="d-flex flex-wrap">
-        @foreach (var example in categoryExampleMapping.Value)
-        {
-            <Card Class="mb-4" Style="width:23rem; margin: 10px">
-                <CardBody Class="d-flex flex-column">
-                    <CardTitle class="d-flex align-items-center">
-                        <div><b>@example.Name</b></div>
-
-                        <div class="ms-auto d-flex flex-wrap justify-content-end">
-                            @foreach (var tag in example.Tags)
-                            {
-                                <Button Color="ButtonColor.Info"
-                                        Style="padding-left: 5px; padding-right: 5px; padding-top: 2px; padding-bottom: 2px; margin-right:5px;">
-                                    @tag
-                                </Button>
-                            }
-                        </div>
-                    </CardTitle>
-                    <hr style="margin-left: 0px; margin-right: 0px; margin-top:0px; margin-bottom:10px;" />
-                    <CardText>
-                        @example.Description
-                        <div class="mt-auto text-center" style="margin:0px">
-                            <a href="@("/" + @example.Id)">
-                                <img src="images/play.png" style="width:80px" />
+    @if (this.showTable)
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Action</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Dexription</th>
+                    <th scope="col">Tags</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var example in categoryExampleMapping.Value
+                    .Where(value => this.activeFilter.IsWhiteSpace() || value.Name.ToLower().Contains(this.activeFilter.ToLower()) || value.Description.ToLower().Contains(this.activeFilter.ToLower())))
+                {
+                    <tr>
+                        <td>
+                            <a href="@("/" + @example.Id)" data-enhance-nav="false">
+                                <img src="images/play.png" style="width:40px" />
                             </a>
-                            @* <Button Color="ButtonColor.Light" To="@("/" + @example.Id)" Type="ButtonType.Link">Go</Button> *@
-                        </div>
-                    </CardText>
-                </CardBody>
-            </Card>
-        }
-    </div>
+                        </td>
+
+                        <td>
+                            <a href="@("/" + @example.Id)" data-enhance-nav="false">
+                                @example.Name
+                            </a>
+                        </td>
+                        <td>@example.Description</td>
+                        <td>
+                            <div class="ms-auto d-flex flex-wrap justify-content-start">
+                                @foreach (var tag in example.Tags)
+                                {
+                                    <Button Color="ButtonColor.Info"
+                                            Style="padding-left: 5px; padding-right: 5px; padding-top: 2px; padding-bottom: 2px; margin-right:5px;">
+                                        @tag
+                                    </Button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+    }
+    else
+    {
+        <div class="d-flex flex-wrap">
+            @foreach (var example in categoryExampleMapping.Value
+                    .Where(value => this.activeFilter.IsWhiteSpace() || value.Name.ToLower().Contains(this.activeFilter.ToLower()) || value.Description.ToLower().Contains(this.activeFilter.ToLower())))
+            {
+                <Card Class="mb-4" Style="width:23rem; margin: 10px">
+                    <CardBody Class="d-flex flex-column">
+                        <CardTitle class="d-flex align-items-center">
+                            <div><b>@example.Name</b></div>
+
+                            <div class="ms-auto d-flex flex-wrap justify-content-end">
+                                @foreach (var tag in example.Tags)
+                                {
+                                    <Button Color="ButtonColor.Info"
+                                            Style="padding-left: 5px; padding-right: 5px; padding-top: 2px; padding-bottom: 2px; margin-right:5px;">
+                                        @tag
+                                    </Button>
+                                }
+                            </div>
+                        </CardTitle>
+                        <hr style="margin-left: 0px; margin-right: 0px; margin-top:0px; margin-bottom:10px;" />
+                        <CardText>
+                            @example.Description
+                            <div class="mt-auto text-center" style="margin:0px">
+                                <a href="@("/" + @example.Id)" data-enhance-nav="false">
+                                    <img src="images/play.png" style="width:80px" />
+                                </a>
+                            </div>
+                        </CardText>
+                    </CardBody>
+                </Card>
+            }
+        </div>
+    }
 }
 
 @code
 {
+    /// <summary>
+    /// A indicator, that determines whether data should be shown inside a table or in cards.
+    /// </summary>
+    private bool showTable;
+
+    /// <summary>
+    /// The curently active filter.
+    /// </summary>
+    private string activeFilter = string.Empty;
+
     /// <summary>
     /// A guard to test, whether the page is already initialized.
     /// </summary>

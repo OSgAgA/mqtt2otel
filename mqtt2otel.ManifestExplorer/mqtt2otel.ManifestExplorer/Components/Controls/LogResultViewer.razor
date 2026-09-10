@@ -1,0 +1,45 @@
+﻿@using mqtt2otel.Metadata
+<div style="padding: 15px;">
+    @if (this.LogEntries != null)
+    {
+        <Card class="overflow-x-auto">
+            <table class="table overflow-x-auto">
+                <thead>
+                    <th>Timestamp</th>
+                    <th>Level</th>
+                    <th>Body</th>
+                    <th>Attribute</th>
+                </thead>
+                <tbody>
+                    @foreach (var logEntry in this.LogEntries)
+                    {
+
+                        <tr>
+                            <td>@logEntry.Timestamp</td>
+                            <td>@logEntry.LogLevel</td>
+                            <td>@logEntry.Body</td>
+                            <td>
+                                @foreach (var tag in logEntry.Attributes.Where(tag => !tag.Key.StartsWith("otel_")))
+                                {
+                                    <Card style="margin-bottom: 5px;">
+                                        <div style="padding-left: 10px; padding-right:10px; padding-top: 4px; padding-bottom:4px;"><b>@tag.Key: </b>@tag.Value</div>
+                                    </Card>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </Card>
+    }
+</div>
+
+
+@code {
+
+    /// <summary>
+    /// Gets or sets the log entries that should be shown by the viewer.
+    /// </summary>
+    [Parameter]
+    public List<LogTestData>? LogEntries { get; set; }
+}

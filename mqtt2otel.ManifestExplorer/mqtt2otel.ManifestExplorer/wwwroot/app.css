@@ -60,7 +60,7 @@ h1:focus {
 }
 
 .nav-scrollable {
-    background: linear-gradient(135deg, #ffffff, #e0e0e0);
+    background: linear-gradient(135deg, #ffffff, #fafafa);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
@@ -74,10 +74,18 @@ h1:focus {
 }
 
 .top-row {
-    background-color: #f0f0f0 !important;
+    background-color: #ffffff !important;
 }
 
 .card {
+    border-radius: 10px;
+    background: var(--body-background);
+    /* Fluent shadow */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+.button .withShadow {
     border-radius: 10px;
     background: var(--body-background);
     /* Fluent shadow */
@@ -118,4 +126,112 @@ h1:focus {
     .navbar-toggler {
         display: none !important;
     }
+}
+
+/* The manifest code editor */
+#my-editor {
+    height: 600px;
+    width: 100%;
+}
+
+
+/* Monaco completion popup */
+.monaco-editor .suggest-widget {
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    /* Softer, deeper floating shadow */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid rgba(128, 128, 128, 0.25) !important;
+    background: #ffffff !important;
+    font-family: Arial
+}
+
+/* Individual suggestion rows */
+.monaco-editor .suggest-widget .monaco-list-row {
+    border-radius: 6px;
+    margin: 2px 4px;
+    width: calc(100% - 8px);
+}
+
+    /* Selected suggestion */
+    .monaco-editor .suggest-widget .monaco-list-row.focused {
+        border-radius: 6px;
+    }
+
+    /* Property name */
+    .monaco-editor .suggest-widget .monaco-list-row .label-name {
+        font-weight: 100;
+        font-family: Arial;
+        text-decoration: none !important;
+    }
+
+    /* Type / detail text */
+    .monaco-editor .suggest-widget .monaco-list-row .type-label {
+        opacity: 0.7;
+    }
+
+/* Documentation/details area */
+.monaco-editor .suggest-details {
+    border-radius: 8px;
+    margin-left: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Make the scrollbar less visually dominant */
+.monaco-editor .suggest-widget .monaco-scrollable-element > .scrollbar {
+    opacity: 0.5;
+}
+
+/* Example view switch */
+.view-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 4px;
+    margin-right: 10px
+    border: 1px solid var(--bs-border-color);
+    border-radius: 999px;
+    background-color: var(--bs-tertiary-bg);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.view-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+    color: var(--bs-secondary-color);
+    transition: color 0.2s ease;
+}
+
+    .view-label.active {
+        color: var(--bs-primary);
+        font-weight: 600;
+    }
+
+    .view-label i {
+        font-size: 1rem;
+    }
+
+.key {
+
+    align-items: center;
+    gap: 0.65rem;
+    padding: 4px;
+    margin-right: 10px border: 1px solid var(--bs-border-color);
+    margin-bottom: 10px;
+    border-radius: 99px 0px 0px 99px;
+    background-color: #e0e0e0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.value {
+    align-items: center;
+    gap: 0.65rem;
+    padding: 4px;
+    margin-bottom: 10px;
+    margin-right: 10px border: 1px solid var(--bs-border-color);
+    border-radius: 0px 999px 999px 0px;
+    background-color: #fafafa;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }

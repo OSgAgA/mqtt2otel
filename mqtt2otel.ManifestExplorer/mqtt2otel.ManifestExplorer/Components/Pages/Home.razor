@@ -1,12 +1,15 @@
 ﻿@page "/{ExampleId?}"
+
 @using mqtt2otel.ManifestExplorer.Components.Controls
 @using mqtt2otel.ManifestExplorer.DTOs
+@using mqtt2otel.ManifestExplorer.Helper
 @using mqtt2otel.ManifestExplorer.Settings
 @using mqtt2otel.Shared
 @inject IJSRuntime JS
 
 @rendermode InteractiveServer
 @inject IHttpClientFactory Factory
+@inject ILogger<Home> logger
 @inject Microsoft.Extensions.Options.IOptions<FeatureToggles> featureToggles
 @inject mqtt2otel.ManifestExplorer.Meters.UsageMeter usageMeter
 
@@ -102,17 +105,17 @@
                         </button>
                     </div>
                 </CardHeader>
-                <InputTextArea id="editor" class="form-control w-100" title="Manifest" @bind-value="@this.Data.Setup.Manifest" rows="24" />
+                <StandaloneCodeEditor @ref="manifestEditor" Id="my-editor" ConstructionOptions="EditorOptions" OnDidInit="OnEditorInit" />
             </Card>
 
             @* The buttons *@
 
             <div class="row">
                 <div class="col" style="text-align: center">
-                    <button class="btn btn-primary" style="margin:20px; width:150px; background-color: #44b8e7" @onclick="Apply">Apply</button>
+                    <button class="btn btn-primary withShadow" style="margin:20px; width:150px; background-color: #44b8e7" @onclick="Apply">Apply</button>
                     @if (featureToggles.Value.ShowCreateJsonButton)
                     {
-                        <button class="btn btn-primary" style="margin:20px; width:150px; background-color: #44b8e7" @onclick="ShowModal">Create Json</button>
+                        <button class="btn btn-primary withShadow" style="margin:20px; width:150px; background-color: #44b8e7" @onclick="ShowModal">Create Json</button>
                     }
                 </div>
             </div>
@@ -130,19 +133,24 @@
                         <Tabs @ref="tabs" EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
                             <Tab @bind-Title="@this.errorTitle" Id="ErrorsTab">
                                 <Content>
-                                    <InputTextArea class="form-control w-100" title="Errors" @bind-Value="@this.errorText" rows="15" />
+                                    <div>
+                                        <Card style="margin:10px">
+                                            <TextAreaInput class="form-control w-100" title="Errors" @bind-Value="@this.errorText" style="color: #660000; font-weight:500" readonly />
+                                        </Card>
+                                    </div>
                                 </Content>
                             </Tab>
-                            <Tab @bind-Title="@this.metricsTitle" IsActive="true">
+                            <Tab @bind-Title="this.metricsTitle" IsActive="true">
                                 <Content>
-                                    <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultMetricsText" rows="15" />
+                                    <MetricResultViewer Metrics="@this.Result?.Metrics"/>
                                 </Content>
                             </Tab>
                             <Tab @bind-Title="@this.logsTitle">
                                 <Content>
-                                    <InputTextArea class="form-control w-100" title="Result" @bind-Value="@this.resultLogText" rows="10" />
+                                    <LogResultViewer LogEntries="@this.Result?.Logs"/>
                                 </Content>
                             </Tab>
+
                         </Tabs>
                     </Card>
                 </div>
@@ -152,7 +160,18 @@
     </div>
 </div>
 
-@code {
+@code
+{
+    /// <summary>
+    /// Contains a reference to the manifest editor
+    /// </summary>
+    private StandaloneCodeEditor? manifestEditor;
+
+    /// <summary>
+    /// A guard for testing, whether the manifest editor is initialized.
+    /// </summary>
+    private bool editorIsInitialized = false;
+
     /// <summary>
     /// The tabs controll that contains the different results.
     /// </summary>
@@ -224,6 +243,15 @@
 
         var httpClient = Factory.CreateClient("ServerAPI");
 
+        try
+        {
+            if (this.manifestEditor != null) this.Data.Setup.Manifest = await this.manifestEditor.GetValue();
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Could not read monacco editor text.");
+        }
+
         var request = new ApplyPatternToPayloadData(this.Data.Setup.Topic, this.Data.Setup.Payload, this.Data.Setup.Manifest, this.Data.Setup.UserProperties);
         var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/ApplyPatternToPayload", request);
 
@@ -251,6 +279,8 @@
             {
                 await this.tabs.ShowTabByIndexAsync(2);
             }
+
+            this.StateHasChanged();
         }
 
         this.Result = result;
@@ -282,12 +312,12 @@
 
                 this.usageMeter.ExampleRequestedCounter.Add(1, exampleTags);
             }
-        }
 
-        if (this.ExampleId != null)
-        {
+            if (this.ExampleId != null)
+            {
 
-            this.Data = TestCaseData.GetById(this.ExampleId);
+                this.Data = TestCaseData.GetById(this.ExampleId);
+            }
         }
 
         return base.OnInitializedAsync();
@@ -304,10 +334,10 @@
     /// <summary>
     /// Adds server stubs to the manifest, so that a complete manifest is available that can be used for further processing.
     /// </summary>
-    private void AddServerStubs()
+    private async Task AddServerStubs()
     {
         string serverStub = """
-Version: 1.0
+Version: 1.1
 
 MqttConnections:
   - Name: "My broker"
@@ -330,6 +360,8 @@ OtelConnections:
 """;
 
         this.Data.Setup.Manifest = serverStub + (this.Data.Setup.Manifest.StartsWith('\n') ? "" : "\n") + this.Data.Setup.Manifest;
+
+        await this.SetManifestEditorText(Data.Setup.Manifest);
     }
 
     /// <summary>
@@ -359,7 +391,86 @@ OtelConnections:
     /// <returns></returns>
     private async Task CopyManifest()
     {
+        if (this.manifestEditor != null) this.Data.Setup.Manifest = await this.manifestEditor.GetValue();
+
         await JS.InvokeVoidAsync("copyToClipboard", this.Data.Setup.Manifest);
+    }
+
+    /// <summary>
+    /// Sets the options of the monacco editor at construction time.
+    /// </summary>
+    /// <param name="editor">The editor for which the options should be set.</param>
+    /// <returns>The created options.</returns>
+    private StandaloneEditorConstructionOptions EditorOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            AutomaticLayout = true,
+            Language = "yaml",
+            Value = " ",
+            Minimap = new EditorMinimapOptions { Enabled = false },
+            FontSize = 16,
+            Scrollbar = new EditorScrollbarOptions
+            {
+                Vertical = "auto",
+                Horizontal = "auto",
+                AlwaysConsumeMouseWheel = false,
+                UseShadows = false
+            }
+        };
+    }
+
+    /// <summary>
+    /// Called when the monacco editor has completed its init process.
+    /// </summary>
+    private async Task OnEditorInit()
+    {
+        if (manifestEditor != null)
+        {
+            await Task.Delay(100);
+
+            try
+            {
+                await this.SetManifestEditorText(Data.Setup.Manifest, allowUninitialized: true);
+                await manifestEditor.Layout();
+
+                string? manifestSchema = new ManifestCompletionService().Generate();
+
+                await JS.InvokeVoidAsync(
+                "manifestCompletion.register",
+                manifestSchema);
+
+                this.editorIsInitialized = true;
+
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Could not initialize monacco editor.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sets the provided text in the monacco editor.
+    /// </summary>
+    /// <param name="text">The text that should be set.</param>
+    /// <param name="allowUninitialized">A flag indicating whether the <see cref="editorIsInitialized"/> flag should be ignored.</param>
+    private async Task SetManifestEditorText(string text, bool allowUninitialized = false)
+    {
+        if (manifestEditor != null && this.editorIsInitialized != allowUninitialized)
+        {
+            try
+            {
+                await manifestEditor.SetValue(text);
+                await manifestEditor.Layout();
+            }
+
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Could not set manifest editor text.");
+            }
+        }
     }
 
 }
