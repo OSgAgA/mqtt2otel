@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using mqtt2otel.ManifestExplorer.Client.Pages;
 using mqtt2otel.ManifestExplorer.Components;
 using mqtt2otel.ManifestExplorer.Meters;
+using mqtt2otel.ManifestExplorer.Services;
 using mqtt2otel.ManifestExplorer.Settings;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
@@ -38,6 +39,7 @@ namespace mqtt2otel.ManifestExplorer
             var filePath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "version.txt");
             builder.Services.AddSingleton<ApplicationInfo>(new ApplicationInfo(filePath ?? string.Empty));
             builder.Services.AddSingleton<UsageMeter>();
+            builder.Services.AddSingleton<RealUserMonitoring>();
 
             builder.Services.AddHttpClient("ServerAPI", (serviceProvider, client) =>
             {
