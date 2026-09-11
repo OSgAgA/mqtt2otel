@@ -27,6 +27,7 @@ namespace mqtt2otel.ManifestExplorer.Meters
             this.PageRequestedCounter = this.meter.CreateCounter<long>(prefix + "page_requested_counter", description: "Counts how often a page is requested from a user.");
             this.ExampleRequestedCounter = this.meter.CreateCounter<long>(prefix + "example_requested_counter", description: "Counts how often an example code is requested from a user.");
             this.ExampleAppliedCounter = this.meter.CreateCounter<long>(prefix + "example_applied_counter", description: "Counts how often the apply button is clicked from a user.");
+            this.UnsupportedSubPageCalled = this.meter.CreateCounter<long>(prefix + "unsupported_sub_page_counter", description: "Counts how often an unsupported sub page is called.");
         }
 
         /// <summary>
@@ -43,5 +44,10 @@ namespace mqtt2otel.ManifestExplorer.Meters
         /// Gets a counter that counts how often the apply button is clicked from a user.
         /// </summary>
         public Counter<long> ExampleAppliedCounter { get; }
+
+        /// <summary>
+        /// Gets a counter that counts how often an unsupported sub page is called.
+        /// </summary>
+        public Counter<long> UnsupportedSubPageCalled { get; }
     }
 }

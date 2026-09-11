@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
         explorerBtn.addEventListener("click", () => {
             if (!id) return;
 
-            const url = `https://explorer.mqtt2otel.org/${id}${field ? "#" + field : ""}`;
+            const url = `https://explorer.mqtt2otel.org/Explorer?exampleId=${id}`;
             window.open(url, "_blank");
         });
 

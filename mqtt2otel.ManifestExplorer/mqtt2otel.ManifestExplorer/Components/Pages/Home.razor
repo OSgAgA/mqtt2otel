@@ -1,476 +1,84 @@
-﻿@page "/{ExampleId?}"
+﻿@page "/{UnprocessedPath?}"
 
-@using mqtt2otel.ManifestExplorer.Components.Controls
-@using mqtt2otel.ManifestExplorer.DTOs
 @using mqtt2otel.ManifestExplorer.Helper
-@using mqtt2otel.ManifestExplorer.Settings
-@using mqtt2otel.Shared
 @inject IJSRuntime JS
 
 @rendermode InteractiveServer
-@inject IHttpClientFactory Factory
-@inject ILogger<Home> logger
-@inject Microsoft.Extensions.Options.IOptions<FeatureToggles> featureToggles
 @inject mqtt2otel.ManifestExplorer.Meters.UsageMeter usageMeter
 
 <PageTitle>mqtt2otel manifest explorer</PageTitle>
 
-<div class="flex-container">
+<div class="flex-container" style="align-content:center">
+    <Card class="hide-on-mobile" style="margin:auto; width: 400px; margin-bottom: 50px; margin-top: 70px;">
+        <img src="images/logo-new.png" alt="mqtt2otel logo" style="width: 400px; margin: auto" />
+    </Card>
+    <Card style="max-width: 900px; margin: auto; padding-bottom: 20px;">
+        <p style="margin:auto; padding: 30px;  font-size: 24px; text-align: center">
+            <b>Welcome to the mqtt2otel explorer.</b>
+        </p>
 
-    <CreateJsonDialog @ref="modal" Data="@this.Data" Result="@this.Result" />
+        <p style="margin:auto; padding: 30px;  font-size: 24px; text-align: center">
+            <b>What would you like to do?</b>
+        </p>
 
-    <div class="row">
-
-        @* The mqtt part *@
-
-        <div class="col">
-            <h2>MQTT</h2>
-            <div class="flex-container">
-                <div class="row">
-                    <div class="col" style="margin-bottom:20px;">
-                        <Card>
-                            <CardHeader style="background-color: #dbeaf1">
-                                <b>Topic</b>
-                            </CardHeader>
-                            <InputText @bind-Value="@this.Data.Setup.Topic" />
-                        </Card>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col" style="margin-bottom:20px;">
-                        <Card>
-                            <CardHeader style="background-color: #dbeaf1">
-                                <b>Payload</b>
-                            </CardHeader>
-                            <InputTextArea class="form-control w-100" title="Payload" @bind-Value="@this.Data.Setup.Payload" rows="22" />
-                        </Card>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col">
-                        <Card>
-                            <CardHeader class="d-flex justify-content-between align-items-center" style="background-color: #dbeaf1">
-                                <b>User properties</b>
-
-                                <div>
-                                    <button class="btn btn-outline-primary me-2" @onclick="AddUserProperty">
-                                        Add
-                                    </button>
-                                </div>
-                            </CardHeader>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Name</th>
-                                        <th scope="col">Value</th>
-                                        <th scope="col">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var property in this.Data.Setup.UserProperties)
-                                    {
-                                        <tr>
-                                            <td><InputText class="form-control w-100" @bind-Value="@property.Name" /></td>
-                                            <td><InputText class="form-control w-100" @bind-Value="@property.Value" /></td>
-                                            <td><button class="btn btn-outline-primary me-2" @onclick="() => DeleteUserProperty(property)">Delete</button></td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </Card>
-                    </div>
-                </div>
-            </div>
+        <div class="d-flex flex-wrap" style="margin: auto;">
+            <button class="btn btn-success " style="padding: 30px; margin:30px; background-color: #44b8e7" onclick="window.location.href='./Explorer'">
+                <b>Start with an empty explorer</b>
+            </button>
+            <button class="btn btn-success " style="padding: 30px; margin:30px; background-color: #44b8e7" onclick="window.location.href='./Examples'">
+                <b>Choose an example to start with</b>
+            </button>
         </div>
-
-        <div class="col-auto d-flex align-items-center hide-on-mobile">
-            <img src="images/play_no_circle.png" style="width:80px" />
-        </div>
-
-        @* The mqtt2otel part *@
-
-        <div class="col">
-            <h2 class="add-top-margin-on-mobile">to Open Telemetry</h2>
-            <Card>
-                <CardHeader class="d-flex justify-content-between align-items-center" style="background-color: #dbeaf1">
-                    <b>Manifest</b>
-
-                    <div>
-                        <button class="btn btn-outline-primary me-2" @onclick="AddServerStubs">
-                            Add server stubs
-                        </button>
-                        <button class="btn btn-outline-primary" @onclick="CopyManifest">
-                            Copy
-                        </button>
-                    </div>
-                </CardHeader>
-                <StandaloneCodeEditor @ref="manifestEditor" Id="my-editor" ConstructionOptions="EditorOptions" OnDidInit="OnEditorInit" />
-            </Card>
-
-            @* The buttons *@
-
-            <div class="row">
-                <div class="col" style="text-align: center">
-                    <button class="btn btn-primary withShadow" style="margin:20px; width:150px; background-color: #44b8e7" @onclick="Apply">Apply</button>
-                    @if (featureToggles.Value.ShowCreateJsonButton)
-                    {
-                        <button class="btn btn-primary withShadow" style="margin:20px; width:150px; background-color: #44b8e7" @onclick="ShowModal">Create Json</button>
-                    }
-                </div>
-            </div>
-
-            <hr />
-
-            @* The results *@
-
-            <div class="row">
-                <div class="col">
-                    <Card>
-                        <CardHeader style="background-color: #dbeaf1">
-                            <b>Result</b>
-                        </CardHeader>
-                        <Tabs @ref="tabs" EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
-                            <Tab @bind-Title="@this.errorTitle" Id="ErrorsTab">
-                                <Content>
-                                    <div>
-                                        <Card style="margin:10px">
-                                            <TextAreaInput class="form-control w-100" title="Errors" @bind-Value="@this.errorText" style="color: #660000; font-weight:500" readonly />
-                                        </Card>
-                                    </div>
-                                </Content>
-                            </Tab>
-                            <Tab @bind-Title="this.metricsTitle" IsActive="true">
-                                <Content>
-                                    <MetricResultViewer Metrics="@this.Result?.Metrics"/>
-                                </Content>
-                            </Tab>
-                            <Tab @bind-Title="@this.logsTitle">
-                                <Content>
-                                    <LogResultViewer LogEntries="@this.Result?.Logs"/>
-                                </Content>
-                            </Tab>
-
-                        </Tabs>
-                    </Card>
-                </div>
-            </div>
-        </div>
-
-    </div>
+    </Card>
 </div>
 
 @code
 {
     /// <summary>
-    /// Contains a reference to the manifest editor
-    /// </summary>
-    private StandaloneCodeEditor? manifestEditor;
-
-    /// <summary>
-    /// A guard for testing, whether the manifest editor is initialized.
-    /// </summary>
-    private bool editorIsInitialized = false;
-
-    /// <summary>
-    /// The tabs controll that contains the different results.
-    /// </summary>
-    Tabs tabs = new();
-
-    /// <summary>
-    /// The modal dialog used for creating json data.
-    /// </summary>
-    CreateJsonDialog modal = new();
-
-    /// <summary>
-    /// The id of the example that should be used to prefill the page. May be null if no example is provided.
+    /// Gets or sets the part of the path that will not be processed by the page. This is for telemetry purposes only!
     /// </summary>
     [Parameter]
-    public string? ExampleId { get; set; }
-
-    ///# <summary>
-    /// The tilte of the error tab.
-    /// </summary>
-    private string errorTitle = "Errors";
+    public string? UnprocessedPath { get; set; }
 
     /// <summary>
-    /// The title of the metric tab.
+    /// Sends metric data about the client to the metric backend on first render.
     /// </summary>
-    private string metricsTitle = "Metrics";
-
-    /// <summary>
-    /// The title of the log tab.
-    /// </summary>
-    private string logsTitle = "Logs";
-
-    /// <summary>
-    /// The text representation of the metric result.
-    /// </summary>
-    private string resultMetricsText = string.Empty;
-
-    /// <summary>
-    /// The text representation of the error result.
-    /// </summary>
-    private string errorText = string.Empty;
-
-    /// <summary>
-    /// The text representation of the log result.
-    /// </summary>
-    private string resultLogText = string.Empty;
-
-    /// <summary>
-    /// The result received via the ApplyPatternToPayload request. Maybe null if request is not yet called,
-    /// or if not successfull.
-    /// </summary>
-    private ApplyPatternToPayloadResult? Result = null;
-
-    /// <summary>
-    /// A guard to test, whether the page is already initialized.
-    /// </summary>
-    private bool isInitialized = false;
-
-    /// <summary>
-    /// Contains the data used by the explorer for testing different inputs based on incoming messages.
-    /// </summary>
-    private TestCaseData Data = new TestCaseData();
-
-    /// <summary>
-    /// Apply the provided data and set the result tabs.
-    /// </summary>
-    private async Task Apply()
+    /// <param name="firstRender">True if this is the first render of the page.</param>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        this.usageMeter.ExampleAppliedCounter.Add(1);
-
-        var httpClient = Factory.CreateClient("ServerAPI");
-
-        try
+        if (firstRender)
         {
-            if (this.manifestEditor != null) this.Data.Setup.Manifest = await this.manifestEditor.GetValue();
-        }
-        catch (Exception ex)
-        {
-            this.logger.LogError(ex, "Could not read monacco editor text.");
-        }
+            var browserInfo = await JS.InvokeAsync<ClientInfo>("getClientInfo");
 
-        var request = new ApplyPatternToPayloadData(this.Data.Setup.Topic, this.Data.Setup.Payload, this.Data.Setup.Manifest, this.Data.Setup.UserProperties);
-        var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/ApplyPatternToPayload", request);
-
-        var result = await response.Content.ReadFromJsonAsync<ApplyPatternToPayloadResult>();
-
-        if (result != null)
-        {
-            this.resultMetricsText = result.GetMetricsAsString();
-            this.resultLogText = result.GetLogsAsString();
-            this.errorText = result.GetErrorsAsString();
-
-            this.errorTitle = $"Errors ({result.Errors.Count})";
-            this.metricsTitle = $"Metrics ({result.Metrics.Count})";
-            this.logsTitle = $"Logs ({result.Logs.Count})";
-
-            if (result.HasErrors)
-            {
-                await this.tabs.ShowTabByIndexAsync(0);
-            }
-            else if (result.HasMetrics)
-            {
-                await this.tabs.ShowTabByIndexAsync(1);
-            }
-            else if (result.HasLogs)
-            {
-                await this.tabs.ShowTabByIndexAsync(2);
-            }
-
-            this.StateHasChanged();
-        }
-
-        this.Result = result;
-    }
-
-    /// <summary>
-    /// Called when the side is initialized. Will load example data if an example id is provided.
-    /// </summary>
-    /// <returns></returns>
-    protected override Task OnInitializedAsync()
-    {
-        if (!this.isInitialized)
-        {
-            this.isInitialized = true;
+            var parser = UAParser.Parser.GetDefault();
+            var clientInfo = parser.ParseUserAgent(browserInfo.UserAgent);
+            var os = parser.ParseOS(browserInfo.UserAgent);
 
             var pageTags = new System.Diagnostics.TagList()
             {
-                { "Page", "Home"}
+                { "Page", "Home"},
+                { "OS_Family", os.Family },
+                { "OS", os.ToString() },
+                { "Client", clientInfo.Family},
+                { "Window.Width", (int)(browserInfo.WindowWidth / 100) * 100 },
+                { "Window.Height", (int) (browserInfo.WindowHeight / 100) * 100 },
+                { "Language", browserInfo.Language }
             };
 
             this.usageMeter.PageRequestedCounter.Add(1, pageTags);
 
-            if (this.ExampleId != null)
+            if (this.UnprocessedPath != null)
             {
-                var exampleTags = new System.Diagnostics.TagList()
-            {
-                { "ExampleId", this.ExampleId}
-            };
+                var tags = new System.Diagnostics.TagList()
+                {
+                    { "Path", this.UnprocessedPath }
+                };
 
-                this.usageMeter.ExampleRequestedCounter.Add(1, exampleTags);
-            }
-
-            if (this.ExampleId != null)
-            {
-
-                this.Data = TestCaseData.GetById(this.ExampleId);
+                this.usageMeter.UnsupportedSubPageCalled.Add(1, tags);
             }
         }
 
-        return base.OnInitializedAsync();
-    }
-
-    /// <summary>
-    /// Shows the modal dialog.
-    /// </summary>
-    private async Task ShowModal()
-    {
-        await modal.Show();
-    }
-
-    /// <summary>
-    /// Adds server stubs to the manifest, so that a complete manifest is available that can be used for further processing.
-    /// </summary>
-    private async Task AddServerStubs()
-    {
-        string serverStub = """
-Version: 1.1
-
-MqttConnections:
-  - Name: "My broker"
-    Endpoint:
-      Port: 1813
-      Protocol: tcp
-      Address: "mymqtt-broker.net"
-      EnableTls: false
-
-OtelConnections:
-  - Name: "My Otel server"
-    ServiceName: "my-service"
-    ServiceNamespace: "my-service-namespace"
-    Endpoint:
-      Protocol: "http"
-      Port: 4317
-      Address: "my-otel-collector.net"
-      EnableTls: false
-
-""";
-
-        this.Data.Setup.Manifest = serverStub + (this.Data.Setup.Manifest.StartsWith('\n') ? "" : "\n") + this.Data.Setup.Manifest;
-
-        await this.SetManifestEditorText(Data.Setup.Manifest);
-    }
-
-    /// <summary>
-    /// Adds a new mqtt user property.
-    /// </summary>
-    private void AddUserProperty()
-    {
-        this.Data.Setup.UserProperties.Add(new UserProperty());
-
-        this.StateHasChanged();
-    }
-
-    /// <summary>
-    /// Deletes an existing user property.
-    /// </summary>
-    /// <param name="property">The property to be deleted.</param>
-    private void DeleteUserProperty(UserProperty property)
-    {
-        this.Data.Setup.UserProperties.Remove(property);
-
-        this.StateHasChanged();
-    }
-
-    /// <summary>
-    /// Copies the manifest string into the paste buffer.
-    /// </summary>
-    /// <returns></returns>
-    private async Task CopyManifest()
-    {
-        if (this.manifestEditor != null) this.Data.Setup.Manifest = await this.manifestEditor.GetValue();
-
-        await JS.InvokeVoidAsync("copyToClipboard", this.Data.Setup.Manifest);
-    }
-
-    /// <summary>
-    /// Sets the options of the monacco editor at construction time.
-    /// </summary>
-    /// <param name="editor">The editor for which the options should be set.</param>
-    /// <returns>The created options.</returns>
-    private StandaloneEditorConstructionOptions EditorOptions(StandaloneCodeEditor editor)
-    {
-        return new StandaloneEditorConstructionOptions
-        {
-            AutomaticLayout = true,
-            Language = "yaml",
-            Value = " ",
-            Minimap = new EditorMinimapOptions { Enabled = false },
-            FontSize = 16,
-            Scrollbar = new EditorScrollbarOptions
-            {
-                Vertical = "auto",
-                Horizontal = "auto",
-                AlwaysConsumeMouseWheel = false,
-                UseShadows = false
-            }
-        };
-    }
-
-    /// <summary>
-    /// Called when the monacco editor has completed its init process.
-    /// </summary>
-    private async Task OnEditorInit()
-    {
-        if (manifestEditor != null)
-        {
-            await Task.Delay(100);
-
-            try
-            {
-                await this.SetManifestEditorText(Data.Setup.Manifest, allowUninitialized: true);
-                await manifestEditor.Layout();
-
-                string? manifestSchema = new ManifestCompletionService().Generate();
-
-                await JS.InvokeVoidAsync(
-                "manifestCompletion.register",
-                manifestSchema);
-
-                this.editorIsInitialized = true;
-
-
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Could not initialize monacco editor.");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Sets the provided text in the monacco editor.
-    /// </summary>
-    /// <param name="text">The text that should be set.</param>
-    /// <param name="allowUninitialized">A flag indicating whether the <see cref="editorIsInitialized"/> flag should be ignored.</param>
-    private async Task SetManifestEditorText(string text, bool allowUninitialized = false)
-    {
-        if (manifestEditor != null && this.editorIsInitialized != allowUninitialized)
-        {
-            try
-            {
-                await manifestEditor.SetValue(text);
-                await manifestEditor.Layout();
-            }
-
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Could not set manifest editor text.");
-            }
-        }
+        await base.OnAfterRenderAsync(firstRender);
     }
 
 }

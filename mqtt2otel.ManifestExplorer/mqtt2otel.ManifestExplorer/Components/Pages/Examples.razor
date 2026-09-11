@@ -51,15 +51,16 @@
                 @foreach (var example in categoryExampleMapping.Value
                     .Where(value => this.activeFilter.IsWhiteSpace() || value.Name.ToLower().Contains(this.activeFilter.ToLower()) || value.Description.ToLower().Contains(this.activeFilter.ToLower())))
                 {
+                    string encodedExampleId = Uri.EscapeDataString(example.Id);
                     <tr>
                         <td>
-                            <a href="@("/" + @example.Id)" data-enhance-nav="false">
+                            <a href="@("Explorer/?exampleId=" + @encodedExampleId)" data-enhance-nav="false">
                                 <img src="images/play.png" style="width:40px" />
                             </a>
                         </td>
 
                         <td>
-                            <a href="@("/" + @example.Id)" data-enhance-nav="false">
+                            <a href="@("Explorer/?exampleId=" + @encodedExampleId)" data-enhance-nav="false">
                                 @example.Name
                             </a>
                         </td>
@@ -87,6 +88,8 @@
             @foreach (var example in categoryExampleMapping.Value
                     .Where(value => this.activeFilter.IsWhiteSpace() || value.Name.ToLower().Contains(this.activeFilter.ToLower()) || value.Description.ToLower().Contains(this.activeFilter.ToLower())))
             {
+                string encodedExampleId = Uri.EscapeDataString(example.Id);
+
                 <Card Class="mb-4" Style="width:23rem; margin: 10px">
                     <CardBody Class="d-flex flex-column">
                         <CardTitle class="d-flex align-items-center">
@@ -106,7 +109,7 @@
                         <CardText>
                             @example.Description
                             <div class="mt-auto text-center" style="margin:0px">
-                                <a href="@("/" + @example.Id)" data-enhance-nav="false">
+                                <a href="@("Explorer/?exampleId=" + @encodedExampleId)" data-enhance-nav="false">
                                     <img src="images/play.png" style="width:80px" />
                                 </a>
                             </div>
