@@ -224,7 +224,7 @@ Two metrics will be created:
 > [!Note]
 > ## Interacting with the created names and values
 >
-> You can interact with the `ParseAs`results by convert the values using a [`ValueConverter`](/docs/expressions/converter-and-formatter/#valueconverter)) and 
+> You can interact with the `ParseAs`results by convert the values using a [`ValueConverter`](/docs/expressions/converter-and-formatter/#valueconverter) and 
 > formatting the signal name using a [`NameFormatter`](/docs/expressions/converter-and-formatter/#nameformatter).
 
 

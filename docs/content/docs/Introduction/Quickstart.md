@@ -38,7 +38,7 @@ For additional configuration options, see [Configure MQTT Broker](todo) and [Con
 
 After connecting to the MQTT broker and Otel server, you can subscribe to an MQTT topic and generate an Otel metric from incoming messages.
 
-Assume the server publishes messages to the topic `{{< exampleData id="doc-2" field="Topic">}}` in the following JSON format:
+Assume the server publishes messages to the topic `{{< exampleData id="doc-12" field="Topic">}}` in the following JSON format:
 
 {{< exampleCode id="doc-12" field="Payload" lang="yaml">}}
 
