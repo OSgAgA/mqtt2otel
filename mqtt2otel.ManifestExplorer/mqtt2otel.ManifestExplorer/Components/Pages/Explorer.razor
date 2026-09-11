@@ -4,6 +4,7 @@
 @using mqtt2otel.ManifestExplorer.Components.Controls
 @using mqtt2otel.ManifestExplorer.DTOs
 @using mqtt2otel.ManifestExplorer.Helper
+@using mqtt2otel.ManifestExplorer.Services
 @using mqtt2otel.ManifestExplorer.Settings
 @using mqtt2otel.Shared
 @inject IJSRuntime JS
@@ -13,7 +14,7 @@
 @inject IHttpClientFactory Factory
 @inject ILogger<Explorer> logger
 @inject Microsoft.Extensions.Options.IOptions<FeatureToggles> featureToggles
-@inject mqtt2otel.ManifestExplorer.Meters.UsageMeter usageMeter
+@inject RealUserMonitoring rum
 
 <PageTitle>mqtt2otel manifest explorer</PageTitle>
 
@@ -289,20 +290,7 @@
     /// </summary>
     private async Task Apply()
     {
-        var tags = new System.Diagnostics.TagList();
-
-
-        if (this.ExampleId != null)
-        {
-            tags.Add("ExampleId", this.ExampleId);
-        }
-        else
-        {
-            tags.Add("ExampleId", "custom");
-        }
-
-        this.usageMeter.ExampleAppliedCounter.Add(1);
-
+        rum.RecordExampleApplied(this.ExampleId);
 
         var httpClient = Factory.CreateClient("ServerAPI");
 
@@ -367,17 +355,7 @@
 
             if (this.ExampleId != null)
             {
-                var exampleTags = new System.Diagnostics.TagList()
-                {
-                    { "ExampleId", this.ExampleId}
-                };
-
-                this.usageMeter.ExampleRequestedCounter.Add(1, exampleTags);
-            }
-
-            if (this.ExampleId != null)
-            {
-
+                rum.RecordExampleRequested(this.ExampleId);
                 this.Data = TestCaseData.GetById(this.ExampleId);
             }
         }
@@ -395,22 +373,7 @@
         {
             var browserInfo = await JS.InvokeAsync<ClientInfo>("getClientInfo");
 
-            var parser = UAParser.Parser.GetDefault();
-            var clientInfo = parser.ParseUserAgent(browserInfo.UserAgent);
-            var os = parser.ParseOS(browserInfo.UserAgent);
-
-            var pageTags = new System.Diagnostics.TagList()
-            {
-                { "Page", "Explorer"},
-                { "OS_Family", os.Family },
-                { "OS", os.ToString() },
-                { "Client", clientInfo.Family},
-                { "Window.Width", (int)(browserInfo.WindowWidth / 100) * 100 },
-                { "Window.Height", (int) (browserInfo.WindowHeight / 100) * 100 },
-                { "Language", browserInfo.Language }
-            };
-
-            this.usageMeter.PageRequestedCounter.Add(1, pageTags);
+            rum.RecordPageLoad(browserInfo, "Explorer");
         }
 
         await base.OnAfterRenderAsync(firstRender);

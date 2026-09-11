@@ -1,10 +1,12 @@
 ﻿@page "/{UnprocessedPath?}"
 
 @using mqtt2otel.ManifestExplorer.Helper
+@using mqtt2otel.ManifestExplorer.Services
 @inject IJSRuntime JS
 
 @rendermode InteractiveServer
-@inject mqtt2otel.ManifestExplorer.Meters.UsageMeter usageMeter
+@inject RealUserMonitoring rum
+
 
 <PageTitle>mqtt2otel manifest explorer</PageTitle>
 
@@ -50,32 +52,7 @@
         {
             var browserInfo = await JS.InvokeAsync<ClientInfo>("getClientInfo");
 
-            var parser = UAParser.Parser.GetDefault();
-            var clientInfo = parser.ParseUserAgent(browserInfo.UserAgent);
-            var os = parser.ParseOS(browserInfo.UserAgent);
-
-            var pageTags = new System.Diagnostics.TagList()
-            {
-                { "Page", "Home"},
-                { "OS_Family", os.Family },
-                { "OS", os.ToString() },
-                { "Client", clientInfo.Family},
-                { "Window.Width", (int)(browserInfo.WindowWidth / 100) * 100 },
-                { "Window.Height", (int) (browserInfo.WindowHeight / 100) * 100 },
-                { "Language", browserInfo.Language }
-            };
-
-            this.usageMeter.PageRequestedCounter.Add(1, pageTags);
-
-            if (this.UnprocessedPath != null)
-            {
-                var tags = new System.Diagnostics.TagList()
-                {
-                    { "Path", this.UnprocessedPath }
-                };
-
-                this.usageMeter.UnsupportedSubPageCalled.Add(1, tags);
-            }
+            rum.RecordPageLoad(browserInfo, "Home");
         }
 
         await base.OnAfterRenderAsync(firstRender);

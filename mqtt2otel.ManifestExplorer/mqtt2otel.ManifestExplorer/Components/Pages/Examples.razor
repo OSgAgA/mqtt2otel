@@ -3,7 +3,10 @@
 
 @attribute [StreamRendering]
 @using mqtt2otel.ManifestExplorer.DTOs
-@inject mqtt2otel.ManifestExplorer.Meters.UsageMeter usageMeter
+@using mqtt2otel.ManifestExplorer.Helper
+@using mqtt2otel.ManifestExplorer.Services
+@inject IJSRuntime JS
+@inject RealUserMonitoring rum
 
 <PageTitle>Examples</PageTitle>
 
@@ -134,34 +137,23 @@
     private string activeFilter = string.Empty;
 
     /// <summary>
-    /// A guard to test, whether the page is already initialized.
-    /// </summary>
-    private bool isInitialized = false;
-
-    /// <summary>
     /// All available examples.
     /// </summary>
     private Dictionary<string, List<ExampleData>> categoryExampleMappings = ExampleData.GetAllByCategories();
 
-
     /// <summary>
-    /// Called when the side is initialized.
+    /// Sends metric data about the client to the metric backend on first render.
     /// </summary>
-    /// <returns></returns>
-    protected override Task OnInitializedAsync()
+    /// <param name="firstRender">True if this is the first render of the page.</param>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!this.isInitialized)
+        if (firstRender)
         {
-            this.isInitialized = true;
+            var browserInfo = await JS.InvokeAsync<ClientInfo>("getClientInfo");
 
-            var pageTags = new System.Diagnostics.TagList()
-            {
-                { "Page", "Examples"}
-            };
-
-            this.usageMeter.PageRequestedCounter.Add(1, pageTags);
+            rum.RecordPageLoad(browserInfo, "Examples");
         }
 
-        return base.OnInitializedAsync();
+        await base.OnAfterRenderAsync(firstRender);
     }
 }
