@@ -1,4 +1,9 @@
 {
+  "Links": {
+    "Open telemetry metrics": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-metrics-section",
+    "Supported functions": "https://mqtt2otel.org/docs/expressions/#available-functions",
+    "Expression constants": "https://mqtt2otel.org/docs/expressions/#constants"
+  },
   "Setup": {
     "Id": "metric-08",
     "Name": "Convert radian in degree",
@@ -18,7 +23,7 @@
     "Metrics": [
       {
         "Name": "Sensor.AngleInDegrees",
-        "OtelServer": "d7330def-c61c-4053-bbe4-f1962d196fab",
+        "OtelServer": "3e08ab17-576d-4850-961f-297d7d5a3503",
         "MeterVersion": "",
         "Description": "",
         "Unit": "",
@@ -26,8 +31,8 @@
         "MetricPoints": [
           {
             "Value": 57.29577951308232,
-            "StartTime": "2026-09-06T11:39:18.0871357+00:00",
-            "EndTime": "2026-09-06T11:39:18.0871719+00:00",
+            "StartTime": "2026-09-13T14:21:57.2558162+00:00",
+            "EndTime": "2026-09-13T14:21:57.2558691+00:00",
             "Tags": {}
           }
         ]

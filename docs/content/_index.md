@@ -87,18 +87,22 @@ it to different otel endpoints that are optimized for different use cases.
 
   {{< /card >}}
 
-- {{< card class="hide-on-mobile" >}}
-  ![sphere](/Book.png)
+- <a href="/docs/introduction" class="book-card-link">
+  {{< card class="hide-on-mobile" >}}
+  ![book](/Book.png)
 
   {{< /card >}}
+  </a>
 
 {{% /columns %}}
 
 {{% columns ratio="1:3" %}}
-- {{< card class="hide-on-mobile" >}}
+- <a href="https://explorer.mqtt2otel.org" class="book-card-link">
+  {{< card class="hide-on-mobile" >}}
   ![explorer](/logo.png)
 
   {{< /card >}}
+  </a>
 
 - {{< card >}}
 
@@ -130,10 +134,12 @@ it to different otel endpoints that are optimized for different use cases.
   If you would like to join or start a discussion, or ask a question then welcome to our [discussions page](https://github.com/OSgAgA/mqtt2otel/discussions).
   {{< /card >}}
 
-- {{< card class="hide-on-mobile" >}}
+- <a href="https://github.com/OSgAgA/mqtt2otel" class="book-card-link">
+  {{< card class="hide-on-mobile" >}}
   ![gears](/Gears.png)
 
   {{< /card >}}
+  </a>
 
 {{% /columns %}}
 

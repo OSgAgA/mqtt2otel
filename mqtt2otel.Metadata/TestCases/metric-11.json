@@ -1,4 +1,8 @@
 {
+  "Links": {
+    "Open telemetry metrics": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-metrics-section",
+    "ParseAs": "https://mqtt2otel.org/docs/manifest/processors/#parseas"
+  },
   "Setup": {
     "Id": "metric-11",
     "Name": "Automatically parse Json",
@@ -18,7 +22,7 @@
     "Metrics": [
       {
         "Name": "Processor.Temperature",
-        "OtelServer": "1c1ad657-7abc-4438-8729-0ee6a6467de5",
+        "OtelServer": "bb6896e5-5ea7-404c-961a-76670ff18eec",
         "MeterVersion": "",
         "Description": "",
         "Unit": "",
@@ -26,15 +30,15 @@
         "MetricPoints": [
           {
             "Value": 42,
-            "StartTime": "2026-09-06T11:47:42.5850437+00:00",
-            "EndTime": "2026-09-06T11:47:42.5851183+00:00",
+            "StartTime": "2026-09-13T14:22:31.5535975+00:00",
+            "EndTime": "2026-09-13T14:22:31.5537199+00:00",
             "Tags": {}
           }
         ]
       },
       {
         "Name": "Processor.Angle",
-        "OtelServer": "1c1ad657-7abc-4438-8729-0ee6a6467de5",
+        "OtelServer": "bb6896e5-5ea7-404c-961a-76670ff18eec",
         "MeterVersion": "",
         "Description": "",
         "Unit": "",
@@ -42,8 +46,8 @@
         "MetricPoints": [
           {
             "Value": 32,
-            "StartTime": "2026-09-06T11:47:42.5850991+00:00",
-            "EndTime": "2026-09-06T11:47:42.585119+00:00",
+            "StartTime": "2026-09-13T14:22:31.5536742+00:00",
+            "EndTime": "2026-09-13T14:22:31.5537202+00:00",
             "Tags": {}
           }
         ]

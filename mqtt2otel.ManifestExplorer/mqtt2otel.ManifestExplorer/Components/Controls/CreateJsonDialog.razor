@@ -1,5 +1,6 @@
 ﻿@using System.Text.Json
 @using mqtt2otel.ManifestExplorer.DTOs
+@using mqtt2otel.ManifestExplorer.Helper
 @using mqtt2otel.Metadata
 @using mqtt2otel.Shared
 @inject IJSRuntime JS
@@ -52,6 +53,34 @@
                 {
                     <Button Color="ButtonColor.Success" Style="margin:10px">@tag</Button>
                 }
+            </div>
+        </div>
+
+        <div class="row" style="margin-bottom:10px">
+            <div class="col-3">
+                <label>Links</label>
+            </div>
+            <div class="col-8">
+                <select class="form-select" @onchange="OnLinkSelectedChanged">
+                    <option value="<<Please select>>"></option>
+                    @foreach (var kvp in LinkLibrary.GetAll().OrderBy( keyValue => keyValue.Key ))
+                    {
+                        <option value="@kvp.Key">@kvp.Key</option>
+                    }
+                </select>
+                <Card style="margin: 10px;">
+                    <table class="table">
+                        <tbody>
+                            @foreach (var linkInfo in this.Data.Links)
+                            {
+                                <tr>
+                                    <td>@linkInfo.Key</td>
+                                    <td><a class="btn btn-link" @onclick="() => DeleteLink(linkInfo.Key)">Delete</a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </Card>
             </div>
         </div>
 
@@ -113,9 +142,10 @@
         {
             var testcase = new TestCaseData()
             {
-                Setup = new ExampleData(this.Data.Setup.Id, this.Data.Setup.Name, this.Data.Setup.Description, this.Data.Setup.Topic, this.Data.Setup.Payload, this.Data.Setup.UserProperties, this.Data.Setup.Manifest, this.Data.Setup.Category, 
+                Setup = new ExampleData(this.Data.Setup.Id, this.Data.Setup.Name, this.Data.Setup.Description, this.Data.Setup.Topic, this.Data.Setup.Payload, this.Data.Setup.UserProperties, this.Data.Setup.Manifest, this.Data.Setup.Category,
                     this.Data.Setup.Tags, this.Data.Setup.CreateExample, this.Data.Setup.ValidateManifestOnly),
-                ExpectedResult = new ExpectedTestResult(this.Result.Metrics, this.Result.Logs)
+                ExpectedResult = new ExpectedTestResult(this.Result.Metrics, this.Result.Logs),
+                Links = this.Data.Links
             };
 
             var options = new JsonSerializerOptions
@@ -165,5 +195,32 @@
 
         this.tagInput = currentValue;
         this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Called when a link is selected by the user. Will add the selected link to the link list..
+    /// </summary>
+    /// <exception cref="NotImplementedException"></exception>
+    private void OnLinkSelectedChanged(ChangeEventArgs e)
+    {
+        var selectedKey = e.Value?.ToString();
+        var query = LinkLibrary.GetAll().Where(link => link.Key == selectedKey);
+
+        if (query.Any())
+        {
+            var match = query.First();
+            if (this.Data.Links.ContainsKey(match.Key)) return;
+
+            this.Data.Links.Add(match.Key, match.Value);
+        }
+    }
+
+    /// <summary>
+    /// Removes the given key from the link list.
+    /// </summary>
+    /// <param name="key"></param>
+    private void DeleteLink(string key)
+    {
+        this.Data.Links.Remove(key);
     }
 }

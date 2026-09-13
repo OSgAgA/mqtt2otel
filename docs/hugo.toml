@@ -9,6 +9,12 @@ enableRobotsTXT = true
   [markup.goldmark.renderer]
     unsafe = true
 
+  [markup.goldmark.renderHooks.image]
+    useEmbedded = 'fallback'
+
+  [markup.goldmark.renderHooks.link]
+    useEmbedded = 'fallback'
+
   [markup.highlight]
     codeFences = true       # Enable fenced code block highlighting
     guessSyntax = false     # Don't guess language if not specified

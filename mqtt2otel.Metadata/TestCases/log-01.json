@@ -1,4 +1,8 @@
 {
+  "Links": {
+    "Open telemetry logs": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-logs-section",
+    "Extended dissect parser": "https://github.com/OSgAgA/Dissect.Extended.Net"
+  },
   "Setup": {
     "Id": "log-01",
     "Name": "Parsing logs with dissect",
@@ -29,8 +33,8 @@
           "server_name": "ServerA",
           "original_value": "2026-01-31T15:42Z [INFO] [ServerA] This is a test."
         },
-        "SpanId": "1d0bb96cb3efda3d",
-        "TraceId": "f8bea8c10d689c9e96361f1b7eb67f38",
+        "SpanId": "689a3d4c052b9ffa",
+        "TraceId": "aa081e8af4bd086e2d9954737c38c342",
         "TraceState": null,
         "TraceFlags": 0
       }

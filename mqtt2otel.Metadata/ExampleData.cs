@@ -20,7 +20,7 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// <summary>
         /// Gets all available categories.
         /// </summary>
-        private static List<string> categories = new();
+        private static List<string> categories = new();        
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExampleData"/> class.

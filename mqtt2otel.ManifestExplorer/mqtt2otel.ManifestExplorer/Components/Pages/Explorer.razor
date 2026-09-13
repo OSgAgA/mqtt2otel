@@ -85,7 +85,7 @@
                     </div>
                 </div>
 
-                @if (this.ExampleId != null && this.Data != null && featureToggles.Value.ShowExampleInfo)
+                @if (this.ExampleId != null && this.Data != null && !this.ExampleId.ToLower().StartsWith("doc") && featureToggles.Value.ShowExampleInfo)
                 {
                     <div class="row hide-on-mobile">
                         <div class="col">
@@ -107,21 +107,14 @@
                                         <div style="margin: 15px">
                                             <table class="table">
                                                 <tbody>
-                                                    <tr>
-                                                        <td>
-                                                            <a href="https://mqtt2otel.org/docs/introduction/">How to use ParseAs</a>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <a href="https://mqtt2otel.org/docs/introduction/">Expressions and embedded expressions</a>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <a href="https://mqtt2otel.org/docs/introduction/">Deep dive conditional actions</a>
-                                                        </td>
-                                                    </tr>
+                                                    @foreach (var linkInfo in this.Data.Links)
+                                                    {
+                                                        <tr>
+                                                            <td>
+                                                                <a href="@linkInfo.Value">@linkInfo.Key</a>
+                                                            </td>
+                                                        </tr>
+                                                    }
                                                 </tbody>
                                             </table>
                                         </div>

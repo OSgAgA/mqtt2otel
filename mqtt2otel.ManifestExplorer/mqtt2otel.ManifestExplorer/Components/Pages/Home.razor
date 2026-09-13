@@ -11,10 +11,9 @@
 <PageTitle>mqtt2otel manifest explorer</PageTitle>
 
 <div class="flex-container" style="align-content:center">
-    <Card class="hide-on-mobile" style="margin:auto; width: 400px; margin-bottom: 50px; margin-top: 70px;">
-        <img src="images/logo-new.png" alt="mqtt2otel logo" style="width: 400px; margin: auto" />
-    </Card>
-    <Card style="max-width: 900px; margin: auto; padding-bottom: 20px;">
+    <Card style="max-width: 900px; margin: auto; padding-bottom: 20px; padding-top: 20px; margin-top:50px">
+        <img src="images/logo-new.png" alt="mqtt2otel logo" style="width: 400px; margin: auto;" />
+
         <p style="margin:auto; padding: 30px;  font-size: 24px; text-align: center">
             <b>Welcome to the mqtt2otel explorer.</b>
         </p>
@@ -53,6 +52,11 @@
             var browserInfo = await JS.InvokeAsync<ClientInfo>("getClientInfo");
 
             rum.RecordPageLoad(browserInfo, "Home");
+        }
+
+        if (!string.IsNullOrWhiteSpace(this.UnprocessedPath))
+        {
+            rum.RecordUnsupportedPath(this.UnprocessedPath);
         }
 
         await base.OnAfterRenderAsync(firstRender);

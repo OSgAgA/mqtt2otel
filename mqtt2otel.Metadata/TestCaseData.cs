@@ -14,6 +14,11 @@ namespace mqtt2otel.Shared
     public class TestCaseData
     {
         /// <summary>
+        /// Gets or sets a list of links that contain further information for the topic.
+        /// </summary>
+        public Dictionary<string, string> Links { get; set; } = new();
+
+        /// <summary>
         /// Gets or sets the setup , that is needed to execute the test successfully.
         /// </summary>
         public ExampleData Setup { get; set; } = new();

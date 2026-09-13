@@ -238,8 +238,20 @@ You can also explicitly set the timezone of the parsed log entry:
 
 More information about transformations can be found [here](/docs/expressions/#transformations).
 
+# Where to continue
+
+If you want to learn more about more complex scenarios, please have a look at the documentation and the examples libraries.
+
+Topics of special interest may be:
+
+* [Expressions and transformations](http://localhost:1313/docs/expressions/)
+* [How to organize complex manifest files](/docs/manifest/organize/)
+* [Working with MQTT user properties](/docs/expressions/userproperties/)
+* [Conditional metric actions](/docs/expressions/actions)
+
 # Complete example manifest
 
 Below is a complete minimal example manifest using logs and metrics:
 
 {{< exampleCode id="doc-09" field="Manifest" lang="yaml">}}
+

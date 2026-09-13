@@ -1,4 +1,8 @@
 {
+  "Links": {
+    "Open telemetry logs": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-logs-section",
+    "Extended dissect parser": "https://github.com/OSgAgA/Dissect.Extended.Net"
+  },
   "Setup": {
     "Id": "log-03",
     "Name": "Change time zone",
@@ -28,8 +32,8 @@
           "otel_loglevel": "INFO",
           "original_value": "2026-01-31 15:42 [INFO] This is a test."
         },
-        "SpanId": "f3545942bf2bfe7b",
-        "TraceId": "3b8f41d71ac796fb0b552ab8ace81aae",
+        "SpanId": "8297fed8d7963a02",
+        "TraceId": "e804624ba25298c9545536787458dcf7",
         "TraceState": null,
         "TraceFlags": 0
       }
