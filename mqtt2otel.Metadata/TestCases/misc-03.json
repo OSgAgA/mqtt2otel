@@ -1,4 +1,7 @@
 {
+  "Links": {
+    "Subscriptions": "https://mqtt2otel.org/docs/manifest/subscription/"
+  },
   "Setup": {
     "Id": "misc-3",
     "Name": "Wildcard subscriptions",
@@ -18,7 +21,7 @@
     "Metrics": [
       {
         "Name": "Processor.Temperature",
-        "OtelServer": "4e8f7b2c-4d7a-42cf-987d-a62c91d266dc",
+        "OtelServer": "6411ee53-cb69-4565-b2de-d535759e5656",
         "MeterVersion": "",
         "Description": "The current processor temperature.",
         "Unit": "",
@@ -26,8 +29,8 @@
         "MetricPoints": [
           {
             "Value": 42,
-            "StartTime": "2026-09-06T11:56:15.4270224+00:00",
-            "EndTime": "2026-09-06T11:56:15.4270709+00:00",
+            "StartTime": "2026-09-13T14:31:07.7330626+00:00",
+            "EndTime": "2026-09-13T14:31:07.7330981+00:00",
             "Tags": {}
           }
         ]

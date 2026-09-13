@@ -1,4 +1,8 @@
 {
+  "Links": {
+    "TopicAttribute": "https://mqtt2otel.org/docs/expressions/topicparsing/#the-topicattribute-syntax",
+    "TopicPath": "https://mqtt2otel.org/docs/expressions/topicparsing/#the-topicpath-syntax"
+  },
   "Setup": {
     "Id": "misc-07",
     "Name": "TopicAttribute",
@@ -18,7 +22,7 @@
     "Metrics": [
       {
         "Name": "Sensor.1234.Temperature",
-        "OtelServer": "3c24ce02-d386-4d41-878e-af5791111c7e",
+        "OtelServer": "495c5348-5ede-4a11-8667-a9a9398df675",
         "MeterVersion": "",
         "Description": "The current processor temperature.",
         "Unit": "",
@@ -26,8 +30,8 @@
         "MetricPoints": [
           {
             "Value": 42,
-            "StartTime": "2026-09-06T12:30:53.5074302+00:00",
-            "EndTime": "2026-09-06T12:30:53.5074682+00:00",
+            "StartTime": "2026-09-13T14:28:55.6639781+00:00",
+            "EndTime": "2026-09-13T14:28:55.6657949+00:00",
             "Tags": {
               "device.Id": "1234",
               "location": "germany"

@@ -1,4 +1,9 @@
 {
+  "Links": {
+    "Open telemetry connection": "https://mqtt2otel.org/docs/manifest/otelserver/",
+    "Open telemetry logs": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-logs-section",
+    "Extended dissect parser": "https://github.com/OSgAgA/Dissect.Extended.Net"
+  },
   "Setup": {
     "Id": "log-05",
     "Name": "Set minimum log level",
@@ -27,8 +32,8 @@
           "otel_loglevel": "TRACE",
           "original_value": "2026-01-31T15:42Z [TRACE] Minimum log level is set at the otel connection. Change to Trace, Debug, Information, Warning, Error, or Critical to test."
         },
-        "SpanId": "70eedea304bab686",
-        "TraceId": "7c4014a8691212f1894537851deac65b",
+        "SpanId": "f50bb1ae6f491cfd",
+        "TraceId": "3563081405782864c47c4e689c3bcfb8",
         "TraceState": null,
         "TraceFlags": 0
       }

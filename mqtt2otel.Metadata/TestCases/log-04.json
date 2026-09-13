@@ -1,4 +1,8 @@
 {
+  "Links": {
+    "Open telemetry logs": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-logs-section",
+    "GROK parser": "https://www.elastic.co/docs/reference/logstash/plugins/plugins-filters-grok"
+  },
   "Setup": {
     "Id": "log-04",
     "Name": "Escaping characters",
@@ -28,8 +32,8 @@
           "server_name": "ServerA",
           "original_value": "2026-01-31T15:42Z [INFO] [ServerA] This is a test."
         },
-        "SpanId": "2840b8eff37120a6",
-        "TraceId": "c3559535fb1fb6c7ba9e0b835df14117",
+        "SpanId": "d1a38a8e6a303464",
+        "TraceId": "395e083d49badd43b341e466ede0051d",
         "TraceState": null,
         "TraceFlags": 0
       }

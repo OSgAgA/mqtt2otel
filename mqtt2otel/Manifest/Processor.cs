@@ -449,7 +449,7 @@ namespace mqtt2otel.Manifest
             //Then write the data.
             if (value != null)
             {
-                signalType = rule.SignalDataType == SignalDataType.Default ? TypeHelper.ConvertTypeToSignalDataType(value.GetType()) : rule.SignalDataType;
+                signalType = signalType == SignalDataType.Default ? TypeHelper.ConvertTypeToSignalDataType(value.GetType()) : signalType;
 
                 if (signalType != SignalDataType.String)
                 {

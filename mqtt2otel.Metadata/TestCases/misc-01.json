@@ -1,4 +1,7 @@
 {
+  "Links": {
+    "Variables": "https://mqtt2otel.org/docs/manifest/variables/"
+  },
   "Setup": {
     "Id": "misc-01",
     "Name": "Usage of variables",
@@ -18,7 +21,7 @@
     "Metrics": [
       {
         "Name": "Processor.Temperature",
-        "OtelServer": "30bd7c49-0450-4924-ac8d-8ffdd3ceecc9",
+        "OtelServer": "79057dfe-1fde-425f-aaa2-6e1212159522",
         "MeterVersion": "",
         "Description": "The current processor temperature.",
         "Unit": "",
@@ -26,8 +29,8 @@
         "MetricPoints": [
           {
             "Value": 42,
-            "StartTime": "2026-09-06T11:53:50.3737992+00:00",
-            "EndTime": "2026-09-06T11:53:50.375397+00:00",
+            "StartTime": "2026-09-13T14:25:10.3536723+00:00",
+            "EndTime": "2026-09-13T14:25:10.3537367+00:00",
             "Tags": {
               "sensor name": "My sensor"
             }

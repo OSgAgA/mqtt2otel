@@ -1,4 +1,8 @@
 {
+  "Links": {
+    "Open telemetry metrics": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-metrics-section",
+    "Expressions": "https://mqtt2otel.org/docs/expressions/"
+  },
   "Setup": {
     "Id": "metric-10",
     "Name": "Create dynamic metrics",
@@ -18,7 +22,7 @@
     "Metrics": [
       {
         "Name": "Processor.Temperature_In_C",
-        "OtelServer": "0775fa37-53de-4ba7-a415-e603345d7c45",
+        "OtelServer": "df2c4230-cad4-4203-b827-e9cf13f5cb57",
         "MeterVersion": "",
         "Description": "The current processor temperature in C.",
         "Unit": "C",
@@ -26,8 +30,8 @@
         "MetricPoints": [
           {
             "Value": 42,
-            "StartTime": "2026-09-06T11:44:45.0433966+00:00",
-            "EndTime": "2026-09-06T11:44:45.0434282+00:00",
+            "StartTime": "2026-09-13T14:21:35.5603285+00:00",
+            "EndTime": "2026-09-13T14:21:35.5603728+00:00",
             "Tags": {}
           }
         ]

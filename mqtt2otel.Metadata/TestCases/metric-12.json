@@ -1,4 +1,10 @@
 {
+  "Links": {
+    "Open telemetry metrics": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-metrics-section",
+    "ParseAs": "https://mqtt2otel.org/docs/manifest/processors/#parseas",
+    "Metric actions": "https://mqtt2otel.org/docs/expressions/actions/",
+    "Expressions": "https://mqtt2otel.org/docs/expressions/"
+  },
   "Setup": {
     "Id": "metric-12",
     "Name": "Manipulate data via actions",
@@ -18,7 +24,7 @@
     "Metrics": [
       {
         "Name": "Temperature",
-        "OtelServer": "86188eed-5925-43d9-b1d2-f0b347e732f6",
+        "OtelServer": "5e5f27b7-0065-4a2b-9a73-299cca95ea1e",
         "MeterVersion": "",
         "Description": "",
         "Unit": "C",
@@ -26,15 +32,15 @@
         "MetricPoints": [
           {
             "Value": 42,
-            "StartTime": "2026-09-09T15:19:25.3394965+00:00",
-            "EndTime": "2026-09-09T15:19:25.3456637+00:00",
+            "StartTime": "2026-09-13T14:23:14.6927008+00:00",
+            "EndTime": "2026-09-13T14:23:14.6934741+00:00",
             "Tags": {}
           }
         ]
       },
       {
         "Name": "Temperature_B",
-        "OtelServer": "86188eed-5925-43d9-b1d2-f0b347e732f6",
+        "OtelServer": "5e5f27b7-0065-4a2b-9a73-299cca95ea1e",
         "MeterVersion": "",
         "Description": "",
         "Unit": "C",
@@ -42,15 +48,15 @@
         "MetricPoints": [
           {
             "Value": 39,
-            "StartTime": "2026-09-09T15:19:25.3439286+00:00",
-            "EndTime": "2026-09-09T15:19:25.3458004+00:00",
+            "StartTime": "2026-09-13T14:23:14.693076+00:00",
+            "EndTime": "2026-09-13T14:23:14.6934748+00:00",
             "Tags": {}
           }
         ]
       },
       {
         "Name": "Pressure",
-        "OtelServer": "86188eed-5925-43d9-b1d2-f0b347e732f6",
+        "OtelServer": "5e5f27b7-0065-4a2b-9a73-299cca95ea1e",
         "MeterVersion": "",
         "Description": "",
         "Unit": "",
@@ -58,8 +64,8 @@
         "MetricPoints": [
           {
             "Value": 12,
-            "StartTime": "2026-09-09T15:19:25.3442863+00:00",
-            "EndTime": "2026-09-09T15:19:25.3458009+00:00",
+            "StartTime": "2026-09-13T14:23:14.6934181+00:00",
+            "EndTime": "2026-09-13T14:23:14.6934755+00:00",
             "Tags": {}
           }
         ]

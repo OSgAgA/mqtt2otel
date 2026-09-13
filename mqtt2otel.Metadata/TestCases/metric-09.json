@@ -1,4 +1,8 @@
 {
+  "Links": {
+    "Open telemetry metrics": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-metrics-section",
+    "Supported functions": "https://mqtt2otel.org/docs/expressions/#available-functions"
+  },
   "Setup": {
     "Id": "metric-09",
     "Name": "Constant value",
@@ -18,7 +22,7 @@
     "Metrics": [
       {
         "Name": "sensor.errors",
-        "OtelServer": "44b161f0-6cde-4bac-b64c-839e0414c000",
+        "OtelServer": "120ab71f-b317-44b8-abea-8b929d939e36",
         "MeterVersion": "",
         "Description": "Counts all sensor errors.",
         "Unit": "",
@@ -26,8 +30,8 @@
         "MetricPoints": [
           {
             "Value": 1,
-            "StartTime": "2026-09-06T11:52:48.4211009+00:00",
-            "EndTime": "2026-09-06T11:52:48.4211728+00:00",
+            "StartTime": "2026-09-13T14:20:27.8892124+00:00",
+            "EndTime": "2026-09-13T14:20:27.8912106+00:00",
             "Tags": {}
           }
         ]

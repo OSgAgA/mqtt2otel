@@ -1,4 +1,7 @@
 {
+  "Links": {
+    "Subscription groups": "https://mqtt2otel.org/docs/manifest/subscription/#subscription-groups"
+  },
   "Setup": {
     "Id": "misc-05",
     "Name": "Subscription groups with paths",
@@ -18,7 +21,7 @@
     "Metrics": [
       {
         "Name": "Energy_Power_W",
-        "OtelServer": "ad49c99b-7a24-4f6c-8486-84fa6024520f",
+        "OtelServer": "e6264756-9e21-432d-b62e-537123c2c06e",
         "MeterVersion": "",
         "Description": "The current power consumption at the time of measurement in Watt.",
         "Unit": "",
@@ -26,8 +29,8 @@
         "MetricPoints": [
           {
             "Value": 0,
-            "StartTime": "2026-09-06T11:58:24.3678802+00:00",
-            "EndTime": "2026-09-06T11:58:24.3679192+00:00",
+            "StartTime": "2026-09-13T14:27:30.8500394+00:00",
+            "EndTime": "2026-09-13T14:27:30.850075+00:00",
             "Tags": {
               "sensor name": "WashingMachine"
             }

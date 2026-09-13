@@ -18,6 +18,6 @@
         /// <summary>
         /// Gets or sets a value indicating whether the explorer should show example links, when showing inforation about chosen example.
         /// </summary>
-        public bool ShowExampleLinks { get; set; } = false;
+        public bool ShowExampleLinks { get; set; } = true;
     }
 }

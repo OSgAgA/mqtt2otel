@@ -6,6 +6,17 @@ a, .btn-link {
     color: #006bb7;
 }
 
+.page {
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+}
+
+main {
+    flex: 1;
+    overflow-y: auto;
+}
+
 .btn-primary {
     color: #fff;
     background-color: #1b6ec2;
@@ -188,7 +199,7 @@ h1:focus {
     align-items: center;
     gap: 0.65rem;
     padding: 4px;
-    margin-right: 10px
+    margin-right: 10px;
     border: 1px solid var(--bs-border-color);
     border-radius: 999px;
     background-color: var(--bs-tertiary-bg);
@@ -218,7 +229,7 @@ h1:focus {
     align-items: center;
     gap: 0.65rem;
     padding: 4px;
-    margin-right: 10px border: 1px solid var(--bs-border-color);
+    margin-right: 10px; border: 1px solid var(--bs-border-color);
     margin-bottom: 10px;
     border-radius: 99px 0px 0px 99px;
     background-color: #e0e0e0;
@@ -230,7 +241,7 @@ h1:focus {
     gap: 0.65rem;
     padding: 4px;
     margin-bottom: 10px;
-    margin-right: 10px border: 1px solid var(--bs-border-color);
+    margin-right: 10px; border: 1px solid var(--bs-border-color);
     border-radius: 0px 999px 999px 0px;
     background-color: #fafafa;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);

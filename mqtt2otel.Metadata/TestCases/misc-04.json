@@ -1,4 +1,7 @@
 {
+  "Links": {
+    "Subscription groups": "https://mqtt2otel.org/docs/manifest/subscription/#subscription-groups"
+  },
   "Setup": {
     "Id": "misc-04",
     "Name": "Subscription groups",
@@ -18,7 +21,7 @@
     "Metrics": [
       {
         "Name": "Energy_Power_W",
-        "OtelServer": "d83d85be-0061-4477-9a85-7c7c946ee6d3",
+        "OtelServer": "583ad257-ae37-4d15-ab9b-9fcbe6222aa1",
         "MeterVersion": "",
         "Description": "",
         "Unit": "",
@@ -26,8 +29,8 @@
         "MetricPoints": [
           {
             "Value": 0,
-            "StartTime": "2026-09-06T11:57:57.798835+00:00",
-            "EndTime": "2026-09-06T11:57:57.8020948+00:00",
+            "StartTime": "2026-09-13T14:25:55.6677125+00:00",
+            "EndTime": "2026-09-13T14:25:55.6678843+00:00",
             "Tags": {
               "sensor name": "WashingMachine"
             }

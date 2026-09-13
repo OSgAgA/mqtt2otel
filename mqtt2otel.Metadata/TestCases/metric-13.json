@@ -1,4 +1,8 @@
 {
+  "Links": {
+    "Open telemetry metrics": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-metrics-section",
+    "Converter and Formatters": "https://mqtt2otel.org/docs/expressions/converter-and-formatter/"
+  },
   "Setup": {
     "Id": "metric-13",
     "Name": "Use NameFormatter and ValueConverter",
@@ -18,7 +22,7 @@
     "Metrics": [
       {
         "Name": "processorTemperature",
-        "OtelServer": "7defdc3b-cb06-438c-a9ee-d00b2e166450",
+        "OtelServer": "b6c3e5f2-0a0b-4e2a-8cd0-8fd863130009",
         "MeterVersion": "",
         "Description": "",
         "Unit": "",
@@ -26,8 +30,8 @@
         "MetricPoints": [
           {
             "Value": 100,
-            "StartTime": "2026-09-04T18:37:42.0082136+00:00",
-            "EndTime": "2026-09-04T18:37:42.0082469+00:00",
+            "StartTime": "2026-09-13T14:24:27.0599106+00:00",
+            "EndTime": "2026-09-13T14:24:27.0599498+00:00",
             "Tags": {}
           }
         ]

@@ -1,4 +1,8 @@
 {
+  "Links": {
+    "Open telemetry metrics": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-metrics-section",
+    "Supported functions": "https://mqtt2otel.org/docs/expressions/#available-functions"
+  },
   "Setup": {
     "Id": "metric-04",
     "Name": "Advanced XPath",
@@ -18,7 +22,7 @@
     "Metrics": [
       {
         "Name": "Processor.Temperature",
-        "OtelServer": "b6a24f88-a891-49eb-8bd8-cafa02f33fb4",
+        "OtelServer": "e0983ae9-02ed-45a3-b69f-604e2665e838",
         "MeterVersion": "",
         "Description": "The current processor temperature.",
         "Unit": "C",
@@ -26,8 +30,8 @@
         "MetricPoints": [
           {
             "Value": 52,
-            "StartTime": "2026-09-06T11:35:00.1134611+00:00",
-            "EndTime": "2026-09-06T11:35:00.1135266+00:00",
+            "StartTime": "2026-09-13T14:17:19.7235602+00:00",
+            "EndTime": "2026-09-13T14:17:19.7236295+00:00",
             "Tags": {
               "test": "value"
             }

@@ -1,4 +1,7 @@
 {
+  "Links": {
+    "User properties": "https://mqtt2otel.org/docs/expressions/userproperties"
+  },
   "Setup": {
     "Id": "misc-06",
     "Name": "Customizing user properties",
@@ -23,7 +26,7 @@
     "Metrics": [
       {
         "Name": "Processor.Temperature",
-        "OtelServer": "cb2f30e3-352a-43de-9dad-4e66c02ace5a",
+        "OtelServer": "036818d5-7099-4a2a-a628-8519f6f5b3ea",
         "MeterVersion": "",
         "Description": "The current processor temperature.",
         "Unit": "",
@@ -31,8 +34,8 @@
         "MetricPoints": [
           {
             "Value": 42,
-            "StartTime": "2026-09-06T12:00:54.5260401+00:00",
-            "EndTime": "2026-09-06T12:00:54.5260992+00:00",
+            "StartTime": "2026-09-13T14:50:45.2218224+00:00",
+            "EndTime": "2026-09-13T14:50:45.2404421+00:00",
             "Tags": {
               "Criticality": "Critical"
             }

@@ -65,5 +65,15 @@ namespace mqtt2otel.ManifestExplorer.Services
 
             this.meter.ExampleRequestedCounter.Add(1, exampleTags);
         }
-    }
+
+        public void RecordUnsupportedPath(string path)
+        {
+            var exampleTags = new System.Diagnostics.TagList()
+                {
+                    { "Path", path}
+                };
+
+            this.meter.UnsupportedSubPageCalled.Add(1, exampleTags);
+        }
+        }
 }
