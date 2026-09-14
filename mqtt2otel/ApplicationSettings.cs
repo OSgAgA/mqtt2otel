@@ -84,6 +84,6 @@ namespace mqtt2otel
         /// <summary>
         /// Gets the base address for the rest service of the application.
         /// </summary>
-        public string BaseAddress { get; set; } = "http://localhost:8080";
+        public string BaseAddress { get; set; } = "http://0.0.0.0:8080";
     }
 }
