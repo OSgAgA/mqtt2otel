@@ -17,6 +17,12 @@ on:
       - 'mqtt2otel.ManifestExplorer/**'
       - '.github/workflows/deploy manifest explorer.yaml'
       - 'mqtt2otel.Metadata/**'
+      - 'mqtt2otel.Server/**'
+      - 'mqtt2otel/**'
+      - 'mqtt2otel.Tests/**'
+      - 'mqtt2otel.Metadata/**'
+      - 'github/workflows/**'
+
 
 jobs:
   # Publishes the application
