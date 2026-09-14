@@ -104,7 +104,7 @@ namespace mqtt2otel.Stores
                         }
                         catch (Exception ex)
                         {
-                            this.internalLogger.LogError($"Cannot parse payload {message.Payload} as json message. The following error occured: {ex.Message}");
+                            this.internalLogger.LogError($"Could not parse message as json. The following error occured: {ex.Message}");
                             return false;
                         }
 
