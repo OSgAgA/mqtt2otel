@@ -74,6 +74,11 @@ namespace mqtt2otel.InternalLogging
                     otlpOptions.Endpoint = settings.Otel.Endpoint.Uri;
                     otlpOptions.Protocol = settings.Otel.OtlpExportProtocol;
                     otlpOptions.ExportProcessorType = settings.Otel.ExportProcessorType;
+
+                    if (!string.IsNullOrWhiteSpace(settings.Otel.Endpoint.Headers))
+                    {
+                        otlpOptions.Headers = settings.Otel.Endpoint.Headers;
+                    }
                 });
             });
 

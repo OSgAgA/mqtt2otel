@@ -5,6 +5,7 @@ using mqtt2otel.InternalLogging;
 using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 using mqtt2otel.Transformation;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -82,7 +83,7 @@ namespace mqtt2otel.Stores
             var context = new ParsingContext(variables, message);
             List<KeyValuePair<string, object?>> attributes = combinedAttributes
                 .Select(attribute => new KeyValuePair<string, object?>(
-                    this.embeddedExpressionParser.Expand(attribute.Key, context), 
+                    this.embeddedExpressionParser.Expand(attribute.Key, context),
                     this.embeddedExpressionParser.Expand(attribute.Value.ToString() ?? string.Empty, context)))
                 .ToList();
 
@@ -95,7 +96,17 @@ namespace mqtt2otel.Stores
                         body = message.Payload;
                         break;
                     case OtelLoggingPayloadType.Json:
-                        var obj = Newtonsoft.Json.Linq.JObject.Parse(message.Payload).ToObject<Dictionary<string, object?>>();
+                        Dictionary<string, object?>? obj = null;
+
+                        try
+                        {
+                            obj = Newtonsoft.Json.Linq.JObject.Parse(message.Payload).ToObject<Dictionary<string, object?>>();
+                        }
+                        catch (Exception ex)
+                        {
+                            this.internalLogger.LogError($"Cannot parse payload {message.Payload} as json message. The following error occured: {ex.Message}");
+                            return false;
+                        }
 
                         if (obj == null) return false;
 
