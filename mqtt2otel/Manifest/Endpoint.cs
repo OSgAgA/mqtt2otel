@@ -64,17 +64,9 @@ namespace mqtt2otel.Manifest
         /// <param name="result">The validation result.</param>
         public void Validate(string id, ValidationResult result)
         {
-            if (this.Port <= 0) result.AddError($"Provided {id} endpoint port ({this.Port}) needs to be > 0.");
-
             if (string.IsNullOrWhiteSpace(this.Address))
             {
                 result.AddError($"{id} endpoint Address is empty, but must be set.");
-            }
-            else
-            {
-                Uri? test;
-                UriCreationOptions options = new();
-                if (!Uri.TryCreate(this.FullAddress, in options, out test)) result.AddError($"Provided {id} endpoint address ({this.FullAddress}) is not a valid URI.");
             }
         }
     }
