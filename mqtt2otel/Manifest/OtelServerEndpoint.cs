@@ -16,8 +16,6 @@ namespace mqtt2otel.Manifest
         /// </summary>
         public OtelServerEndpoint() : base()
         {
-            this.Port = 4317;
-            this.Protocol = "http";
         }
 
         /// <summary>
@@ -37,7 +35,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets a value indicating whether transport level security should be enabled for the endpoint.
         /// </summary>
-        public bool EnableTls { get; set; } = true;
+        public bool EnableTls { get; set; } = false;
 
         /// <summary>
         /// Gets or sets the path for a provided TLS client certificate.

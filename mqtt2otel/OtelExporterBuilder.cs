@@ -22,7 +22,7 @@ namespace mqtt2otel
         /// <param name="connection">The otel server connection data.</param>
         public void AddToLoggerOptions(OpenTelemetryLoggerOptions options, OtelServerConnection connection)
         {
-            options.AddOtlpExporter(otlpOptions => this.InitializeExporterOptions(otlpOptions, connection));
+            options.AddOtlpExporter(otlpOptions => this.InitializeExporterOptions(otlpOptions, connection, "v1/logs"));
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace mqtt2otel
         /// <param name="connection">The otel server connection data.</param>
         public void AddToMeterProviderBuilder(MeterProviderBuilder builder, OtelServerConnection connection)
         {
-            builder.AddOtlpExporter(otlpOptions => this.InitializeExporterOptions(otlpOptions, connection));
+            builder.AddOtlpExporter(otlpOptions => this.InitializeExporterOptions(otlpOptions, connection, "v1/metrics"));
         }
 
         /// <summary>
@@ -40,11 +40,19 @@ namespace mqtt2otel
         /// </summary>
         /// <param name="otlpOptions">The options that will be initialized.</param>
         /// <param name="connection">The settings defining the options to be applied.</param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        private OtlpExporterOptions InitializeExporterOptions(OtlpExporterOptions otlpOptions, OtelServerConnection connection)
+        /// <returns>The generated exporter options.</returns>
+        /// <exception cref="Exception">Thrown, if tls is enabled but client certificate path is not set.</exception>
+        private OtlpExporterOptions InitializeExporterOptions(OtlpExporterOptions otlpOptions, OtelServerConnection connection, string defaultHttpPath)
         {
             if (connection.Endpoint.Address == null) throw new Exception("Address of Otel server endpoint must be set!");
+
+            var address = connection.Endpoint.Uri.OriginalString;
+            if (connection.OtlpExportProtocol == OtlpExportProtocol.HttpProtobuf && !address.EndsWith(defaultHttpPath))
+            {
+                if (!address.EndsWith("/")) address += "/";
+
+                address += defaultHttpPath;
+            }
 
             otlpOptions.Endpoint = connection.Endpoint.Uri;
             otlpOptions.Protocol = connection.OtlpExportProtocol;

@@ -49,7 +49,7 @@ namespace mqtt2otel.ManifestExplorer.Services
                 {  "ExampleId", exampleId ?? "custom" }
             };
 
-            this.meter.ExampleAppliedCounter.Add(1);
+            this.meter.ExampleAppliedCounter.Add(1, tags);
         }
 
         /// <summary>

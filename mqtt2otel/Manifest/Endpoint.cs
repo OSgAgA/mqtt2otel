@@ -33,11 +33,17 @@ namespace mqtt2otel.Manifest
         {
             get
             {
+                string address = string.Empty;
+
                 string protocol = this.Protocol;
 
                 if (protocol.Length > 2 && protocol.EndsWith("://")) protocol = protocol.Remove(protocol.Length - 3, 3);
 
-                string address = protocol + "://" + this.Address + ":" + this.Port;
+                if (!string.IsNullOrWhiteSpace(protocol)) address = protocol + "://";
+
+                address += this.Address;
+
+                if (this.Port > 0) address += ":" + this.Port;
 
                 return address;
             }
