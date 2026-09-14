@@ -80,5 +80,10 @@ namespace mqtt2otel
         /// Gets or sets the path to the manifest file.
         /// </summary>
         public string ManifestPath { get; set; } = "/data/Manifest.yaml";
+
+        /// <summary>
+        /// Gets the base address for the rest service of the application.
+        /// </summary>
+        public string BaseAddress { get; set; } = "http://localhost:8080";
     }
 }

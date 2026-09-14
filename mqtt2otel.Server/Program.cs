@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.Extensions.Options;
 using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
 using mqtt2otel.InternalLogging;
@@ -16,9 +18,7 @@ namespace mqtt2otel.Server
             var appSettings = Bootstrapper.ReadApplicationSettings();
             var logFactory = Bootstrapper.InitializeLogFactory(appSettings.Logging);
 
-            // Using host builder as currently no web functionality is used.
-            // Change to WebApplication if endpoints, dontrollers and so on are needed.
-            var builder = Host.CreateApplicationBuilder(args);
+            var builder = WebApplication.CreateBuilder(args);
 
             builder.Logging.ClearProviders();
             builder.Services.AddHostedService<Mqtt2OtelService>();
@@ -42,7 +42,17 @@ namespace mqtt2otel.Server
             builder.Services.AddSingleton<ManifestMeter>(new ManifestMeter());
             builder.Services.AddSingleton<ProcessorMeter>(new ProcessorMeter());
 
+            builder.Services.AddHttpClient("ServerAPI", (serviceProvider, client) =>
+            {
+                client.BaseAddress = new Uri(appSettings.BaseAddress);
+            });
+
+            builder.Services.AddControllers();
+            builder.WebHost.UseUrls(appSettings.BaseAddress);
+
             var app = builder.Build();
+
+            app.MapControllers();
 
             app.Run();
         }
