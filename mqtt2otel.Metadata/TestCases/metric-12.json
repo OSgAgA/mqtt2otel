@@ -3,7 +3,8 @@
     "Open telemetry metrics": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-metrics-section",
     "ParseAs": "https://mqtt2otel.org/docs/manifest/processors/#parseas",
     "Metric actions": "https://mqtt2otel.org/docs/expressions/actions/",
-    "Expressions": "https://mqtt2otel.org/docs/expressions/"
+    "Expressions": "https://mqtt2otel.org/docs/expressions/",
+    "Converter and Formatters": "https://mqtt2otel.org/docs/expressions/converter-and-formatter/"
   },
   "Setup": {
     "Id": "metric-12",
@@ -24,7 +25,7 @@
     "Metrics": [
       {
         "Name": "Temperature",
-        "OtelServer": "5e5f27b7-0065-4a2b-9a73-299cca95ea1e",
+        "OtelServer": "307dc443-8a74-488c-9c66-64b4e69e4cdf",
         "MeterVersion": "",
         "Description": "",
         "Unit": "C",
@@ -32,15 +33,15 @@
         "MetricPoints": [
           {
             "Value": 42,
-            "StartTime": "2026-09-13T14:23:14.6927008+00:00",
-            "EndTime": "2026-09-13T14:23:14.6934741+00:00",
+            "StartTime": "2026-09-16T12:46:29.5944068+00:00",
+            "EndTime": "2026-09-16T12:46:29.6025044+00:00",
             "Tags": {}
           }
         ]
       },
       {
         "Name": "Temperature_B",
-        "OtelServer": "5e5f27b7-0065-4a2b-9a73-299cca95ea1e",
+        "OtelServer": "307dc443-8a74-488c-9c66-64b4e69e4cdf",
         "MeterVersion": "",
         "Description": "",
         "Unit": "C",
@@ -48,15 +49,15 @@
         "MetricPoints": [
           {
             "Value": 39,
-            "StartTime": "2026-09-13T14:23:14.693076+00:00",
-            "EndTime": "2026-09-13T14:23:14.6934748+00:00",
+            "StartTime": "2026-09-16T12:46:29.5987009+00:00",
+            "EndTime": "2026-09-16T12:46:29.6025735+00:00",
             "Tags": {}
           }
         ]
       },
       {
         "Name": "Pressure",
-        "OtelServer": "5e5f27b7-0065-4a2b-9a73-299cca95ea1e",
+        "OtelServer": "307dc443-8a74-488c-9c66-64b4e69e4cdf",
         "MeterVersion": "",
         "Description": "",
         "Unit": "",
@@ -64,8 +65,8 @@
         "MetricPoints": [
           {
             "Value": 12,
-            "StartTime": "2026-09-13T14:23:14.6934181+00:00",
-            "EndTime": "2026-09-13T14:23:14.6934755+00:00",
+            "StartTime": "2026-09-16T12:46:29.5988322+00:00",
+            "EndTime": "2026-09-16T12:46:29.6025739+00:00",
             "Tags": {}
           }
         ]

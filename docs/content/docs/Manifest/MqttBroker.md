@@ -24,23 +24,23 @@ MqttConnections:
 
 It has the following parameters:
 
-| Parameter                       | Description                                                                                               |
-|---------------------------------|-----------------------------------------------------------------------------------------------------------|
-| Name                            | An optional name that can be given to the broker. With this the broker can be refered to later.           |
-| Description                     | An optional description of the broker                                                                     |
-| Eendpoint.Protocol              | The optional protocol that will be used for connecting to the broker, e.g. tcp.                           |
-| Endpoint.Address                | The address of the mqtt broker                                                                            |
-| Endpoint.Port                   | The optional port under which the broker can be reached. Default is 1813.                                 |
-| Endpoint.ConnectionType         | One of the following values: Tcp, WebSockets. Default is tcp.                                             |
-| Endpoint.MqttProtocollVersion   | Optional. You can set an explicit mqtt protocol version in case of compatibility issues.                  |
-| Endpoint.EnableTls              | Set to false to disable transport level security (TLS). Default is true.                                  |
-| Endpoint.TlsSslProtocol         | Optional. Choose the ssl protocol: Tls, Tls11, Tls12, Tls13, Ssl2, Ssl3, Default                          |
-| Endpoint.TlsCaFilePath          | Optional. Set a file path for a certificate authority (CA) file.                                          |
-| Endpoint.UsePacketFragmentation | Set to false to disable packet fragmentation (may be needed to connect to AWS broker.                     |
-| Endpoint.Username               | The credentials username for basic authentication.                                                        |
-| Endpoint.Password               | The credentials password for basic authentication.                                                        |
-| ReconnectDelayInMs              | Sets the delay intervall on reconnect in milliseconds. Default: 5000                                      |
-| ClientPrefix                    | A prefix that will be added to the client id when connecting to the broker. Helps to identify the client. |
+| Parameter                       | Description                                                                                                                   |
+|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| Name                            | An optional name that can be given to the broker. With this the broker can be refered to later.                               |
+| Description                     | An optional description of the broker                                                                                         |
+| Eendpoint.Protocol              | The optional protocol that will be used for connecting to the broker, e.g. tcp.                                               |
+| Endpoint.Address                | The address of the mqtt broker                                                                                                |
+| Endpoint.Port                   | The optional port under which the broker can be reached. Default is 1813.                                                     |
+| Endpoint.ConnectionType         | One of the following values: Tcp, WebSockets. Default is tcp.                                                                 |
+| Endpoint.MqttProtocollVersion   | Optional. You can set an explicit mqtt protocol version in case of compatibility issues.                                      |
+| Endpoint.EnableTls              | Set to true to enable transport level security (TLS). In that case a ClientCertificatePath needs to be set. Default is false. |
+| Endpoint.TlsSslProtocol         | Optional. Choose the ssl protocol: Tls, Tls11, Tls12, Tls13, Ssl2, Ssl3, Default                                              |
+| Endpoint.TlsCaFilePath          | Optional. Set a file path for a certificate authority (CA) file.                                                              |
+| Endpoint.UsePacketFragmentation | Set to false to disable packet fragmentation (may be needed to connect to AWS broker.                                         |
+| Endpoint.Username               | The credentials username for basic authentication.                                                                            |
+| Endpoint.Password               | The credentials password for basic authentication.                                                                            |
+| ReconnectDelayInMs              | Sets the delay intervall on reconnect in milliseconds. Default: 5000                                                          |
+| ClientPrefix                    | A prefix that will be added to the client id when connecting to the broker. Helps to identify the client.                     |
 
 ## Using multiple connections
 

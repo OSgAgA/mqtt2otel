@@ -164,8 +164,6 @@ namespace mqtt2otel.Manifest
 
             ImportEnabledList<NamedIdObject>.InitializeImports(this, this.internalLogger, Manifest.ObjectFactory);
 
-            Manifest.SetObjectHierarchy(this);
-
             foreach (var subscriptionGroup in this.SubscriptionGroups)
             {
                 this.ApplyVariablesToSubscriptions(subscriptionGroup.Subscriptions, subscriptionGroup.Variables);
@@ -176,6 +174,8 @@ namespace mqtt2otel.Manifest
                 this.ApplySubscriptionGroupsToSubscriptions(processor.Mqtt.SubscriptionGroups, processor.Mqtt.Subscriptions);
                 this.ApplyVariablesToSubscriptions(processor.Mqtt.Subscriptions, processor.Mqtt.Variables);
             }
+            
+            Manifest.SetObjectHierarchy(this);
         }
 
         /// <summary>
