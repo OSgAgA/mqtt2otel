@@ -26,25 +26,25 @@ OtelConnections:
 
 It has the following parameters:
 
-| Parameter                          | Description                                                                                               |
-|------------------------------------|-----------------------------------------------------------------------------------------------------------|
-| Name                               | An optional name that can be given to the otel server. With this the server can be refered to later.      |
-| Description                        | An optional description of the server                                                                     |
-| ServiceName                        | The otel service name                                                                                     |
-| ServiceVersion                     | The otel service version                                                                                  |
-| ServiceNamespace                   | The otel service namespace                                                                                |
-| MinimumLogLevel                    | Set the minimum log level to: trace, debug, information, warning, error or critical                       |
-| Eendpoint.Protocol                 | The optional protocol that will be used for connecting to the broker, e.g. https                          |
-| Endpoint.Address                   | The address of the otel server                                                                            |
-| Endpoint.Port                      | The optional port under which the broker can be reached. Default is 4317.                                 |
-| Endpoint.Headers                   | Optional: The http headers, that will be send to the server on each request.                              |
-| Endpoint.BatchTimeoutInMs          | Optional. The maximum waiting time for the server to process a batch.                                     |
-| Endpoint.EnableTls                 | Set to false to disable transport level security (TLS). Default is true.                                  |
-| Endpoint.ClientCertificatePath     | Optional. Set a file path for a client certificate file.                                                  |
-| Endpoint.ClientCertificatePassword | Optional. The password to access the provided client certificate.                                         |
-| OtlpExportProtocol                 | Optional. The export protocol that should be used: Grpc or HttpProtobuf. Default is HttpProtobuf.         |
-| ExportProcessorType                | Optional. The export processor type that should be used: Batch or Simple. Default is Batch.               |
-| ClientPrefix                       | A prefix that will be added to the client id when connecting to the server. Helps to identify the client. |
+| Parameter                          | Description                                                                                                                   |
+|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| Name                               | An optional name that can be given to the otel server. With this the server can be refered to later.                          |
+| Description                        | An optional description of the server                                                                                         |
+| ServiceName                        | The otel service name                                                                                                         |
+| ServiceVersion                     | The otel service version                                                                                                      |
+| ServiceNamespace                   | The otel service namespace                                                                                                    |
+| MinimumLogLevel                    | Set the minimum log level to: trace, debug, information, warning, error or critical                                           |
+| Eendpoint.Protocol                 | The optional protocol that will be used for connecting to the broker, e.g. https                                              |
+| Endpoint.Address                   | The address of the otel server                                                                                                |
+| Endpoint.Port                      | The optional port under which the broker can be reached. Default is 4317.                                                     |
+| Endpoint.Headers                   | Optional: The http headers, that will be send to the server on each request.                                                  |
+| Endpoint.BatchTimeoutInMs          | Optional. The maximum waiting time for the server to process a batch.                                                         |
+| Endpoint.EnableTls                 | Set to true to enable transport level security (TLS). In that case a ClientCertificatePath needs to be set. Default is false. | 
+| Endpoint.ClientCertificatePath     | Optional. Set a file path for a client certificate file.                                                                      |
+| Endpoint.ClientCertificatePassword | Optional. The password to access the provided client certificate.                                                             |
+| OtlpExportProtocol                 | Optional. The export protocol that should be used: Grpc or HttpProtobuf. Default is HttpProtobuf.                             |
+| ExportProcessorType                | Optional. The export processor type that should be used: Batch or Simple. Default is Batch.                                   |
+| ClientPrefix                       | A prefix that will be added to the client id when connecting to the server. Helps to identify the client.                     |
 
 ## The export processor type
 

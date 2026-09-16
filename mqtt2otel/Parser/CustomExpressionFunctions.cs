@@ -47,7 +47,7 @@ namespace mqtt2otel.Parser
             AddStringCheck(context, "Contains", (text, condition) => text.Contains(condition));
 
             AddReplace(context, "Replace");
-            AddStringCheck(context, "MatchesWildcard", (text, condition) => FileSystemName.MatchesSimpleExpression(text, condition));
+            AddStringCheck(context, "MatchesWildcard", (text, condition) => FileSystemName.MatchesSimpleExpression(condition, text));
             AddStringCheck(context, "MatchesRegEx", (text, condition) => new Regex(condition).IsMatch(text));
 
             AddCaseFunction(context, "ToPascalCase", string.Empty, firstIsLower: false, restIsLower: false);
@@ -321,7 +321,7 @@ namespace mqtt2otel.Parser
             {
                 if (args.Count() == 1)
                 {
-                    string src = GetArgument<string>(functionName, context, 0, args).ToLower();
+                    string src = GetArgument<string>(functionName, context, 0, args);
                     return CaseConverter(src, separator, firstIsLower, restIsLower);
                 }
 
@@ -344,7 +344,13 @@ namespace mqtt2otel.Parser
         /// <returns>The converted source string.</returns>
         private static string CaseConverter(string source, string separator, bool firstIsLower, bool restIsLower)
         {
-            var parts = source.Split(new char[] { ' ', '_', '-', '.' });
+            // 1. Split on space, underscore, minus
+            // 2. Also split before uppercase letters (lowercase → uppercase boundary)
+            var pattern = @"(?<!^)(?=[A-Z])|[ _\-\.S]+";
+
+            var parts = Regex.Split(source, pattern);
+
+            //var parts = source.Split(new char[] { ' ', '_', '-', '.' });
 
             bool isFirst = true;
             StringBuilder result = new StringBuilder();
@@ -352,19 +358,23 @@ namespace mqtt2otel.Parser
 
             foreach (var part in parts)
             {
+                if (part.Length == 0) continue;
+
+                var lowerPart = part.ToLower();
+
                 if (isFirst)
                 {
-                    firstChar = firstIsLower ? char.ToLower(part[0]) : char.ToUpper(part[0]);
+                    firstChar = firstIsLower ? char.ToLower(lowerPart[0]) : char.ToUpper(lowerPart[0]);
                     isFirst = false;
                 }
                 else
                 {
                     result.Append(separator);
-                    firstChar = restIsLower ? char.ToLower(part[0]) : char.ToUpper(part[0]);
+                    firstChar = restIsLower ? char.ToLower(lowerPart[0]) : char.ToUpper(lowerPart[0]);
                 }
 
                 result.Append(firstChar);
-                result.Append(part[1..]);
+                result.Append(lowerPart[1..]);
             }
 
             return result.ToString();
