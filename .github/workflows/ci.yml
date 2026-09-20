@@ -59,9 +59,9 @@ jobs:
         run: pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium
         working-directory: mqtt2otel.ManifestExplorer.Tests
 
-      # Run tests and generate TestResults file. (m:1 removes parallel tests)
+      # Run tests and generate TestResults file.
       - name: Test
-        run: dotnet test --configuration Release --no-build -m:1 --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json"
+        run: dotnet test --configuration Release --no-build --max-parallel-test-modules 1 --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json"
 
       # Publish the test report. Currently not running due to usage of mtp (microsoft test platform) which is enforced on .net 10.
       # - name: Publish Test Report
