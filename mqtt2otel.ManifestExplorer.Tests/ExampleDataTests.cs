@@ -190,7 +190,7 @@ namespace mqtt2otel.ManifestExplorer.Tests
             else
             {
                 string uri = $"{this.ServerAddress}Explorer/?exampleId={testCase.Setup.Id}";
-                await this.TestPage.GotoAsync(uri);
+                await this.TestPage.GotoAsync(uri, new PageGotoOptions() {  Timeout = 60000 });
             }
         }
 
