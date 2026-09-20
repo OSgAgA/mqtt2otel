@@ -61,7 +61,7 @@ jobs:
 
       # Run tests and generate TestResults file.
       - name: Test
-        run: dotnet test --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json"
+        run: dotnet test --configuration Release --no-build --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json"
 
       # Publish the test report. Currently not running due to usage of mtp (microsoft test platform) which is enforced on .net 10.
       # - name: Publish Test Report
