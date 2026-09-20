@@ -9,12 +9,14 @@ using OpenTelemetry.Metrics;
 using System.Drawing;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
+using Xunit.v3;
 
 namespace mqtt2otel.ManifestExplorer.Tests
 {
     /// <summary>
     /// Tests all examples that are available to the explorer.
     /// </summary>
+    [CollectionDefinition("Sequential Playwright Tests", DisableParallelization = true)]
     public class ExampleDataTests : PageTestBase, IClassFixture<ManifestExplorerFactory>
     {
         /// <summary>
