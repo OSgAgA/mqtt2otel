@@ -265,6 +265,40 @@ namespace mqtt2otel.ManifestExplorer.Tests
         }
 
         /// <summary>
+        /// Tests whether a link is reachable (sending repsonse in [200,300). Uses maxAttempts retries. 
+        /// </summary>
+        /// <param name="url">The url under test.</param>
+        /// <param name="maxAttempts">The maximum number of attempts.</param>
+        /// <returns></returns>
+        public async Task<bool> IsLinkReachable(string url, int maxAttempts = 3)
+        {
+            await this.StartTraceGroupAsync($"Test reachability of: {url}");
+
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                try
+                {
+                    var response = await this.TestPage.Context.APIRequest.GetAsync(url, new() 
+                    {
+                        MaxRedirects = 10,
+                        Timeout = 5000,
+                        IgnoreHTTPSErrors = true
+                    });
+
+                    return response.Ok;
+                }
+                catch (PlaywrightException) when (attempt < maxAttempts)
+                {
+                    await Task.Delay(1000 * attempt);
+                }
+            }
+
+            await this.EndTraceGroupAsync();
+
+            return false;
+        }
+
+        /// <summary>
         /// Tests whethe an action should be executed based on an action trigger.
         /// </summary>
         /// <param name="testFailed">A value indicating, whether the current test has failed.</param>

@@ -144,19 +144,8 @@ namespace mqtt2otel.ManifestExplorer.Tests
                 await Expect(linkLocator).ToHaveAttributeAsync("href", link.Value);
                 await Expect(linkLocator).ToHaveTextAsync(link.Key);
 
-                var url = await linkLocator.GetAttributeAsync("href");
-                await this.StartTraceGroupAsync($"Test validity (200 ok) of link: {url}");
-
-                var apiResponse = await this.TestPage.Context.APIRequest.GetAsync(url!, new()
-                {
-                    MaxRedirects = 10,
-                    Timeout = 15000,
-                    IgnoreHTTPSErrors = true
-                });
-
-                Assert.Equal(200, apiResponse.Status);
-
-                await this.EndTraceGroupAsync();
+                var url = await linkLocator.GetAttributeAsync("href") ?? "href returned <<null>>.";
+                await this.IsLinkReachable(url);
             });
         }
 
