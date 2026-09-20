@@ -50,6 +50,11 @@ jobs:
       - name: Build
         run: dotnet build -c Release --no-restore -warnaserror
 
+      # Installs the playwright browsers.
+      - name: Install Playwright browsers
+        run: pwsh bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+        working-directory: mqtt2otel.ManifestExplorer.Tests
+
       # Run tests and generate TestResults file.
       - name: Test
         run: dotnet test --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json"
