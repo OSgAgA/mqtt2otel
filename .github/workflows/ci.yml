@@ -83,6 +83,11 @@ jobs:
           name: test-results
           path: TestResults/TestResults.json
 
+      # Identify where the playwright trace files have been written to.
+      - name: List trace files
+        if: always()
+        run: find . -iname "*.zip" -path "*traces*"
+
       # Upload Playwright traces, if existing. (Usually only available on failure, if not configured otherwise)
       - name: Upload Playwright Traces
         if: always()
