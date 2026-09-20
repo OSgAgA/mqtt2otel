@@ -94,5 +94,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-traces
-          path: playwright/traces/**
+          path: ./mqtt2otel.ManifestExplorer.Tests/bin/Release/net10.0/playwright/traces/**
           if-no-files-found: ignore
