@@ -493,7 +493,6 @@ OtelConnections:
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Could not initialize monacco editor. Reloading page...");
                 NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
             }
         }
@@ -516,7 +515,6 @@ OtelConnections:
 
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Could not set manifest editor text. Reloading page...");
                 NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
             }
         }
