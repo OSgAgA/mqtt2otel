@@ -50,6 +50,10 @@ jobs:
       - name: Build
         run: dotnet build -c Release --no-restore -warnaserror
 
+      # Find script
+      - name: List build output
+        run: find . -iname "playwright.ps1"
+
       # Installs the playwright browsers.
       - name: Install Playwright browsers
         run: pwsh bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
