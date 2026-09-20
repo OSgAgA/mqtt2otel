@@ -3,27 +3,27 @@
     @if (this.LogEntries != null)
     {
         <Card class="overflow-x-auto">
-            <table class="table overflow-x-auto">
+            <table data-testid="log-result-container" class="table overflow-x-auto">
                 <thead>
-                    <th>Timestamp</th>
-                    <th>Level</th>
-                    <th>Body</th>
-                    <th>Attribute</th>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Level</th>
+                        <th>Body</th>
+                        <th>Attribute</th>
+                    </tr>
                 </thead>
                 <tbody>
                     @foreach (var logEntry in this.LogEntries)
                     {
 
-                        <tr>
-                            <td>@logEntry.Timestamp</td>
-                            <td>@logEntry.LogLevel</td>
-                            <td>@logEntry.Body</td>
+                        <tr data-testid="log-result-entry">
+                            <td data-testid="log-result-timestamp">@logEntry.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ")</td>
+                            <td data-testid="log-result-level">@logEntry.LogLevel</td>
+                            <td data-testid="log-result-body">@logEntry.Body</td>
                             <td>
                                 @foreach (var tag in logEntry.Attributes.Where(tag => !tag.Key.StartsWith("otel_")))
                                 {
-                                    <Card style="margin-bottom: 5px;">
-                                        <div style="padding-left: 10px; padding-right:10px; padding-top: 4px; padding-bottom:4px;"><b>@tag.Key: </b>@tag.Value</div>
-                                    </Card>
+                                    <OtelAttribute Value="@tag" />
                                 }
                             </td>
                         </tr>

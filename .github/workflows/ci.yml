@@ -68,7 +68,17 @@ jobs:
 
       # Upload test results as artifacts.
       - name: Upload Test Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: TestResults/TestResults.json
+
+      # Upload Playwright traces, if existing. (Usually only available on failure, if not configured otherwise)
+      - name: Upload Playwright Traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: playwright/traces/**
+          if-no-files-found: ignore
