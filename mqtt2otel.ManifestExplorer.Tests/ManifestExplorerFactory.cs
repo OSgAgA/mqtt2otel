@@ -49,8 +49,8 @@ namespace mqtt2otel.ManifestExplorer.Tests
             var testHost = builder.Build();
 
             // Build a second host, this time on real Kestrel.
-            builder.ConfigureWebHost(b => b.UseKestrel());
-                                           //.UseUrls("http://127.0.0.1:0"));
+            builder.ConfigureWebHost(b => b.UseKestrel()
+                                           .UseUrls("http://127.0.0.1:0"));
             this.kestrelHost = builder.Build();
             this.kestrelHost.Start();
 
