@@ -1,0 +1,50 @@
+﻿@using mqtt2otel.ManifestExplorer.Settings
+@using mqtt2otel.Shared
+@inject Microsoft.Extensions.Options.IOptions<FeatureToggles> featureToggles
+
+@if (this.Data.Setup.Id != null && this.Data != null && !this.Data.Setup.Id.ToLower().StartsWith("doc") && featureToggles.Value.ShowExampleInfo)
+{
+    <div class="row hide-on-mobile">
+        <div class="col">
+            <hr style="margin: 50px" />
+
+            <h3 style="text-align: center;">Example information</h3>
+
+            <Card>
+                <CardHeader style="background-color: #dbeaff">
+                    <b>Example: @this.Data.Setup.Name</b>
+                </CardHeader>
+                <CardBody>
+                    <p>@this.Data.Setup.Description</p>
+
+                    @if (featureToggles.Value.ShowExampleLinks)
+                    {
+                        <p><b style="margin-top:10px;">Relevant documentation links</b></p>
+
+                        <div style="margin: 15px">
+                            <table class="table" data-testid="example-link-container">
+                                <tbody>
+                                    @foreach (var linkInfo in this.Data.Links)
+                                    {
+                                        <tr data-testid="example-link-item">
+                                            <td>
+                                                <a data-testid="example-link-entry" href="@linkInfo.Value">@linkInfo.Key</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </CardBody>
+            </Card>
+        </div>
+    </div>
+}
+
+@code 
+{
+    [Parameter, EditorRequired]
+    public TestCaseData Data { get; set; }
+
+}
