@@ -41,8 +41,6 @@ namespace mqtt2otel.ManifestExplorer.Tests
             // Arrange  
             var testCase = TestCaseData.GetById(exampleId);
 
-            this.CreateTraceOutput = ActionTrigger.Always;
-
             // Act and assert
             await this.NavigateToExplorerWithExample(testCase);
 
