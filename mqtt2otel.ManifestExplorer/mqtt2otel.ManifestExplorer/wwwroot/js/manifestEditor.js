@@ -16,7 +16,7 @@
 
 // Waits until the monacco editor is available
 window.waitForMonaco = () => {
-    timeout = 15000;
+    timeoutMs = 15000;
 
     return new Promise((resolve, reject) => {
         const start = Date.now();
