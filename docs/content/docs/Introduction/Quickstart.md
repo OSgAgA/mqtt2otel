@@ -38,15 +38,15 @@ For additional configuration options, see [Configure MQTT Broker](todo) and [Con
 
 After connecting to the MQTT broker and Otel server, you can subscribe to an MQTT topic and generate an Otel metric from incoming messages.
 
-Assume the server publishes messages to the topic `{{< exampleData id="doc-12" field="Topic">}}` in the following JSON format:
+Assume the server publishes messages to the topic `{{< exampleData id="doc-12" field="MqttData.Topic">}}` in the following JSON format:
 
-{{< exampleCode id="doc-12" field="Payload" lang="yaml">}}
+{{< exampleCode id="doc-12" field="MqttData.Payload" lang="yaml">}}
 
 You can parse this payload using the processor below, which automatically creates metric signals based on the JSON structure:
 
 {{< exampleCode id="doc-12" field="Manifest" lang="yaml">}}
 
-This configuration subscribes to the MQTT topic `{{< exampleData id="doc-12" field="Topic">}}` and generates two Otel `Gauge` metrics:  
+This configuration subscribes to the MQTT topic `{{< exampleData id="doc-12" field="MqttData.Topic">}}` and generates two Otel `Gauge` metrics:  
 `Data.Temperature` and `Data.Angle`. The data types are detected automatically.
 
 The syntax works as follows:
@@ -75,7 +75,7 @@ You can further adjust names using `NameFormatter`, and you can convert values�
 
 Given the following payload:
 
-{{< exampleCode id="doc-13" field="Payload" lang="yaml">}}
+{{< exampleCode id="doc-13" field="MqttData.Payload" lang="yaml">}}
 
 You can convert the value from °F to °C and format the metric name in camel case using this processor:
 
@@ -99,16 +99,16 @@ which are beyond the scope of this quickstart.
 
 If your payload cannot be parsed automatically, or if you need fine‑grained control over the generated signal, you can define metrics manually.
 
-Assume the server publishes messages to the topic `{{< exampleData id="doc-2" field="Topic">}}` in this JSON format:
+Assume the server publishes messages to the topic `{{< exampleData id="doc-2" field="MqttData.Topic">}}` in this JSON format:
 
-{{< exampleCode id="doc-02" field="Payload" lang="yaml" hl_lines="4">}}
+{{< exampleCode id="doc-02" field="MqttData.Payload" lang="yaml" hl_lines="4">}}
 
 To extract the temperature, use the [JSONPath](https://www.rfc-editor.org/rfc/rfc9535) expression `$.Processor.Temperature`.  
 The corresponding YAML looks like this:
 
 {{< exampleCode id="doc-02" field="Manifest" lang="yaml">}}
 
-This configuration subscribes to the MQTT topic `{{< exampleData id="doc-2" field="Topic">}}` and creates an Otel metric called `Processor.Temperature` with:
+This configuration subscribes to the MQTT topic `{{< exampleData id="doc-2" field="MqttData.Topic">}}` and creates an Otel metric called `Processor.Temperature` with:
 
 * a `float` signal data type is explicitly set, instead of the autodetected integer.  
 * a `Gauge` instrument  
@@ -166,7 +166,7 @@ In addition to manual attributes and variable‑based attributes, you can extrac
 
 Given a topic like:
 
-{{< exampleCode id="doc-14" field="Topic" lang="yaml">}}
+{{< exampleCode id="doc-14" field="MqttData.Topic" lang="yaml">}}
 
 You can see that the location (`germany`) and device ID (`1234`) are encoded in the topic.  
 The following processor extracts them using the TopicAttributes property:
@@ -195,7 +195,7 @@ functions can be found [here](/docs/expressions/).
 Log messages work similarly to metrics.  
 Assume you receive a log message payload in this format:
 
-{{< exampleCode id="doc-06" field="Payload" lang="dissect">}}
+{{< exampleCode id="doc-06" field="MqttData.Payload" lang="dissect">}}
 
 Instead of forwarding the raw message to Otel, you can transform it into structured log data using an extended  
 [DISSECT](https://github.com/OSgAgA/Dissect.Extended.Net) expression:

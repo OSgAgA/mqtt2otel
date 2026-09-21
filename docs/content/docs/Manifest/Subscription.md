@@ -44,7 +44,7 @@ under the same topic structure but need to handle them differently in your rules
 Let’s say you have a device that sends both power consumption metrics (like current, power, voltage) and status information 
 (like the microcontroller core temperature) in the same MQTT message. The message payload is structured as follows:
 
-{{< exampleCode id="doc-10" field="Payload" lang="json">}}
+{{< exampleCode id="doc-10" field="MqttData.Payload" lang="json">}}
 
 
 You want to treat power metrics separately from the microcontroller status. To achieve this, you can group the subscriptions 

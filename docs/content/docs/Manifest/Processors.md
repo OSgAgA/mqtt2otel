@@ -162,7 +162,7 @@ It consists of the following parameters:
 
 Given the following payload:
 
-{{< exampleCode id="doc-17" field="Payload" lang="yaml">}}
+{{< exampleCode id="doc-17" field="MqttData.Payload" lang="yaml">}}
 
 We can process this via the following processor:
 
@@ -214,7 +214,7 @@ It consists of:
 
 When using a json type to parse the following payload:
 
-{{< exampleCode id="doc-18" field="Payload" lang="yaml">}}
+{{< exampleCode id="doc-18" field="MqttData.Payload" lang="yaml">}}
 
 Two metrics will be created:
 
