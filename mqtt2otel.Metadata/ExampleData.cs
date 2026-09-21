@@ -36,28 +36,24 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// <param name="id">The example id.</param>
         /// <param name="name">The name of the example</param>
         /// <param name="description">A description.</param>
-        /// <param name="topic">The mqtt topic.</param>
-        /// <param name="payload">The mqtt payload</param>
-        /// <param name="userProperties">The mqtt user properties.</param>
+        /// <param name="mqttData">The mqtt data collection</param>
         /// <param name="manifest">The manifest.</param>
         /// <param name="category">The user defined category of the example.</param>
         /// <param name="tags">The associated tags.</param>
         /// <param name="createExample">A value indicating whether this should be added to the list of examples or if only a test case should be generated.</param>
         /// <param name="validateManifestOnly">Indicating whether only the manifest should be validated at testing. All other information, e.g. payload, or results
         /// are ignored.</param>
-        public ExampleData(string id, string name, string description, string topic, string payload, List<UserProperty> userProperties, string manifest, string category, List<string> tags, bool createExample, bool validateManifestOnly)
+        public ExampleData(string id, string name, string description, List<MqttSetupData> mqttData, string manifest, string category, List<string> tags, bool createExample, bool validateManifestOnly)
         {
             this.Id = id;
             this.Name = name;
             this.Description = description;
-            this.Topic = topic;
-            this.Payload = payload;
+            this.MqttData = mqttData;
             this.Manifest = manifest;
             this.Tags = tags;
             this.CreateExample = createExample;
             this.Category = category;
             this.ValidateManifestOnly = validateManifestOnly;
-            this.UserProperties = userProperties;
         }
 
         /// <summary>
@@ -149,16 +145,9 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         public string Description { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the example topic.
+        /// Gets or sets the mqtt data collection.
         /// </summary>
-        public string Topic { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the example payload.
-        /// </summary>
-        public string Payload { get; set; } = string.Empty;
-
-        public List<UserProperty> UserProperties { get; set; } = new();
+        public List<MqttSetupData> MqttData { get; set; } = new() { new MqttSetupData() };
 
         /// <summary>
         /// Gets or sets the example manifest.

@@ -115,7 +115,7 @@
             this.logger.LogError(ex, "Could not read monacco editor text.");
         }
 
-        var request = new ApplyPatternToPayloadData(this.Data.Setup.Topic, this.Data.Setup.Payload, this.Data.Setup.Manifest, this.Data.Setup.UserProperties);
+        var request = new ApplyPatternToPayloadData(this.Data.Setup.MqttData, this.Data.Setup.Manifest);
         var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/ApplyPatternToPayload", request);
         this.Result = await response.Content.ReadFromJsonAsync<ApplyPatternToPayloadResult>();
 

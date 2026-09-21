@@ -26,7 +26,7 @@ namespace mqtt2otel.Shared
         /// <summary>
         /// Gets or sets the expected test result.
         /// </summary>
-        public ExpectedTestResult ExpectedResult { get; set; } = new();
+        public List<ExpectedTestResult> ExpectedResults { get; set; } = new();
 
         /// <summary>
         /// Loads all tests as member data that can be used in a unit test.

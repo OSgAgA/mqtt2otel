@@ -6,7 +6,7 @@
                 <CardHeader style="background-color: #dbeaf1">
                     <b>MQTT topic</b>
                 </CardHeader>
-                <InputText data-testid="input-topic" @bind-Value="@this.Data.Topic" />
+                <InputText data-testid="input-topic" @bind-Value="@this.Data.MqttData[0].Topic" />
             </Card>
         </div>
     </div>
@@ -16,7 +16,7 @@
                 <CardHeader style="background-color: #dbeaf1">
                     <b>MQTT payload</b>
                 </CardHeader>
-                <InputTextArea data-testid="input-payload" class="form-control w-100" title="Payload" @bind-Value="@this.Data.Payload" rows="15" />
+                <InputTextArea data-testid="input-payload" class="form-control w-100" title="Payload" @bind-Value="@this.Data.MqttData[0].Payload" rows="15" />
             </Card>
         </div>
     </div>
@@ -42,7 +42,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var property in this.Data.UserProperties)
+                        @foreach (var property in this.Data.MqttData[0].UserProperties)
                         {
                             <tr data-testid="user-property-item-container">
                                 <td><InputText data-testid="input-user-property-name" class="form-control w-100" @bind-Value="@property.Name" /></td>
@@ -67,7 +67,7 @@
     /// </summary>
     private void AddUserProperty()
     {
-        this.Data.UserProperties.Add(new UserProperty());
+        this.Data.MqttData[0].UserProperties.Add(new UserProperty());
 
         this.StateHasChanged();
     }
@@ -78,7 +78,7 @@
     /// <param name="property">The property to be deleted.</param>
     private void DeleteUserProperty(UserProperty property)
     {
-        this.Data.UserProperties.Remove(property);
+        this.Data.MqttData[0].UserProperties.Remove(property);
 
         this.StateHasChanged();
     }
