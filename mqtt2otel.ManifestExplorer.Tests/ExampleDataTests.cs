@@ -1,22 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Playwright;
-using Microsoft.Playwright.Xunit.v3;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using mqtt2otel.Parser;
+﻿using Microsoft.Playwright;
 using mqtt2otel.Shared;
-using OpenTelemetry.Metrics;
-using System.Drawing;
-using System.Reflection.Metadata;
-using System.Runtime.CompilerServices;
-using Xunit.v3;
 
 namespace mqtt2otel.ManifestExplorer.Tests
 {
     /// <summary>
     /// Tests all examples that are available to the explorer.
     /// </summary>
-    [CollectionDefinition("Sequential Playwright Tests", DisableParallelization = true)]
     public class ExampleDataTests : PageTestBase, IClassFixture<ManifestExplorerFactory>
     {
         /// <summary>
@@ -46,35 +35,23 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// </summary>
         /// <param name="testCase">The case to be tested.</param>
         [Theory]
-        [MemberData(nameof(TestCaseData.LoadAllAsMemberdata), MemberType = typeof(TestCaseData))]
-        public async Task ShouldSuccessfullyExecuteExample(TestCaseData testCase)
+        [MemberData(nameof(TestCaseData.LoadAllAsMemberdataTestIds), MemberType = typeof(TestCaseData))]
+        public async Task ShouldSuccessfullyExecuteExample(string exampleId)
         {
             // Arrange  
-            this.TestDisplayName = $"{nameof(ShouldSuccessfullyExecuteExample)} - {testCase.Setup.Id}";
-            //if (testCase.Setup.Id != "log-01") return;
-            //this.AllwaysCreateTraceOutput = true;
+            var testCase = TestCaseData.GetById(exampleId);
+
+            this.CreateTraceOutput = ActionTrigger.Always;
 
             // Act and assert
-
-            // STEP 1
-            //     If example is on example page: open home --ClickStartWithExample--> ExamplePage --ClickExampleLink--> Explorer
-            //                              else: open Explorer with example id.
             await this.NavigateToExplorerWithExample(testCase);
 
-            // STEP 2:
-            //     Tests if all setup information is set correctly in the UI.
             await CheckExampleSetup(testCase);
 
-            // STEP 3:
-            //     If example links are available, then tests if all the links appear with the right description and navigates to the links.
             await CheckDocumentationLinks(testCase);
 
-            // STEP 4:
-            //     Clicks the apply button.
-            await this.TestPage.GetByTestId("button-apply").ClickAsync();
+            await this.Page.GetByTestId("button-apply").ClickAsync();
 
-            // STEP 5:
-            ///     Tests if the expected results are shown on the UI.
             await CheckTestResults(testCase);
         }
 
@@ -85,15 +62,16 @@ namespace mqtt2otel.ManifestExplorer.Tests
         private async Task CheckTestResults(TestCaseData testCase)
         {
             // Check result headers
-            var logResultsHeader = this.TestPage.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(2);
+            var logResultsHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(2);
             await Expect(logResultsHeader).ToHaveTextAsync($"Logs ({testCase.ExpectedResult.Logs.Count})");
 
-            var metricsResultHeader = this.TestPage.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(1);
+            var metricsResultHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(1);
             await Expect(metricsResultHeader).ToHaveTextAsync($"Metrics ({testCase.ExpectedResult.Metrics.Count})");
 
-            var errorResultHeader = this.TestPage.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(0);
+            var errorResultHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(0);
             await Expect(errorResultHeader).ToHaveTextAsync($"Errors (0)");
 
+            // Check test results
             if (testCase.ExpectedResult.Metrics.Count > 0)
             {
                 await metricsResultHeader.ClickAsync();
@@ -115,7 +93,7 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// <param name="testCase">The current test case.</param>
         private async Task CheckLogResults(TestCaseData testCase)
         {
-            var logResultContainer = this.TestPage.GetByTestId("log-result-container");
+            var logResultContainer = this.Page.GetByTestId("log-result-container");
 
             await Iterate(logResultContainer, testCase.ExpectedResult.Logs, "log-result-entry", async (log, locator) =>
             {
@@ -137,7 +115,7 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// <param name="testCase">The current test case.</param>
         private async Task CheckDocumentationLinks(TestCaseData testCase)
         {
-            var exampleLinksContainer = this.TestPage.GetByTestId("example-link-container");
+            var exampleLinksContainer = this.Page.GetByTestId("example-link-container");
 
             await Iterate(exampleLinksContainer, testCase.Links, "example-link-item", async (link, locator) =>
             {
@@ -157,11 +135,11 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// <param namee="testCase">The current test case.</param>
         private async Task CheckExampleSetup(TestCaseData testCase)
         {
-            await Expect(this.TestPage.GetByTestId("input-topic")).ToHaveValueAsync(testCase.Setup.Topic);
+            await Expect(this.Page.GetByTestId("input-topic")).ToHaveValueAsync(testCase.Setup.Topic);
 
-            await Expect(this.TestPage.GetByTestId("input-payload")).ToHaveValueAsync(testCase.Setup.Payload.Replace("\r", ""));
+            await Expect(this.Page.GetByTestId("input-payload")).ToHaveValueAsync(testCase.Setup.Payload.Replace("\r", ""));
 
-            var userPropertiesContainer = this.TestPage.GetByTestId("user-properties-container");
+            var userPropertiesContainer = this.Page.GetByTestId("user-properties-container");
 
             await Iterate(userPropertiesContainer, testCase.Setup.UserProperties, "user-property-item-container", async (prop, propItem) =>
             {
@@ -181,16 +159,16 @@ namespace mqtt2otel.ManifestExplorer.Tests
         {
             if (testCase.Setup.CreateExample)
             {
-                await this.TestPage.GotoAsync(this.ServerAddress);
-                await this.TestPage.GetByTestId("button-start-with-example").ClickAsync();
+                await this.Page.GotoAsync(this.ServerAddress);
+                await this.Page.GetByTestId("button-start-with-example").ClickAsync();
 
-                var link = this.TestPage.Locator($"a[href$='exampleId={testCase.Setup.Id}']").First;
+                var link = this.Page.Locator($"a[href$='exampleId={testCase.Setup.Id}']").First;
                 await link.ClickAsync();
             }
             else
             {
                 string uri = $"{this.ServerAddress}Explorer/?exampleId={testCase.Setup.Id}";
-                await this.TestPage.GotoAsync(uri, new PageGotoOptions() {  Timeout = 60000 });
+                await this.Page.GotoAsync(uri, new PageGotoOptions() {  Timeout = 60000 });
             }
         }
 
@@ -202,7 +180,7 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// <param name="testCase">The current test case.</param>
         private async Task CheckMetricResults(TestCaseData testCase, ILocator metricsResultHeader)
         {
-            var metricResultsContainer = this.TestPage.GetByTestId("metric-result-container");
+            var metricResultsContainer = this.Page.GetByTestId("metric-result-container");
 
             await Iterate(metricResultsContainer, testCase.ExpectedResult.Metrics, "metric-result-entry", async (metric, locator) =>
             {

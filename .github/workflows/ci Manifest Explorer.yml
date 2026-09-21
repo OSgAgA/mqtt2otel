@@ -49,3 +49,39 @@ jobs:
       # Build the application.
       - name: Build
         run: dotnet build -c Release --no-restore -warnaserror
+
+      # Identify all csproj files
+      - name: List project files
+        if: always()
+        run: find . -iname "*.csproj"
+
+      # Installs the playwright browsers.
+      - name: Install Playwright browsers
+        run: pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+        working-directory: mqtt2otel.ManifestExplorer.Tests
+
+      # Run tests and generate TestResults file.
+      - name: Test
+        run: dotnet test mqtt2otel.ManifestExplorer.Tests/mqtt2otel.Tests.csproj  --configuration Release --no-build --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json" 
+
+      # Upload test results as artifacts.
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/TestResults.json
+
+      # Identify where the playwright trace files have been written to.
+      - name: List trace files
+        if: always()
+        run: find . -iname "*.zip" -path "*traces*"
+
+      # Upload Playwright traces, if existing. (Usually only available on failure, if not configured otherwise)
+      - name: Upload Playwright Traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: ./mqtt2otel.ManifestExplorer.Tests/bin/Release/net10.0/playwright/traces/**
+          if-no-files-found: ignore

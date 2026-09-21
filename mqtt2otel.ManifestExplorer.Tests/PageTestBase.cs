@@ -20,39 +20,14 @@ namespace mqtt2otel.ManifestExplorer.Tests
     public class PageTestBase : PageTest, IAsyncLifetime
     {
         /// <summary>
-        /// the current page object, that can be used by the tests.
-        /// </summary>
-        private IPage? testPage = null;
-
-        /// <summary>
         /// The factory used for creating an instance of the manifest explorer server.
         /// </summary>
         private readonly ManifestExplorerFactory _factory;
 
         /// <summary>
-        /// This context is used by the playwright browser, e.g. to create traces.
-        /// </summary>
-        private IBrowserContext? browserContext;
-
-        /// <summary>
-        /// The browser object used for testing.
-        /// </summary>
-        private IBrowser? browser;
-
-        /// <summary>
-        /// The playwright driver that is created for each test.
-        /// </summary>
-        private IPlaywright playwrightDriver;
-
-        /// <summary>
         /// The server address of the manifest explorer.
         /// </summary>
         public string ServerAddress { get; private set; }
-
-        /// <summary>
-        /// Gets or sets the test display name. This is used to create filenames for videos and traces.
-        /// </summary>
-        public string TestDisplayName { get; set; } = "Unknown test";
 
         /// <summary>
         /// Gets or sets a value that defines, when playwright trace output should be created.
@@ -63,19 +38,6 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// Gets or sets a value that defines, when playwright trace output should be created.
         /// </summary>
         public ActionTrigger CreateVideoOutput { get; set; } = ActionTrigger.Never;
-
-        /// <summary>
-        /// Gets the current page object, that can be used by the tests.
-        /// </summary>
-        public IPage TestPage
-        {
-            get
-            {
-                if (this.testPage == null) throw new Exception("Internal error: Property TestPage is not set.");
-
-                return this.testPage;
-            }
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PageTestBase"/> class.
@@ -92,14 +54,26 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// </summary>
         public async override ValueTask InitializeAsync()
         {
-            this.playwrightDriver = await Microsoft.Playwright.Playwright.CreateAsync();
-            var launchOptions = new BrowserTypeLaunchOptions()
+            await base.InitializeAsync();
+
+            if (this.CreateTraceOutput != ActionTrigger.Never)
             {
-                Headless = true,
-            };
+                await this.Context.Tracing.StartAsync(new()
+                {
+                    Screenshots = true,
+                    Snapshots = true,
+                    Sources = true,
+                });
+            }
+        }
 
-            this.browser = await this.playwrightDriver.Chromium.LaunchAsync(launchOptions);
-
+        
+        /// <summary>
+        /// Provides the browser context options, setting e.g. the screen and viewport size. Called before each test.
+        /// </summary>
+        /// <returns>The created context options.</returns>
+        public override BrowserNewContextOptions ContextOptions()
+        {
             int width = 2500;
             int height = 1300;
 
@@ -116,17 +90,21 @@ namespace mqtt2otel.ManifestExplorer.Tests
                 options.RecordVideoSize = new RecordVideoSize() { Width = width, Height = height };
             }
 
-            this.browserContext = await this.browser.NewContextAsync(options);
-
-            await browserContext.Tracing.StartAsync(new()
-            {
-                Screenshots = true,
-                Snapshots = true,
-                Sources = true,
-            });
-
-            this.testPage = await this.browserContext.NewPageAsync();
+            return options;
         }
+
+        /// <summary>
+        /// Provides the browser launch options. Called before each test.
+        /// </summary>
+        /// <returns>The created options.</returns>
+        public override Task<BrowserTypeLaunchOptions?> LaunchOptionsAsync()
+        {
+            return Task.FromResult<BrowserTypeLaunchOptions?>(new BrowserTypeLaunchOptions()
+            {
+                Headless = true,
+            });
+        }
+
 
         /// <summary>
         /// Disposes all objects created by the base class after each test.
@@ -137,25 +115,41 @@ namespace mqtt2otel.ManifestExplorer.Tests
         {
             try
             {
-                if (this.browserContext == null || this.TestPage == null) return;
+                var displayName = TestContext.Current.TestCase?.TestCaseDisplayName ?? "NoMethod()";
+
+                var split = displayName.Split("(");
+                if (split.Length == 2)
+                {
+                    displayName = (TestContext.Current.TestCase?.TestMethodName ?? "NoMethod") + "(" + split[1];
+                }
+
+                displayName = displayName.Replace("\"", "");
+                displayName = displayName.Replace("(", "( ");
+                displayName = displayName.Replace(")", " )");
+                displayName = displayName.Replace(": ", "=");
+                displayName = displayName.Replace(":", "=");
 
                 var failed = TestContext.Current.TestState?.Result == Xunit.TestResult.Failed;
 
-                string videoPath = this.TestPage.Video != null ? await this.TestPage.Video!.PathAsync() : string.Empty;
+                string videoPath = this.Page.Video != null ? await this.Page.Video!.PathAsync() : string.Empty;
 
                 var videoPathDirectory = Path.GetDirectoryName(videoPath) ?? string.Empty;
-                var videoFilename = $"{DateTime.UtcNow:yyyy-MM-dd HHmmss} {this.TestDisplayName}{Path.GetExtension(videoPath)}";
-                var traceFilename = $"{DateTime.UtcNow:yyyy-MM-dd HHmmss} Playwright {this.TestDisplayName}.zip";
+                var videoFilename = $"{DateTime.UtcNow:yyyy-MM-ddTHHmmssZ} {displayName}{Path.GetExtension(videoPath)}";
+                var traceFilename = $"{DateTime.UtcNow:yyyy-MM-ddTHHmmssZ} {displayName}.zip";
 
                 if (this.TestActionTrigger(failed, this.CreateTraceOutput))
                 {
-                    await browserContext.Tracing.StopAsync(new()
+                    await Context.Tracing.StopAsync(new()
                     {
                         Path = Path.Combine("playwright", "traces", traceFilename)
                     });
                 }
+                else
+                {
+                    await Context.Tracing.StopAsync();
+                }
 
-                await this.browserContext.CloseAsync();
+                await this.Context.CloseAsync();
 
                 if (this.TestActionTrigger(failed, this.CreateVideoOutput))
                 {
@@ -169,10 +163,7 @@ namespace mqtt2otel.ManifestExplorer.Tests
             }
             finally
             {
-                if (this.browser != null)
-                    await browser.CloseAsync();
-
-                this.playwrightDriver?.Dispose();
+                await base.DisposeAsync();
             }
         }
 
@@ -185,13 +176,13 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// <returns></returns>
         public async Task ExpectManifestEditor(string expectation)
         {
-            await this.StartTraceGroupAsync("Test content of manifest editor)");
+            await this.Context.Tracing.GroupAsync("Test content of manifest editor)");
 
-            await Expect(this.TestPage!.Locator(".monaco-editor")).ToBeVisibleAsync();
-            await this.TestPage.WaitForFunctionAsync("() => monaco?.editor?.getModels()?.length > 0");
+            await Expect(this.Page!.Locator(".monaco-editor")).ToBeVisibleAsync();
+            await this.Page.WaitForFunctionAsync("() => monaco?.editor?.getModels()?.length > 0");
 
             // Inject hidden dump element
-            await this.TestPage!.EvaluateAsync(@"() => {
+            await this.Page!.EvaluateAsync(@"() => {
                 const container = document.querySelector('#manifest-editor-container');
 
                 let div = document.createElement('div');
@@ -202,7 +193,7 @@ namespace mqtt2otel.ManifestExplorer.Tests
             }");
 
             // Dump Monaco text into DOM
-            await this.TestPage.EvaluateAsync(@"() => {
+            await this.Page.EvaluateAsync(@"() => {
                 const text = monaco.editor.getModels()[0].getValue();
                 document.querySelector('#monaco-text-dump').innerText = text.replace('\n', '');
             }");
@@ -212,15 +203,15 @@ namespace mqtt2otel.ManifestExplorer.Tests
             var cleaned = expectation.Replace("\n", "");
 
             // Expectation that shows up in traces
-            await Expect(this.TestPage.Locator("#monaco-text-dump"))
+            await Expect(this.Page.Locator("#monaco-text-dump"))
                 .ToContainTextAsync(cleaned);
 
             // Inject hidden dump element
-            await this.TestPage.EvaluateAsync(@"() => {
+            await this.Page.EvaluateAsync(@"() => {
                 document.getElementById('monaco-text-dump').remove();
             }");
 
-            await this.EndTraceGroupAsync();
+            await this.Context.Tracing.GroupEndAsync();
         }
 
         /// <summary>
@@ -242,29 +233,6 @@ namespace mqtt2otel.ManifestExplorer.Tests
         }
 
         /// <summary>
-        /// Starts a new tracing group.
-        /// </summary>
-        /// <param name="title">The title of the tracing group.</param>
-        /// <exception cref="Exception">Thrown if <see cref="browserContext"/> is not set.</exception>
-        public async Task StartTraceGroupAsync(string title)
-        {
-            if (this.browserContext == null) throw new Exception("Cannot create a tracing group on null context.");
-
-            await this.browserContext.Tracing.GroupAsync(title);
-        }
-
-        /// <summary>
-        /// Ends the current active tracing group.
-        /// </summary>
-        /// <exception cref="Exception">Thrown if <see cref="browserContext"/> is not set.</exception>
-        public async Task EndTraceGroupAsync()
-        {
-            if (this.browserContext == null) throw new Exception("Cannot end a tracing group on null context.");
-
-            await this.browserContext.Tracing.GroupEndAsync();
-        }
-
-        /// <summary>
         /// Tests whether a link is reachable (sending repsonse in [200,300). Uses maxAttempts retries. 
         /// </summary>
         /// <param name="url">The url under test.</param>
@@ -272,19 +240,21 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// <returns></returns>
         public async Task<bool> IsLinkReachable(string url, int maxAttempts = 3)
         {
-            await this.StartTraceGroupAsync($"Test reachability of: {url}");
+            await this.Context.Tracing.GroupAsync($"Test reachability of: {url}");
 
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
                 try
                 {
-                    var response = await this.TestPage.Context.APIRequest.GetAsync(url, new() 
+                    var response = await this.Page.Context.APIRequest.GetAsync(url, new()
                     {
                         MaxRedirects = 10,
                         Timeout = 5000,
                         IgnoreHTTPSErrors = true
                     });
 
+
+                    await this.Context.Tracing.GroupEndAsync();
                     return response.Ok;
                 }
                 catch (PlaywrightException) when (attempt < maxAttempts)
@@ -293,7 +263,7 @@ namespace mqtt2otel.ManifestExplorer.Tests
                 }
             }
 
-            await this.EndTraceGroupAsync();
+            await this.Context.Tracing.GroupEndAsync();
 
             return false;
         }
