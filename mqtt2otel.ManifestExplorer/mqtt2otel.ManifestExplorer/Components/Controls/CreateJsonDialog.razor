@@ -142,9 +142,9 @@
         {
             var testcase = new TestCaseData()
             {
-                Setup = new ExampleData(this.Data.Setup.Id, this.Data.Setup.Name, this.Data.Setup.Description, this.Data.Setup.Topic, this.Data.Setup.Payload, this.Data.Setup.UserProperties, this.Data.Setup.Manifest, this.Data.Setup.Category,
+                Setup = new ExampleData(this.Data.Setup.Id, this.Data.Setup.Name, this.Data.Setup.Description, this.Data.Setup.MqttData, this.Data.Setup.Manifest, this.Data.Setup.Category,
                     this.Data.Setup.Tags, this.Data.Setup.CreateExample, this.Data.Setup.ValidateManifestOnly),
-                ExpectedResult = new ExpectedTestResult(this.Result.Metrics, this.Result.Logs),
+                ExpectedResults = new List<ExpectedTestResult>() { new ExpectedTestResult(this.Result.Metrics, this.Result.Logs) },
                 Links = this.Data.Links
             };
 

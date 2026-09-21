@@ -1,0 +1,85 @@
+﻿@using mqtt2otel.ManifestExplorer.DTOs
+<div class="flex-container">
+    <div class="row">
+        <div class="col" style="margin-bottom:20px;">
+            <Card>
+                <CardHeader style="background-color: #dbeaf1">
+                    <b>MQTT topic</b>
+                </CardHeader>
+                <InputText data-testid="input-topic" @bind-Value="@this.Data.MqttData[0].Topic" />
+            </Card>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col" style="margin-bottom:20px;">
+            <Card>
+                <CardHeader style="background-color: #dbeaf1">
+                    <b>MQTT payload</b>
+                </CardHeader>
+                <InputTextArea data-testid="input-payload" class="form-control w-100" title="Payload" @bind-Value="@this.Data.MqttData[0].Payload" rows="15" />
+            </Card>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <Card>
+                <CardHeader class="d-flex justify-content-between align-items-center" style="background-color: #dbeaf1">
+                    <b>MQTT user properties</b>
+
+                    <div>
+                        <button class="btn btn-outline-primary me-2" @onclick="AddUserProperty">
+                            Add
+                        </button>
+                    </div>
+                </CardHeader>
+                <table data-testid="user-properties-container" class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Value</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var property in this.Data.MqttData[0].UserProperties)
+                        {
+                            <tr data-testid="user-property-item-container">
+                                <td><InputText data-testid="input-user-property-name" class="form-control w-100" @bind-Value="@property.Name" /></td>
+                                <td><InputText data-testid="input-user-property-value" class="form-control w-100" @bind-Value="@property.Value" /></td>
+                                <td><button id="button-delete-user-property" class="btn btn-outline-primary me-2" @onclick="() => DeleteUserProperty(property)">Delete</button></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </Card>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter, EditorRequired]
+    public ExampleData Data { get; set; }
+
+    /// <summary>
+    /// Adds a new mqtt user property.
+    /// </summary>
+    private void AddUserProperty()
+    {
+        this.Data.MqttData[0].UserProperties.Add(new UserProperty());
+
+        this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Deletes an existing user property.
+    /// </summary>
+    /// <param name="property">The property to be deleted.</param>
+    private void DeleteUserProperty(UserProperty property)
+    {
+        this.Data.MqttData[0].UserProperties.Remove(property);
+
+        this.StateHasChanged();
+    }
+}

@@ -1,15 +1,12 @@
-﻿using System.Numerics;
+﻿using mqtt2otel.Metadata;
+using System.Numerics;
 
 namespace mqtt2otel.ManifestExplorer.DTOs
 {
-    public class ApplyPatternToPayloadData(string topic, string payload, string pattern, List<UserProperty> userProperties)
+    public class ApplyPatternToPayloadData(List<MqttSetupData> mqttData, string manifest)
     {
-        public string Topic { get; set; } = topic;
+        public List<MqttSetupData> MqttData { get; set; } = mqttData;
 
-        public string Payload { get; set; } = payload;
-
-        public string Pattern { get; set; } = pattern;
-
-        public List<UserProperty> UserProperties { get; set; } = userProperties;
+        public string Manifest { get; set; } = manifest;
     }
 }

@@ -41,8 +41,6 @@ namespace mqtt2otel.ManifestExplorer.Tests
             // Arrange  
             var testCase = TestCaseData.GetById(exampleId);
 
-            this.CreateTraceOutput = ActionTrigger.Always;
-
             // Act and assert
             await this.NavigateToExplorerWithExample(testCase);
 
@@ -63,22 +61,22 @@ namespace mqtt2otel.ManifestExplorer.Tests
         {
             // Check result headers
             var logResultsHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(2);
-            await Expect(logResultsHeader).ToHaveTextAsync($"Logs ({testCase.ExpectedResult.Logs.Count})");
+            await Expect(logResultsHeader).ToHaveTextAsync($"Logs ({testCase.ExpectedResults[0].Logs.Count})");
 
             var metricsResultHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(1);
-            await Expect(metricsResultHeader).ToHaveTextAsync($"Metrics ({testCase.ExpectedResult.Metrics.Count})");
+            await Expect(metricsResultHeader).ToHaveTextAsync($"Metrics ({testCase.ExpectedResults[0].Metrics.Count})");
 
             var errorResultHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(0);
             await Expect(errorResultHeader).ToHaveTextAsync($"Errors (0)");
 
             // Check test results
-            if (testCase.ExpectedResult.Metrics.Count > 0)
+            if (testCase.ExpectedResults[0].Metrics.Count > 0)
             {
                 await metricsResultHeader.ClickAsync();
                 await CheckMetricResults(testCase, metricsResultHeader);
             }
 
-            if (testCase.ExpectedResult.Logs.Count > 0)
+            if (testCase.ExpectedResults[0].Logs.Count > 0)
             {
                 await logResultsHeader.ClickAsync();
                 await CheckLogResults(testCase);
@@ -95,7 +93,7 @@ namespace mqtt2otel.ManifestExplorer.Tests
         {
             var logResultContainer = this.Page.GetByTestId("log-result-container");
 
-            await Iterate(logResultContainer, testCase.ExpectedResult.Logs, "log-result-entry", async (log, locator) =>
+            await Iterate(logResultContainer, testCase.ExpectedResults[0].Logs, "log-result-entry", async (log, locator) =>
             {
                 await Expect(locator.GetByTestId("log-result-timestamp")).ToHaveTextAsync(log.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ"));
                 await Expect(locator.GetByTestId("log-result-level")).ToHaveTextAsync(log.LogLevel.ToString());
@@ -135,13 +133,13 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// <param namee="testCase">The current test case.</param>
         private async Task CheckExampleSetup(TestCaseData testCase)
         {
-            await Expect(this.Page.GetByTestId("input-topic")).ToHaveValueAsync(testCase.Setup.Topic);
+            await Expect(this.Page.GetByTestId("input-topic")).ToHaveValueAsync(testCase.Setup.MqttData[0].Topic);
 
-            await Expect(this.Page.GetByTestId("input-payload")).ToHaveValueAsync(testCase.Setup.Payload.Replace("\r", ""));
+            await Expect(this.Page.GetByTestId("input-payload")).ToHaveValueAsync(testCase.Setup.MqttData[0].Payload.Replace("\r", ""));
 
             var userPropertiesContainer = this.Page.GetByTestId("user-properties-container");
 
-            await Iterate(userPropertiesContainer, testCase.Setup.UserProperties, "user-property-item-container", async (prop, propItem) =>
+            await Iterate(userPropertiesContainer, testCase.Setup.MqttData[0].UserProperties, "user-property-item-container", async (prop, propItem) =>
             {
                 await Expect(propItem.GetByTestId("input-user-property-name")).ToHaveValueAsync(prop.Name);
                 await Expect(propItem.GetByTestId("input-user-property-value")).ToHaveValueAsync(prop.Value);
@@ -182,7 +180,7 @@ namespace mqtt2otel.ManifestExplorer.Tests
         {
             var metricResultsContainer = this.Page.GetByTestId("metric-result-container");
 
-            await Iterate(metricResultsContainer, testCase.ExpectedResult.Metrics, "metric-result-entry", async (metric, locator) =>
+            await Iterate(metricResultsContainer, testCase.ExpectedResults[0].Metrics, "metric-result-entry", async (metric, locator) =>
             {
                 await Expect(locator.GetByTestId("metric-name")).ToHaveTextAsync(metric.Name);
                 await Expect(locator.GetByTestId("metric-type")).ToHaveTextAsync(metric.MetricType.ToString());

@@ -1,0 +1,86 @@
+﻿@using mqtt2otel.ManifestExplorer.DTOs
+<Card>
+    <CardHeader style="background-color: #dbeaf1">
+        <b>Result</b>
+    </CardHeader>
+    <Tabs data-testid="result-container" @ref="tabs" EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
+        <Tab data-testid="errors-result-header" @bind-Title="@this.errorTitle">
+            <Content>
+                <div>
+                    <Card style="margin:10px">
+                        <TextAreaInput class="form-control w-100" title="Errors" @bind-Value="@this.errorText" style="color: #660000; font-weight:500" readonly />
+                    </Card>
+                </div>
+            </Content>
+        </Tab>
+        <Tab data-testid="metrics-result-header" @bind-Title="this.metricsTitle" IsActive="true">
+            <Content>
+                <MetricResultViewer Metrics="@this.Data?.Metrics" />
+            </Content>
+        </Tab>
+        <Tab data-testid="logs-result-header" @bind-Title="@this.logsTitle">
+            <Content>
+                <LogResultViewer LogEntries="@this.Data?.Logs" />
+            </Content>
+        </Tab>
+
+    </Tabs>
+</Card>
+
+@code 
+{
+    [Parameter]
+    public ApplyPatternToPayloadResult? Data { get; set; }
+
+    /// <summary>
+    /// The tabs controll that contains the different results.
+    /// </summary>
+    Tabs tabs = new();
+
+    ///# <summary>
+    /// The tilte of the error tab.
+    /// </summary>
+    private string errorTitle = "Errors";
+
+    /// <summary>
+    /// The title of the metric tab.
+    /// </summary>
+    private string metricsTitle = "Metrics";
+
+    /// <summary>
+    /// The title of the log tab.
+    /// </summary>
+    private string logsTitle = "Logs";
+
+    /// <summary>
+    /// The text representation of the error result.
+    /// </summary>
+    private string errorText = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (this.Data != null)
+        {
+            this.errorText = this.Data.GetErrorsAsString();
+
+            this.errorTitle = $"Errors ({this.Data.Errors.Count})";
+            this.metricsTitle = $"Metrics ({this.Data.Metrics.Count})";
+            this.logsTitle = $"Logs ({this.Data.Logs.Count})";
+
+            if (this.Data.HasErrors)
+            {
+                await this.tabs.ShowTabByIndexAsync(0);
+            }
+            else if (this.Data.HasMetrics)
+            {
+                await this.tabs.ShowTabByIndexAsync(1);
+            }
+            else if (this.Data.HasLogs)
+            {
+                await this.tabs.ShowTabByIndexAsync(2);
+            }
+
+            this.StateHasChanged();
+        }
+    }
+}

@@ -1,0 +1,162 @@
+﻿@using mqtt2otel.ManifestExplorer.Helper
+@inject IJSRuntime JS
+@inject NavigationManager NavManager
+
+<Card id="manifest-editor-container">
+    <CardHeader class="d-flex justify-content-between align-items-center" style="background-color: #dbeaf1">
+        <b>mqtt2otel manifest</b>
+
+        <div>
+            <button class="btn btn-outline-primary me-2" @onclick="AddServerStubs">
+                Add server stubs
+            </button>
+            <button class="btn btn-outline-primary" @onclick="CopyManifest">
+                Copy
+            </button>
+        </div>
+    </CardHeader>
+    <StandaloneCodeEditor @ref="manifestEditor" Id="my-editor" ConstructionOptions="EditorOptions" OnDidInit="OnEditorInit" />
+</Card>
+
+@code
+{
+
+    [Parameter, EditorRequired]
+    public string InitialText { get; set; }
+
+    /// <summary>
+    /// Contains a reference to the manifest editor
+    /// </summary>
+    private StandaloneCodeEditor? manifestEditor;
+
+    /// <summary>
+    /// A guard for testing, whether the manifest editor is initialized.
+    /// </summary>
+    private bool editorIsInitialized = false;
+
+    /// <summary>
+    /// Gets the value of the manifest editor as a simple text string.
+    /// </summary>
+    /// <returns>The current value of the editor.</returns>
+    public async Task<string> GetValueAsString()
+    {
+        if (this.manifestEditor != null) return await this.manifestEditor.GetValue();
+
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// Sets the provided text in the monacco editor.
+    /// </summary>
+    /// <param name="text">The text that should be set.</param>
+    /// <param name="allowUninitialized">A flag indicating whether the <see cref="editorIsInitialized"/> flag should be ignored.</param>
+    public async Task SetValueAsText(string text, bool allowUninitialized = false)
+    {
+        if (manifestEditor != null && this.editorIsInitialized != allowUninitialized)
+        {
+            await JS.InvokeVoidAsync("waitForMonaco", null);
+            try
+            {
+                await manifestEditor.SetValue(text);
+                await manifestEditor.Layout();
+            }
+
+            catch
+            {
+                NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Adds server stubs to the manifest, so that a complete manifest is available that can be used for further processing.
+    /// </summary>
+    private async Task AddServerStubs()
+    {
+        string serverStub = """
+Version: 1.1
+
+MqttConnections:
+  - Name: "My broker"
+    Endpoint:
+      Port: 1813
+      Protocol: tcp
+      Address: "mymqtt-broker.net"
+
+OtelConnections:
+  - Name: "My Otel server"
+    ServiceName: "my-service"
+    ServiceNamespace: "my-service-namespace"
+    Endpoint:
+      Address: "https://my-otel-collector.net"
+
+""";
+
+        var text = await this.GetValueAsString();
+        text = serverStub + (text.StartsWith('\n') ? "" : "\n") + text;
+
+        await this.SetValueAsText(text);
+    }
+
+    /// <summary>
+    /// Copies the manifest string into the paste buffer.
+    /// </summary>
+    /// <returns></returns>
+    private async Task CopyManifest()
+    {
+        await JS.InvokeVoidAsync("copyToClipboard", await this.GetValueAsString());
+    }
+
+    /// <summary>
+    /// Sets the options of the monacco editor at construction time.
+    /// </summary>
+    /// <param name="editor">The editor for which the options should be set.</param>
+    /// <returns>The created options.</returns>
+    private StandaloneEditorConstructionOptions EditorOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            AutomaticLayout = true,
+            Language = "yaml",
+            Value = " ",
+            Minimap = new EditorMinimapOptions { Enabled = false },
+            FontSize = 16,
+            Scrollbar = new EditorScrollbarOptions
+            {
+                Vertical = "auto",
+                Horizontal = "auto",
+                AlwaysConsumeMouseWheel = false,
+                UseShadows = false
+            }
+        };
+    }
+
+    /// <summary>
+    /// Called when the monacco editor has completed its init process.
+    /// </summary>
+    private async Task OnEditorInit()
+    {
+        if (manifestEditor != null)
+        {
+            await JS.InvokeVoidAsync("waitForMonaco", null);
+
+            try
+            {
+                await this.SetValueAsText(this.InitialText, allowUninitialized: true);
+                await manifestEditor.Layout();
+
+                string? manifestSchema = new ManifestCompletionService().Generate();
+
+                await JS.InvokeVoidAsync(
+                "manifestCompletion.register",
+                manifestSchema);
+
+                this.editorIsInitialized = true;
+            }
+            catch
+            {
+                NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+            }
+        }
+    }
+}

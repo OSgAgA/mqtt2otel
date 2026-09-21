@@ -94,7 +94,7 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             // Act
 
-            await mqttHelper.PublishPayload(testCase.Setup.Topic, testCase.Setup.Payload, testCase.Setup.UserProperties);
+            await mqttHelper.PublishPayload(testCase.Setup.MqttData[0].Topic, testCase.Setup.MqttData[0].Payload, testCase.Setup.MqttData[0].UserProperties);
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
@@ -109,10 +109,10 @@ namespace mqtt2otel.Tests._30_SystemTests
             // Assert
             // Metrics
 
-            AssertEqual(testCase.ExpectedResult.Metrics.Count, exportBuilder.Metrics.Count, "metrics.count");
+            AssertEqual(testCase.ExpectedResults[0].Metrics.Count, exportBuilder.Metrics.Count, "metrics.count");
 
             int i = 0;
-            foreach (var expectedMetric in testCase.ExpectedResult.Metrics)
+            foreach (var expectedMetric in testCase.ExpectedResults[0].Metrics)
             {
                 var metric = exportBuilder.Metrics[i++];
 
@@ -144,10 +144,10 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             // Logs
 
-            AssertEqual(testCase.ExpectedResult.Logs.Count, exportBuilder.Logs.Count, "Logs.Count");
+            AssertEqual(testCase.ExpectedResults[0].Logs.Count, exportBuilder.Logs.Count, "Logs.Count");
 
             int logCount = 0;
-            foreach (var expectedLogEntry in testCase.ExpectedResult.Logs)
+            foreach (var expectedLogEntry in testCase.ExpectedResults[0].Logs)
             {
                 Assert.True(exportBuilder.Logs.Count > logCount);
                 var logEntry = exportBuilder.Logs[logCount++];
