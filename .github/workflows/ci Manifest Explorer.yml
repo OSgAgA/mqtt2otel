@@ -62,7 +62,7 @@ jobs:
 
       # Run tests and generate TestResults file.
       - name: Test
-        run: dotnet test mqtt2otel.ManifestExplorer.Tests/mqtt2otel.Tests.csproj  --configuration Release --no-build --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json" 
+        run: dotnet test mqtt2otel.ManifestExplorer.Tests/mqtt2otel.ManifestExplorer.Tests.csproj  --configuration Release --no-build --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json" 
 
       # Upload test results as artifacts.
       - name: Upload Test Results
