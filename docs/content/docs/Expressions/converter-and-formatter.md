@@ -65,7 +65,7 @@ Important functions for formatting names are:
 
 Take the following json.
 
-{{< exampleCode id="metric-13" field="Payload" lang="yaml">}}
+{{< exampleCode id="metric-13" field="MqttData.Payload" lang="yaml">}}
 
 We want to parse this as a JSon document using `ParseAs`. But we want to explicitly convert the name of the signal
 to camel case and convert the value from fahrenheit to celsius:

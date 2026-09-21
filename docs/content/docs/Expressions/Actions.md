@@ -52,7 +52,7 @@ It consists of the following properties, properties that are not set, will keep 
 Let's have a look at the following example. We get a message that contains different information from different kind of sensors and 
 additionaly a unit for the temperature measurement:
 
-{{< exampleCode id="doc-20" field="Payload" lang="yaml">}}
+{{< exampleCode id="doc-20" field="MqttData.Payload" lang="yaml">}}
 
 We want this to be automatically parsed using a `ParseAs` command, but we want all temperatures to be in °C. So we set the unit accordingly.
 In case the temperature unit is reported as °F we will convert the value to °C using a `ValueConverter`:

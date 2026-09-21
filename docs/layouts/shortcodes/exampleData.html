@@ -1,9 +1,23 @@
 {{ $id := .Get "id" }}
 {{ $field := .Get "field" }}
+{{ $idx := .Get "index" | default 0 }}
+{{ $value := "" }}
 
 {{ range hugo.Data.examples }}
-  {{ if eq .Setup.Id $id }}
-    {{ index .Setup $field }}
-    {{ break }}
-  {{ end }}
+    {{ if eq .Setup.Id $id }}
+
+        {{ if hasPrefix $field "MqttData." }}
+            {{ $parts := split $field "." }}
+            {{ $mqtt := index .Setup.MqttData $idx }}
+
+            {{ $prop := index $parts 1 }}
+            {{ $value = index $mqtt $prop }}
+        {{ else }}
+            {{ $value = index .Setup $field }}
+            {{ end }}
+
+        {{ $value }}
+        {{ break }}
+
+    {{ end }}
 {{ end }}

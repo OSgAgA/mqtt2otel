@@ -2,14 +2,28 @@
 {{ $field := .Get "field" }}
 {{ $lang := .Get "lang" | default "yaml" }}
 {{ $hl := .Get "hl_lines" }}
+{{ $idx := .Get "index" | default 0 }}
+{{ $value := "" }}
 
 {{ $opts := dict "hl_lines" $hl }}
 
 {{ range hugo.Data.examples }}
-{{ if eq .Setup.Id $id }}
-    <div class="code-meta" data-id="{{ $id }}">
-        {{ highlight (index .Setup $field) $lang $opts }}
-    </div>
-{{ break }}
-{{ end }}
+    {{ if eq .Setup.Id $id }}
+    
+        {{ if hasPrefix $field "MqttData." }}
+            {{ $parts := split $field "." }}
+            {{ $mqtt := index .Setup.MqttData $idx }}
+    
+            {{ $prop := index $parts 1 }}
+            {{ $value = index $mqtt $prop }}
+        {{ else }}
+            {{ $value = index .Setup $field }}
+            {{ end }}
+    
+        <div class="code-meta" data-id="{{ $id }}">
+            {{ highlight $value $lang $opts }}
+        </div>
+        {{ break }}
+
+    {{ end }}
 {{ end }}

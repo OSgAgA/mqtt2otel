@@ -77,7 +77,7 @@ the topic using `TopicPath`syntax.
 
 The topic is looks like this.
 
-{{< exampleCode id="doc-16" field="Topic" lang="yaml">}}
+{{< exampleCode id="doc-16" field="MqttData.Topic" lang="yaml">}}
 
 It will be processed using the following processor:
 
