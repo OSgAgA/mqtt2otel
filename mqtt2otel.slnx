@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="mqtt2otel.ManifestExplorer.Tests/mqtt2otel.ManifestExplorer.Tests.csproj" Id="82ed5e86-d6d7-4769-ba83-478145cb73e7" />
   <Project Path="mqtt2otel.ManifestExplorer/mqtt2otel.ManifestExplorer.Client/mqtt2otel.ManifestExplorer.Client.csproj" Id="dd171650-92e1-42a8-9f9c-1c2108f0e3a2" />
   <Project Path="mqtt2otel.ManifestExplorer/mqtt2otel.ManifestExplorer/mqtt2otel.ManifestExplorer.csproj" Id="3a38e717-d313-4453-835a-b2b62af9030f" />
   <Project Path="mqtt2otel.Metadata/mqtt2otel.Metadata.csproj" Id="b488db58-5d1c-4b7a-aada-c40ce9847c18" />

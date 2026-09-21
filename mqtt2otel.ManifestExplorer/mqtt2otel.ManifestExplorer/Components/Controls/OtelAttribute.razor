@@ -1,0 +1,8 @@
+﻿<Card style="margin-bottom: 5px;" data-testid="attribute">
+    <div style="padding-left: 10px; padding-right:10px; padding-top: 4px; padding-bottom:4px;"><b><span data-testid="attribute-key">@this.Value.Key</span>: </b><span data-testid="attribute-value">@this.Value.Value</span></div>
+</Card>
+
+@code {
+    [Parameter]
+    public KeyValuePair<string, object?> Value { get; set; }
+}

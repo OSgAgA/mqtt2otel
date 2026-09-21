@@ -42,6 +42,32 @@ namespace mqtt2otel.Shared
         }
 
         /// <summary>
+        /// Loads all tests as member data test id that can be used in a unit test.
+        /// </summary>
+        /// <returns>All available test cases.</returns>
+        /// <exception cref="Exception">Thrown if directory with json files describing the test cases is not found.</exception>
+        public static IEnumerable<object[]> LoadAllAsMemberdataTestIds()
+        {
+            foreach (var testCase in TestCaseData.LoadAll())
+            {
+                yield return new object[] { testCase.Setup.Id };
+            }
+        }
+
+        /// <summary>
+        /// Loads all tests as member data that can be used in a unit test.
+        /// </summary>
+        /// <returns>All available test cases.</returns>
+        /// <exception cref="Exception">Thrown if directory with json files describing the test cases is not found.</exception>
+        public static IEnumerable<object[]> LoadExamplesAsMemberdata()
+        {
+            foreach (var testCase in TestCaseData.LoadAll().Where(test => test.Setup.CreateExample))
+            {
+                yield return new object[] { testCase };
+            }
+        }
+
+        /// <summary>
         /// Gets the test case data with the given id, or a newly created <see cref="TestCaseData"/> instance if no
         /// test case with the provided id has been found.
         /// </summary>

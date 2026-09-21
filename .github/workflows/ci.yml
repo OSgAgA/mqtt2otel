@@ -50,9 +50,18 @@ jobs:
       - name: Build
         run: dotnet build -c Release --no-restore -warnaserror
 
+      # Find script
+      - name: List build output
+        run: find . -iname "playwright.ps1"
+
+      # Identify all csproj files
+      - name: List project files
+        if: always()
+        run: find . -iname "*.csproj"
+
       # Run tests and generate TestResults file.
       - name: Test
-        run: dotnet test --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json"
+        run: dotnet test mqtt2otel.Tests/mqtt2otel.Tests.csproj  --configuration Release --no-build --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json" 
 
       # Publish the test report. Currently not running due to usage of mtp (microsoft test platform) which is enforced on .net 10.
       # - name: Publish Test Report
@@ -68,6 +77,7 @@ jobs:
 
       # Upload test results as artifacts.
       - name: Upload Test Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results

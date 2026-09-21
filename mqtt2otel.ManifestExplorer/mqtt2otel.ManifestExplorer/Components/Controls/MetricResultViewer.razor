@@ -1,58 +1,61 @@
 ﻿@using mqtt2otel.Metadata
-@if (this.Metrics != null)
-{
-    @foreach (var metric in this.Metrics)
+
+<div data-testid="metric-result-container">
+    @if (this.Metrics != null)
     {
-        <Card class="overflow-x-auto" style="margin:10px;">
-            <CardHeader class="d-flex align-items-center">
-                <div><b>@metric.Name</b></div>
-                <div class="ms-auto d-flex flex-wrap justify-content-end">
-                    <b>@metric.MetricType</b>
-                </div>
-            </CardHeader>
-            <CardBody>
-                <table class="table">
-                    <tbody>
-                        <tr>
-                            <td style="width: 1%"><b>Description: </b></td>
-                            <td>@metric.Description</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <table class="table">
-                    <thead>
-                        <th>Value</th>
-                        <th>StartTime</th>
-                        <th>EndTime</th>
-                        <th>Attribute</th>
-                    </thead>
-                    <tbody>
-                        @foreach (var metricPoint in metric.MetricPoints)
-                        {
+        @foreach (var metric in this.Metrics)
+        {
+            <Card class="overflow-x-auto" style="margin:10px;" data-testid="metric-result-entry">
+                <CardHeader class="d-flex align-items-center">
+                    <div data-testid="metric-name"><b>@metric.Name</b></div>
+                    <div class="ms-auto d-flex flex-wrap justify-content-end">
+                        <b data-testid="metric-type">@metric.MetricType</b>
+                    </div>
+                </CardHeader>
+                <CardBody>
+                    <table class="table">
+                        <tbody>
                             <tr>
-                                <td>@metricPoint.Value @metric.Unit</td>
-                                <td>@metricPoint.StartTime</td>
-                                <td>@metricPoint.EndTime</td>
-                                <td>
-                                    @foreach (var tag in metricPoint.Tags)
-                                    {
-                                        <Card style="margin-bottom: 5px;">
-                                            <div style="padding-left: 10px; padding-right:10px; padding-top: 4px; padding-bottom:4px;"><b>@tag.Key: </b>@tag.Value</div>
-                                        </Card>
-                                    }
-                                </td>
+                                <td style="width: 1%"><b>Description: </b></td>
+                                <td data-testid="metric-description">@metric.Description</td>
                             </tr>
-                        }
-                    </tbody>
-                </table>
-            </CardBody>
+                        </tbody>
+                    </table>
 
-        </Card>
+                    <table class="table" data-testid="metric-points">
+                        <thead>
+                            <tr>
+                                <th>Value</th>
+                                <th>StartTime</th>
+                                <th>EndTime</th>
+                                <th>Attribute</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var metricPoint in metric.MetricPoints)
+                            {
+                                <tr data-testid="metric-point">
+                                    <td><span data-testid="metric-point-value">@metricPoint.Value</span> <span data-testid="metric-point-unit">@metric.Unit</span></td>
+                                    <td data-testid="metric-point-start">@metricPoint.StartTime.ToString("yyyy-MM-ddTHH:mm:ssZ")</td>
+                                    <td data-testid="metric-point-end">@metricPoint.EndTime.ToString("yyyy-MM-ddTHH:mm:ssZ")</td>
+                                    <td>
+                                        @foreach (var tag in metricPoint.Tags)
+                                        {
+                                            <OtelAttribute Value="@tag" />
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </CardBody>
+
+            </Card>
+        }
     }
-}
+</div>
 
-@code 
+@code
 {
     /// <summary>
     /// Gets or sets the metrics that should be shown by this viewer.
