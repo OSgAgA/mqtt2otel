@@ -476,6 +476,8 @@ OtelConnections:
     {
         if (manifestEditor != null)
         {
+            await JS.InvokeVoidAsync("waitForMonaco", null);
+
             try
             {
                 await this.SetManifestEditorText(Data.Setup.Manifest, allowUninitialized: true);
@@ -507,6 +509,8 @@ OtelConnections:
     {
         if (manifestEditor != null && this.editorIsInitialized != allowUninitialized)
         {
+            await JS.InvokeVoidAsync("waitForMonaco", null);
+
             try
             {
                 await manifestEditor.SetValue(text);
