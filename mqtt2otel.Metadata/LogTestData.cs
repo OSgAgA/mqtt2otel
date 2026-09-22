@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using mqtt2otel.Shated;
 using OpenTelemetry.Logs;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,11 @@ namespace mqtt2otel.Metadata
         public ActivityTraceFlags TraceFlags { get; set; } = new();
 
         /// <summary>
+        /// Gets or sets the connection information.
+        /// </summary>
+        public OtelServerConnectionInfo Connection { get; set; } = new();
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LogTestData"/> class.
         /// 
         /// This constructor is for serialization only and should not be used directly.
@@ -68,8 +74,11 @@ namespace mqtt2otel.Metadata
         /// Initializes a new instance of the <see cref="LogTestData"/> class.
         /// </summary>
         /// <param name="entry">The log entry, that defines the expectation.</param>
-        public LogTestData(LogRecord entry)
+        /// <param name="connection">The otel connection name.</param>
+        public LogTestData(LogRecord entry, OtelServerConnectionInfo connection)
         {
+            this.Connection = connection;
+
             this.Timestamp = entry.Timestamp;
             this.LogLevel = entry.LogLevel;
             this.Body = entry.Body;

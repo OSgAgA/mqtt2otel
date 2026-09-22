@@ -120,7 +120,7 @@ namespace mqtt2otel
                     .AddMeter(nameof(MqttMeter))
                     .AddMeter(nameof(ProcessorMeter))
                     .AddMeter(nameof(ManifestMeter))
-                    .AddMeter(nameof(OtelMeter));
+                    .AddMeter(nameof(OtelScope));
 
             exporterBuilder.AddToMeterProviderBuilder(builder, settings.Metrics.Otel);
 

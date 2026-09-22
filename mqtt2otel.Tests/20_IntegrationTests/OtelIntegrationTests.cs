@@ -58,7 +58,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var payloadParser = new PayloadParser();
             var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter(), embeddedExpressionParser);
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser);
             otelCoordinator.Connect(manifest);
 
             var subscription = manifest.Processors[0].Mqtt.Subscriptions[0];
@@ -67,8 +67,10 @@ namespace mqtt2otel.Tests._20_IntegrationTests
 
             otelCoordinator.FlushMeters();
 
-            Assert.Single(exportBuilder.Metrics);
-            var metric = exportBuilder.Metrics[0];
+            var metrics = exportBuilder.GetAllMetrics().Select( keyValue => keyValue.Value ).ToList();
+
+            Assert.Single(metrics);
+            var metric = metrics[0];
             Assert.Equal("Test_Metric", metric.Name);
             Assert.Equal("DoubleGauge", metric.MetricType.ToString());
             Assert.Equal("W", metric.Unit);
@@ -130,7 +132,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var payloadParser = new PayloadParser();
             var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter(), embeddedExpressionParser);
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser);
             otelCoordinator.Connect(manifest);
 
             var logRule = manifest.Processors[0].Otel.Logs[0];
@@ -138,8 +140,8 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var logger = dataStores.LoggerStore.GetLogger(logRule.Id);
             bool success = logger.ProcessLogMessage(new MqttMessage( payload: "This is a test message", topic: "sensors/temperature"), logRule, new List<Variable>(), internalLogger.Object, logRule.Attributes);
 
-            Assert.Single(exportBuilder.Logs);
-            var logEntry = exportBuilder.Logs[0];
+            Assert.Single(exportBuilder.GetAllLogs());
+            var logEntry = exportBuilder.GetAllLogs().First().Value;
             Assert.Equal("This is a test message", logEntry.Body);
         }
 
@@ -184,7 +186,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var payloadParser = new PayloadParser();
             var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter(), embeddedExpressionParser);
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser);
             otelCoordinator.Connect(manifest);
 
             var logRule = manifest.Processors[0].Otel.Logs[0];
@@ -192,8 +194,8 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var logger = dataStores.LoggerStore.GetLogger(logRule.Id);
             bool success = logger.ProcessLogMessage(new MqttMessage( payload: "2026-01-31T15:42Z WARN This is a simple log message.", topic: "sensors/temperature"), logRule, new List<Variable>(), internalLogger.Object, logRule.Attributes);
 
-            Assert.Single(exportBuilder.Logs);
-            var logEntry = exportBuilder.Logs[0];
+            Assert.Single(exportBuilder.GetAllLogs());
+            var logEntry = exportBuilder.GetAllLogs().First().Value;
             Assert.Equal("This is a simple log message.", logEntry.Body);
             Assert.Equal(LogLevel.Warning, logEntry.LogLevel);
             Assert.Equal(new DateTime(2026, 1, 31, 15, 42, 0), logEntry.Timestamp);

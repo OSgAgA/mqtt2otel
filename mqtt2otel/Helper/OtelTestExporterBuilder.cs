@@ -19,13 +19,13 @@ namespace mqtt2otel.Helper
         /// Gets or sets the metrics that are collected via this exporter. You can subscribe to the observable
         /// collection to get informed about new metrics.
         /// </summary>
-        public ObservableCollection<Metric> Metrics { get; set; } = new();
+        private Dictionary<OtelServerConnection, ObservableCollection<Metric>> Metrics { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the log entries that are collected via this exporter. You can subscribe to the observable
         /// collection to get informed about new log entries.
         /// </summary>
-        public ObservableCollection<LogRecord> Logs { get; set; } = new();
+        private Dictionary<OtelServerConnection, ObservableCollection<LogRecord>> Logs { get; set; } = new();
 
         /// <summary>
         /// Gets the current scope used by the logger. Will be set via the <see cref="GetScope(LogRecordScope, object?)"/> callback.
@@ -35,13 +35,57 @@ namespace mqtt2otel.Helper
         /// <inheritdoc/>
         public void AddToLoggerOptions(OpenTelemetryLoggerOptions options, OtelServerConnection connection)
         {
-            options.AddInMemoryExporter(this.Logs);
+            if (!this.Logs.ContainsKey(connection))
+            {
+                this.Logs[connection] = new();
+            }
+
+            options.AddInMemoryExporter(this.Logs[connection]);
         }
 
         /// <inheritdoc/>
         public void AddToMeterProviderBuilder(MeterProviderBuilder builder, OtelServerConnection connection)
         {
-            builder.AddInMemoryExporter(this.Metrics);
+            if (!this.Metrics.ContainsKey(connection))
+            {
+                this.Metrics[connection] = new();
+            }
+
+            builder.AddInMemoryExporter(this.Metrics[connection]);
+        }
+
+        /// <summary>
+        /// Gets all metrics as key value pairs consisting of the connection name as key and the metric as the value.
+        /// </summary>
+        /// <returns>The key value pairs.</returns>
+        public IEnumerable<ConnectionValue<Metric>> GetAllMetrics()
+        {
+            foreach (var keyValue in this.Metrics)
+            {
+                var connection = keyValue.Key;
+
+                foreach (var metric in keyValue.Value)
+                {
+                    yield return new ConnectionValue<Metric>(connection, metric);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets all metrics as key value pairs consisting of the connection name as key and the metric as the value.
+        /// </summary>
+        /// <returns>The key value pairs.</returns>
+        public IEnumerable<ConnectionValue<LogRecord>> GetAllLogs()
+        {
+            foreach (var keyValue in this.Logs)
+            {
+                var connection = keyValue.Key;
+
+                foreach (var logEntry in keyValue.Value)
+                {
+                    yield return new ConnectionValue<LogRecord>(connection, logEntry);
+                }
+            }
         }
     }
 }

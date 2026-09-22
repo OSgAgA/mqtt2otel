@@ -53,14 +53,15 @@ Processors:
 
 The Processor consists of the following parameters:
 
-| Parameter                          | Description                                                                                                  |
-|------------------------------------|--------------------------------------------------------------------------------------------------------------|
-| Name                               | An optional name for the processor.                                                                          |
-| Description                        | An optional description of the processor.                                                                    |
-| OtelConnection                     | A reference to an otel connection, if not set the default connection will be used.                           |
+| Parameter                          | Description                                                                                                                                                                     |
+|------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Name                               | An optional name for the processor.                                                                                                                                             |
+| Description                        | An optional description of the processor.                                                                                                                                       |
+| OtelConnection                     | A reference to an otel connection, if not set the default connection will be used.                                                                                              |
+| OtelScope                          | The (optional) name of the instrumentation scope to be used.                                                                                                                    | 
 | CreateAttributesFromUserProperties {{< badge style="info" title="version" value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings. |
-| Mqtt                               | A section containing mqtt relevant parameters. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)  |           
-| Otel                               | A section containint open telemetry relevant parameters. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize) |   
+| Mqtt                               | A section containing mqtt relevant parameters. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)                                                       |           
+| Otel                               | A section containint open telemetry relevant parameters. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)                                             |   
 
 
 
@@ -86,15 +87,15 @@ A simple example for the mqtt would look like this:
 
 It consists of the following parameters:
 
-| Parameter             | Description                                                                                                                     |
-|-----------------------|---------------------------------------------------------------------------------------------------------------------------------|
-| Name                  | An optional name for the mqtt configuration.                                                                                    |
-| Description           | An optional description.                                                                                                        |
-| Variables             | A list of [variables](../variables) that will be applied to all subscriptions.                                                  |
-| Subscriptions         | A list of [subscriptions](../subscription/#configure-subscriptions) to which the processor will subscribe. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)                       |
-| SubscriptionGroups    | A list of [subscription groups](../subscription/#subscription-groups) to which the processor will subscribe                     |
-| BrokerConnection      | The (optional) broker that will be applied to all subscriptions and subscription groups that do not have a specific broker set. | 
-| Transform             | An optional transform expression that will be applied to all received message payloads. [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformations)                                        | 
+| Parameter             | Description                                                                                                                                                                                       |
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Name                  | An optional name for the mqtt configuration.                                                                                                                                                      |
+| Description           | An optional description.                                                                                                                                                                          |
+| Variables             | A list of [variables](../variables) that will be applied to all subscriptions.                                                                                                                    |
+| Subscriptions         | A list of [subscriptions](../subscription/#configure-subscriptions) to which the processor will subscribe. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)             |
+| SubscriptionGroups    | A list of [subscription groups](../subscription/#subscription-groups) to which the processor will subscribe                                                                                       |
+| BrokerConnection      | The (optional) broker that will be applied to all subscriptions and subscription groups that do not have a specific broker set.                                                                   | 
+| Transform             | An optional transform expression that will be applied to all received message payloads. [{{< badge style="info" title="supports" value="transformations" >}}](/docs/expressions/#transformations) | 
 
 The processor will subscribe to all subscriptions (and subscription groups) in the `Mqtt` section. When a message for one of the subscriptions is received 
 the message is transformed (if `Transform` is set) and afterwards the `Otel` section will be executed. 
@@ -131,6 +132,7 @@ It consists of the following parameters:
 | TopicAttributes {{< badge style="info" title="version" value="1.1">}}                    | The (optional) [TopicAttribute expression](/docs/expressions/topicparsing/#the-topicattribute-syntax) that maps topics to attributes.                                                                            |  
 | CreateAttributesFromUserProperties {{< badge style="info" title="version" value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings.                                                                                        |
 | OtelConnection                                                                           | The (optional) otel connection name that will be applied to all `Metrics` and `Logs` sections that do not explicitly state the connection name.                                                                  | 
+| OtelScope                                                                                | The (optional) name of the instrumentation scope to be used.                                                                                                                                                     | 
 | Metrics                                                                                  | An optional list of `Metrics` that will describe how the payload of a subscription message will be parsed into an otel metric signal. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize) | 
 | Logs                                                                                     | An optional list of `Logs` that will describe how the payload of a subscription message will be parsed into an otel log message. [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)      | 
 
@@ -148,6 +150,7 @@ It consists of the following parameters:
 | TopicAttributes {{< badge style="info" title="version" value="1.1">}}                    | The (optional) [TopicAttribute expression](/docs/expressions/topicparsing/#the-topicattribute-syntax) that maps topics to attributes.                                                                               | 
 | CreateAttributesFromUserProperties {{< badge style="info" title="version" value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings.                                                                                           |
 | OtelConnection                                                                           | The (optional) otel server connection that will be applied to the metric. If not set the default server is used.                                                                                                    | 
+| OtelScope                                                                                | The (optional) name of the instrumentation scope to be used.                                                                                                                                                        | 
 | Instrument                                                                               | Defines the otel metric instruments to be used. See [otel instruments](#otel-instruments) for details.                                                                                                              | 
 | SignalDataType                                                                           | The data type of the metric. See [otel data types](#otel-data-types) for details.                                                                                                                                   | 
 | Unit                                                                                     | The optional unit that will be sent to the open telemetry endpoint as part of the metric. [{{< badge style="info" title="supports" value="embedded expressions" >}}](/docs/expressions/topicparsing/#topic-parsing) | 

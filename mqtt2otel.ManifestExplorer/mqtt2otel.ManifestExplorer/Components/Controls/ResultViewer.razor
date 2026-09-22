@@ -1,7 +1,18 @@
 ﻿@using mqtt2otel.ManifestExplorer.DTOs
 <Card>
-    <CardHeader style="background-color: #dbeaf1">
+    <CardHeader class="d-flex justify-content-between align-items-center" style="background-color: #dbeaf1">
         <b>Result</b>
+        <div class="view-switcher" style="padding: 7px;">
+            <span class="view-label @(ShowDetails ? "" : "active")">
+                Simple
+            </span>
+
+            <Switch @bind-Value="ShowDetails" />
+
+            <span class="view-label @(ShowDetails ? "active" : "")">
+                Extended
+            </span>
+        </div>
     </CardHeader>
     <Tabs data-testid="result-container" @ref="tabs" EnableFadeEffect="true" NavStyle="NavStyle.Tabs">
         <Tab data-testid="errors-result-header" @bind-Title="@this.errorTitle">
@@ -15,22 +26,49 @@
         </Tab>
         <Tab data-testid="metrics-result-header" @bind-Title="this.metricsTitle" IsActive="true">
             <Content>
-                <MetricResultViewer Metrics="@this.Data?.Metrics" />
+                <MetricResultViewer Metrics="@this.Data?.Metrics" @bind-ShowDetails="@ShowDetails" />
             </Content>
         </Tab>
         <Tab data-testid="logs-result-header" @bind-Title="@this.logsTitle">
             <Content>
-                <LogResultViewer LogEntries="@this.Data?.Logs" />
+                <LogResultViewer LogEntries="@this.Data?.Logs" @bind-ShowDetails="@ShowDetails" />
             </Content>
         </Tab>
 
     </Tabs>
 </Card>
 
-@code 
+@code
 {
+    /// <summary>
+    /// Gets or sets the data that should be presented in the viewer.
+    /// </summary>
     [Parameter]
     public ApplyPatternToPayloadResult? Data { get; set; }
+
+    /// <summary>
+    /// Gets a value indicating, whether all details should be shown.
+    /// </summary>
+    [Parameter]
+    public bool ShowDetails
+    {
+        get => field;
+
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                this.ShowDetailsChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Used for two way binding. Called, when ShowDetails has changed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> ShowDetailsChanged { get; set; }
 
     /// <summary>
     /// The tabs controll that contains the different results.

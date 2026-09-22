@@ -87,7 +87,7 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var exportBuilder = new OtelTestExporterBuilder();
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter(), embeddedExpressionParser);
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser);
             otelCoordinator.Connect(manifest);
 
             this._output.WriteLine($"{DateTime.UtcNow}: Arrange completed.");
@@ -109,12 +109,14 @@ namespace mqtt2otel.Tests._30_SystemTests
             // Assert
             // Metrics
 
-            AssertEqual(testCase.ExpectedResults[0].Metrics.Count, exportBuilder.Metrics.Count, "metrics.count");
+            AssertEqual(testCase.ExpectedResults[0].Metrics.Count, exportBuilder.GetAllMetrics().Count(), "metrics.count");
+
+            var metrics = exportBuilder.GetAllMetrics().Select(keyValue => keyValue.Value).ToList();
 
             int i = 0;
             foreach (var expectedMetric in testCase.ExpectedResults[0].Metrics)
             {
-                var metric = exportBuilder.Metrics[i++];
+                var metric = metrics[i++];
 
                 AssertEqual(expectedMetric.Name, metric.Name, "Metric.Name");
                 AssertEqual(expectedMetric.MetricType, metric.MetricType, "Metric.Type");
@@ -144,13 +146,15 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             // Logs
 
-            AssertEqual(testCase.ExpectedResults[0].Logs.Count, exportBuilder.Logs.Count, "Logs.Count");
+            AssertEqual(testCase.ExpectedResults[0].Logs.Count, exportBuilder.GetAllLogs().Count(), "Logs.Count");
+
+            var logs = exportBuilder.GetAllLogs().Select(keyValue => keyValue.Value).ToList();
 
             int logCount = 0;
             foreach (var expectedLogEntry in testCase.ExpectedResults[0].Logs)
             {
-                Assert.True(exportBuilder.Logs.Count > logCount);
-                var logEntry = exportBuilder.Logs[logCount++];
+                Assert.True(exportBuilder.GetAllLogs().Count() > logCount);
+                var logEntry = logs[logCount++];
                 AssertEqual(expectedLogEntry.Body, logEntry.Body, "LogEntry.Body");
                 AssertEqual(expectedLogEntry.LogLevel, logEntry.LogLevel, "LogEntry.LogLevel");
                 AssertEqual(expectedLogEntry.Timestamp, logEntry.Timestamp, "LogLevel.Timestamp");

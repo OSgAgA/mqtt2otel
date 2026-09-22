@@ -13,6 +13,12 @@
                     </div>
                 </CardHeader>
                 <CardBody>
+
+                    @if (this.ShowDetails)
+                    {
+                        <ConnectionDetailsViewer Connection="@metric.Connection" Metric="@metric" />
+                    }
+
                     <table class="table">
                         <tbody>
                             <tr>
@@ -62,4 +68,28 @@
     /// </summary>
     [Parameter]
     public List<MetricTestData>? Metrics { get; set; }
+
+    /// <summary>
+    /// Gets a value indicating, whether all details should be shown.
+    /// </summary>
+    [Parameter]
+    public bool ShowDetails
+    {
+        get => field;
+
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                this.ShowDetailsChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Used for two way binding. Called, when ShowDetails has changed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> ShowDetailsChanged { get; set; }
 }

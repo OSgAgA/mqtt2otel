@@ -2,6 +2,7 @@
 using mqtt2otel.Metadata;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text;
 
@@ -57,16 +58,16 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// </summary>
         /// <param name="metrics">The metrics result.</param>
         /// <param name="logs">The logs result.</param>
-        public ApplyPatternToPayloadResult(List<Metric> metrics, List<LogRecord> logs)
+        public ApplyPatternToPayloadResult(OtelTestExporterBuilder exportBuilder)
         {
-            foreach (var metric in metrics)
+            foreach (var connectionValue in exportBuilder.GetAllMetrics())
             {
-                this.Metrics.Add(new MetricTestData(metric));
+                    this.Metrics.Add(new MetricTestData(connectionValue.Value, connectionValue.Connection));
             }
 
-            foreach (var log in logs)
+            foreach (var connectionValue in exportBuilder.GetAllLogs())
             {
-                this.Logs.Add(new LogTestData(log));
+                this.Logs.Add(new LogTestData(connectionValue.Value, connectionValue.Connection));
             }
         }
 

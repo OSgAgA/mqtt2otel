@@ -140,6 +140,11 @@ namespace mqtt2otel.Manifest
         public ImportEnabledList<OtelServerConnection> OtelConnections { get; set; } = new();
 
         /// <summary>
+        /// Gets or sets the open telemetry meters.
+        /// </summary>
+        public ImportEnabledList<OtelScope> OtelScopes { get; set; } = new();
+
+        /// <summary>
         /// Gets or sets all metrics.
         /// </summary>
         public ImportEnabledList<Processor> Processors { get; set; } = new();
@@ -174,7 +179,7 @@ namespace mqtt2otel.Manifest
                 this.ApplySubscriptionGroupsToSubscriptions(processor.Mqtt.SubscriptionGroups, processor.Mqtt.Subscriptions);
                 this.ApplyVariablesToSubscriptions(processor.Mqtt.Subscriptions, processor.Mqtt.Variables);
             }
-            
+
             Manifest.SetObjectHierarchy(this);
         }
 
@@ -272,7 +277,7 @@ namespace mqtt2otel.Manifest
                 }
 
                 UpdateProperty(current, prop, typeof(ImportEnabledList<>));
-                UpdateProperty(current, prop, typeof(List<>));                
+                UpdateProperty(current, prop, typeof(List<>));
             }
         }
 
@@ -317,7 +322,7 @@ namespace mqtt2otel.Manifest
         /// <param name="child">The child object. If null, nothing is executed.</param>
         private static void UpdateProperty(object parent, NamedIdObject? child)
         {
-            
+
             if (child == null) return;
             child.Parent = parent;
             Manifest.UpdateInheritedProperties(parent, child);
@@ -344,10 +349,10 @@ namespace mqtt2otel.Manifest
             {
                 string parentPropertyName = parentProperty.GetCustomAttribute<InheritedPropertyAttribute>()?.Name ?? parentProperty.Name;
 
-                foreach(var childProperty in childProperties
-                    .Where( childProp => (childProp.GetCustomAttribute<InheritedPropertyAttribute>()?.Name ?? childProp.Name) == parentPropertyName && childProp.PropertyType == parentProperty.PropertyType))
+                foreach (var childProperty in childProperties
+                    .Where(childProp => (childProp.GetCustomAttribute<InheritedPropertyAttribute>()?.Name ?? childProp.Name) == parentPropertyName && childProp.PropertyType == parentProperty.PropertyType))
                 {
-                   var childValue = childProperty.GetValue(child);
+                    var childValue = childProperty.GetValue(child);
 
                     if (childValue == null) childProperty.SetValue(child, parentProperty.GetValue(parent));
                 }

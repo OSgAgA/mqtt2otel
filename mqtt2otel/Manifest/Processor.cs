@@ -95,6 +95,13 @@ namespace mqtt2otel.Manifest
         public string? OtelConnection { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets the open telemetry scope that should be used for the metric.
+        /// Set to null to use the default scope of the <see cref="OtelConnection"/>.
+        /// </summary>
+        [InheritedProperty]
+        public string? OtelScope { get; set; } = null;
+
+        /// <summary>
         /// Validates the object.
         /// </summary>
         /// <param name="result">The validation result.</param>

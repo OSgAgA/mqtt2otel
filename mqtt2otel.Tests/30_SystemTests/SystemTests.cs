@@ -75,7 +75,7 @@ namespace mqtt2otel.Tests._30_SystemTests
             var payloadParser = new PayloadParser();
             var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter(), embeddedExpressionParser);
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser);
             otelCoordinator.Connect(manifest);
 
             string topic = "sensors/temperature";
@@ -90,8 +90,8 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             otelCoordinator.FlushMeters();
 
-            Assert.Single(exportBuilder.Metrics);
-            var metric = exportBuilder.Metrics[0];
+            Assert.Single(exportBuilder.GetAllMetrics());
+            var metric = exportBuilder.GetAllMetrics().First().Value;
             Assert.Equal("TestMetric", metric.Name);
             Assert.Equal("DoubleGauge", metric.MetricType.ToString());
             Assert.Equal("C", metric.Unit);
@@ -170,7 +170,7 @@ namespace mqtt2otel.Tests._30_SystemTests
             var payloadParser = new PayloadParser();
             var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelMeter(), embeddedExpressionParser);
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser);
             otelCoordinator.Connect(manifest);
 
             string topic = "sensors/logEntry";
@@ -183,8 +183,8 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             Assert.True(completedTask == tcs.Task, "Callback was not triggered");
 
-            Assert.Single(exportBuilder.Logs);
-            var logEntry = exportBuilder.Logs[0];
+            Assert.Single(exportBuilder.GetAllLogs());
+            var logEntry = exportBuilder.GetAllLogs().First().Value;
             Assert.Equal("This is a simple log message.", logEntry.Body);
             Assert.Equal(LogLevel.Warning, logEntry.LogLevel);
             Assert.Equal(new DateTime(2026, 1, 31, 15, 42, 0), logEntry.Timestamp);

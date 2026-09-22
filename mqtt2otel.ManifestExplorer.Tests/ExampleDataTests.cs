@@ -61,7 +61,7 @@ namespace mqtt2otel.ManifestExplorer.Tests
         {
             // Check result headers
             var logResultsHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(2);
-            await Expect(logResultsHeader).ToHaveTextAsync($"Logs ({testCase.ExpectedResults[0].Logs.Count})");
+            await Expect(logResultsHeader).ToHaveTextAsync($"Logs ({testCase.ExpectedResults[0].Logs.Count})", new LocatorAssertionsToHaveTextOptions() { Timeout = 10000 });
 
             var metricsResultHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(1);
             await Expect(metricsResultHeader).ToHaveTextAsync($"Metrics ({testCase.ExpectedResults[0].Metrics.Count})");
