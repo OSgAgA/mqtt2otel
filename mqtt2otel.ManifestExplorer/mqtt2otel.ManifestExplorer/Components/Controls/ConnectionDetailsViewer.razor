@@ -1,0 +1,64 @@
+﻿@using mqtt2otel.Metadata
+@using mqtt2otel.Shated
+
+<Card style="margin:20px; padding: 10px">
+    <table style="width:100%; table-layout: auto;">
+        <tr>
+            <td style="width: 1%; white-space: nowrap;padding: 4px 8px;"><b>Connection: </b></td>
+            <td style="width:100%" data-testid="metric-connection-name-and-address">@Connection?.Name (@Connection?.EndpointAddress)</td>
+        </tr>
+
+        @if (Metric == null)
+        {
+            <tr>
+                <td style="width: 1%; white-space: nowrap;padding: 4px 8px;"><b>Minimum log level: </b></td>
+                <td style="width:100%" data-testid="metric-connection-minimum-log-level">@Connection?.MinimumLogLevel</td>
+            </tr>
+        }
+
+        <tr>
+            <td style="width: 1%; white-space: nowrap;padding: 4px 8px;"><b>Service namespace: </b></td>
+            <td style="width:100%" data-testid="metric-service-namespace">@Connection?.ServiceNamespace</td>
+        </tr>
+        <tr>
+            <td style="width: 1%; white-space: nowrap;padding: 4px 8px;"><b>Service: </b></td>
+            <td style="width:100%" data-testid="metric-service-and-version">@Connection?.ServiceName (@Connection?.ServiceVersion)</td>
+        </tr>
+
+        @if (Metric != null)
+        {
+            <tr>
+                <td style="width: 1%; white-space: nowrap;padding: 4px 8px;"><b>Scope: </b></td>
+                <td style="width:100%" data-testid="metric-meter-name-and-version">@Metric.ScopeName (@Metric.ScopeVersion)</td>
+            </tr>
+
+            @if (Metric.ScopeTags != null)
+            {
+                <tr>
+                    <td style="width: 1%; white-space: nowrap;padding: 4px 8px;"><b>Scope tags: </b></td>
+                    <td style="width:100%">
+                        @foreach (var tag in Metric.ScopeTags)
+                        {
+                            <OtelAttribute Value="@tag" />
+                        }
+                    </td>
+                </tr>
+            }
+        }
+    </table>
+</Card>
+
+@code
+{
+    /// <summary>
+    /// Gets or sets the connection info that will be shown in the controll.
+    /// </summary>
+    [Parameter]
+    public OtelServerConnectionInfo? Connection { get; set; }
+
+    /// <summary>
+    /// Gets or sets information that is only relevant for metrics and should be null for logs.
+    /// </summary>
+    [Parameter]
+    public MetricTestData? Metric { get; set; }
+}

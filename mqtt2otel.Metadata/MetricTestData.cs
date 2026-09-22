@@ -1,4 +1,5 @@
-﻿using OpenTelemetry.Metrics;
+﻿using mqtt2otel.Shated;
+using OpenTelemetry.Metrics;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
@@ -22,9 +23,19 @@ namespace mqtt2otel.Metadata
         public string OtelServer { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets the expected meter name.
+        /// </summary>
+        public string ScopeName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the expected meter tags.
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, object?>>? ScopeTags { get; set; } = new List<KeyValuePair<string, object?>>();
+
+        /// <summary>
         /// Gets or sets the expected meter version.
         /// </summary>
-        public string MeterVersion { get; set; } = string.Empty;
+        public string ScopeVersion { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the expected description.
@@ -46,6 +57,8 @@ namespace mqtt2otel.Metadata
         /// </summary>
         public List<MetricPointTestData> MetricPoints { get; set; } = new();
 
+        public OtelServerConnectionInfo Connection { get; set; } = new();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MetricTestData"/> class.
         /// 
@@ -57,11 +70,15 @@ namespace mqtt2otel.Metadata
         /// Initializes a new instance of the <see cref="MetricTestData"/> class.
         /// </summary>
         /// <param name="metric">The metric representing the expected result.</param>
-        public MetricTestData(Metric metric)
+        /// <param name="connection">The open telemetry connection name.</param>
+        public MetricTestData(Metric metric, OtelServerConnectionInfo connection)
         {
             this.Name = metric.Name;
+            this.Connection = connection;
             this.OtelServer = metric.MeterName;
-            this.MeterVersion = metric.MeterVersion;
+            this.ScopeVersion = metric.MeterVersion;
+            this.ScopeName = metric.MeterName;
+            this.ScopeTags = metric.MeterTags;
             this.Description = metric.Description;
             this.Unit = metric.Unit;
             this.MetricType = metric.MetricType;
@@ -126,7 +143,7 @@ namespace mqtt2otel.Metadata
 
 
             sb.Append("  Meter version: ");
-            sb.AppendLine(this.MeterVersion);
+            sb.AppendLine(this.ScopeVersion);
 
             sb.Append("  Description: ");
             sb.AppendLine(this.Description);

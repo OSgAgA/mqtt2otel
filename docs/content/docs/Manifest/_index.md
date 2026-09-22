@@ -25,13 +25,16 @@ The structure of the file is as following
 4. ## OtelConnections
    In this section the available open telemetry connections will be configured. For details, see [Otel connections](otelserver). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
 
-5. ## SubscriptionGroups
+5. ## OtelScopes
+   In this section the available open telemetry instrumentation scopes will be configured. For details, see [Instrumentation scopes](scopes). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
+
+6. ## SubscriptionGroups
    A list of grouped subscriptions that can be referred later in the otel section. For details see [Subscription groups](subscription/#subscription-groups). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
 
-6. ## Processors
+7. ## Processors
    A list of processors, that will take mqtt payloads, processes them and then create otel logs or metrics. For details see [Processors](processors). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
 
-7. ## How to organize large manifests.
+8. ## How to organize large manifests.
    Find out how you can organize complex scenarios in your manifest file. See [Organize manifest files](organize).
 
 {{% /steps %}}

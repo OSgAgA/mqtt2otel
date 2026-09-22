@@ -8,7 +8,7 @@ namespace mqtt2otel.InternalMetrics
     /// <summary>
     /// Represents the meter for recording internal metrics regarding the otel coordinator.
     /// </summary>
-    public class OtelMeter
+    public class OtelInternalMeter
     {
         /// <summary>
         /// The internally used meter.
@@ -16,11 +16,11 @@ namespace mqtt2otel.InternalMetrics
         private Meter meter;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OtelMeter"/> class.
+        /// Initializes a new instance of the <see cref="OtelInternalMeter"/> class.
         /// </summary>
-        public OtelMeter() 
+        public OtelInternalMeter() 
         {
-            this.meter = new Meter(nameof(OtelMeter));
+            this.meter = new Meter(nameof(OtelInternalMeter));
 
             this.Connections = this.meter.CreateGauge<int>("mqtt2otel.otel.connections.sum", description: "This is the sum of all active connections to open telemetry endpoints.");
         }

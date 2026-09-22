@@ -145,6 +145,7 @@
                 Setup = new ExampleData(this.Data.Setup.Id, this.Data.Setup.Name, this.Data.Setup.Description, this.Data.Setup.MqttData, this.Data.Setup.Manifest, this.Data.Setup.Category,
                     this.Data.Setup.Tags, this.Data.Setup.CreateExample, this.Data.Setup.ValidateManifestOnly),
                 ExpectedResults = new List<ExpectedTestResult>() { new ExpectedTestResult(this.Result.Metrics, this.Result.Logs) },
+                ShowResultDetails = this.Data.ShowResultDetails,
                 Links = this.Data.Links
             };
 

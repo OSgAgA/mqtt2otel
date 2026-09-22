@@ -16,13 +16,13 @@ namespace mqtt2otel.Helper
         /// <summary>
         /// The meter for recording internal metrics.
         /// </summary>
-        private OtelMeter otelMeter;
+        private OtelInternalMeter otelMeter;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TimestampOverrideProcessor"/> class.
         /// </summary>
         /// <param name="meter">The meter for recording internal metrics.</param>
-        public TimestampOverrideProcessor(OtelMeter meter)
+        public TimestampOverrideProcessor(OtelInternalMeter meter)
         {
             this.otelMeter = meter;
         }

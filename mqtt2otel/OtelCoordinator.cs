@@ -52,11 +52,6 @@ namespace mqtt2otel
         private TracerProvider? tracerProvider { get; set; } = null;
 
         /// <summary>
-        /// Gets or sets a map that will map an otel connection name to a created otel meter.
-        /// </summary>
-        private Dictionary<string, Meter> MeterConnectionMap { get; set; } = new();
-
-        /// <summary>
         /// Ensures that the meter providers will not get garbage collected.
         /// </summary>
         private List<MeterProvider> MeterProviders { get; set; } = new();
@@ -74,7 +69,12 @@ namespace mqtt2otel
         /// <summary>
         /// The meter for reporting internal metrics.
         /// </summary>
-        private OtelMeter otelMeter;
+        private OtelInternalMeter otelMeter;
+
+        /// <summary>
+        /// The factory used for creating new and accessing existing meters.
+        /// </summary>
+        private OtelMeterFactory? otelMeterFactory = null;
 
         /// <summary>
         /// The parser used for parsing expressions embedded in a subscription.
@@ -89,7 +89,7 @@ namespace mqtt2otel
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
         /// <param name="meter">The meter for reporting internal metrics.</param>
         /// <param name="embeddedExpressionParser">The parser used for parsing expressions embedded in a subscription.</param>
-        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IOtelExporterBuilder exporterBuilder, IDataStores dataStores, OtelMeter meter, IEmbeddedExpressionParser embeddedExpressionParser)
+        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IOtelExporterBuilder exporterBuilder, IDataStores dataStores, OtelInternalMeter meter, IEmbeddedExpressionParser embeddedExpressionParser)
         {
             this.otelMeter = meter;
             this.internalLogger = internalLogger;
@@ -150,23 +150,29 @@ namespace mqtt2otel
         /// <param name="manifest">The rules for creating meters.</param>
         private void InitializeMeters(Manifest.Manifest manifest)
         {
+            this.otelMeterFactory = new OtelMeterFactory(manifest.OtelScopes);
 
-            // Create a separate meter for each connection.
-            foreach (var otelConnection in manifest.OtelConnections)
+            // Create metrics
+            foreach (var processor in manifest.Processors)
             {
-                var meter = new Meter(otelConnection.Name);
-
-                this.MeterConnectionMap[otelConnection.Name] = meter;
+                foreach (var metric in processor.Otel.Metrics)
+                {
+                    this.otelMeterFactory.GetOrCreateMeter(metric);
+                }
             }
 
-            // Create meter providers
+            // Create meter providers and add metrics
             foreach (var otelConnection in manifest.OtelConnections)
             {
                 var builder = Sdk.CreateMeterProviderBuilder()
                     .SetResourceBuilder(
                             ResourceBuilder.CreateDefault()
-                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace))
-                    .AddMeter(otelConnection.Name);
+                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace));
+
+                foreach (var meterName in this.otelMeterFactory.GetMeterNamesForConnection(otelConnection.Name))
+                {
+                    builder.AddMeter(meterName);
+                }
 
                 this.exporterBuilder.AddToMeterProviderBuilder(builder, otelConnection);
 
@@ -190,12 +196,13 @@ namespace mqtt2otel
         {
             if (instrumentName == null) throw new ArgumentNullException(nameof(instrumentName));
 
-            if (rule.OtelConnection == null || !this.MeterConnectionMap.ContainsKey(rule.OtelConnection))
+            if (this.otelMeterFactory == null)
             {
-                throw new Exception($"Cannot create instrument. No meter exists for metric rule with name: {rule.Name}.");
+                throw new Exception($"{nameof(CreateInstrument)} called with {nameof(this.otelMeterFactory)} not set.");
             }
 
-            var meter = this.MeterConnectionMap[rule.OtelConnection];
+            var meter = this.otelMeterFactory.GetOrCreateMeter(rule);
+
             string instrumentCreationMethodName = string.Empty;
 
             switch (rule.Instrument)
@@ -494,10 +501,7 @@ namespace mqtt2otel
             this.otelMeter.Connections.Record(0);
             this.FlushMeters();
 
-            foreach (var meter in this.MeterConnectionMap.Values)
-            {
-                meter.Dispose();
-            }
+            if (this.otelMeterFactory != null) this.otelMeterFactory.DisposeMeters();
 
             foreach (var meterProvider in this.MeterProviders)
             {

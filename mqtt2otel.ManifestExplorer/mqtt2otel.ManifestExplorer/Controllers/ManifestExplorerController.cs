@@ -81,7 +81,6 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             catch (Exception ex)
             {
                 return new ApplyPatternToPayloadResult(new ErrorTestData(ex.Message ?? ""));
-
             }
 
             if (manifest.MqttConnections.Count == 0)
@@ -91,7 +90,15 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             if (manifest.OtelConnections.Count == 0)
             {
-                manifest.OtelConnections.Add(new OtelServerConnection());
+                manifest.OtelConnections.Add(new OtelServerConnection()
+                {
+                    Name = "default-connection",
+                    ServiceNamespace = "default-service-namespace",
+                    ServiceName = "default-service",
+                    ServiceVersion = "1.0.0",
+                    Endpoint = new OtelServerEndpoint() { Address = "https://my-otel-endpoint.org" },
+                    MinimumLogLevel = LogLevel.Information
+                });
             }
 
             if (string.IsNullOrWhiteSpace(manifest.Version)) manifest.Version = "1.0";
@@ -111,7 +118,7 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             ILogger<OtelCoordinator> otelLogger = new Logger<OtelCoordinator>(new LoggerFactory());
             var exportBuilder = new OtelTestExporterBuilder();
-            var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelMeter(), embeddedExpressionParser);
+            var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser);
             otel.Connect(manifest);
 
             var message = new MqttMessage(subscriptionId: 0, topic: request.MqttData[0].Topic, payload: request.MqttData[0].Payload, userProperties: request.MqttData[0].UserProperties);
@@ -124,7 +131,7 @@ namespace mqtt2otel.ManifestExplorer.Controllers
                 return new ApplyPatternToPayloadResult(processorErrors);
             }
 
-            return new ApplyPatternToPayloadResult(exportBuilder.Metrics.ToList(), exportBuilder.Logs.ToList());
+            return new ApplyPatternToPayloadResult(exportBuilder);
         }
     }
 }

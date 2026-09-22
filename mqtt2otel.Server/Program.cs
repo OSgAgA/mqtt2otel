@@ -38,7 +38,7 @@ namespace mqtt2otel.Server
             builder.Services.AddSingleton<IDataStores, DataStores>();
             builder.Services.AddSingleton<IOtelExporterBuilder, OtelExporterBuilder>();
             builder.Services.AddSingleton<MqttMeter>(new MqttMeter());
-            builder.Services.AddSingleton<OtelMeter>(new OtelMeter());
+            builder.Services.AddSingleton<OtelInternalMeter>(new OtelInternalMeter());
             builder.Services.AddSingleton<ManifestMeter>(new ManifestMeter());
             builder.Services.AddSingleton<ProcessorMeter>(new ProcessorMeter());
 

@@ -82,6 +82,13 @@ namespace mqtt2otel.Manifest
         public string? OtelConnection { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets the open telemetry scope that should be used for the metric.
+        /// Set to null to use the default scope of the <see cref="OtelConnection"/>.
+        /// </summary>
+        [InheritedProperty]
+        public string? OtelScope { get; set; } = null;
+
+        /// <summary>
         /// Gets or sets a list of bucket boundaries used in a histogram instrument. If no histogram instrument is used, this
         /// property will be ignored.
         /// </summary>

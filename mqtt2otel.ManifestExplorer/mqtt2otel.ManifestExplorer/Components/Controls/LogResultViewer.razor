@@ -3,6 +3,7 @@
     @if (this.LogEntries != null)
     {
         <Card class="overflow-x-auto">
+
             <table data-testid="log-result-container" class="table overflow-x-auto">
                 <thead>
                     <tr>
@@ -15,6 +16,14 @@
                 <tbody>
                     @foreach (var logEntry in this.LogEntries)
                     {
+                        <tr>
+                            <td colspan="4">
+                            @if (this.ShowDetails)
+                            {
+                                <ConnectionDetailsViewer Connection="@logEntry.Connection" />
+                            }
+                            </td>
+                        </tr>
 
                         <tr data-testid="log-result-entry">
                             <td data-testid="log-result-timestamp">@logEntry.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ")</td>
@@ -42,4 +51,28 @@
     /// </summary>
     [Parameter]
     public List<LogTestData>? LogEntries { get; set; }
+
+    /// <summary>
+    /// Gets a value indicating, whether all details should be shown.
+    /// </summary>
+    [Parameter]
+    public bool ShowDetails
+    {
+        get => field;
+
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                this.ShowDetailsChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Used for two way binding. Called, when ShowDetails has changed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> ShowDetailsChanged { get; set; }
 }
