@@ -168,8 +168,8 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             // Cleanup
 
-            mqttHelper.Dispose();
             await mqttCoordinator.DisconnectAllBrokers();
+            mqttHelper.Dispose();
 
             this._output.WriteLine($"{DateTime.UtcNow}: Cleanup completed.");
 
