@@ -20,22 +20,22 @@ The structure of the file is as following
    General setting that will be applied to the full manifest.
 
 3. ## MqttConnections
-   In this section the available Mqtt broker connections will be configured. For details, see [Mqtt broker](mqttbroker). [{{< importFromLabel >}}](organize)
+   In this section the available Mqtt broker connections will be configured. For details, see [Mqtt broker](mqttbroker). {{< importFromLabel >}}
 
 4. ## OtelConnections
-   In this section the available open telemetry connections will be configured. For details, see [Otel connections](otelserver). [{{< importFromLabel >}}](organize)
+   In this section the available open telemetry connections will be configured. For details, see [Otel connections](otelserver). {{< importFromLabel >}}
 
 5. ## OtelScopes {{< version value="beta">}}
-   In this section the available open telemetry instrumentation scopes will be configured. For details, see [Instrumentation scopes](scopes). [{{< importFromLabel >}}](organize)
+   In this section the available open telemetry instrumentation scopes will be configured. For details, see [Instrumentation scopes](scopes). {{< importFromLabel >}}
 
 6. ## Mappings {{< version value="beta">}}
-   The Mappings section defines reusable lookup tables that translate raw input values into human‑readable values. For details, see [Mappings](mappings). [{{< importFromLabel >}}](organize)
+   The Mappings section defines reusable lookup tables that translate raw input values into human‑readable values. For details, see [Mappings](mappings). {{< importFromLabel >}}
 
 7. ## SubscriptionGroups
-   A list of grouped subscriptions that can be referred later in the otel section. For details see [Subscription groups](subscription/#subscription-groups). [{{< importFromLabel >}}](organize)
+   A list of grouped subscriptions that can be referred later in the otel section. For details see [Subscription groups](subscription/#subscription-groups). {{< importFromLabel >}}
 
 8. ## Processors
-   A list of processors, that will take mqtt payloads, processes them and then create otel logs or metrics. For details see [Processors](processors). [{{< importFromLabel >}}](organize)
+   A list of processors, that will take mqtt payloads, processes them and then create otel logs or metrics. For details see [Processors](processors). {{< importFromLabel >}}
 
 9. ## How to organize large manifests.
    Find out how you can organize complex scenarios in your manifest file. See [Organize manifest files](organize).
