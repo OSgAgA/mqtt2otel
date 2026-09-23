@@ -24,10 +24,6 @@ jobs:
   # Build the application and run tests.
   build-and-test:
     runs-on: ubuntu-latest
-    env: 
-      XUNIT_MAX_PARALLEL_THREADS: 1
-      DOTNET_GCHeapHardLimit: 2147483648   # 2 GB
-      MTP_WORKER_COUNT: 1
 
     steps:
       # Checkout the code.
@@ -63,9 +59,21 @@ jobs:
         if: always()
         run: find . -iname "*.csproj"
 
+      - name: Disable xUnit parallelism 
+        run: |
+          echo '{
+            "parallelizeTestCollections": false,
+            "maxParallelThreads": 1
+          }' > mqtt2otel.Tests/bin/Release/net10.0/xunit.runner.json
+      
       # Run tests and generate TestResults file.
       - name: Test
-        run: dotnet test mqtt2otel.Tests/mqtt2otel.Tests.csproj  --configuration Release --no-build --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json" 
+        env:
+          MTP_WORKER_COUNT: 1
+          MTP_FORCE_SINGLE_WORKER: 1
+          DOTNET_GCHeapHardLimit: 2147483648
+          DOTNET_GCTotalMemoryLimit: 0.7
+        run: dotnet test mqtt2otel.Tests/mqtt2otel.Tests.csproj  --configuration Release --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json" 
 
       # Publish the test report. Currently not running due to usage of mtp (microsoft test platform) which is enforced on .net 10.
       # - name: Publish Test Report
