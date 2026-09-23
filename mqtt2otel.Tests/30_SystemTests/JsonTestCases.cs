@@ -29,9 +29,11 @@ namespace mqtt2otel.Tests._30_SystemTests
         }
 
         [Theory]
-        [MemberData(nameof(TestCaseData.LoadAllAsMemberdata), MemberType = typeof(TestCaseData))]
-        public async Task ShouldPassAllJsonTestCases(TestCaseData testCase)
+        [MemberData(nameof(TestCaseData.LoadAllAsMemberdataTestIds), MemberType = typeof(TestCaseData))]
+        public async Task ShouldPassAllJsonTestCases(string testCaseId)
         {
+            TestCaseData testCase = TestCaseData.GetById(testCaseId);
+
             var culture = new CultureInfo("en-US");
             CultureInfo.DefaultThreadCurrentCulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
@@ -47,7 +49,9 @@ namespace mqtt2otel.Tests._30_SystemTests
             await mqttHelper.EnsureServerIsStarted();
 
             var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
-            var manifest = ManifestHelper.ReadManifestFromString(testCase.Setup.Manifest, dataStores);
+            var manifest = ManifestHelper.ReadManifestFromString(testCase.Setup.Manifest, dataStores, payloadParser, embeddedExpressionParser);
+            payloadParser.SetMappings(manifest.Mappings);
+            embeddedExpressionParser.SetMappings(manifest.Mappings);
 
             if (string.IsNullOrWhiteSpace(manifest.Version)) manifest.Version = "1.0";
 
