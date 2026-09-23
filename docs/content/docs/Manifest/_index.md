@@ -25,10 +25,10 @@ The structure of the file is as following
 4. ## OtelConnections
    In this section the available open telemetry connections will be configured. For details, see [Otel connections](otelserver). {{< importFromLabel >}}
 
-5. ## OtelScopes {{< version value="beta">}}
+5. ## OtelScopes 
    In this section the available open telemetry instrumentation scopes will be configured. For details, see [Instrumentation scopes](scopes). {{< importFromLabel >}}
 
-6. ## Mappings {{< version value="beta">}}
+6. ## Mappings 
    The Mappings section defines reusable lookup tables that translate raw input values into human‑readable values. For details, see [Mappings](mappings). {{< importFromLabel >}}
 
 7. ## SubscriptionGroups

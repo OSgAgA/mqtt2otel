@@ -12,7 +12,7 @@ Expressions and transformations are the tools with which message data (payload, 
 * Transformations are used to transform a payload into a different format, e.g. from text to json.
 
 Parameters supporting expressions or transformation can be identified by the tag {{< expressionLabel >}} or 
-{{< badge style="info" title="supports" value="transformation" >}}.
+{{< transformationLabel >}}.
 
 In fields that supports text input, there is a special syntax for embedding expressions inside a text field. The expression must then be wrapped
 inside a `$(expression)`. So for example to include the payload inside a text, you can use `This is the payload: $(Payload()).`. Parameters supporting
