@@ -73,6 +73,8 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             try
             {
                 manifest = Manifest.Manifest.ReadFromYaml(logger.Object, yaml: request.Manifest);
+                payloadParser.SetMappings(manifest.Mappings);
+                embeddedExpressionParser.SetMappings(manifest.Mappings);
             }
             catch (YamlException ex)
             {

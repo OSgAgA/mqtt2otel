@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualBasic;
 using mqtt2otel.Helper;
+using mqtt2otel.Manifest;
 using NCalc;
 using NCalc.Exceptions;
 using NCalc.Extensions;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO.Enumeration;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -23,7 +25,7 @@ namespace mqtt2otel.Parser
         /// Adds all custom functions to the given expression.
         /// </summary>
         /// <param name="context">The expression context to which the functions should be added.,</param>
-        public static void AddTo(NCalc.ExpressionContext context)
+        public static void AddTo(NCalc.ExpressionContext context, IEnumerable<Mapping> mappings)
         {
             AddParseDateTimeFunction(context, "ParseDateTime");
 
@@ -61,6 +63,8 @@ namespace mqtt2otel.Parser
             AddTypeConverter<float>(context, "ToFloat");
             AddTypeConverter<double>(context, "ToDouble");
             AddTypeConverter<string>(context, "ToString");
+
+            AddMapFunction(context, "Map", mappings);
         }
 
         /// <summary>
@@ -404,6 +408,48 @@ namespace mqtt2otel.Parser
                 }
 
                 throw new InvalidArgumentCountException(functionName, 1, 1, args.Count());
+            };
+        }
+
+        /// <summary>
+        /// Adds a function that maps a value to another value based on a provided mapping.
+        /// 
+        /// Usage:
+        ///    Map( object: source, string: mappingName )
+        ///    
+        /// If mapping is not found, the original value is returned.
+        ///    
+        /// Examples:
+        ///    Given a map with name "IdToDeviceName" with
+        ///         From: "12345"
+        ///         To: "Temperature Sensor A"
+        ///         
+        ///    Map( "12345", "IdToDeviceName" ) => "Temperature Sensor A"
+        /// </summary>
+        /// <param name="context">The expression context, where the function should be added.</param>
+        /// <param name="functionName">The function name.</param>
+        /// <exception cref="InvalidArgumentCountException">Thrown if the argument has not exactly 2 arguments.</exception>
+        private static void AddMapFunction(NCalc.ExpressionContext context, string functionName, IEnumerable<Mapping> mappings)
+        {
+            context.Functions[functionName] = (args) =>
+            {
+                if (args.Count() == 2)
+                {
+                    string src = GetArgument<string>(functionName, context, 0, args);
+                    var mappingName = GetArgument<string>(functionName, context, 1, args);
+
+                    var queryMapping = mappings.Where(mapping => mapping.Name == mappingName);
+
+                    if (!queryMapping.Any()) return src;
+
+                    var queryMappingEntry = queryMapping.Last().Entries.Where(entry => entry.From.Equals(src));
+
+                    if (!queryMappingEntry.Any()) return src;
+
+                    return queryMappingEntry.Last().To;
+                }
+
+                throw new InvalidArgumentCountException(functionName, 2, 2, args.Count());
             };
         }
     }

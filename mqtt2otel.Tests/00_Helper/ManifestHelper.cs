@@ -14,13 +14,13 @@ namespace mqtt2otel.Tests.Helper
 {
     public static class ManifestHelper
     {
-        public static Manifest.Manifest ReadManifestFromString(string yaml, DataStores? dataStores = null)
+        public static Manifest.Manifest ReadManifestFromString(string yaml, DataStores? dataStores = null, PayloadParser? payloadParser = null, EmbeddedExpressionParser? embeddedExpressionParser = null)
         {
             var objFactoryLoggerMock = new Mock<ILogger<Manifest.Processor>>();
             var internalLoggerMock = new Mock<ILogger<string>>();
 
-            var payloadParser = new PayloadParser();
-            var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
+            if (payloadParser == null) payloadParser = new PayloadParser();
+            if (embeddedExpressionParser == null) embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
             if (dataStores == null)
             {

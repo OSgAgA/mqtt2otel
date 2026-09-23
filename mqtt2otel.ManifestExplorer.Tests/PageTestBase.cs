@@ -62,7 +62,7 @@ namespace mqtt2otel.ManifestExplorer.Tests
                 {
                     Screenshots = true,
                     Snapshots = true,
-                    Sources = true,
+                    Sources = true,                    
                 });
             }
         }
@@ -79,7 +79,6 @@ namespace mqtt2otel.ManifestExplorer.Tests
 
             var options = new BrowserNewContextOptions()
             {
-
                 ScreenSize = new ScreenSize() { Width = width, Height = height },
                 ViewportSize = new ViewportSize() { Width = width, Height = height },
             };

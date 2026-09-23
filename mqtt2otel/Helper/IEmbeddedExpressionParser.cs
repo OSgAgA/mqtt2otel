@@ -1,4 +1,5 @@
 ﻿using mqtt2otel.Interfaces;
+using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 
 namespace mqtt2otel.Helper
@@ -8,6 +9,12 @@ namespace mqtt2otel.Helper
     /// </summary>
     public interface IEmbeddedExpressionParser
     {
+        /// <summary>
+        /// Sets the mappings, that are available inside the parser. Will override existing mappings.
+        /// </summary>
+        /// <param name="mappings">The mappings that should be made available to the parser.</param>
+        void SetMappings(IEnumerable<Mapping> mappings);
+
         /// <summary>
         /// Expands all variables in source with the given replacements.
         /// </summary>

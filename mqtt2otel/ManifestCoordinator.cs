@@ -53,6 +53,16 @@ namespace mqtt2otel
         private ManifestMeter manifestMeter;
 
         /// <summary>
+        /// The payload parser used by the applicatin.
+        /// </summary>
+        private IPayloadParser payloadParser;
+
+        /// <summary>
+        /// The embedded payload parser used by the application.
+        /// </summary>
+        private IEmbeddedExpressionParser embeddedPayloadParser;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Bootstrapper"/> class.
         /// 
         /// </summary>
@@ -63,7 +73,9 @@ namespace mqtt2otel
         /// <param name="loggerStore">The logger store for providing otel loggers to consumers.</param>
         /// <param name="applicationSettings">The application settings.</param>
         /// <param name="manifestMeter">The manifest meter used for internal metrics.</param>
-        public ManifestCoordinator(ILogger<Bootstrapper> internalLogger, IOtelCoordinator otelCoordinator, IMqttCoordinator mqttCoordinator, IDataStores dataStores, ApplicationSettings applicationSettings, ManifestMeter manifestMeter)
+        public ManifestCoordinator(
+            ILogger<Bootstrapper> internalLogger, IOtelCoordinator otelCoordinator, IMqttCoordinator mqttCoordinator, IDataStores dataStores, ApplicationSettings applicationSettings, 
+            ManifestMeter manifestMeter, IPayloadParser payloadParser, IEmbeddedExpressionParser embeddedPayloadParser)
         {
             this.manifestMeter = manifestMeter;
             this.applicationSettings = applicationSettings;
@@ -71,6 +83,8 @@ namespace mqtt2otel
             this.dataStores = dataStores;
             this.mqttCoordinator = mqttCoordinator;
             this.internalLogger = internalLogger;
+            this.payloadParser = payloadParser;
+            this.embeddedPayloadParser = embeddedPayloadParser;
         }
 
         /// <summary>
@@ -134,6 +148,8 @@ namespace mqtt2otel
             }
 
             manifest.Initialize();
+            this.payloadParser.SetMappings(manifest.Mappings);
+            this.embeddedPayloadParser.SetMappings(manifest.Mappings);
 
             var validationResult = manifest.Validate();
 

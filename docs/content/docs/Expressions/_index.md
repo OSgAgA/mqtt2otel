@@ -83,29 +83,30 @@ This will return the value 42.
 
 **String functions**
 
-| Function          | Example                                           | Description                                                                                                                                          |
-| ------------------| ------------------------------------------------- | ----------------------------------------                                                                                                             |
-| `ToLower`         | `ToLower('My Signal')` => my signal               | Returns lower case value                                                                                                                             |
-| `ToUpper`         | `ToUpper('My Signal')` => MY SIGNAL               | Returns upper case value                                                                                                                             |
-| `ToPascalCase`    | `ToPascalCase('My Signal')` => MySignal           | Returns pascal case value                                                                                                                             |
-| `ToCamelCase`     | `ToCamelCase('My Signal')` => mySignal            | Returns camel case value                                                                                                                             |
-| `ToSnakeCase`     | `ToSnakeCase('My Signal')` => my_signal           | Returns snake case value                                                                                                                             |
-| `ToKebabCase`     | `ToKebabCase('My Signal')` => my-signal           | Returns kebab or hyphen case value                                                                                                                             |
-| `ToTrainCase`     | `ToTrainCase('My Signal')` => My-Signal           | Returns train case value                                                                                                                             |
-| `Trim`            | `Trim('    Test  ')` => "Test"                    | Removes leading and trailing whitespace                                                                                                                            |
-| `TrimStart`       | `TrimStart('  Test  ')` => "Test  "               | Removes leading whitespace                                                                                                                             |
-| `TrimEnd`         | `TrimEnd('  Test  ')` => "  Test"                 | Remove trailing whitespace                                                                                                                             |
-| `StartsWith`      | `StartsWith('MyValue', 'My')` => true             | Tests, whether a string starts with the provided pattern.                                                                                                                             |
-| `EndsWith`        | `StartsWith('MyValue', 'Value')` => true          | Tests, whether a string ends with the provided pattern.                                                                                            |
-| `Contains`        | `Contains('MyValue', 'Val')` => true              | Tests, whether a string contains the provided pattern.                                                                                                                             |
-| `Replace`         | `Replace('Test', 'e', 'ee')` => Teest             | Replaces strings inside a string.                                                                                                                             |
-| `MatchesWildcard` | `MatchesWildcard('My Signal', '*Signal')` => true | Tests, whether a string matches a wildcard pattern.                                                                                                                             |
-| `MatchesRegEx`    | `MatchesRegEx('My Signal', '.*')` => true         | Tests, whether a string matches a regular expression.                                                                                                                              |
+| Function          | Example                                           | Description                                                                                                      |
+| ------------------| ------------------------------------------------- | ----------------------------------------                                                                         |
+| `ToLower`         | `ToLower('My Signal')` => my signal               | Returns lower case value                                                                                         |
+| `ToUpper`         | `ToUpper('My Signal')` => MY SIGNAL               | Returns upper case value                                                                                         |
+| `ToPascalCase`    | `ToPascalCase('My Signal')` => MySignal           | Returns pascal case value                                                                                        |
+| `ToCamelCase`     | `ToCamelCase('My Signal')` => mySignal            | Returns camel case value                                                                                         |
+| `ToSnakeCase`     | `ToSnakeCase('My Signal')` => my_signal           | Returns snake case value                                                                                         |
+| `ToKebabCase`     | `ToKebabCase('My Signal')` => my-signal           | Returns kebab or hyphen case value                                                                               |
+| `ToTrainCase`     | `ToTrainCase('My Signal')` => My-Signal           | Returns train case value                                                                                         |
+| `Trim`            | `Trim('    Test  ')` => "Test"                    | Removes leading and trailing whitespace                                                                          |
+| `TrimStart`       | `TrimStart('  Test  ')` => "Test  "               | Removes leading whitespace                                                                                       |
+| `TrimEnd`         | `TrimEnd('  Test  ')` => "  Test"                 | Remove trailing whitespace                                                                                       |
+| `StartsWith`      | `StartsWith('MyValue', 'My')` => true             | Tests, whether a string starts with the provided pattern.                                                        |
+| `EndsWith`        | `StartsWith('MyValue', 'Value')` => true          | Tests, whether a string ends with the provided pattern.                                                          |
+| `Contains`        | `Contains('MyValue', 'Val')` => true              | Tests, whether a string contains the provided pattern.                                                           |
+| `Replace`         | `Replace('Test', 'e', 'ee')` => Teest             | Replaces strings inside a string.                                                                                |
+| `MatchesWildcard` | `MatchesWildcard('My Signal', '*Signal')` => true | Tests, whether a string matches a wildcard pattern.                                                              |
+| `MatchesRegEx`    | `MatchesRegEx('My Signal', '.*')` => true         | Tests, whether a string matches a regular expression.                                                            |
+| `Map`             | `Map('value', 'lookupTable')` => translated value | Maps the provided value to another value, as defined in the lookup table. For details, see [Mappings](mappings). |
 
 **Type conversion**
 
-| Function          | Example                                           | Description                                                                                                                                          |
-| ------------------| ------------------------------------------------- | ----------------------------------------                                                                                                             |
+| Function          | Example                                           | Description                        |
+| ------------------| ------------------------------------------------- | -----------------------------------|
 | `ToInt`           | `ToInt(42.1)` => 42                               | Converts a value to integer        |
 | `ToLong`          | `ToLong(42.1)` => 42L                             | Converts a value to a long integer |
 | `ToFloat`         | `ToInt(42)` => 42.0                               | Converts a value to float          |

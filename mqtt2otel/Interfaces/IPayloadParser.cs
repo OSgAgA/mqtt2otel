@@ -1,4 +1,5 @@
-﻿using mqtt2otel.Parser;
+﻿using mqtt2otel.Manifest;
+using mqtt2otel.Parser;
 
 namespace mqtt2otel.Interfaces
 {
@@ -7,6 +8,12 @@ namespace mqtt2otel.Interfaces
     /// </summary>
     public interface IPayloadParser
     {
+        /// <summary>
+        /// Sets the mappings, that are available inside the parser. Will override existing mappings.
+        /// </summary>
+        /// <param name="mappings">The mappings that should be made available to the parser.</param>
+        void SetMappings(IEnumerable<Mapping> mappings);
+
         /// <summary>
         /// Adds a new strategy that can be used to parse a given payload to a certain type. The strategy will be 
         /// identified via its provided Key property.
