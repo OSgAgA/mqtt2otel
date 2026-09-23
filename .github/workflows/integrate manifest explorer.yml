@@ -1,4 +1,4 @@
-name: IntegrationManifestExplorer
+name: IntegrateManifestExplorer
 
 # Only executed on pull requests for the main branch.
 on:

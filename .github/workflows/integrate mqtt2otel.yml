@@ -1,4 +1,4 @@
-name: Integration
+name: IntegrateMqtt2Otel
 
 # Only executed on pull requests for the main branch.
 on:
@@ -50,10 +50,6 @@ jobs:
       - name: Build
         run: dotnet build -c Release --no-restore -warnaserror
 
-      # Find script
-      - name: List build output
-        run: find . -iname "playwright.ps1"
-
       # Identify all csproj files
       - name: List project files
         if: always()
@@ -68,7 +64,7 @@ jobs:
       
       # Run tests and generate TestResults file.
       - name: Test
-        run: dotnet test mqtt2otel.Tests/mqtt2otel.Tests.csproj  --configuration Release --no-build --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json" --diagnostic
+        run: dotnet test mqtt2otel.Tests/mqtt2otel.Tests.csproj  --configuration Release --no-build --diagnostic
 
       # Publish the test report. Currently not running due to usage of mtp (microsoft test platform) which is enforced on .net 10.
       # - name: Publish Test Report

@@ -1,4 +1,4 @@
-name: PublishDocs
+name: PublishDocsAndHomepage
 
 # Workflow can 
 #   * write repositroy content

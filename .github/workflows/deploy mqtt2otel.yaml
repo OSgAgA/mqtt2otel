@@ -1,4 +1,4 @@
-name: DeployApplication
+name: DeployMqtt2Otel
 
 # Workflow can 
 #   * write repositroy content
