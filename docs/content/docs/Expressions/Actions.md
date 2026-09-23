@@ -31,16 +31,16 @@ It consists of the following properties, properties that are not set, will keep 
 
 | Parameter         | Description                                                                                                                                      |
 |-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| Name              | The name of the created signal. {{< badge style="info" title="supports" value="embedded expressions" >}}                                         |
-| Unit              | The unit.	{{< badge style="info" title="supports" value="embedded expressions" >}}                                                               |
-| Description       | The description. {{< badge style="info" title="supports" value="embedded expressions" >}}                                                        |
+| Name              | The name of the created signal. {{< embeddedExpressionLabel >}}                                         |
+| Unit              | The unit.	{{< embeddedExpressionLabel >}}                                                               |
+| Description       | The description. {{< embeddedExpressionLabel >}}                                                        |
 | NameFormatter     | The name formatter.                                                                                                                              |
 | ValueConverter    | The value converter.                                                                                                                             |
 | SignalDataType    | The signal data type.                                                                                                                            |
 | Instrument        | The otel instrument.                                                                                                                             |
 | Ignore            | If set to true, then the signal will be skipped and not further processed. Any following actions will not be evaluated.                          |
 | ClearAttributes   | Set to true to clear all the attributes from the signal. Will be executed before new attributes are added via `AddAttributes`.                   |
-| AddAttributes     | Adds the provided attributes to the signal. {{< badge style="info" title="supports" value="embedded expressions" >}}.                            |
+| AddAttributes     | Adds the provided attributes to the signal. {{< embeddedExpressionLabel >}}.                            |
 | RemoveAttributes  | A list of attribute keys, that should be removed. If the key is not found it is ignored. Attributes are removed before new attributes are added. |
 | Output            | An output message that will be written to the standard log.                                                                                      |
 | Output.Message    | The message that should be written                                                                                                               |
