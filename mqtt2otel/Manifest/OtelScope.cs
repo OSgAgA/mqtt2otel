@@ -25,5 +25,10 @@ namespace mqtt2otel.Manifest
         /// Gets or sets attributes for this meter.
         /// </summary>
         public List<OtelAttribute> Attributes { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets a value indicatinge whether the default attributes should be applied.
+        /// </summary>
+        public bool ApplyDefaultAttributes { get; set; } = true;
     }
 }

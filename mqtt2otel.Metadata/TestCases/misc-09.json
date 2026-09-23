@@ -1,0 +1,64 @@
+{
+  "Links": {
+    "Instrumentation Scope": "https://mqtt2otel.org/docs/manifest/scopes/",
+    "Supported functions": "https://mqtt2otel.org/docs/expressions/#available-functions"
+  },
+  "Setup": {
+    "Id": "misc-09",
+    "Name": "Usage of Scopes",
+    "Description": "Uses a custom instrumentation scope on a metric.",
+    "MqttData": [
+      {
+        "Topic": "sensor/1234/raw",
+        "Payload": "42",
+        "UserProperties": []
+      }
+    ],
+    "Manifest": "OtelScopes:\n  - Name: \u0022MyApplicationTest\u0022\n    Version: \u002217.1.2\u0022\n    ApplyDefaultAttributes: false\n    Attributes:\n      - Key: \u0022Environment\u0022\n        Value: \u0022Test\u0022\n  - Name: \u0022MyApplicationProd\u0022\n    Version: \u002217.1.2\u0022\n    ApplyDefaultAttributes: true\n    Attributes:\n      - Key: \u0022Environment\u0022\n        Value: \u0022Prod\u0022\n\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Connects a metric to a scope. Remove the OtelScope property to get the default (=first) scope.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/raw\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          OtelScope: \u0022MyApplicationTest\u0022\n          Instrument: Gauge\n          Value: \u0022PAYLOAD()\u0022",
+    "Category": "Misc",
+    "Tags": [
+      "scope"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResults": [
+    {
+      "Metrics": [
+        {
+          "Name": "Processor.Temperature",
+          "OtelServer": "MyApplicationTest",
+          "ScopeName": "MyApplicationTest",
+          "ScopeTags": [
+            {
+              "Key": "Environment",
+              "Value": "Test"
+            }
+          ],
+          "ScopeVersion": "17.1.2",
+          "Description": "",
+          "Unit": "",
+          "MetricType": 42,
+          "MetricPoints": [
+            {
+              "Value": 42,
+              "StartTime": "2026-09-23T18:27:18.2300857+00:00",
+              "EndTime": "2026-09-23T18:27:18.2337796+00:00",
+              "Tags": {}
+            }
+          ],
+          "Connection": {
+            "Name": "default-connection",
+            "ServiceName": "default-service",
+            "ServiceVersion": "1.0.0",
+            "ServiceNamespace": "default-service-namespace",
+            "MinimumLogLevel": "Information",
+            "EndpointAddress": "https://my-otel-endpoint.org"
+          }
+        }
+      ],
+      "Logs": []
+    }
+  ],
+  "ShowResultDetails": true
+}

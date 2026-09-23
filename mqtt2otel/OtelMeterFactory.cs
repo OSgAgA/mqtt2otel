@@ -35,12 +35,33 @@ namespace mqtt2otel
         private Dictionary<string, string> connectionToDefaultMapping = new();
 
         /// <summary>
+        /// The mqtt version.
+        /// </summary>
+        private string version = "0.0.0";
+
+        /// <summary>
+        /// The major part of the mqtt version.
+        /// </summary>
+        private string? majorVersion = null;
+
+        /// <summary>
+        /// The minor part of the mqtt version.
+        /// </summary>
+        private string? minorVersion = null;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OtelMeterFactory"/> class.
         /// </summary>
         /// <param name="meterInfo">Information about how to create new meters from the manifest.</param>
-        public OtelMeterFactory(IEnumerable<OtelScope> meterInfo)
+        public OtelMeterFactory(IEnumerable<OtelScope> meterInfo, ApplicationSettings settings)
         {
             this.meterInfo = meterInfo;
+            this.version = settings.Mqtt2OtelVersion;
+
+            var versionSplit = version.Split(".");
+
+            if (versionSplit.Length > 1) majorVersion = versionSplit[0];
+            if (versionSplit.Length > 2) minorVersion = versionSplit[1];
         }
 
         /// <summary>
@@ -51,6 +72,10 @@ namespace mqtt2otel
         public System.Diagnostics.Metrics.Meter GetOrCreateMeter(OtelMetricRule metric)
         {
             string connectionName = metric.OtelConnection ?? "unknown connection";
+
+            var defaultTags = new List<OtelAttribute>();
+            if (this.majorVersion != null) defaultTags.Add(new OtelAttribute("mqtt2otel.version.major", majorVersion));
+            if (this.minorVersion != null) defaultTags.Add(new OtelAttribute("mqtt2otel.version.minor", minorVersion));
 
             if (!meters.ContainsKey(connectionName))
             {
@@ -64,12 +89,17 @@ namespace mqtt2otel
                 if (!query.Any())
                 {
                     string defaultMeterName = "mqtt2otel";
-                    this.meters[connectionName][defaultMeterName] = new Meter(name: defaultMeterName, version: "1.0.0");
+                    this.meters[connectionName][defaultMeterName] = new Meter(name: defaultMeterName, version: this.version, defaultTags.ToKeyValuePairs());
                     this.connectionToDefaultMapping[connectionName] = defaultMeterName;
                 }
                 else
                 {
                     var info = query.First();
+                    if (info.ApplyDefaultAttributes)
+                    {
+                        info.Attributes.AddRange(defaultTags);
+                    }
+
                     this.meters[connectionName][info.Name] = new Meter(name: info.Name, version: info.Version, tags: info.Attributes.ToKeyValuePairs());
                     this.connectionToDefaultMapping[connectionName] = info.Name;
                 }
@@ -87,12 +117,17 @@ namespace mqtt2otel
                 {
                     // yes, then use it to create the new query.
                     var info = query.First();
+                    if (info.ApplyDefaultAttributes)
+                    {
+                        info.Attributes.AddRange(defaultTags);
+                    }
+
                     this.meters[connectionName][meterName] = new Meter(name: meterName, version: info.Version, tags: info.Attributes.ToKeyValuePairs());
                 }
                 else
                 {
                     // no, so build new query with default values.
-                    this.meters[connectionName][meterName] = new Meter(name: meterName, version: "1.0.0");
+                    this.meters[connectionName][meterName] = new Meter(name: meterName, version: "1.0.0", defaultTags.ToKeyValuePairs());
                 }
             }
 

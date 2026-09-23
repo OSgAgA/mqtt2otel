@@ -1,7 +1,8 @@
 {
   "Links": {
     "TopicPath": "https://mqtt2otel.org/docs/expressions/topicparsing/#the-topicpath-syntax",
-    "Supported functions": "https://mqtt2otel.org/docs/expressions/#available-functions"
+    "Supported functions": "https://mqtt2otel.org/docs/expressions/#available-functions",
+    "Mappings": "https://mqtt2otel.org/docs/manifest/mappings/"
   },
   "Setup": {
     "Id": "misc-08",
@@ -29,16 +30,25 @@
           "Name": "Processor.Temperature",
           "OtelServer": "mqtt2otel",
           "ScopeName": "mqtt2otel",
-          "ScopeTags": null,
-          "ScopeVersion": "1.0.0",
+          "ScopeTags": [
+            {
+              "Key": "mqtt2otel.version.major",
+              "Value": "0"
+            },
+            {
+              "Key": "mqtt2otel.version.minor",
+              "Value": "0"
+            }
+          ],
+          "ScopeVersion": "0.0.0",
           "Description": "The current processor temperature.",
           "Unit": "",
           "MetricType": 42,
           "MetricPoints": [
             {
               "Value": 42,
-              "StartTime": "2026-09-23T15:14:44.6919281+00:00",
-              "EndTime": "2026-09-23T15:14:44.7147215+00:00",
+              "StartTime": "2026-09-23T18:40:58.5612779+00:00",
+              "EndTime": "2026-09-23T18:40:58.5806285+00:00",
               "Tags": {
                 "Sensor name": "sensor one"
               }

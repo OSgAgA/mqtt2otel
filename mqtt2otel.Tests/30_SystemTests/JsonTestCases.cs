@@ -91,7 +91,7 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
             var exportBuilder = new OtelTestExporterBuilder();
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser);
+            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
             otelCoordinator.Connect(manifest);
 
             this._output.WriteLine($"{DateTime.UtcNow}: Arrange completed.");
@@ -168,8 +168,8 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             // Cleanup
 
-            mqttHelper.Dispose();
             await mqttCoordinator.DisconnectAllBrokers();
+            mqttHelper.Dispose();
 
             this._output.WriteLine($"{DateTime.UtcNow}: Cleanup completed.");
 
