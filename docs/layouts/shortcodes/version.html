@@ -1,0 +1,4 @@
+{{ $value := .Get "value" }}
+
+{{ $badge := printf "{{< badge style=\"info\" value=\"v %s\" >}}" $value }}
+{{ .Page.RenderString $badge }}

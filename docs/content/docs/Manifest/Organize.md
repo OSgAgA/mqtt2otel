@@ -7,7 +7,7 @@ bookCollapseSection: false
 
 Manifest files tend to get huge over time. To organize these files, many parameters have the possibility to be read from an external file. To 
 do this, you just have to identify the filename via the `ImportFrom` parameter. The file can contain multiple objects. The objects need to be 
-organized as a yaml list. Parameters that support this can be identified via the tag {{< badge style="info" title="supports" value="ImportFrom" >}}.
+organized as a yaml list. Parameters that support this can be identified via the tag {{< importFromLabel >}}.
 
 ## Example
 

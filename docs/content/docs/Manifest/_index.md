@@ -20,22 +20,22 @@ The structure of the file is as following
    General setting that will be applied to the full manifest.
 
 3. ## MqttConnections
-   In this section the available Mqtt broker connections will be configured. For details, see [Mqtt broker](mqttbroker). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
+   In this section the available Mqtt broker connections will be configured. For details, see [Mqtt broker](mqttbroker). [{{< importFromLabel >}}](organize)
 
 4. ## OtelConnections
-   In this section the available open telemetry connections will be configured. For details, see [Otel connections](otelserver). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
+   In this section the available open telemetry connections will be configured. For details, see [Otel connections](otelserver). [{{< importFromLabel >}}](organize)
 
-5. ## OtelScopes
-   In this section the available open telemetry instrumentation scopes will be configured. For details, see [Instrumentation scopes](scopes). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
+5. ## OtelScopes {{< version value="beta">}}
+   In this section the available open telemetry instrumentation scopes will be configured. For details, see [Instrumentation scopes](scopes). [{{< importFromLabel >}}](organize)
 
-6. ## Mappings
-   The Mappings section defines reusable lookup tables that translate raw input values into human‑readable values. For details, see [Mappings](mappings). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
+6. ## Mappings {{< version value="beta">}}
+   The Mappings section defines reusable lookup tables that translate raw input values into human‑readable values. For details, see [Mappings](mappings). [{{< importFromLabel >}}](organize)
 
 7. ## SubscriptionGroups
-   A list of grouped subscriptions that can be referred later in the otel section. For details see [Subscription groups](subscription/#subscription-groups). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
+   A list of grouped subscriptions that can be referred later in the otel section. For details see [Subscription groups](subscription/#subscription-groups). [{{< importFromLabel >}}](organize)
 
 8. ## Processors
-   A list of processors, that will take mqtt payloads, processes them and then create otel logs or metrics. For details see [Processors](processors). [{{< badge style="info" title="supports" value="ImportFrom" >}}](organize)
+   A list of processors, that will take mqtt payloads, processes them and then create otel logs or metrics. For details see [Processors](processors). [{{< importFromLabel >}}](organize)
 
 9. ## How to organize large manifests.
    Find out how you can organize complex scenarios in your manifest file. See [Organize manifest files](organize).
@@ -52,4 +52,4 @@ The Manifest supports the following general settings:
 
 | Parameter                                                                                | Description                                                                                                  |
 |------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
-| CreateAttributesFromUserProperties {{< badge style="info" title="version" value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings. |
+| CreateAttributesFromUserProperties {{< version value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings. |
