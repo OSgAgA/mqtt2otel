@@ -24,6 +24,10 @@ jobs:
   # Build the application and run tests.
   build-and-test:
     runs-on: ubuntu-latest
+    env: 
+      XUNIT_MAX_PARALLEL_THREADS: 1
+      DOTNET_GCHeapHardLimit: 2147483648   # 2 GB
+      MTP_WORKER_COUNT: 1
 
     steps:
       # Checkout the code.
