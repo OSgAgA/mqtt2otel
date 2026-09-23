@@ -1,4 +1,5 @@
 ﻿using mqtt2otel.Helper;
+using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 using MQTTnet;
 using NCalc;
@@ -26,12 +27,26 @@ namespace mqtt2otel
         protected Dictionary<string, T> NameStrategyMapping { get; set; } = new();
 
         /// <summary>
+        /// Gets or sets the available mappings.
+        /// </summary>
+        protected IEnumerable<Mapping> mappings { get; set; } = new List<Mapping>();
+
+        /// <summary>
         /// Adds a new stratgy.
         /// </summary>
         /// <param name="strategy">The strategy to be added.</param>
         public void AddStrategy(T strategy)
         {
             this.NameStrategyMapping[strategy.Key] = strategy;
+        }
+
+        /// <summary>
+        /// Sets the mappings, that are available inside the parser. Will override existing mappings.
+        /// </summary>
+        /// <param name="mappings">The mappings that should be made available to the parser.</param>
+        public void SetMappings(IEnumerable<Mapping> mappings)
+        {
+            this.mappings = mappings;
         }
 
         /// <summary>
@@ -89,7 +104,7 @@ namespace mqtt2otel
 
                 var expression = new Expression(expression: expressionString, context: expressionContext, configuration: configuration);
 
-                CustomExpressionFunctions.AddTo(expressionContext);
+                CustomExpressionFunctions.AddTo(expressionContext, this.mappings);
 
                 var result = expression.Evaluate() ?? throw new Exception();
 

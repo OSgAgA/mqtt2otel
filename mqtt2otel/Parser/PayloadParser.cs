@@ -1,4 +1,5 @@
 ﻿using mqtt2otel.Interfaces;
+using mqtt2otel.Manifest;
 using NCalc;
 using System;
 using System.Collections;

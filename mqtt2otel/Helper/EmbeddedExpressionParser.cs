@@ -1,4 +1,5 @@
 ﻿using mqtt2otel.Interfaces;
+using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 using MQTTnet.Extensions.ManagedClient;
 using Parlot.Fluent;
@@ -17,6 +18,15 @@ namespace mqtt2otel.Helper
         /// The internally used payload parser for embedded expressions.
         /// </summary>
         private IPayloadParser parser = _parser;
+
+        /// <summary>
+        /// Sets the mappings, that are available inside the parser. Will override existing mappings.
+        /// </summary>
+        /// <param name="mappings">The mappings that should be made available to the parser.</param>
+        public void SetMappings(IEnumerable<Mapping> mappings)
+        {
+            this.parser.SetMappings(mappings);
+        }
 
         /// <summary>
         /// Expand all embedded expressions that are found in a string.

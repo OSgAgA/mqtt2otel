@@ -50,6 +50,7 @@ namespace mqtt2otel.Server
             builder.Services.AddControllers();
             builder.WebHost.UseUrls(appSettings.BaseAddress);
 
+
             var app = builder.Build();
 
             app.MapControllers();

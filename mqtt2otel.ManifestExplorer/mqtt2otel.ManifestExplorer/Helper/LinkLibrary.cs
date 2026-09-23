@@ -33,6 +33,8 @@
                 { "User properties", "https://mqtt2otel.org/docs/expressions/userproperties" },
                 { "Converter and Formatters", "https://mqtt2otel.org/docs/expressions/converter-and-formatter/" },
                 { "Metric actions", "https://mqtt2otel.org/docs/expressions/actions/" },
+                { "Instrumentation Scope", "https://mqtt2otel.org/docs/manifest/scopes/" },
+                { "Mappings", "https://mqtt2otel.org/docs/manifest/mappings/" },
             };
         }
     }

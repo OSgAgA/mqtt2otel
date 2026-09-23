@@ -40,6 +40,11 @@ namespace mqtt2otel.InternalLogging
             return LoggerFactory.Create(logging =>
             {
                 logging.SetMinimumLevel(settings.MinimumLogLevel);
+                logging.AddFilter("Microsoft.AspNetCore", LogLevel.Error);
+                logging.AddFilter("Microsoft.AspNetCore.Mvc", LogLevel.Error);
+                logging.AddFilter("Microsoft.AspNetCore.Routing", LogLevel.Error);
+                logging.AddFilter("Microsoft.AspNetCore.Hosting", LogLevel.Error);
+                logging.AddFilter("Microsoft.AspNetCore.Diagnostics", LogLevel.Error);
 
                 if (settings.LogToConsole) AddConsoleLogger(logging, settings);
                 if (settings.LogToOtel) AddOtelLogger(logging, settings);

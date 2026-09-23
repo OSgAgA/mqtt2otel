@@ -1,0 +1,61 @@
+{
+  "Links": {
+    "TopicPath": "https://mqtt2otel.org/docs/expressions/topicparsing/#the-topicpath-syntax",
+    "Supported functions": "https://mqtt2otel.org/docs/expressions/#available-functions"
+  },
+  "Setup": {
+    "Id": "misc-08",
+    "Name": "Usage of Mappings",
+    "Description": "Uses a mapping to map an id to a human readable name.",
+    "MqttData": [
+      {
+        "Topic": "sensor/1234/raw",
+        "Payload": "42",
+        "UserProperties": []
+      }
+    ],
+    "Manifest": "Mappings:\n  - Name: \u0022IdToName\u0022\n    Entries: \n      - From: \u00221234\u0022\n        To: \u0022sensor one\u0022\n      - From: \u00224321\u0022\n        To: \u0022sensor two\u0022\n\n\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Reads the sensor id from the topic and converts it into a human readable form using mappings.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/raw\u0022\n    Otel:\n      Metrics:\n        - Name: \u0022Processor.Temperature\u0022\n          Description: \u0022The current processor temperature.\u0022\n          Instrument: Gauge\n          Attributes:\n            - Key: \u0022Sensor name\u0022\n              Value: \u0022$(Map(TopicPath(\u0027[1]\u0027), \u0027IdToName\u0027))\u0022\n          Value: \u0022PAYLOAD()\u0022",
+    "Category": "Misc",
+    "Tags": [
+      "mapping"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResults": [
+    {
+      "Metrics": [
+        {
+          "Name": "Processor.Temperature",
+          "OtelServer": "mqtt2otel",
+          "ScopeName": "mqtt2otel",
+          "ScopeTags": null,
+          "ScopeVersion": "1.0.0",
+          "Description": "The current processor temperature.",
+          "Unit": "",
+          "MetricType": 42,
+          "MetricPoints": [
+            {
+              "Value": 42,
+              "StartTime": "2026-09-23T15:14:44.6919281+00:00",
+              "EndTime": "2026-09-23T15:14:44.7147215+00:00",
+              "Tags": {
+                "Sensor name": "sensor one"
+              }
+            }
+          ],
+          "Connection": {
+            "Name": "default-connection",
+            "ServiceName": "default-service",
+            "ServiceVersion": "1.0.0",
+            "ServiceNamespace": "default-service-namespace",
+            "MinimumLogLevel": "Information",
+            "EndpointAddress": "https://my-otel-endpoint.org"
+          }
+        }
+      ],
+      "Logs": []
+    }
+  ],
+  "ShowResultDetails": false
+}

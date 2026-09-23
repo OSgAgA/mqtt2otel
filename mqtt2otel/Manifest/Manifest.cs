@@ -145,6 +145,11 @@ namespace mqtt2otel.Manifest
         public ImportEnabledList<OtelScope> OtelScopes { get; set; } = new();
 
         /// <summary>
+        /// Gets or sets the mappings available for the processors.
+        /// </summary>
+        public ImportEnabledList<Mapping> Mappings { get; set; } = new();
+
+        /// <summary>
         /// Gets or sets all metrics.
         /// </summary>
         public ImportEnabledList<Processor> Processors { get; set; } = new();
