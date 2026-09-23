@@ -15,12 +15,18 @@ namespace mqtt2otel.Server
         private Bootstrapper Bootstrapper;
 
         /// <summary>
+        /// The application settings.
+        /// </summary>
+        private ApplicationSettings settings;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Mqtt2OtelService"/> class.
         /// </summary>
         /// <param name="bootstrapper">The bootstrapper for bootstrapping the application.</param>
-        public Mqtt2OtelService(Bootstrapper bootstrapper)
+        public Mqtt2OtelService(Bootstrapper bootstrapper, ApplicationSettings settings)
         {
             this.Bootstrapper = bootstrapper;
+            this.settings = settings;
         }
 
         /// <summary>
@@ -30,7 +36,7 @@ namespace mqtt2otel.Server
         /// <returns></returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await Bootstrapper.Bootstrap();
+            await Bootstrapper.Bootstrap(settings);
 
             while (!stoppingToken.IsCancellationRequested)
             {

@@ -82,6 +82,11 @@ namespace mqtt2otel
         private IEmbeddedExpressionParser embeddedExpressionParser;
 
         /// <summary>
+        /// The global application settings.
+        /// </summary>
+        private ApplicationSettings settings;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OtelCoordinator"/> class.
         /// </summary>
         /// <param name="internalLogger">The logger used for internal logging.</param>
@@ -89,7 +94,7 @@ namespace mqtt2otel
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
         /// <param name="meter">The meter for reporting internal metrics.</param>
         /// <param name="embeddedExpressionParser">The parser used for parsing expressions embedded in a subscription.</param>
-        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IOtelExporterBuilder exporterBuilder, IDataStores dataStores, OtelInternalMeter meter, IEmbeddedExpressionParser embeddedExpressionParser)
+        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IOtelExporterBuilder exporterBuilder, IDataStores dataStores, OtelInternalMeter meter, IEmbeddedExpressionParser embeddedExpressionParser, ApplicationSettings settings)
         {
             this.otelMeter = meter;
             this.internalLogger = internalLogger;
@@ -97,6 +102,7 @@ namespace mqtt2otel
             this.dataStores = dataStores;
             this.dataStores.SignalStore.SignalCreator = this.CreateInstrument;
             this.embeddedExpressionParser = embeddedExpressionParser;
+            this.settings = settings;
         }
 
         /// <summary>
@@ -150,7 +156,7 @@ namespace mqtt2otel
         /// <param name="manifest">The rules for creating meters.</param>
         private void InitializeMeters(Manifest.Manifest manifest)
         {
-            this.otelMeterFactory = new OtelMeterFactory(manifest.OtelScopes);
+            this.otelMeterFactory = new OtelMeterFactory(manifest.OtelScopes, settings);
 
             // Create metrics
             foreach (var processor in manifest.Processors)

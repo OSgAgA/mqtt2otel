@@ -19,6 +19,7 @@ An instrument scope can be defined on the manifest top level and has the followi
 | Version                            | An optional version.                                                                                                          |
 | Attributes                         | Optional attributes.                                                                                                          |
 | OtelConnection                     | The otel connection, to which this scope belongs. If none is set, the default connection is used.                             |
+| ApplyDefaultAttributes             | If set to true (default), mqtt version information is added as additional attributes.                                         |
 
 > [!Note]
 > ### Information

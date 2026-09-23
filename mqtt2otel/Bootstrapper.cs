@@ -131,10 +131,10 @@ namespace mqtt2otel
         /// Bootstraps the applicatino.
         /// </summary>
         /// <returns>A return code.</returns>
-        public async Task<int> Bootstrap()
+        public async Task<int> Bootstrap(ApplicationSettings settings)
         {
             // Read version number file or set to not defined, if no file is found.
-            string version = "Not defined";
+            string version = "0.0.0";
             string versionFilePath = "./version.txt";
             if (Path.Exists(versionFilePath))
             {
@@ -144,6 +144,8 @@ namespace mqtt2otel
 
             this.internalLogger.LogInformation($"Starting application with version: {version}");
             this.internalLogger.LogInformation("ApplicationSettings.yaml read.");
+
+            settings.Mqtt2OtelVersion = version;
 
             // Register ctrl-c
             Console.CancelKeyPress += (sender, e) =>

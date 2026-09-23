@@ -61,6 +61,8 @@ namespace mqtt2otel
             return deserializer.Deserialize<ApplicationSettings>(yaml);
         }
 
+        public string Mqtt2OtelVersion { get; set; } = "0.0.0";
+
         /// <summary>
         /// Gets or sets the logging settings used for internal logging.
         /// </summary>
