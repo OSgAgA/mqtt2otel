@@ -68,12 +68,7 @@ jobs:
       
       # Run tests and generate TestResults file.
       - name: Test
-        env:
-          MTP_WORKER_COUNT: 1
-          MTP_FORCE_SINGLE_WORKER: 1
-          DOTNET_GCHeapHardLimit: 2147483648
-          DOTNET_GCTotalMemoryLimit: 0.7
-        run: dotnet test mqtt2otel.Tests/mqtt2otel.Tests.csproj  --configuration Release --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json" 
+        run: dotnet test mqtt2otel.Tests/mqtt2otel.Tests.csproj  --configuration Release --no-build --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json" --diagnostic
 
       # Publish the test report. Currently not running due to usage of mtp (microsoft test platform) which is enforced on .net 10.
       # - name: Publish Test Report
