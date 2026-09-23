@@ -1,3 +1,2 @@
-
-{{ $badge := printf "{{< badge style=\"important\" value=\"embedded expressions\" >}}" }}
+{{ $badge := printf "[{{< badge style=\"important\" value=\"embedded expressions\" >}}](/docs/expressions/)" }}
 {{ .Page.RenderString $badge }}
