@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Moq;
 using mqtt2otel.Helper;
 using mqtt2otel.InternalMetrics;
