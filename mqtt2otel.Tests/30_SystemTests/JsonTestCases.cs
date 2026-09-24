@@ -17,7 +17,7 @@ using Xunit.Sdk;
 namespace mqtt2otel.Tests._30_SystemTests
 {
     [Collection("MQTT Tests")]
-    public class JsonTestCases
+    public class JsonTestCases : IClassFixture<JsonTestsFixture>
     {
         private readonly ITestOutputHelper _output;
 
@@ -43,11 +43,11 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             // Arrange
 
+            if (JsonTestsFixture.mqttHelper != null) await JsonTestsFixture.mqttHelper.ConnectClient();
+
             var payloadParser = new PayloadParser();
             var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
-            using var mqttHelper = new MqttTestHelper();
-            await mqttHelper.EnsureServerIsStarted();
 
             var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
             var manifest = ManifestHelper.ReadManifestFromString(testCase.Setup.Manifest, dataStores, payloadParser, embeddedExpressionParser);
@@ -99,7 +99,7 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             // Act
 
-            await mqttHelper.PublishPayload(testCase.Setup.MqttData[0].Topic, testCase.Setup.MqttData[0].Payload, testCase.Setup.MqttData[0].UserProperties);
+            await JsonTestsFixture.mqttHelper!.PublishPayload(testCase.Setup.MqttData[0].Topic, testCase.Setup.MqttData[0].Payload, testCase.Setup.MqttData[0].UserProperties);
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
@@ -170,7 +170,7 @@ namespace mqtt2otel.Tests._30_SystemTests
             // Cleanup
 
             await mqttCoordinator.DisconnectAllBrokers();
-            mqttHelper.Dispose();
+            await JsonTestsFixture.mqttHelper.DisconnectClient();
 
             otelCoordinator.Dispose();
 

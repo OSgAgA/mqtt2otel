@@ -19,6 +19,7 @@ namespace mqtt2otel.Tests._30_SystemTests
         {
             using var mqttHelper = new MqttTestHelper();
             await mqttHelper.EnsureServerIsStarted();
+            await mqttHelper.ConnectClient();
 
             var yaml = """
                        Version: 1.0
@@ -113,6 +114,7 @@ namespace mqtt2otel.Tests._30_SystemTests
             Assert.Equal(1, count);
 
             await mqttCoordinator.DisconnectAllBrokers();
+            await mqttHelper.DisconnectClient();
         }
 
         [Fact]
@@ -120,6 +122,7 @@ namespace mqtt2otel.Tests._30_SystemTests
         {
             using var mqttHelper = new MqttTestHelper();
             await mqttHelper.EnsureServerIsStarted();
+            await mqttHelper.ConnectClient();
 
             var yaml = """
                        Version: 1.0
@@ -190,6 +193,7 @@ namespace mqtt2otel.Tests._30_SystemTests
             Assert.Equal(new DateTime(2026, 1, 31, 15, 42, 0), logEntry.Timestamp);
 
             await mqttCoordinator.DisconnectAllBrokers();
+            await mqttHelper.DisconnectClient();
         }
     }
 }

@@ -19,6 +19,8 @@ namespace mqtt2otel.Server.Helper
 
         public async Task EnsureServerIsStarted()
         {
+            if (this.mqttServer != null) return;
+
             var options = new MqttServerOptionsBuilder()
                 .WithDefaultEndpoint()
                 .WithDefaultEndpointPort(1883)
@@ -26,7 +28,10 @@ namespace mqtt2otel.Server.Helper
             mqttServer = new MqttServerFactory().CreateMqttServer(options);
             await mqttServer.StartAsync();
             await Task.Delay(100);
+        }
 
+        public async Task ConnectClient()
+        {
             mqttClient = new MqttClientFactory().CreateMqttClient();
 
             await mqttClient.ConnectAsync(
@@ -35,6 +40,14 @@ namespace mqtt2otel.Server.Helper
                       .Build());
 
             Assert.True(mqttClient.IsConnected);
+        }
+
+        public async Task DisconnectClient()
+        {
+            if (this.mqttClient == null) return;
+
+            await this.mqttClient.DisconnectAsync();
+            this.mqttClient.Dispose();
         }
 
         public async Task PublishPayload(string topic, string payload, List<UserProperty>? userProperties = null)
