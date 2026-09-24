@@ -10,7 +10,6 @@
 
   <PropertyGroup>
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
-    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
   
   <ItemGroup>
@@ -20,8 +19,7 @@
     <PackageReference Include="MQTTnet.Server" Version="5.2.0.1603" />
     <PackageReference Include="OpenTelemetry.Exporter.InMemory" Version="1.18.0" />
     <PackageReference Include="xunit.v3" Version="4.0.0" />
-    <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Version="2.4.1" />
-    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.19.1" />
+    <!--<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.19.1" />-->
   </ItemGroup>
 
   <ItemGroup>
