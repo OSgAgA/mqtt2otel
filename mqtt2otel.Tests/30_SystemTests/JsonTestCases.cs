@@ -172,6 +172,8 @@ namespace mqtt2otel.Tests._30_SystemTests
             await mqttCoordinator.DisconnectAllBrokers();
             mqttHelper.Dispose();
 
+            otelCoordinator.Dispose();
+
             this._output.WriteLine($"{DateTime.UtcNow}: Cleanup completed.");
 
             this._output.WriteLine($"{DateTime.UtcNow}: Test case with id '{testCase.Setup.Id}' completed.");
