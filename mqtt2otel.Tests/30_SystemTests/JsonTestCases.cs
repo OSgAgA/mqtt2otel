@@ -30,8 +30,8 @@ namespace mqtt2otel.Tests._30_SystemTests
         [MemberData(nameof(TestCaseData.LoadAllAsMemberdataTestIds), MemberType = typeof(TestCaseData))]
         public async Task ShouldPassAllJsonTestCases(string testCaseId)
         {
-            var mb = GC.GetTotalMemory(forceFullCollection: false) / (1024 * 1024);
-            Console.WriteLine($"[mem] after {testCaseId}: {mb} MB");
+            var mb = GC.GetTotalMemory(forceFullCollection: true) / (1024 * 1024);
+            Console.WriteLine($"[mem] before {testCaseId}: {mb} MB");
 
             TestCaseData testCase = TestCaseData.GetById(testCaseId);
 
