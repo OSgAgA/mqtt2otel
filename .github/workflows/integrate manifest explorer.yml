@@ -39,22 +39,27 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
-          restore-keys: nuget-${{ runner.os }}-
+          key: nuget-${{ runner.os }}-pr
+          restore-keys: |
+            nuget-${{ runner.os }}-
 
       # Restore nuget.
       - name: Restore
         run: dotnet restore
-
-      # Build the application.
-      - name: Build
-        run: dotnet build -c Release --no-restore -warnaserror
 
       # Identify all csproj files
       - name: List project files
         if: always()
         run: find . -iname "*.csproj"
 
+      # Build the manifest explorer.
+      - name: Build
+        run: dotnet build mqtt2otel.ManifestExplorer/mqtt2otel.ManifestExplorer/mqtt2otel.ManifestExplorer.csproj -c Release --no-restore -warnaserror
+
+      # Build the test project
+      - name: Build
+        run: dotnet build mqtt2otel.ManifestExplorer.Tests/mqtt2otel.ManifestExplorer.Tests.csproj -c Release --no-restore -warnaserror
+          
       # Installs the playwright browsers.
       - name: Install Playwright browsers
         run: pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium
@@ -62,15 +67,14 @@ jobs:
 
       # Run tests and generate TestResults file.
       - name: Test
-        run: dotnet test mqtt2otel.ManifestExplorer.Tests/mqtt2otel.ManifestExplorer.Tests.csproj  --configuration Release --no-build --report-xunit-ctrf --report-xunit-ctrf-filename "TestResults.json" 
-
-      # Upload test results as artifacts.
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: TestResults/TestResults.json
+        env:
+          OTEL_SERVICE_NAME: mqtt2otel-explorer-github-tests
+          OTEL_SERVICE_NAMESPACE: mqtt2otel-github
+          OTEL_EXPORTER_OTLP_ENDPOINT: https://ingress.europe-west4.gcp.dash0.com/
+          OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+          OTEL_EXPORTER_OTLP_HEADERS: Authorization=Bearer ${{ secrets.DASH0_TOKEN }},Dash0-Dataset=default
+        working-directory: mqtt2otel.ManifestExplorer.Tests/bin/Release/net10.0/
+        run: ./mqtt2otel.ManifestExplorer.Tests --report-gh
 
       # Identify where the playwright trace files have been written to.
       - name: List trace files

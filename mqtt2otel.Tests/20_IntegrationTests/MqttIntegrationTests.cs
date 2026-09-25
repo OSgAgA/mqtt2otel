@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Moq;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
@@ -26,6 +24,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
         {
             using var mqttHelper = new MqttTestHelper();
             await mqttHelper.EnsureServerIsStarted();
+            await mqttHelper.ConnectClient();
 
             var yaml = """
                        Version: 1.0
@@ -72,6 +71,8 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             Assert.Equal(payload, result?.Message.Payload);
             Assert.Equal("Temperature", result?.Subscription?.Name);
             Assert.Equal("Test processor", result?.Processor?.Name);
+
+            await mqttHelper.DisconnectClient();
         }
 
         [Fact]
@@ -79,6 +80,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
         {
             using var mqttHelper = new MqttTestHelper();
             await mqttHelper.EnsureServerIsStarted();
+            await mqttHelper.ConnectClient();
 
             var yaml = """
                        Version: 1.0
@@ -127,6 +129,8 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             Assert.Equal(payload, result.Message.Payload);
             Assert.Equal("Temperature", result?.Subscription?.Name);
             Assert.Equal("Test processor", result?.Processor?.Name);
+
+            await mqttHelper.DisconnectClient();
         }
 
         [Fact]
@@ -134,6 +138,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
         {
             using var mqttHelper = new MqttTestHelper();
             await mqttHelper.EnsureServerIsStarted();
+            await mqttHelper.ConnectClient();
 
             var yaml = """
                        Version: 1.0
@@ -186,6 +191,8 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             Assert.Equal(payload, result.Message.Payload);
             Assert.Equal("Temperature", result?.Subscription?.Name);
             Assert.Equal("Test processor", result?.Processor?.Name);
+
+            await mqttHelper.DisconnectClient();
         }
 
         [Fact]
@@ -193,6 +200,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
         {
             using var mqttHelper = new MqttTestHelper();
             await mqttHelper.EnsureServerIsStarted();
+            await mqttHelper.ConnectClient();
 
             var yaml = """
                        Version: 1.0
@@ -259,6 +267,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             Assert.Equal("Temperature", results[1]?.Subscription?.Name);
             Assert.Equal("Second processor", results[1]?.Processor?.Name);
 
+            await mqttHelper.DisconnectClient();
         }
     }
 }

@@ -38,6 +38,8 @@ namespace mqtt2otel.ManifestExplorer.Tests
         [MemberData(nameof(TestCaseData.LoadAllAsMemberdataTestIds), MemberType = typeof(TestCaseData))]
         public async Task ShouldSuccessfullyExecuteExample(string exampleId)
         {
+            this.CreateTraceOutput = ActionTrigger.Always;
+
             // Arrange  
             var testCase = TestCaseData.GetById(exampleId);
 

@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Moq;
 using mqtt2otel.Helper;
 using mqtt2otel.InternalMetrics;
@@ -19,7 +17,7 @@ using Xunit.Sdk;
 namespace mqtt2otel.Tests._30_SystemTests
 {
     [Collection("MQTT Tests")]
-    public class JsonTestCases
+    public class JsonTestCases : IClassFixture<JsonTestsFixture>
     {
         private readonly ITestOutputHelper _output;
 
@@ -28,10 +26,14 @@ namespace mqtt2otel.Tests._30_SystemTests
             _output = output;
         }
 
-        [Theory]
+        [Theory(DisplayName = "{method} ({args})")]
         [MemberData(nameof(TestCaseData.LoadAllAsMemberdataTestIds), MemberType = typeof(TestCaseData))]
         public async Task ShouldPassAllJsonTestCases(string testCaseId)
         {
+            // Let's keep this in, to track memory consumption. Can be removed if memory is tracked via otel.
+            var mb = GC.GetTotalMemory(forceFullCollection: false) / (1024 * 1024);
+            Console.WriteLine($"[mem] before {testCaseId}: {mb} MB");
+
             TestCaseData testCase = TestCaseData.GetById(testCaseId);
 
             var culture = new CultureInfo("en-US");
@@ -42,11 +44,11 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             // Arrange
 
+            if (JsonTestsFixture.mqttHelper != null) await JsonTestsFixture.mqttHelper.ConnectClient();
+
             var payloadParser = new PayloadParser();
             var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
-            using var mqttHelper = new MqttTestHelper();
-            await mqttHelper.EnsureServerIsStarted();
 
             var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
             var manifest = ManifestHelper.ReadManifestFromString(testCase.Setup.Manifest, dataStores, payloadParser, embeddedExpressionParser);
@@ -79,101 +81,107 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
             var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
-            var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
-            int tcsCount = 1;
-            int expectedCount = 1;
-            mqttCoordinator.OnMessageProcessed += (sender, args) =>
+
+            try
             {
-                if (expectedCount == tcsCount++) tcs.SetResult(args);
-            };
-
-            await mqttCoordinator.ConnectAndSubscribe(manifest);
-
-            var internalLogger = new Mock<ILogger<OtelCoordinator>>();
-            var exportBuilder = new OtelTestExporterBuilder();
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
-            otelCoordinator.Connect(manifest);
-
-            this._output.WriteLine($"{DateTime.UtcNow}: Arrange completed.");
-
-            // Act
-
-            await mqttHelper.PublishPayload(testCase.Setup.MqttData[0].Topic, testCase.Setup.MqttData[0].Payload, testCase.Setup.MqttData[0].UserProperties);
-
-            var completedTask = await Task.WhenAny(
-                               tcs.Task,
-                               Task.Delay(1000, TestContext.Current.CancellationToken));
-
-            Assert.True(completedTask == tcs.Task, "Callback was not triggered");
-
-            otelCoordinator.FlushMeters();
-
-            this._output.WriteLine($"{DateTime.UtcNow}: Act completed.");
-
-            // Assert
-            // Metrics
-
-            AssertEqual(testCase.ExpectedResults[0].Metrics.Count, exportBuilder.GetAllMetrics().Count(), "metrics.count");
-
-            var metrics = exportBuilder.GetAllMetrics().Select(keyValue => keyValue.Value).ToList();
-
-            int i = 0;
-            foreach (var expectedMetric in testCase.ExpectedResults[0].Metrics)
-            {
-                var metric = metrics[i++];
-
-                AssertEqual(expectedMetric.Name, metric.Name, "Metric.Name");
-                AssertEqual(expectedMetric.MetricType, metric.MetricType, "Metric.Type");
-                AssertEqual(expectedMetric.Unit, metric.Unit, "Metric.Unit");
-                AssertEqual(expectedMetric.Description, metric.Description, "Metric.Description");
-
-                int count = 0;
-                foreach (var metricPoint in metric.GetMetricPoints())
+                var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
+                int tcsCount = 1;
+                int expectedCount = 1;
+                mqttCoordinator.OnMessageProcessed += (sender, args) =>
                 {
-                    Assert.True(expectedMetric.MetricPoints.Count > count);
-                    var expectedPoint = expectedMetric.MetricPoints[count++];
-                    count++;
-                    AssertEqual(expectedPoint.Value.ToString(), metricPoint.GetValueAsObject(metric.MetricType).ToString(), "MetricPoint.Value");
-                    AssertEqual(expectedPoint.Tags.Count, metricPoint.Tags.Count, "tags.count");
+                    if (expectedCount == tcsCount++) tcs.SetResult(args);
+                };
 
-                    foreach (var tag in metricPoint.Tags)
+                await mqttCoordinator.ConnectAndSubscribe(manifest);
+
+                var internalLogger = new Mock<ILogger<OtelCoordinator>>();
+                var exportBuilder = new OtelTestExporterBuilder();
+                using var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
+                otelCoordinator.Connect(manifest);
+
+                this._output.WriteLine($"{DateTime.UtcNow}: Arrange completed.");
+
+                // Act
+
+                await JsonTestsFixture.mqttHelper!.PublishPayload(testCase.Setup.MqttData[0].Topic, testCase.Setup.MqttData[0].Payload, testCase.Setup.MqttData[0].UserProperties);
+
+                var completedTask = await Task.WhenAny(
+                                   tcs.Task,
+                                   Task.Delay(1000, TestContext.Current.CancellationToken));
+
+                Assert.True(completedTask == tcs.Task, "Callback was not triggered");
+
+                otelCoordinator.FlushMeters();
+
+                this._output.WriteLine($"{DateTime.UtcNow}: Act completed.");
+
+                // Assert
+                // Metrics
+
+                AssertEqual(testCase.ExpectedResults[0].Metrics.Count, exportBuilder.GetAllMetrics().Count(), "metrics.count");
+
+                var metrics = exportBuilder.GetAllMetrics().Select(keyValue => keyValue.Value).ToList();
+
+                int i = 0;
+                foreach (var expectedMetric in testCase.ExpectedResults[0].Metrics)
+                {
+                    var metric = metrics[i++];
+
+                    AssertEqual(expectedMetric.Name, metric.Name, "Metric.Name");
+                    AssertEqual(expectedMetric.MetricType, metric.MetricType, "Metric.Type");
+                    AssertEqual(expectedMetric.Unit, metric.Unit, "Metric.Unit");
+                    AssertEqual(expectedMetric.Description, metric.Description, "Metric.Description");
+
+                    int count = 0;
+                    foreach (var metricPoint in metric.GetMetricPoints())
                     {
-                        Assert.True(expectedPoint.Tags.ContainsKey(tag.Key));
-                        AssertEqual(expectedPoint.Tags[tag.Key]?.ToString(), tag.Value?.ToString(), $"Tag.Value for key {tag.Key}");
+                        Assert.True(expectedMetric.MetricPoints.Count > count);
+                        var expectedPoint = expectedMetric.MetricPoints[count++];
+                        count++;
+                        AssertEqual(expectedPoint.Value.ToString(), metricPoint.GetValueAsObject(metric.MetricType).ToString(), "MetricPoint.Value");
+                        AssertEqual(expectedPoint.Tags.Count, metricPoint.Tags.Count, "tags.count");
+
+                        foreach (var tag in metricPoint.Tags)
+                        {
+                            Assert.True(expectedPoint.Tags.ContainsKey(tag.Key));
+                            AssertEqual(expectedPoint.Tags[tag.Key]?.ToString(), tag.Value?.ToString(), $"Tag.Value for key {tag.Key}");
+                        }
                     }
+
+                    AssertEqual(expectedMetric.MetricPoints.Count + 1, count, "metricPoints.Count+1");
                 }
 
-                AssertEqual(expectedMetric.MetricPoints.Count + 1, count, "metricPoints.Count+1");
+                this._output.WriteLine($"{DateTime.UtcNow}: Assert metrics completed.");
+
+                // Logs
+
+                AssertEqual(testCase.ExpectedResults[0].Logs.Count, exportBuilder.GetAllLogs().Count(), "Logs.Count");
+
+                var logs = exportBuilder.GetAllLogs().Select(keyValue => keyValue.Value).ToList();
+
+                int logCount = 0;
+                foreach (var expectedLogEntry in testCase.ExpectedResults[0].Logs)
+                {
+                    Assert.True(exportBuilder.GetAllLogs().Count() > logCount);
+                    var logEntry = logs[logCount++];
+                    AssertEqual(expectedLogEntry.Body, logEntry.Body, "LogEntry.Body");
+                    AssertEqual(expectedLogEntry.LogLevel, logEntry.LogLevel, "LogEntry.LogLevel");
+                    AssertEqual(expectedLogEntry.Timestamp, logEntry.Timestamp, "LogLevel.Timestamp");
+                }
+
+                this._output.WriteLine($"{DateTime.UtcNow}: Assert logs completed.");
             }
-
-            this._output.WriteLine($"{DateTime.UtcNow}: Assert metrics completed.");
-
-            // Logs
-
-            AssertEqual(testCase.ExpectedResults[0].Logs.Count, exportBuilder.GetAllLogs().Count(), "Logs.Count");
-
-            var logs = exportBuilder.GetAllLogs().Select(keyValue => keyValue.Value).ToList();
-
-            int logCount = 0;
-            foreach (var expectedLogEntry in testCase.ExpectedResults[0].Logs)
+            finally
             {
-                Assert.True(exportBuilder.GetAllLogs().Count() > logCount);
-                var logEntry = logs[logCount++];
-                AssertEqual(expectedLogEntry.Body, logEntry.Body, "LogEntry.Body");
-                AssertEqual(expectedLogEntry.LogLevel, logEntry.LogLevel, "LogEntry.LogLevel");
-                AssertEqual(expectedLogEntry.Timestamp, logEntry.Timestamp, "LogLevel.Timestamp");
+                // Cleanup
+
+                await mqttCoordinator.DisconnectAllBrokers();
+                if (JsonTestsFixture.mqttHelper != null) await JsonTestsFixture.mqttHelper.DisconnectClient();
+
+                this._output.WriteLine($"{DateTime.UtcNow}: Cleanup completed.");
+
+                this._output.WriteLine($"{DateTime.UtcNow}: Test case with id '{testCase.Setup.Id}' completed.");
             }
-
-            this._output.WriteLine($"{DateTime.UtcNow}: Assert logs completed.");
-
-            // Cleanup
-
-            await mqttCoordinator.DisconnectAllBrokers();
-            mqttHelper.Dispose();
-
-            this._output.WriteLine($"{DateTime.UtcNow}: Cleanup completed.");
-
-            this._output.WriteLine($"{DateTime.UtcNow}: Test case with id '{testCase.Setup.Id}' completed.");
         }
 
         /// <summary>

@@ -74,8 +74,8 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// <returns>The created context options.</returns>
         public override BrowserNewContextOptions ContextOptions()
         {
-            int width = 2500;
-            int height = 1300;
+            int width = 1600;
+            int height = 1200;
 
             var options = new BrowserNewContextOptions()
             {

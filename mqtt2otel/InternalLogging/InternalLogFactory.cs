@@ -87,6 +87,8 @@ namespace mqtt2otel.InternalLogging
                 });
             });
 
+            if (tracerProvider != null) tracerProvider.Dispose();
+
             InternalLogFactory.tracerProvider = Sdk.CreateTracerProviderBuilder()
                 .AddSource(InternalLogFactory.MainActivitySource.Name)
                 .SetSampler(new TraceIdRatioBasedSampler(settings.TraceSamplingRatio))

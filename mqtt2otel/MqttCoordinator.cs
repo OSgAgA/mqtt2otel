@@ -158,6 +158,7 @@ namespace mqtt2otel
                         this.mqttMeter.SubscriptionsCount.Record(0, tags);
 
                         await this.mqttClient[broker.Name].DisconnectAsync();
+                        this.mqttClient[broker.Name].Dispose();
                         this.internalLogger.LogInformation($"Disconnected from broker: {broker.Name}");
                     }
                     catch (Exception ex)
@@ -166,6 +167,8 @@ namespace mqtt2otel
                     }
                 }
             }
+
+            this.mqttClient.Clear();
 
             this.subscriptionCount = 0;
             this.mqttMeter.SubscriptionsCount.Record(0);
