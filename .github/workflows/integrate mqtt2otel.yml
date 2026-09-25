@@ -64,7 +64,8 @@ jobs:
       - name: Test
         env:
           OTEL_SERVICE_NAME: mqtt2otel-github-tests
-          OTEL_EXPORTER_OTLP_ENDPOINT: https://ingress.europe-west4.gcp.dash0.com/v1/metrics
+          OTEL_SERVICE_NAMESPACE: mqtt2otel-github
+          OTEL_EXPORTER_OTLP_ENDPOINT: https://ingress.europe-west4.gcp.dash0.com/
           OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
           OTEL_EXPORTER_OTLP_HEADERS: Authorization=Bearer ${{ secrets.DASH0_TOKEN }},Dash0-Dataset=default
         working-directory: mqtt2otel.Tests/bin/Release/net10.0/

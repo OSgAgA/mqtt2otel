@@ -67,6 +67,12 @@ jobs:
 
       # Run tests and generate TestResults file.
       - name: Test
+        env:
+          OTEL_SERVICE_NAME: mqtt2otel-explorer-github-tests
+          OTEL_SERVICE_NAMESPACE: mqtt2otel-github
+          OTEL_EXPORTER_OTLP_ENDPOINT: https://ingress.europe-west4.gcp.dash0.com/
+          OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+          OTEL_EXPORTER_OTLP_HEADERS: Authorization=Bearer ${{ secrets.DASH0_TOKEN }},Dash0-Dataset=default
         working-directory: mqtt2otel.ManifestExplorer.Tests/bin/Release/net10.0/
         run: ./mqtt2otel.ManifestExplorer.Tests --report-gh
 
