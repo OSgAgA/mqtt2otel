@@ -28,6 +28,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TestingPlatformBuilderHook Include="036c3204-36ab-4d91-ad8a-27e8fe58e823">
+      <DisplayName>Otel.Extension</DisplayName>
+      <TypeFullName>mqtt2otel.Tests.Extensions.OtelExtensionBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 
