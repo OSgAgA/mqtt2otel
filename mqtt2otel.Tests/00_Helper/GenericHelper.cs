@@ -18,7 +18,7 @@ namespace mqtt2otel.Tests.Helper
         /// Gets an empty <see cref="DataStores"/> object.
         /// </summary>
         /// <returns>The created data stores.</returns>
-        public static DataStores GetDataStores(PayloadParser? payloadParser = null, EmbeddedExpressionParser? embeddedExpressionParser = null)
+        public static DataStores GetDataStores(PayloadParser? payloadParser, EmbeddedExpressionParser? embeddedExpressionParser)
         {
             if (payloadParser == null)
             {

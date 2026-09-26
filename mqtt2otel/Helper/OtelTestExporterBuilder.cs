@@ -60,6 +60,8 @@ namespace mqtt2otel.Helper
         /// <returns>The key value pairs.</returns>
         public IEnumerable<ConnectionValue<Metric>> GetAllMetrics()
         {
+            Task.Delay(10);  // Ensure, that all metrics have been processed.
+
             foreach (var keyValue in this.Metrics)
             {
                 var connection = keyValue.Key;
@@ -72,7 +74,7 @@ namespace mqtt2otel.Helper
         }
 
         /// <summary>
-        /// Gets all metrics as key value pairs consisting of the connection name as key and the metric as the value.
+        /// Gets all logs as key value pairs consisting of the connection name as key and the log entry as the value.
         /// </summary>
         /// <returns>The key value pairs.</returns>
         public IEnumerable<ConnectionValue<LogRecord>> GetAllLogs()

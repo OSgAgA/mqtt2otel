@@ -120,13 +120,13 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             ILogger<OtelCoordinator> otelLogger = new Logger<OtelCoordinator>(new LoggerFactory());
             var exportBuilder = new OtelTestExporterBuilder();
-            using var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
-            otel.Connect(manifest);
+            using (var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings()))
+            {
+                otel.Connect(manifest);
 
-            var message = new MqttMessage(subscriptionId: 0, topic: request.MqttData[0].Topic, payload: request.MqttData[0].Payload, userProperties: request.MqttData[0].UserProperties);
-            bool success = await mqtt.SimulateOnMqttMessageReceived(message);
-
-            otel.FlushMeters();
+                var message = new MqttMessage(subscriptionId: 0, topic: request.MqttData[0].Topic, payload: request.MqttData[0].Payload, userProperties: request.MqttData[0].UserProperties);
+                bool success = await mqtt.SimulateOnMqttMessageReceived(message);
+            }
 
             if (processorErrors.Any())
             {

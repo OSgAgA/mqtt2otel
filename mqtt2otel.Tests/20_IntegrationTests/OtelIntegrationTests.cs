@@ -53,19 +53,20 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             manifest.Initialize();
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
-            var dataStores = GenericHelper.GetDataStores();
-            var exportBuilder = new OtelTestExporterBuilder();
             var payloadParser = new PayloadParser();
             var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
-            otelCoordinator.Connect(manifest);
+            var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
+            var exportBuilder = new OtelTestExporterBuilder();
 
-            var subscription = manifest.Processors[0].Mqtt.Subscriptions[0];
-            var rule = manifest.Processors[0].Otel.Metrics[0];
-            GenericHelper.WriteMetricToSignalStore<double>(subscription, rule, rule.Name, dataStores.SignalStore, 42.0);
+            using (var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings()))
+            {
+                otelCoordinator.Connect(manifest);
 
-            otelCoordinator.FlushMeters();
+                var subscription = manifest.Processors[0].Mqtt.Subscriptions[0];
+                var rule = manifest.Processors[0].Otel.Metrics[0];
+                GenericHelper.WriteMetricToSignalStore<double>(subscription, rule, rule.Name, dataStores.SignalStore, 42.0);
+            }
 
             var metrics = exportBuilder.GetAllMetrics().Select( keyValue => keyValue.Value ).ToList();
 
@@ -127,12 +128,13 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             manifest.Initialize();
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
-            var dataStores = GenericHelper.GetDataStores();
-            var exportBuilder = new OtelTestExporterBuilder();
             var payloadParser = new PayloadParser();
             var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
+            var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
+            var exportBuilder = new OtelTestExporterBuilder();
+
+            using var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
             otelCoordinator.Connect(manifest);
 
             var logRule = manifest.Processors[0].Otel.Logs[0];
@@ -181,12 +183,13 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             manifest.Initialize();
 
             var internalLogger = new Mock<ILogger<OtelCoordinator>>();
-            var dataStores = GenericHelper.GetDataStores();
-            var exportBuilder = new OtelTestExporterBuilder();
             var payloadParser = new PayloadParser();
             var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
-            var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
+            var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
+            var exportBuilder = new OtelTestExporterBuilder();
+
+            using var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
             otelCoordinator.Connect(manifest);
 
             var logRule = manifest.Processors[0].Otel.Logs[0];
