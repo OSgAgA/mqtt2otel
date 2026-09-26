@@ -109,7 +109,6 @@ namespace mqtt2otel
             if (this.mqttCoordinator != null) this.mqttCoordinator.DisconnectAllBrokers().Wait();
             if (this.otelCoordinator != null)
             {
-                this.otelCoordinator.FlushMeters();
                 this.otelCoordinator.Dispose();
             }
         }

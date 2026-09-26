@@ -49,7 +49,6 @@ namespace mqtt2otel.Tests._30_SystemTests
             var payloadParser = new PayloadParser();
             var embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
-
             var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
             var manifest = ManifestHelper.ReadManifestFromString(testCase.Setup.Manifest, dataStores, payloadParser, embeddedExpressionParser);
             payloadParser.SetMappings(manifest.Mappings);
@@ -96,22 +95,24 @@ namespace mqtt2otel.Tests._30_SystemTests
 
                 var internalLogger = new Mock<ILogger<OtelCoordinator>>();
                 var exportBuilder = new OtelTestExporterBuilder();
-                using var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
-                otelCoordinator.Connect(manifest);
+                using (var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings()))
+                {
+                    ;
+                    otelCoordinator.Connect(manifest);
 
-                this._output.WriteLine($"{DateTime.UtcNow}: Arrange completed.");
+                    this._output.WriteLine($"{DateTime.UtcNow}: Arrange completed.");
 
-                // Act
+                    // Act
 
-                await JsonTestsFixture.mqttHelper!.PublishPayload(testCase.Setup.MqttData[0].Topic, testCase.Setup.MqttData[0].Payload, testCase.Setup.MqttData[0].UserProperties);
+                    await JsonTestsFixture.mqttHelper!.PublishPayload(testCase.Setup.MqttData[0].Topic, testCase.Setup.MqttData[0].Payload, testCase.Setup.MqttData[0].UserProperties);
 
-                var completedTask = await Task.WhenAny(
-                                   tcs.Task,
-                                   Task.Delay(1000, TestContext.Current.CancellationToken));
+                    var completedTask = await Task.WhenAny(
+                                       tcs.Task,
+                                       Task.Delay(1000, TestContext.Current.CancellationToken));
 
-                Assert.True(completedTask == tcs.Task, "Callback was not triggered");
+                    Assert.True(completedTask == tcs.Task, "Callback was not triggered");
 
-                otelCoordinator.FlushMeters();
+                }
 
                 this._output.WriteLine($"{DateTime.UtcNow}: Act completed.");
 
