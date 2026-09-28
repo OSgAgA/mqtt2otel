@@ -97,7 +97,6 @@ namespace mqtt2otel.Tests._30_SystemTests
                 var exportBuilder = new OtelTestExporterBuilder();
                 using (var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings()))
                 {
-                    ;
                     otelCoordinator.Connect(manifest);
 
                     this._output.WriteLine($"{DateTime.UtcNow}: Arrange completed.");
@@ -111,7 +110,6 @@ namespace mqtt2otel.Tests._30_SystemTests
                                        Task.Delay(1000, TestContext.Current.CancellationToken));
 
                     Assert.True(completedTask == tcs.Task, "Callback was not triggered");
-
                 }
 
                 this._output.WriteLine($"{DateTime.UtcNow}: Act completed.");

@@ -505,7 +505,6 @@ namespace mqtt2otel
         public void Dispose()
         {
             this.otelMeter.Connections.Record(0);
-            //this.FlushMeters();
 
             if (this.otelMeterFactory != null) this.otelMeterFactory.DisposeMeters();
 
