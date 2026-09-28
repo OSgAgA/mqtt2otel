@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Options;
-using mqtt2otel.ManifestExplorer.Client.Pages;
 using mqtt2otel.ManifestExplorer.Components;
 using mqtt2otel.ManifestExplorer.Meters;
 using mqtt2otel.ManifestExplorer.Services;
@@ -85,8 +84,8 @@ namespace mqtt2otel.ManifestExplorer
             app.MapControllers();
             app.MapRazorComponents<App>()
                 //.AddInteractiveWebAssemblyRenderMode()
-                .AddInteractiveServerRenderMode()
-                .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
+                .AddInteractiveServerRenderMode();
+                //.AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
 
             app.Run();
         }
