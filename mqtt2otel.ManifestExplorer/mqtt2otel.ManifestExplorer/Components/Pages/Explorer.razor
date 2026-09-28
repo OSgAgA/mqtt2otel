@@ -18,22 +18,19 @@
 
 <PageTitle>mqtt2otel manifest explorer</PageTitle>
 
-<div class="flex-container">
+<div class="container-fluid">
 
     <CreateJsonDialog @ref="modal" Data="@this.Data" Result="@this.Result" />
 
-    <div class="row">
-        <div class="col">
+    <div class="row g-4">
+        <div class="col-5">
             <h3 style="text-align: center;">MQTT</h3>
 
             <MqttInput Data="this.Data.Setup" />
             <ExampleLinksViewer Data="this.Data"/>
         </div>
 
-        <div class="col-auto d-flex align-items-center hide-on-mobile">
-        </div>
-
-        <div class="col">
+        <div class="col-7">
             <h3 class="add-top-margin-on-mobile" style="text-align: center;">mqtt2otel</h3>
 
             <ManifestEditor @ref="@this.manifestEditor" InitialText="@this.Data.Setup.Manifest"/>
