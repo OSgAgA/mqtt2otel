@@ -67,11 +67,12 @@ namespace mqtt2otel
         /// <summary>
         /// Gets an existing meter, or creates a new one if the meter does not exist.
         /// </summary>
-        /// <param name="metric">The metric for which the meter should be provided.</param>
+        /// <param name="otelConnection">The otel connection.</param>
+        /// <param name="otelScope">The otel scope.</param>
         /// <returns>The existing or newly created meter.</returns>
-        public System.Diagnostics.Metrics.Meter GetOrCreateMeter(OtelMetricRule metric)
+        public System.Diagnostics.Metrics.Meter GetOrCreateMeter(string? otelConnection, string? otelScope)
         {
-            string connectionName = metric.OtelConnection ?? "unknown connection";
+            string connectionName = otelConnection ?? "unknown connection";
 
             var defaultTags = new List<OtelAttribute>();
             if (this.majorVersion != null) defaultTags.Add(new OtelAttribute("mqtt2otel.version.major", majorVersion));
@@ -82,7 +83,7 @@ namespace mqtt2otel
                 this.meters[connectionName] = new Dictionary<string, System.Diagnostics.Metrics.Meter>();
             }
 
-            if (metric.OtelScope == null && !this.connectionToDefaultMapping.ContainsKey(connectionName))
+            if (otelScope == null && !this.connectionToDefaultMapping.ContainsKey(connectionName))
             {
                 var query = this.meterInfo.Where(info => info.OtelConnection == connectionName);
 
@@ -105,7 +106,7 @@ namespace mqtt2otel
                 }
             }
 
-            string meterName = metric.OtelScope ?? this.connectionToDefaultMapping[connectionName];
+            string meterName = otelScope ?? this.connectionToDefaultMapping[connectionName];
 
             // If meter cannot be found, create a new meter.
             if (!this.meters[connectionName].ContainsKey(meterName))

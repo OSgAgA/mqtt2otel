@@ -65,7 +65,13 @@ namespace mqtt2otel.Tests._20_IntegrationTests
 
                 var subscription = manifest.Processors[0].Mqtt.Subscriptions[0];
                 var rule = manifest.Processors[0].Otel.Metrics[0];
-                GenericHelper.WriteMetricToSignalStore<double>(subscription, rule, rule.Name, dataStores.SignalStore, 42.0);
+
+                var measurement = OtelMeasurement.FromRule(rule, payloadParser, embeddedExpressionParser, ParsingContext.CreateEmpty());
+                measurement.Attributes = rule.Attributes;
+
+                measurement.Value = 42.0;
+
+                dataStores.SignalStore.UpdateValue<double>(measurement, ParsingContext.CreateEmpty());
             }
 
             var metrics = exportBuilder.GetAllMetrics().Select( keyValue => keyValue.Value ).ToList();

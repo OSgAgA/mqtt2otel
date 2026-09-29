@@ -220,10 +220,8 @@ The following metrics will be provided:
   	<td>&micro;s</td>
   	<td>
       subscription.name<br/>
-      subscription.id<br/>
       subscription.connection<br/>
       processor.name<br/>
-      processor.id<br/>
       processor.otel.connection<br/>
     </td>
   	<td>The total duration of processing all metric and otel rules of a single processor.</td>
@@ -235,13 +233,10 @@ The following metrics will be provided:
   	<td>&micro;s</td>
   	<td>
       subscription.name<br/>
-      subscription.id<br/>
       subscription.connection<br/>
       processor.name<br/>
-      processor.id<br/>
       processor.otel.connection<br/>
       rule.name<br/>
-      rule.id<br/>
       rule.connection<br/>
       rule.instrument<br/>
     </td>
@@ -254,13 +249,10 @@ The following metrics will be provided:
   	<td>&micro;s</td>
   	<td>
       subscription.name<br/>
-      subscription.id<br/>
       subscription.connection<br/>
       processor.name<br/>
-      processor.id<br/>
       processor.otel.connection<br/>
       rule.name<br/>
-      rule.id<br/>
       rule.connection<br/>
       rule.instrument<br/>
       rule.category<br/>
@@ -275,10 +267,8 @@ The following metrics will be provided:
   	<td></td>
   	<td>
       subscription.name<br/>
-      subscription.id<br/>
       subscription.connection<br/>
       processor.name<br/>
-      processor.id<br/>
       processor.otel.connection<br/>
     </td>
   	<td>A counter for measuring the amount of errors, that appeared while processing incoming data.</td>
@@ -290,13 +280,10 @@ The following metrics will be provided:
   	<td></td>
   	<td>
       subscription.name<br/>
-      subscription.id<br/>
       subscription.connection<br/>
       processor.name<br/>
-      processor.id<br/>
       processor.otel.connection<br/>
       rule.name<br/>
-      rule.id<br/>
       rule.connection<br/>
       rule.category<br/>
       rule.payload_type<br/>
@@ -310,13 +297,10 @@ The following metrics will be provided:
   	<td></td>
   	<td>
       subscription.name<br/>
-      subscription.id<br/>
       subscription.connection<br/>
       processor.name<br/>
-      processor.id<br/>
       processor.otel.connection<br/>
       rule.name<br/>
-      rule.id<br/>
       rule.connection<br/>
       rule.instrument<br/>
     </td>

@@ -12,6 +12,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Text;
 using System.Xml.Linq;
+using YamlDotNet.Core.Tokens;
 
 namespace mqtt2otel.Manifest
 {
@@ -124,10 +125,8 @@ namespace mqtt2otel.Manifest
 
             var tags = new TagList();
             tags.Add("subscription.name", subscription.Name);
-            tags.Add("subscription.id", subscription.Id);
             tags.Add("subscription.connection", subscription.BrokerConnection);
             tags.Add("processor.name", this.Name);
-            tags.Add("processor.id", this.Id);
             tags.Add("processor.otel.connection", this.OtelConnection);
 
             var sw = new Stopwatch();
@@ -181,13 +180,10 @@ namespace mqtt2otel.Manifest
 
                     var tags = new TagList();
                     tags.Add("processor.name", this.Name);
-                    tags.Add("processor.id", this.Id);
                     tags.Add("processor.otel.connection", this.OtelConnection);
                     tags.Add("subscription.name", subscription.Name);
-                    tags.Add("subscription.id", subscription.Id);
                     tags.Add("subscription.connection", subscription.BrokerConnection);
                     tags.Add("rule.name", rule.Name);
-                    tags.Add("rule.id", rule.Id);
                     tags.Add("rule.connection", rule.OtelConnection);
                     tags.Add("rule.instrument", rule.Instrument);
                     this.processorMeter.ProcessingTimeMetricRule.Record(sw.ElapsedMicroseconds, tags);
@@ -248,13 +244,10 @@ namespace mqtt2otel.Manifest
 
                     var tags = new TagList();
                     tags.Add("processor.name", this.Name);
-                    tags.Add("processor.id", this.Id);
                     tags.Add("processor.otel.connection", this.OtelConnection);
                     tags.Add("subscription.name", subscription.Name);
-                    tags.Add("subscription.id", subscription.Id);
                     tags.Add("subscription.connection", subscription.BrokerConnection);
                     tags.Add("rule.name", rule.Name);
-                    tags.Add("rule.id", rule.Id);
                     tags.Add("rule.connection", rule.OtelConnection);
                     tags.Add("rule.category", rule.CategoryName);
                     tags.Add("rule.payload_type", rule.PayloadType);
@@ -298,18 +291,20 @@ namespace mqtt2otel.Manifest
 
             IEnumerable<OtelAttribute> expandedAttributes = this.embeddedExpressionParser.Expand(combinedAttributes, variables, message);
 
+
             try
             {
                 var context = new ParsingContext(variables, message);
+
+                var measurement = OtelMeasurement.FromRule(rule, this.payloadParser, this.embeddedExpressionParser, context);
+                measurement.Attributes = expandedAttributes;
 
                 Dictionary<string, object?> valueData = new();
 
                 switch (rule.ParseAs.Type)
                 {
                     case ParseAsOptions.Undefined:
-                        string name = this.embeddedExpressionParser.Expand(rule.Name, context);
-                        SignalDataType type = rule.SignalDataType;
-                        valueData[name] = null;
+                        valueData[measurement.SignalName] = null;
                         break;
                     case ParseAsOptions.Json:
                         valueData = JsonFlattener.Flatten(message.Payload, rule.ParseAs.Separator, rule.ParseAs.NameOnly);
@@ -323,7 +318,10 @@ namespace mqtt2otel.Manifest
 
                 foreach (var item in valueData)
                 {
-                    CallUpdateSignalStoreValueWithType(subscription, rule, item.Key, rule.SignalDataType, item.Value, context, expandedAttributes);
+                    var newMeasurement = measurement.Clone();
+                    newMeasurement.SignalName = item.Key;
+                    newMeasurement.Value = item.Value;
+                    CallUpdateSignalStoreValueWithType(subscription, rule, newMeasurement, context);
                 }
             }
             catch (ExpressionParsingException ex)
@@ -342,50 +340,42 @@ namespace mqtt2otel.Manifest
         /// <typeparam name="T">The type of the value inside the store.</typeparam>
         /// <param name="subscription">The subscription that generated the message from which the signal is received.</param>
         /// <param name="rule">The otel metric rule that should be applied.</param>
-        /// <param name="name">The instrument name.</param>
-        /// <param name="type">The signal type.</param>
-        /// <param name="value">The value that should be stored. If null the rule value will be used.</param>
+        /// <param name="measurement">The measuremet to be send to the signal store..</param>
         /// <param name="context">The current parsing context..</param>
-        /// <param name="expandedAttributes">The attributes to be applied to the value.</param>
-        private void CallUpdateSignalStoreValueWithType(MqttSubscription subscription, OtelMetricRule rule, string name, SignalDataType type, object? value, ParsingContext context, IEnumerable<OtelAttribute> expandedAttributes)
+        private void CallUpdateSignalStoreValueWithType(MqttSubscription subscription, OtelMetricRule rule, OtelMeasurement measurement, ParsingContext context)
         {
-            switch (type)
+            switch (rule.SignalDataType)
             {
                 case SignalDataType.Default:
-                    object objValue = value != null ? value : this.payloadParser.Parse(rule.Name, rule.Value, context);
-                    UpdateSignalStoreValue( subscription, rule, name, type, objValue, context, expandedAttributes );
+                    measurement.Value = measurement.Value != null ? measurement.Value : this.payloadParser.Parse(rule.Name, rule.Value, context);
                     break;
                 case SignalDataType.Float:
-                    float floatValue = value != null ? Convert.ToSingle(value) : this.payloadParser.Parse<float>(rule.Name, rule.Value, context);
-                    UpdateSignalStoreValue(subscription, rule, name, type, floatValue, context, expandedAttributes);
+                    measurement.Value = measurement.Value != null ? Convert.ToSingle(measurement.Value) : this.payloadParser.Parse<float>(rule.Name, rule.Value, context);
                     break;
                 case SignalDataType.Int:
-                    int intValue = value != null ? TypeHelper.ConvertObject<int>(value) : this.payloadParser.Parse<int>(rule.Name, rule.Value, context);
-                    UpdateSignalStoreValue(subscription, rule, name, type, intValue, context, expandedAttributes);
+                    measurement.Value = measurement.Value != null ? TypeHelper.ConvertObject<int>(measurement.Value) : this.payloadParser.Parse<int>(rule.Name, rule.Value, context);
                     break;
                 case SignalDataType.Double:
-                    double doubleValue = value != null ? Convert.ToDouble(value) : this.payloadParser.Parse<double>(rule.Name, rule.Value, context);
-                    UpdateSignalStoreValue(subscription, rule, name, type, doubleValue, context, expandedAttributes);
+                    measurement.Value = measurement.Value != null ? Convert.ToDouble(measurement.Value) : this.payloadParser.Parse<double>(rule.Name, rule.Value, context);
                     break;
                 case SignalDataType.Long:
-                    long longValue = value != null ? Convert.ToInt64(value) : this.payloadParser.Parse<long>(rule.Name, rule.Value, context);
-                    UpdateSignalStoreValue(subscription, rule, name, type, longValue, context, expandedAttributes);
+                    measurement.Value = measurement.Value != null ? Convert.ToInt64(measurement.Value) : this.payloadParser.Parse<long>(rule.Name, rule.Value, context);
                     break;
                 case SignalDataType.Decimal:
-                    decimal decimalValue = value != null ? Convert.ToDecimal(value) : this.payloadParser.Parse<decimal>(rule.Name, rule.Value, context);
-                    UpdateSignalStoreValue(subscription, rule, name, type, decimalValue, context, expandedAttributes);
+                    measurement.Value = measurement.Value != null ? Convert.ToDecimal(measurement.Value) : this.payloadParser.Parse<decimal>(rule.Name, rule.Value, context);
                     break;
                 case SignalDataType.String:
-                    string stringValue = value != null ? (value.ToString() ?? string.Empty) : this.payloadParser.Parse<string>(rule.Name, rule.Value, context);
-                    UpdateSignalStoreValue(subscription, rule, name, type, stringValue, context, expandedAttributes);
+                    measurement.Value = measurement.Value != null ? (measurement.Value.ToString() ?? string.Empty) : this.payloadParser.Parse<string>(rule.Name, rule.Value, context);
                     break;
                 case SignalDataType.DateTime:
-                    DateTime dateTimeValue = value != null ? (DateTime)value : this.payloadParser.Parse<DateTime>(rule.Name, rule.Value, context);
-                    UpdateSignalStoreValue(subscription, rule, name, type, dateTimeValue, context, expandedAttributes);
+                    measurement.Value = measurement.Value != null ? (DateTime)measurement.Value : this.payloadParser.Parse<DateTime>(rule.Name, rule.Value, context);
                     break;
                 default:
                     throw new ExpressionParsingException(new Exception(), rule.Name, $"Signal type {rule.SignalDataType} not supported.");
             }
+
+            this.UpdateSignalStoreValue(subscription, rule, measurement, context);
+
         }
 
         /// <summary>
@@ -394,12 +384,9 @@ namespace mqtt2otel.Manifest
         /// <typeparam name="T">The type of the value inside the store.</typeparam>
         /// <param name="subscription">The subscription that generated the message from which the signal is received.</param>
         /// <param name="rule">The otel metric rule that should be applied.</param>
-        /// <param name="instrumentName">The instrument name.</param>
-        /// <param name="signalType">The signal type.</param>
-        /// <param name="value">The value that should be stored.</param>
+        /// <param name="measurement">The measuremet to be send to the signal store..</param>
         /// <param name="context">The current parsing context..</param>
-        /// <param name="expandedAttributes">The attributes to be applied to the value.</param>
-        private void UpdateSignalStoreValue(MqttSubscription subscription, OtelMetricRule rule, string instrumentName, SignalDataType signalType, object value, ParsingContext context, IEnumerable<OtelAttribute> expandedAttributes)
+        private void UpdateSignalStoreValue(MqttSubscription subscription, OtelMetricRule rule, OtelMeasurement measurement, ParsingContext context)
         {
             bool ignore = false;
 
@@ -407,9 +394,9 @@ namespace mqtt2otel.Manifest
             foreach (var action in rule.Actions)
             {
                 var actionContext = context.Clone();
-                actionContext.InternalVariables["Name"] = instrumentName;
-                actionContext.InternalVariables["Value"] = value;
-                actionContext.InternalVariables["Type"] = signalType.ToString();
+                actionContext.InternalVariables["Name"] = measurement.SignalName;
+                actionContext.InternalVariables["Value"] = measurement.Value;
+                actionContext.InternalVariables["Type"] = measurement.SignalDataType.ToString();
 
                 var checkResult = true;
 
@@ -423,7 +410,7 @@ namespace mqtt2otel.Manifest
 
                 if (checkResult)
                 {
-                    (instrumentName, signalType, ignore, expandedAttributes, rule) = action.Then.Apply(rule, instrumentName, signalType, expandedAttributes, this.embeddedExpressionParser, context);
+                    measurement = action.Then.Apply(measurement, this.embeddedExpressionParser, context);
 
                     if (action.Then.Output != null)
                     {
@@ -439,32 +426,32 @@ namespace mqtt2otel.Manifest
             }
 
             // The convert the value and format the name.
-            if (rule.ValueConverter != null)
+            if (measurement.ValueConverter != null)
             {
                 var valueConverterContext = context.Clone();
-                valueConverterContext.InternalVariables["Value"] = value;
-                value = this.payloadParser.Parse(this.Name, rule.ValueConverter, valueConverterContext);
+                valueConverterContext.InternalVariables["Value"] = measurement.Value;
+                measurement.Value = this.payloadParser.Parse(this.Name, measurement.ValueConverter, valueConverterContext);
             }
 
-            if (rule.NameFormatter != null)
+            if (measurement.NameFormatter != null)
             {
                 var nameContext = context.Clone();
-                nameContext.InternalVariables["Name"] = instrumentName;
-                instrumentName = this.payloadParser.Parse<string>(this.Name, rule.NameFormatter, nameContext);
+                nameContext.InternalVariables["Name"] = measurement.SignalName;
+                measurement.SignalName = this.payloadParser.Parse<string>(this.Name, measurement.NameFormatter, nameContext);
             }
             
             //Then write the data.
-            if (value != null)
+            if (measurement.Value != null)
             {
-                signalType = signalType == SignalDataType.Default ? TypeHelper.ConvertTypeToSignalDataType(value.GetType()) : signalType;
+                measurement.SignalDataType = measurement.SignalDataType == SignalDataType.Default ? TypeHelper.ConvertTypeToSignalDataType(measurement.Value.GetType()) : measurement.SignalDataType;
 
-                if (signalType != SignalDataType.String)
+                if (measurement.SignalDataType != SignalDataType.String)
                 {
                     TypeHelper.CallMethodWithGenericType(
                         this.dataStores.SignalStore,
-                        signalType,
+                        measurement.SignalDataType,
                         "UpdateValue",
-                        new object[] { subscription, rule, instrumentName, signalType, context, value, expandedAttributes });
+                        new object[] { measurement, context });
                 }
             }
         }

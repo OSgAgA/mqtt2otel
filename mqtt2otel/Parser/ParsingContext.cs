@@ -36,6 +36,11 @@ namespace mqtt2otel.Parser
             this.Message = message;
         }
 
+        public static ParsingContext CreateEmpty()
+        {
+            return new ParsingContext(new List<Variable>(), new MqttMessage());
+        }
+
         /// <summary>
         /// Clones the object by creating a copy of the variables and internal string variables. The message still refers to the original message
         /// object.

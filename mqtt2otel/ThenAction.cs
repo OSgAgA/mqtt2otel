@@ -46,7 +46,7 @@ namespace mqtt2otel
         public string Description { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a value indicating whether the rule should be fully ignored.
+        /// Gets or sets a value indicating whether the mesurement should be fully ignored.
         /// </summary>
         public bool Ignore { get; set; } = false;
 
@@ -81,25 +81,22 @@ namespace mqtt2otel
         /// <summary>
         /// Applies the action on a given rule.
         /// </summary>
-        /// <param name="rule">The rule to which the action should be applied.</param>
-        /// <param name="name">The name of the signal</param>
-        /// <param name="signalType">The type of the signal</param>
-        /// <param name="expandedAttributes">The allready expanded attributes.</param>
-        /// <returns>The new name, the data type, the ignored flag, the expandedAttributes and the newly created rule.</returns>
-        public Tuple<string, SignalDataType, bool, IEnumerable<OtelAttribute>, OtelMetricRule> Apply(OtelMetricRule rule, string name, SignalDataType signalType, IEnumerable<OtelAttribute> expandedAttributes, IEmbeddedExpressionParser parser, ParsingContext context)
+        /// <param name="measurement">The otel measurement, to which the action should be applied.</param>
+        /// <param name="parser">The embedded expression parser.</param>   
+        /// <param name="context">The current parsing context.</param>
+        /// <returns>The updated measurement, with the action applied.</returns>
+        public OtelMeasurement Apply(OtelMeasurement measurement, IEmbeddedExpressionParser parser, ParsingContext context)
         {
-            var result = rule.Clone();
-
-            result.Unit = this.Unit == null ? rule.Unit : parser.Expand(this.Unit, context);
-            result.NameFormatter = this.NameFormatter ?? rule.NameFormatter;
-            result.ValueConverter = this.ValueConverter ?? rule.ValueConverter;
-            result.Description = this.Description == null ? rule.Description : parser.Expand(this.Description, context);
-            result.Instrument = this.Instrument ?? rule.Instrument;
+            measurement.Unit = this.Unit == null ? measurement.Unit : parser.Expand(this.Unit, context);
+            measurement.NameFormatter = this.NameFormatter ?? measurement.NameFormatter;
+            measurement.ValueConverter = this.ValueConverter ?? measurement.ValueConverter;
+            measurement.Description = this.Description == null ? measurement.Description : parser.Expand(this.Description, context);
+            measurement.Instrument = this.Instrument ?? measurement.Instrument;
             var attributes = new List<OtelAttribute>();
 
             if (!this.ClearAttributes)
             {
-                foreach (var attribute in expandedAttributes)
+                foreach (var attribute in measurement.Attributes)
                 {
                     if (!this.RemoveAttributes.Contains(attribute.Key))
                     {
@@ -127,12 +124,7 @@ namespace mqtt2otel
                 }
             }
 
-            return new Tuple<string, SignalDataType, bool, IEnumerable<OtelAttribute>, OtelMetricRule>(
-                this.Name == null ? name : parser.Expand(this.Name, context), 
-                this.SignalDataType ?? signalType, 
-                this.Ignore, 
-                attributes, 
-                result);
+            return measurement;
         }
     }
 }
