@@ -112,13 +112,13 @@ h1:focus {
     transform: translateY(-1px);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1500px) {
     .hide-on-mobile {
         display: none !important;
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 300px) {
     .add-top-margin-on-mobile {
         margin-top: 100px;
     }
@@ -271,13 +271,13 @@ h1:focus {
             top: 8px;
         }
 
-@media (max-width: 768px) {
-.img-fluid {
+@media (max-width: 1500px) {
+    .img-fluid {
         height: 50px;
     }
 
- Hide the burger toggle entirely 
-.navbar-toggler {
+    Hide the burger toggle entirely
+    .navbar-toggler {
         display: none !important;
     }
 }

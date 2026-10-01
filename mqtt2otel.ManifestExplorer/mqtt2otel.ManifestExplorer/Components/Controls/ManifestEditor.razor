@@ -120,13 +120,15 @@ OtelConnections:
             Language = "yaml",
             Value = " ",
             Minimap = new EditorMinimapOptions { Enabled = false },
+            OverviewRulerLanes = 0,          // removes the ruler lanes
+            HideCursorInOverviewRuler = true, // hides the cursor marker
             FontSize = 16,
             Scrollbar = new EditorScrollbarOptions
             {
                 Vertical = "auto",
                 Horizontal = "auto",
                 AlwaysConsumeMouseWheel = false,
-                UseShadows = false
+                UseShadows = true
             }
         };
     }
