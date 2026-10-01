@@ -11,7 +11,7 @@ namespace mqtt2otel.Helper
         /// Neutralizes characters that could be used for log forging or terminal
         /// escape-sequence injection when the value is written to an unstructured sink.
         /// </summary>
-        public static string SanitizeForLog(this string value, int maxLength = 1000)
+        public static string SanitizeForLog(this string? value, int maxLength = 1000)
         {
             if (string.IsNullOrEmpty(value)) return string.Empty;
 
