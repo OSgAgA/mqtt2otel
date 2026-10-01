@@ -109,12 +109,12 @@ namespace mqtt2otel
 
                 using (this.internalLogger.StartActivity($"Otel connection information for: {otelConnection.Name}"))
                 {
-                    this.internalLogger.LogInformation("Otel endpoint:              {OtelEndpoint}", otelConnection.Endpoint.FullAddress);
+                    this.internalLogger.LogInformation("Otel endpoint:              {OtelEndpoint}", otelConnection.Endpoint.FullAddress.SanitizeForLog());
                     this.internalLogger.LogInformation("Otel export protocoll:      {OtelExportProtocol}", otelConnection.OtlpExportProtocol);
                     this.internalLogger.LogInformation("Otel export processor type: {OtelExportProcessorType}", otelConnection.ExportProcessorType);
-                    this.internalLogger.LogInformation("Otel service name:          {OtelServiceNamespace}", otelConnection.ServiceName);
-                    this.internalLogger.LogInformation("Otel service version:       {OtelServicVersion}", otelConnection.ServiceVersion);
-                    this.internalLogger.LogInformation("Otel service namespace:     {OtelServiceNamespace}", otelConnection.ServiceNamespace);
+                    this.internalLogger.LogInformation("Otel service name:          {OtelServiceNamespace}", otelConnection.ServiceName.SanitizeForLog());
+                    this.internalLogger.LogInformation("Otel service version:       {OtelServicVersion}", otelConnection.ServiceVersion.SanitizeForLog());
+                    this.internalLogger.LogInformation("Otel service namespace:     {OtelServiceNamespace}", otelConnection.ServiceNamespace.SanitizeForLog());
                 }
             }
 
@@ -444,7 +444,7 @@ namespace mqtt2otel
         {
             var metric = this.dataStores.SignalStore.GetValue<TPayload>(measurement);
 
-            this.internalLogger.LogDebug($"Providing measurement ({metric.Value}) with attributes ({string.Join(",", metric.Attributes.Select(attribute => attribute.Key + ": " + attribute.Value))}).");
+            this.internalLogger.LogDebug("Providing measurement ({Value}) with attributes ({Attributes}).", metric.Value.ToString().SanitizeForLog(), string.Join(",", metric.Attributes.Select(attribute => attribute.Key.SanitizeForLog() + ": " + attribute.Value.ToString().SanitizeForLog())));
 
             return new Measurement<TPayload>(
                 value: metric.Value,
@@ -462,7 +462,7 @@ namespace mqtt2otel
         {
             var metric = this.dataStores.SignalStore.GetValue<TPayload>(measurement);
 
-            this.internalLogger.LogDebug($"Providing measurement ({metric.Value}) with attributes ({string.Join(",", metric.Attributes.Select(attribute => attribute.Key + ": " + attribute.Value))}).");
+            this.internalLogger.LogDebug("Providing measurement ({Value}) with attributes ({Attributes}).", metric.Value.ToString().SanitizeForLog(), string.Join(",", metric.Attributes.Select(attribute => attribute.Key.SanitizeForLog() + ": " + attribute.Value.ToString().SanitizeForLog())));
 
             record(metric.Value, metric.Attributes.ToTagList());
         }

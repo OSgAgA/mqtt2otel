@@ -43,7 +43,7 @@ namespace mqtt2otel.Manifest
 
             if (yaml == null)
             {
-                internalLogger.LogInformation($"Reading {Path.GetFullPath(path)}");
+                internalLogger.LogInformation("Reading {Path}", Path.GetFullPath(path).SanitizeForLog());
 
                 yaml = File.ReadAllText(path);
             }
@@ -237,7 +237,7 @@ namespace mqtt2otel.Manifest
 
                 if (!query.Any())
                 {
-                    this.internalLogger.LogError($"Could not find subscription group with name {group.Name}. Skipping it.");
+                    this.internalLogger.LogError("Could not find subscription group with name {Name}. Skipping it.", group.Name.SanitizeForLog());
                     continue;
                 }
                 var subscriptionGroup = query.First();

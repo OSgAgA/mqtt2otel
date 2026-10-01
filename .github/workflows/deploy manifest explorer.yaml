@@ -102,8 +102,10 @@ jobs:
       # Get the pullrequest number from the commit message and store it in PR_NUMBER.
       - name: Extract PR number (safe)
         id: pr
+        env:
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-            PR_NUMBER=$(echo "${{ github.event.head_commit.message }}" | grep -oE '#[0-9]+' | tr -d '#' || true)
+            PR_NUMBER=$(echo "$HEAD_COMMIT_MESSAGE" | grep -oE '#[0-9]+' | tr -d '#' || true)
             echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
       # Try to find a github label named explorer_version:X.Y.Z and write it to VERSION if found.
