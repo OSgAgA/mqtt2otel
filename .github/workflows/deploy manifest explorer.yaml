@@ -111,10 +111,10 @@ jobs:
       # Try to find a github label named explorer_version:X.Y.Z and write it to VERSION if found.
       - name: Fetch PR labels
         id: pr_labels
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
         if: steps.pr.outputs.pr_number != ''
         run: |
-            PR_NUMBER=${{ steps.pr.outputs.pr_number }}
-
             LABELS=$(curl -s \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               https://api.github.com/repos/${{ github.repository }}/issues/$PR_NUMBER/labels \
