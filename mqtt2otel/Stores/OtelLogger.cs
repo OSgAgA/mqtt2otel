@@ -104,7 +104,7 @@ namespace mqtt2otel.Stores
                         }
                         catch (Exception ex)
                         {
-                            this.internalLogger.LogError($"Could not parse message as json. The following error occured: {ex.Message}");
+                            this.internalLogger.LogError("Could not parse message as json. The following error occured: {Message}", ex.Message.SanitizeForLog());
                             return false;
                         }
 
@@ -163,14 +163,14 @@ namespace mqtt2otel.Stores
                         }
                         else
                         {
-                            internalLogger.LogError($"Could not parse {loglevelKey}: '{loglevelString}' as log level.");
+                            internalLogger.LogError("Could not parse {LogLevelKey}: '{LogLevelString}' as log level.", loglevelKey.SanitizeForLog(), loglevelString.SanitizeForLog());
                             logger.LogInformation(body);
                         }
                     }
                     else
                     {
                         var obj = attributesDict[loglevelKey]?.ToString();
-                        internalLogger.LogError($"Could not parse {loglevelKey}: '{obj}' of type {obj?.GetType().FullName} as log level.");
+                        internalLogger.LogError("Could not parse {LogLevelKey}: '{Object}' of type {TypeName} as log level.", loglevelKey.SanitizeForLog(), obj, obj?.GetType().FullName);
                         logger.LogInformation(body);
                     }
                 }

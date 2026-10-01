@@ -159,11 +159,11 @@ namespace mqtt2otel
 
                         await this.mqttClient[broker.Name].DisconnectAsync();
                         this.mqttClient[broker.Name].Dispose();
-                        this.internalLogger.LogInformation($"Disconnected from broker: {broker.Name}");
+                        this.internalLogger.LogInformation("Disconnected from broker: {BrokerName}", broker.Name.SanitizeForLog());
                     }
                     catch (Exception ex)
                     {
-                        this.internalLogger.LogError(ex, $"Could not disconnect from mqtt broker {broker.Name}.");
+                        this.internalLogger.LogError(ex, "Could not disconnect from mqtt broker {BrokerName}.", broker.Name.SanitizeForLog());
                     }
                 }
             }
@@ -200,7 +200,7 @@ namespace mqtt2otel
             this.mqttClient[broker.Name] = this.mqttFactory.CreateMqttClient();
 
 
-            this.internalLogger.LogInformation($"Connecting to mqtt broker at {broker.Endpoint.FullAddress}...");
+            this.internalLogger.LogInformation("Connecting to mqtt broker at {BrokerEndpoint}...", broker.Endpoint.FullAddress.SanitizeForLog());
             var mqttClientOptionsBuilder = new MqttClientOptionsBuilder();
 
             if (broker.Endpoint.ConnectionType == MqttBrokerConnectionType.Tcp)
@@ -261,7 +261,7 @@ namespace mqtt2otel
                 {
                     this.internalLogger.LogInformation("Mqtt broker client id:                  {MqttBrokerResponseInformation}", mqttClientOptions.ClientId);
                     this.internalLogger.LogInformation("Mqtt broker information:                {MqttBrokerResponseInformation}", response.ResponseInformation);
-                    this.internalLogger.LogInformation("Mqtt broker reason:                     {MqttBrokerResponseReason}", response.ReasonString);
+                    this.internalLogger.LogInformation("Mqtt broker reason:                     {MqttBrokerResponseReason}", response.ReasonString.SanitizeForLog());
                     this.internalLogger.LogInformation("Mqtt broker retain available:           {MqttBrokerRetainAvailable}", response.RetainAvailable);
                     this.internalLogger.LogInformation("Mqtt broker maximum QoS:                {MqttBrokerMaxQoS}", response.MaximumQoS);
                     this.internalLogger.LogInformation("Mqtt broker receive max:                {MqttBrokerReceiveMax}", response.ReceiveMaximum);
@@ -278,7 +278,7 @@ namespace mqtt2otel
                     this.internalLogger.LogInformation("Mqtt broker subscription ids available: {MqttBrokerIdentifierAvailable}", response.SubscriptionIdentifiersAvailable);
                     this.internalLogger.LogInformation("Mqtt broker topic alias max:            {MqttBrokerTopicAliasMaximum}", response.TopicAliasMaximum);
                     this.internalLogger.LogInformation("Mqtt broker wildcard subs available:    {MqttBrokerWildcardSubscriptionAvailable}", response.WildcardSubscriptionAvailable);
-                    this.internalLogger.LogInformation("Mqtt broker user properties:            {MqttBrokerUserProperties}", response.UserProperties);
+                    this.internalLogger.LogInformation("Mqtt broker user properties:            {MqttBrokerUserProperties}", response.UserProperties?.ToString().SanitizeForLog());
                 }
             }
 
@@ -305,7 +305,7 @@ namespace mqtt2otel
             this.connectionCount = 0;
             this.mqttMeter.ConnectionCount.Record(--this.connectionCount);
 
-            this.internalLogger.LogError($"Client ${this.clientId[brokerName]} disconnected from broker: {args.ReasonString}");
+            this.internalLogger.LogError("Client {ClientId} disconnected from broker: {Reason}", this.clientId[brokerName].SanitizeForLog(), args.ReasonString.SanitizeForLog());
 
             bool connected = false;
 
@@ -324,7 +324,7 @@ namespace mqtt2otel
 
                 if (!connected)
                 {
-                    this.internalLogger.LogError($"Could not connect to mqtt broker. Waiting for {this.nameToBrokerMap[brokerName].ReconnectDelayInMs}ms.");
+                    this.internalLogger.LogError("Could not connect to mqtt broker. Waiting for {ReconnectDelay}ms.", this.nameToBrokerMap[brokerName].ReconnectDelayInMs);
                     await Task.Delay(this.nameToBrokerMap[brokerName].ReconnectDelayInMs);
                 }
                 else
@@ -364,7 +364,7 @@ namespace mqtt2otel
                     await this.GetClient(mqttSubscription.BrokerConnection).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
                 }
                 this.nextBrokerSubscriptionId = this.nextBrokerSubscriptionId + 1;
-                this.internalLogger.LogInformation($"Subscribed to topic {mqttSubscription.Topic}.");
+                this.internalLogger.LogInformation("Subscribed to topic {Topic}.", mqttSubscription.Topic.SanitizeForLog());
                 this.mqttMeter.SubscriptionsCount.Record(++this.subscriptionCount);
             }
         }
@@ -412,11 +412,11 @@ namespace mqtt2otel
             }
             catch (ExpressionParsingException ex)
             {
-                this.internalLogger.LogError($"{ex.Message}");
+                this.internalLogger.LogError("{Message}", ex.Message.SanitizeForLog());
             }
             catch (Exception ex)
             {
-                this.internalLogger.LogError(ex, $"Could not process message. An internal error occured.");
+                this.internalLogger.LogError(ex, "Could not process message. An internal error occured.");
             }
 
         }
@@ -450,11 +450,11 @@ namespace mqtt2otel
         /// <returns>A value indicating whether processing has been successful.</returns>
         public bool ProcessReceivedMessage(MqttMessage message)
         {
-            this.internalLogger.LogDebug($"Message received. Payload: {message.Payload}");
+            this.internalLogger.LogDebug("Message received. Payload: {Payload}", message.Payload.SanitizeForLog());
 
             if (!this.subscriptionStore.ContainsSubscriptionId(message.SubscriptionId))
             {
-                this.internalLogger.LogError($"Internal error while processing received mqtt message: {nameof(subscriptionStore)} does not contain topic {message.Topic}. Skipping event.");
+                this.internalLogger.LogError("Internal error while processing received mqtt message: {SubscriptionStoreName} does not contain topic {Topic}. Skipping event.", nameof(subscriptionStore), message.Topic.SanitizeForLog());
                 return false;
             }
 
@@ -473,7 +473,7 @@ namespace mqtt2otel
 
                     success = data.Processor.ProcessSubscriptionPayload(message, data.Subscription);
 
-                    if (!success) this.internalLogger.LogError($"Could not process message. See previous errors. Message skipped. Payload: {message.Payload}");
+                    if (!success) this.internalLogger.LogError("Could not process message. See previous errors. Message skipped. Payload: {Payload}", message.Payload.SanitizeForLog());
                 }
             }
 

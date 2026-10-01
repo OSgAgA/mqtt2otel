@@ -226,7 +226,7 @@ namespace mqtt2otel.Manifest
                     var key = rule.Id;
                     if (!this.dataStores.LoggerStore.ContainsKey(key))
                     {
-                        this.internalLogger.LogError($"Internal error: Could not get logger with id: {key}. Skipping event.");
+                        this.internalLogger.LogError("Internal error: Could not get logger with id: {RuleId}. Skipping event.", key);
                         return false;
                     }
 
@@ -326,11 +326,11 @@ namespace mqtt2otel.Manifest
             }
             catch (ExpressionParsingException ex)
             {
-                this.internalLogger.LogError($"{ex.Message}");
+                this.internalLogger.LogError("{Message}", ex.Message.SanitizeForLog());
             }
             catch (Exception ex)
             {
-                this.internalLogger.LogError(ex, $"Internal error. Could not write signal to metricsContainer. {ex.Message}");
+                this.internalLogger.LogError(ex, "Internal error. Could not write signal to metricsContainer. {Message}", ex.Message.SanitizeForLog());
             }
         }
 
@@ -417,7 +417,7 @@ namespace mqtt2otel.Manifest
                         using (this.internalLogger.BeginScope(action.Then.Output.Attributes))
                         {
                             var message = this.embeddedExpressionParser.Expand(action.Then.Output.Message, context);
-                            this.internalLogger.Log(action.Then.Output.Level, message);
+                            this.internalLogger.Log(action.Then.Output.Level, message.SanitizeForLog());
                         }
                     }
 

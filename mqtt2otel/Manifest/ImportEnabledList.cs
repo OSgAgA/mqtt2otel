@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 using YamlDotNet.Serialization;
+using mqtt2otel.Helper;
 
 namespace mqtt2otel.Manifest
 {
@@ -42,7 +43,7 @@ namespace mqtt2otel.Manifest
 
                     foreach (var path in files)
                     {
-                        internalLogger.LogInformation($"Importing {typeof(T).Name} from {Path.GetFullPath(path)}");
+                        internalLogger.LogInformation("Importing {TypeName} from {Path}", typeof(T).Name, Path.GetFullPath(path).SanitizeForLog());
                         var yaml = File.ReadAllText(path);
                         var deserializer = new DeserializerBuilder().WithObjectFactory(objectFactory).Build();
 

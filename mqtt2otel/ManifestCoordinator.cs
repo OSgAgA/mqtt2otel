@@ -94,8 +94,8 @@ namespace mqtt2otel
         {
             var fullPath = Path.GetFullPath(this.applicationSettings.ManifestPath) ?? "./";
 
-            this.internalLogger.LogInformation($"Watching for manifest changes at {fullPath}.");
-            this.internalLogger.LogInformation($"Polling intervall for manifest updates is set to {this.applicationSettings.PollIntervallInSeconds}s.");
+            this.internalLogger.LogInformation("Watching for manifest changes at {FullPath}.", fullPath.SanitizeForLog());
+            this.internalLogger.LogInformation("Polling intervall for manifest updates is set to {PollInterval}s.", this.applicationSettings.PollIntervallInSeconds);
 
             this.LastManifestFileChange = File.GetLastWriteTimeUtc(this.applicationSettings.ManifestPath);
             _ = this.MonitorFileAsync(this.applicationSettings.ManifestPath, this.applicationSettings.PollIntervallInSeconds);
@@ -136,7 +136,7 @@ namespace mqtt2otel
                     message = $"{message}: {ex.InnerException.Message}";
                 }
 
-                this.internalLogger.LogCritical($"Error parsing manifest file. {message}");
+                this.internalLogger.LogCritical("Error parsing manifest file. {Message}", message.SanitizeForLog());
                 sw.Stop();
                 this.manifestMeter.ManifestReadDuration.Record(sw.ElapsedMicroseconds);
                 this.manifestMeter.ProcessorsCount.Record(manifest.Processors.Count());
