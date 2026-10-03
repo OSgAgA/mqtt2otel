@@ -17,12 +17,12 @@ namespace mqtt2otel.Stores
         /// <summary>
         /// The metric values that are stored inside the signal store.
         /// </summary>
-        private Dictionary<string, object> ValueStore = new();
+        private Dictionary<SignalKey, object> ValueStore = new();
 
         /// <summary>
         /// These callbacks will be executed when a value with the key of the dictionary is stored.
         /// </summary>
-        private Dictionary<string, Action> Callbacks = new();
+        private Dictionary<SignalKey, Action> Callbacks = new();
 
         /// <summary>
         /// The parser used for parsing expressions embedded in a subscription.
@@ -50,7 +50,7 @@ namespace mqtt2otel.Stores
         /// <param name="callback">The callback to be called.</param>
         public void RegisterCallback(OtelMeasurement measurement, Action callback)
         {
-            var key = this.GenerateKey(measurement);
+            var key = new SignalKey(measurement.OtelConnection, measurement.SignalName);
             this.Callbacks[key] = callback;
         }
 
@@ -64,10 +64,10 @@ namespace mqtt2otel.Stores
         /// <param name="payload">The payload that should be stored in the signal store.</param>
         public void StoreValue<TPayload>(OtelMeasurement measurement, OtelMetric<TPayload> payload)
         {
-            var key = this.GenerateKey(measurement);
+            var key = new SignalKey(measurement.OtelConnection, measurement.SignalName);
             this.ValueStore[key] = payload;
 
-            if (this.Callbacks.ContainsKey(key)) this.Callbacks[key]();
+            if (this.Callbacks.TryGetValue(key, out var callback)) callback();
         }
 
         /// <summary>
@@ -79,9 +79,9 @@ namespace mqtt2otel.Stores
         /// <exception cref="Mqtt2OtelException">Thrown if the value cannot be cast to the given type.</exception>
         public OtelMetric<TPayload> GetValue<TPayload>(OtelMeasurement measurement)
         {
-            var key = this.GenerateKey(measurement);
+            var key = new SignalKey(measurement.OtelConnection, measurement.SignalName);
 
-            if (!(this.ValueStore[key] is OtelMetric<TPayload>))
+            if (this.ValueStore[key] is not OtelMetric<TPayload>)
                 throw new Mqtt2OtelException($"Cannot get value from {nameof(SignalStore)}. Key ({key}) returned an object of type {this.ValueStore[key].GetType().FullName}, but type {typeof(OtelMetric<TPayload>).FullName} was expected.");
 
             return (OtelMetric<TPayload>)this.ValueStore[key];
@@ -94,7 +94,7 @@ namespace mqtt2otel.Stores
         /// <returns>A value indicating whether the key exists inside the signal store.</returns>
         public bool ContainsKey(OtelMeasurement measurement)
         {
-            var key = this.GenerateKey(measurement);
+            var key = new SignalKey(measurement.OtelConnection, measurement.SignalName);
 
             return this.ValueStore.ContainsKey(key);
         }
@@ -111,7 +111,7 @@ namespace mqtt2otel.Stores
         {
             if (measurement.Value == null) return;
 
-            var key = this.GenerateKey(measurement);
+            var key = new SignalKey(measurement.OtelConnection, measurement.SignalName);
 
             if (this.SignalCreator != null && !this.ContainsKey(measurement)) this.SignalCreator(measurement, context);
             var metric = this.GetValue<TPayload>(measurement);
@@ -119,7 +119,7 @@ namespace mqtt2otel.Stores
             metric.Value = (TPayload)measurement.Value;
             metric.Attributes = measurement.Attributes;
 
-            if (this.Callbacks.ContainsKey(key)) this.Callbacks[key]();
+            if (this.Callbacks.TryGetValue(key, out var callback)) callback();
         }
 
         /// <summary>
@@ -129,17 +129,6 @@ namespace mqtt2otel.Stores
         {
             this.ValueStore.Clear();
             this.Callbacks.Clear();
-        }
-
-        /// <summary>
-        /// Generates a key for storing the data in the <see cref="ISignalStore"/>.
-        /// </summary>
-        /// <param name="measurement">The measurement that should be stored..</param>
-        /// <returns>The generated key.</returns>
-        private string GenerateKey(OtelMeasurement measurement)
-        {
-            measurement.SignalName.Replace("$$$$$", "");
-            return $"{measurement.SignalName}$$$$${measurement.OtelConnection}";
         }
     }
 }
