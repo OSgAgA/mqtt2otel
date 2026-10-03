@@ -135,7 +135,7 @@ namespace mqtt2otel.Tests._30_SystemTests
                     foreach (var metricPoint in metric.GetMetricPoints())
                     {
                         Assert.True(expectedMetric.MetricPoints.Count > count);
-                        var expectedPoint = expectedMetric.MetricPoints[count++];
+                        var expectedPoint = expectedMetric.MetricPoints[count];
                         count++;
                         AssertEqual(expectedPoint.Value.ToString(), metricPoint.GetValueAsObject(metric.MetricType).ToString(), "MetricPoint.Value");
                         AssertEqual(expectedPoint.Tags.Count, metricPoint.Tags.Count, "tags.count");
@@ -147,7 +147,7 @@ namespace mqtt2otel.Tests._30_SystemTests
                         }
                     }
 
-                    AssertEqual(expectedMetric.MetricPoints.Count + 1, count, "metricPoints.Count+1");
+                    AssertEqual(expectedMetric.MetricPoints.Count, count, "metricPoints.Count");
                 }
 
                 this._output.WriteLine($"{DateTime.UtcNow}: Assert metrics completed.");
