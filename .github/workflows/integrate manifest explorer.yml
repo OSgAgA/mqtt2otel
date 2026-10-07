@@ -62,7 +62,7 @@ jobs:
           
       # Installs the playwright browsers.
       - name: Install Playwright browsers
-        run: pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+        run: pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium firefox webkit
         working-directory: mqtt2otel.ManifestExplorer.Tests
 
       # Run tests and generate TestResults file.
