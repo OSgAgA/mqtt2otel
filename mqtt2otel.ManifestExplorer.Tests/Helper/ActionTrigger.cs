@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace mqtt2otel.ManifestExplorer.Tests
+namespace mqtt2otel.ManifestExplorer.Tests.Helper
 {
     /// <summary>
     /// Represents when an action should be triggered.
