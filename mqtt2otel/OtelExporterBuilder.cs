@@ -54,7 +54,15 @@ namespace mqtt2otel
                 address += defaultHttpPath;
             }
 
-            otlpOptions.Endpoint = connection.Endpoint.Uri;
+            if (address != null)
+            {
+                otlpOptions.Endpoint = new Uri(address);
+            }
+            else
+            {
+                otlpOptions.Endpoint = connection.Endpoint.Uri;
+            }
+
             otlpOptions.Protocol = connection.OtlpExportProtocol;
             otlpOptions.ExportProcessorType = connection.ExportProcessorType;
 
