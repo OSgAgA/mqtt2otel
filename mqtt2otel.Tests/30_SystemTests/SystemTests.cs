@@ -97,7 +97,7 @@ namespace mqtt2otel.Tests._30_SystemTests
                     Assert.True(completedTask == tcs.Task, "Callback was not triggered");
                 }
 
-                await Task.Delay(500); // For some reason, the exportBuilder sometimes does not get the result on time. Therefor this delay :-(
+                await Task.Delay(500, TestContext.Current.CancellationToken); // For some reason, the exportBuilder sometimes does not get the result on time. Therefor this delay :-(
                 Assert.Single(exportBuilder.GetAllMetrics());
                 var metric = exportBuilder.GetAllMetrics().First().Value;
                 Assert.Equal("TestMetric", metric.Name);
