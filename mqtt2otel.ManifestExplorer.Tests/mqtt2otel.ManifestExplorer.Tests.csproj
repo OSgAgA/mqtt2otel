@@ -25,11 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TestingPlatformBuilderHook Include = "6640A661-557C-4231-87F4-887227664CFD" >
+    <TestingPlatformBuilderHook Include="6640A661-557C-4231-87F4-887227664CFD">
       <DisplayName> Otel.Extension </DisplayName>
       <TypeFullName> mqtt2otel.ManifestExplorer.Tests.OtelExtensionBuilderHook </TypeFullName>
-    </TestingPlatformBuilderHook >
-  </ItemGroup >
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />

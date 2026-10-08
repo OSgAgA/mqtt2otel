@@ -8,12 +8,12 @@ using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Options;
 using mqtt2otel.ManifestExplorer.Settings;
 
-namespace mqtt2otel.ManifestExplorer.Tests
+namespace mqtt2otel.ManifestExplorer.Tests.Helper
 {
     /// <summary>
     /// Responsible for starting up the mqtt2otel manifest explorer for testing.
     /// </summary>
-    public class ManifestExplorerFactory : WebApplicationFactory<mqtt2otel.ManifestExplorer.Program>
+    public class ManifestExplorerFactory : WebApplicationFactory<Program>
     {
         /// <summary>
         /// Holds the kestrel host.

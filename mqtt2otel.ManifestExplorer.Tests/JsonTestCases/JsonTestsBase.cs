@@ -1,18 +1,19 @@
 ﻿using Microsoft.Playwright;
+using mqtt2otel.ManifestExplorer.Tests.Helper;
 using mqtt2otel.Shared;
 
-namespace mqtt2otel.ManifestExplorer.Tests
+namespace mqtt2otel.ManifestExplorer.Tests.JsonTestCases
 {
     /// <summary>
     /// Tests all examples that are available to the explorer.
     /// </summary>
-    public class ExampleDataTests : PageTestBase, IClassFixture<ManifestExplorerFactory>
+    public class JsonTestsBase : PageTestBase, IClassFixture<ManifestExplorerFactory>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ExampleDataTests"/> class.
+        /// Initializes a new instance of the <see cref="JsonTestsBase"/> class.
         /// </summary>
         /// <param name="factory"></param>
-        public ExampleDataTests(ManifestExplorerFactory factory) : base(factory) { }
+        public JsonTestsBase(ManifestExplorerFactory factory) : base(factory) { }
 
         /// <summary>
         /// For all available examples:
@@ -33,15 +34,12 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// STEP 5:
         ///     Tests if the expected results are shown on the UI.
         /// </summary>
-        /// <param name="testCase">The case to be tested.</param>
-        [Theory]
-        [MemberData(nameof(TestCaseData.LoadAllAsMemberdataTestIds), MemberType = typeof(TestCaseData))]
-        public async Task ShouldSuccessfullyExecuteExample(string exampleId)
+        /// <param name="testCase">The case to be tested.</param>        
+        public async Task RunJsonTestCase(UITestSettings settings, string id)
         {
-            this.CreateTraceOutput = ActionTrigger.Always;
-
             // Arrange  
-            var testCase = TestCaseData.GetById(exampleId);
+            await this.Initialize(settings, id);
+            var testCase = TestCaseData.GetById(id);
 
             // Act and assert
             await this.NavigateToExplorerWithExample(testCase);
@@ -157,13 +155,14 @@ namespace mqtt2otel.ManifestExplorer.Tests
         /// <param name="testCase">The current test case.</param>
         private async Task NavigateToExplorerWithExample(TestCaseData testCase)
         {
-            if (testCase.Setup.CreateExample)
+            if (testCase.Setup.CreateExample && this.Settings.Browser != BrowserEngine.Firefox)
             {
                 await this.Page.GotoAsync(this.ServerAddress);
                 await this.Page.GetByTestId("button-start-with-example").ClickAsync();
 
                 var link = this.Page.Locator($"a[href$='exampleId={testCase.Setup.Id}']").First;
-                await link.ClickAsync();
+
+                    await link.ClickAsync();
             }
             else
             {
