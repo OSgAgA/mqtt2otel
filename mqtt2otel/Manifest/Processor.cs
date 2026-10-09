@@ -388,8 +388,6 @@ namespace mqtt2otel.Manifest
         /// <param name="context">The current parsing context..</param>
         private void UpdateSignalStoreValue(MqttSubscription subscription, OtelMetricRule rule, OtelMeasurement measurement, ParsingContext context)
         {
-            bool ignore = false;
-
             // First: Apply actions.
             foreach (var action in rule.Actions)
             {
@@ -421,7 +419,7 @@ namespace mqtt2otel.Manifest
                         }
                     }
 
-                    if (ignore) return;
+                    if (action.Then.Ignore) return;
                 }
             }
 
