@@ -423,7 +423,7 @@ namespace mqtt2otel.Manifest
                 }
             }
 
-            // The convert the value and format the name.
+            // Then convert the value and format the name.
             if (measurement.ValueConverter != null)
             {
                 var valueConverterContext = context.Clone();
