@@ -20,6 +20,11 @@ namespace mqtt2otel.Manifest
     public class Manifest
     {
         /// <summary>
+        /// Ensure, that we do not have any side effects, when ReadFromYaml is called in parallel. This is important especially in testing context.
+        /// </summary>
+        public static Mutex mutex = new Mutex();
+
+        /// <summary>
         /// Gets or sets the object factory that should be used for parsing the yaml file.
         /// </summary>
         public static IObjectFactory? ObjectFactory;
@@ -35,32 +40,41 @@ namespace mqtt2otel.Manifest
         /// <returns>The created manifest.</returns>
         public static Manifest ReadFromYaml(ILogger internalLogger, string path = "Manifest.yaml", string? yaml = null)
         {
-            if (Manifest.ObjectFactory == null)
+            mutex.WaitOne(TimeSpan.FromSeconds(30));
+
+            try
             {
-                internalLogger.LogCritical($"Internal error: Calling {nameof(ReadFromYaml)} without initializíng {nameof(ObjectFactory)} first. Providing default manifest.");
-                return new Manifest();
-            }
+                if (Manifest.ObjectFactory == null)
+                {
+                    internalLogger.LogCritical($"Internal error: Calling {nameof(ReadFromYaml)} without initializíng {nameof(ObjectFactory)} first. Providing default manifest.");
+                    return new Manifest();
+                }
 
-            if (yaml == null)
+                if (yaml == null)
+                {
+                    internalLogger.LogInformation("Reading {Path}", Path.GetFullPath(path).SanitizeForLog());
+
+                    yaml = File.ReadAllText(path);
+                }
+                else
+                {
+                    internalLogger.LogInformation("Reading manifest from provided yaml.");
+                }
+
+                var deserializer = new DeserializerBuilder().WithObjectFactory(Manifest.ObjectFactory).Build();
+
+                var result = deserializer.Deserialize<Manifest>(yaml);
+
+                if (result == null) result = new Manifest();
+
+                result.internalLogger = internalLogger;
+
+                return result;
+            }
+            finally
             {
-                internalLogger.LogInformation("Reading {Path}", Path.GetFullPath(path).SanitizeForLog());
-
-                yaml = File.ReadAllText(path);
+                mutex.ReleaseMutex();
             }
-            else
-            {
-                internalLogger.LogInformation("Reading manifest from provided yaml.");
-            }
-
-            var deserializer = new DeserializerBuilder().WithObjectFactory(Manifest.ObjectFactory).Build();
-
-            var result = deserializer.Deserialize<Manifest>(yaml);
-
-            if (result == null) result = new Manifest();
-
-            result.internalLogger = internalLogger;
-
-            return result;
         }
 
         /// <summary>

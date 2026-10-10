@@ -318,19 +318,30 @@ namespace mqtt2otel.Manifest
 
                 foreach (var item in valueData)
                 {
-                    var newMeasurement = measurement.Clone();
-                    newMeasurement.SignalName = item.Key;
-                    newMeasurement.Value = item.Value;
-                    CallUpdateSignalStoreValueWithType(subscription, rule, newMeasurement, context);
+                    try
+                    {
+                        var newMeasurement = measurement.Clone();
+                        newMeasurement.SignalName = item.Key;
+                        newMeasurement.Value = item.Value;
+                        CallUpdateSignalStoreValueWithType(subscription, rule, newMeasurement, context);
+                    }
+                    catch (ExpressionParsingException ex)
+                    {
+                        this.internalLogger.LogError("{Message}. If message contains additional values (e.g. in a Json message) these will still be processed.", ex.Message.SanitizeForLog());
+                    }
+                    catch (Exception ex)
+                    {
+                        this.internalLogger.LogError(ex, "Internal error. Could not write signal to metricsContainer. {Message}. If message contains additional values (e.g. in a Json message) these will still be processed.", ex.Message.SanitizeForLog());
+                    }
                 }
             }
             catch (ExpressionParsingException ex)
             {
-                this.internalLogger.LogError("{Message}", ex.Message.SanitizeForLog());
+                this.internalLogger.LogError("{Message}. Further processing of this message is stopped.", ex.Message.SanitizeForLog());
             }
             catch (Exception ex)
             {
-                this.internalLogger.LogError(ex, "Internal error. Could not write signal to metricsContainer. {Message}", ex.Message.SanitizeForLog());
+                this.internalLogger.LogError(ex, "Internal error. Could not write signal to metricsContainer. {Message}. Further processing of this message is stopped.", ex.Message.SanitizeForLog());
             }
         }
 
@@ -354,6 +365,11 @@ namespace mqtt2otel.Manifest
                     break;
                 case SignalDataType.Int:
                     measurement.Value = measurement.Value != null ? TypeHelper.ConvertObject<int>(measurement.Value) : this.payloadParser.Parse<int>(rule.Name, rule.Value, context);
+                    break;
+                case SignalDataType.Bool:
+                    bool boolValue = measurement.Value != null ? TypeHelper.ConvertObject<bool>(measurement.Value) : this.payloadParser.Parse<bool>(rule.Name, rule.Value, context);
+                    measurement.Value = boolValue ? 1 : 0;
+                    measurement.SignalDataType = SignalDataType.Int;
                     break;
                 case SignalDataType.Double:
                     measurement.Value = measurement.Value != null ? Convert.ToDouble(measurement.Value) : this.payloadParser.Parse<double>(rule.Name, rule.Value, context);
@@ -388,8 +404,6 @@ namespace mqtt2otel.Manifest
         /// <param name="context">The current parsing context..</param>
         private void UpdateSignalStoreValue(MqttSubscription subscription, OtelMetricRule rule, OtelMeasurement measurement, ParsingContext context)
         {
-            bool ignore = false;
-
             // First: Apply actions.
             foreach (var action in rule.Actions)
             {
@@ -421,11 +435,11 @@ namespace mqtt2otel.Manifest
                         }
                     }
 
-                    if (ignore) return;
+                    if (action.Then.Ignore) return;
                 }
             }
 
-            // The convert the value and format the name.
+            // Then convert the value and format the name.
             if (measurement.ValueConverter != null)
             {
                 var valueConverterContext = context.Clone();
@@ -445,8 +459,14 @@ namespace mqtt2otel.Manifest
             {
                 measurement.SignalDataType = measurement.SignalDataType == SignalDataType.Default ? TypeHelper.ConvertTypeToSignalDataType(measurement.Value.GetType()) : measurement.SignalDataType;
 
-                if (measurement.SignalDataType != SignalDataType.String)
+                if (measurement.SignalDataType != SignalDataType.String && measurement.SignalDataType != SignalDataType.DateTime && measurement.SignalDataType != SignalDataType.Default)
                 {
+                    if (measurement.SignalDataType == SignalDataType.Bool && measurement.Value != null)
+                    {
+                        measurement.SignalDataType = SignalDataType.Int;
+                        measurement.Value = (bool)measurement.Value ? 1 : 0;
+                    }
+
                     TypeHelper.CallMethodWithGenericType(
                         this.dataStores.SignalStore,
                         measurement.SignalDataType,

@@ -11,7 +11,6 @@ using System.Data;
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace mqtt2otel
 {

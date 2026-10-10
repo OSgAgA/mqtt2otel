@@ -124,6 +124,8 @@ namespace mqtt2otel
                 }
             }
 
+            measurement.Attributes = attributes;
+
             return measurement;
         }
     }

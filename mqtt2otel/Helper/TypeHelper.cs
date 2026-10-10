@@ -47,6 +47,7 @@ namespace mqtt2otel.Helper
             if (!TypeHelper.SignalTypeMap.TryGetValue(genericTypeName, out var genericType))
                 throw new ArgumentException($"Unknown type '{genericTypeName}'");
 
+            if (genericType == typeof(bool)) genericType = typeof(int);
             return TypeHelper.CallMethodWithGenericType(instance, genericType, methodName, parameters);
         }
 
@@ -131,6 +132,7 @@ namespace mqtt2otel.Helper
             [SignalDataType.String] = typeof(string),
             [SignalDataType.Long] = typeof(long),
             [SignalDataType.DateTime] = typeof(DateTime),
+            [SignalDataType.Bool] = typeof(bool),
             [SignalDataType.Default] = typeof(float),
         };
 
@@ -145,6 +147,7 @@ namespace mqtt2otel.Helper
             ["decimal"] = typeof(decimal),
             ["string"] = typeof(string),
             ["long"] = typeof(long),
+            ["bool"] = typeof(bool),
             ["DateTime"] = typeof(DateTime),
         };
 
@@ -197,6 +200,7 @@ namespace mqtt2otel.Helper
             if (type == typeof(double)) return "double";
             if (type == typeof(decimal)) return "decimal";
             if (type == typeof(long)) return "long";
+            if (type == typeof(bool)) return "bool";
             if (type == typeof(DateTime)) return "DateTime";
 
             throw new NotImplementedException();
@@ -219,6 +223,7 @@ namespace mqtt2otel.Helper
             if (type == typeof(double)) result = double.Parse(input, CultureInfo.InvariantCulture);
             if (type == typeof(decimal)) result = decimal.Parse(input, CultureInfo.InvariantCulture);
             if (type == typeof(long)) result = long.Parse(input, CultureInfo.InvariantCulture);
+            if (type == typeof(bool)) result = bool.Parse(input);
             if (type == typeof(DateTime)) result = DateTime.Parse(input, CultureInfo.InvariantCulture);
 
             return (T)result;

@@ -14,29 +14,42 @@ namespace mqtt2otel.Tests.Helper
 {
     public static class ManifestHelper
     {
+        /// <summary>
+        /// Tests do run in parallel. This ensures that we are not running into issue, due to that!.
+        /// </summary>
+        public static Mutex mutex = new();
+
         public static Manifest.Manifest ReadManifestFromString(string yaml, DataStores? dataStores = null, PayloadParser? payloadParser = null, EmbeddedExpressionParser? embeddedExpressionParser = null)
         {
-            var objFactoryLoggerMock = new Mock<ILogger<Manifest.Processor>>();
-            var internalLoggerMock = new Mock<ILogger<string>>();
-
-            if (payloadParser == null) payloadParser = new PayloadParser();
-            if (embeddedExpressionParser == null) embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
-
-            if (dataStores == null)
+            mutex.WaitOne(TimeSpan.FromSeconds(30));
+            try
             {
-                var signalStore = new SignalStore(embeddedExpressionParser);
-                var loggerStore = new LoggerStore(internalLoggerMock.Object, payloadParser, new PayloadTransformation(), embeddedExpressionParser);
+                var objFactoryLoggerMock = new Mock<ILogger<Manifest.Processor>>();
+                var internalLoggerMock = new Mock<ILogger<string>>();
 
-                dataStores = new DataStores(signalStore, loggerStore);
+                if (payloadParser == null) payloadParser = new PayloadParser();
+                if (embeddedExpressionParser == null) embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
+
+                if (dataStores == null)
+                {
+                    var signalStore = new SignalStore(embeddedExpressionParser);
+                    var loggerStore = new LoggerStore(internalLoggerMock.Object, payloadParser, new PayloadTransformation(), embeddedExpressionParser);
+
+                    dataStores = new DataStores(signalStore, loggerStore);
+                }
+
+                Manifest.Manifest.ObjectFactory = new Manifest.ObjectFactory(objFactoryLoggerMock.Object, payloadParser, new PayloadTransformation(), dataStores, new ProcessorMeter(), embeddedExpressionParser);
+
+                var loggerMock = new Mock<ILogger>();
+
+                var manifest = Manifest.Manifest.ReadFromYaml(loggerMock.Object, yaml: yaml);
+
+                return manifest;
             }
-
-            Manifest.Manifest.ObjectFactory = new Manifest.ObjectFactory(objFactoryLoggerMock.Object, payloadParser, new PayloadTransformation(), dataStores, new ProcessorMeter(), embeddedExpressionParser);
-
-            var loggerMock = new Mock<ILogger>();
-
-            var manifest = Manifest.Manifest.ReadFromYaml(loggerMock.Object, yaml: yaml);
-
-            return manifest;
+            finally
+            {
+                mutex.ReleaseMutex();
+            }
         }
 
     }
