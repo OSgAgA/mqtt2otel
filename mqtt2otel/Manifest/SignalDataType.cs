@@ -23,6 +23,8 @@ namespace mqtt2otel.Manifest
 
         DateTime = 6,
 
+        Bool = 7,
+
         Default = 99,
     }
 }
