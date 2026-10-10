@@ -28,6 +28,12 @@ namespace mqtt2otel.ManifestExplorer.Controllers
     public class ManifestExplorerController : ControllerBase
     {
         /// <summary>
+        /// It seems like the otel debug logger is not fully thread safe. This mutex guards the processor, so that messages are not 
+        /// associated to the wrong processor.
+        /// </summary>
+        public static Mutex processorMutex = new Mutex();
+
+        /// <summary>
         /// Applies the provided pattern to the provided payload.
         /// </summary>
         /// <param name="request">The request describing the setup.</param>
@@ -120,20 +126,30 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             ILogger<OtelCoordinator> otelLogger = new Logger<OtelCoordinator>(new LoggerFactory());
             var exportBuilder = new OtelTestExporterBuilder();
-            using (var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings()))
+
+            processorMutex.WaitOne(TimeSpan.FromSeconds(30));
+
+            try
             {
-                otel.Connect(manifest);
+                using (var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings()))
+                {
+                    otel.Connect(manifest);
 
-                var message = new MqttMessage(subscriptionId: 0, topic: request.MqttData[0].Topic, payload: request.MqttData[0].Payload, userProperties: request.MqttData[0].UserProperties);
-                bool success = await mqtt.SimulateOnMqttMessageReceived(message);
+                    var message = new MqttMessage(subscriptionId: 0, topic: request.MqttData[0].Topic, payload: request.MqttData[0].Payload, userProperties: request.MqttData[0].UserProperties);
+                    bool success = await mqtt.SimulateOnMqttMessageReceived(message);
+                }
+
+                if (processorErrors.Any())
+                {
+                    return new ApplyPatternToPayloadResult(processorErrors);
+                }
+
+                return new ApplyPatternToPayloadResult(exportBuilder);
             }
-
-            if (processorErrors.Any())
+            finally
             {
-                return new ApplyPatternToPayloadResult(processorErrors);
+                processorMutex.ReleaseMutex();
             }
-
-            return new ApplyPatternToPayloadResult(exportBuilder);
         }
     }
 }
