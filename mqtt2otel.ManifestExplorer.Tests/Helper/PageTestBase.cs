@@ -95,12 +95,12 @@ namespace mqtt2otel.ManifestExplorer.Tests.Helper
         /// <param name="engine">The browser engine to be used.</param>
         private IBrowserType ResolveBrowserType(BrowserEngine engine)
         {
-            return engine switch 
+            return engine switch
             {
                 BrowserEngine.Firefox => this.Playwright.Firefox,
                 BrowserEngine.Webkit => this.Playwright.Webkit,
                 BrowserEngine.Chromium => this.Playwright.Chromium,
-                _ => throw new ArgumentOutOfRangeException( nameof(engine), engine.ToString() ),
+                _ => throw new ArgumentOutOfRangeException(nameof(engine), engine.ToString()),
             };
         }
 
@@ -142,9 +142,9 @@ namespace mqtt2otel.ManifestExplorer.Tests.Helper
         public BrowserTypeLaunchOptions GetLaunchOptions(UITestSettings settings)
         {
             return new BrowserTypeLaunchOptions()
-            {                
-                Headless = settings.Headless,   
-                SlowMo = settings.SloMo,                
+            {
+                Headless = settings.Headless,
+                SlowMo = settings.SloMo,
                 FirefoxUserPrefs = new Dictionary<string, object>
                 {
                     ["network.http.max-connections-per-server"] = 30,
@@ -246,7 +246,15 @@ namespace mqtt2otel.ManifestExplorer.Tests.Helper
         {
             await this.Context.Tracing.GroupAsync("Test content of manifest editor)");
 
-            await Expect(this.Page!.Locator(".monaco-editor")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions() { Timeout = 10000 });
+            try
+            {
+                await Expect(this.Page!.Locator(".monaco-editor")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions() { Timeout = 5000 });
+            }
+            catch (PlaywrightException)
+            {
+                await this.Page.ReloadAsync();
+                await Expect(this.Page!.Locator(".monaco-editor")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions() { Timeout = 10000 });
+            }
             await this.Page.WaitForFunctionAsync("() => monaco?.editor?.getModels()?.length > 0");
 
             // Inject hidden dump element

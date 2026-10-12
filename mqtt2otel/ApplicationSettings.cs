@@ -61,6 +61,11 @@ namespace mqtt2otel
             return deserializer.Deserialize<ApplicationSettings>(yaml);
         }
 
+        /// <summary>
+        /// Gets or sets the mqtt2otel version of the application. This version is overriden by the system and should not be set manually.
+        /// 
+        /// In developer environments, this version shows as "0.0.0".
+        /// </summary>
         public string Mqtt2OtelVersion { get; set; } = "0.0.0";
 
         /// <summary>
@@ -74,6 +79,11 @@ namespace mqtt2otel
         public InternalMetricsSettings Metrics { get; set; } = new();
 
         /// <summary>
+        /// Gets or sets a value indicating whether the default usage telemetry should be disabled.
+        /// </summary>
+        public bool DisableUsageTelemetry { get; set; } = false;
+
+        /// <summary>
         /// Gets or sets the delay intervall that will be used for <see cref="AutoUpdateMode.PollManifestFile"/>.
         /// </summary>
         public int PollIntervallInSeconds { get; set; } = 5;
@@ -82,6 +92,11 @@ namespace mqtt2otel
         /// Gets or sets the path to the manifest file.
         /// </summary>
         public string ManifestPath { get; set; } = "/data/Manifest.yaml";
+
+        /// <summary>
+        /// Gets or sets the path that is used to store internal files.
+        /// </summary>
+        public string InternalDataPath { get; set; } = "/data/.internal";
 
         /// <summary>
         /// Gets the base address for the rest service of the application.

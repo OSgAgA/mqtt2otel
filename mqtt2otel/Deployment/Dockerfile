@@ -3,6 +3,10 @@ WORKDIR /app
 
 FROM base AS final
 WORKDIR /app
+
+ARG USAGE_TELEMETRY_HEADER
+ENV usage-telemetry-headers=${USAGE_TELEMETRY_HEADER}
+
 COPY ./app/ .
 RUN apk add --no-cache icu-libs
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false

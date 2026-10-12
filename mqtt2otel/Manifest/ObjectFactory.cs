@@ -51,6 +51,11 @@ namespace mqtt2otel.Manifest
         private ProcessorMeter processorMeter;
 
         /// <summary>
+        /// The usage telemetry meter for recording usage telemetry metrics.
+        /// </summary>
+        private UsageTelemetryMeter usageTelemetryMeter;
+
+        /// <summary>
         /// The parser for parsing expressions embedded inside a text field.
         /// </summary>
         private IEmbeddedExpressionParser embeddedExpressionParser;
@@ -65,9 +70,11 @@ namespace mqtt2otel.Manifest
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
         /// <param name="meter">The processor meter for recording internal processor metrics.</param>
         /// <param name="embeddedExpressionParser">The parser for parsing expressions embedded inside a text field.</param>
-        public ObjectFactory(ILogger<Processor> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores, ProcessorMeter meter, IEmbeddedExpressionParser embeddedExpressionParser)
+        public ObjectFactory(ILogger<Processor> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores, 
+            ProcessorMeter meter, UsageTelemetryMeter usageTelemetryMeter, IEmbeddedExpressionParser embeddedExpressionParser)
         {
             this.processorMeter = meter;
+            this.usageTelemetryMeter = usageTelemetryMeter;
             fallback = new DefaultObjectFactory();
             this.internalLogger = internalLogger;
             this.payloadParser = payloadParser;
@@ -85,7 +92,7 @@ namespace mqtt2otel.Manifest
         {
             if (type == typeof(Processor))
             {
-                return new Processor(this.internalLogger, this.payloadParser, this.payloadTransformation, this.dataStores, this.processorMeter, this.embeddedExpressionParser);
+                return new Processor(this.internalLogger, this.payloadParser, this.payloadTransformation, this.dataStores, this.processorMeter, this.usageTelemetryMeter, this.embeddedExpressionParser);
             }
 
             return fallback.Create(type);
