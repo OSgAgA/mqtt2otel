@@ -194,6 +194,8 @@ The otel processor supports the following metric data types:
 * Double
 * Long
 * Decimal
+* Boolean
+* String
 
 ### ParseAs
 
