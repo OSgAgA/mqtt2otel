@@ -165,6 +165,8 @@ namespace mqtt2otel.Manifest
         /// </summary>
         public void Initialize()
         {
+            if (this.ObjectFactory == null) throw new Exception("Could not initialize manifest as no object factory is set.");
+
             ImportEnabledList<NamedIdObject>.InitializeImports(this, this.internalLogger, this.ObjectFactory);
 
             foreach (var subscriptionGroup in this.SubscriptionGroups)
