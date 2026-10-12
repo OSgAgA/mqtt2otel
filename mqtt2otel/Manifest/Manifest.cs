@@ -19,15 +19,16 @@ namespace mqtt2otel.Manifest
     /// </summary>
     public class Manifest
     {
+
         /// <summary>
-        /// Ensure, that we do not have any side effects, when ReadFromYaml is called in parallel. This is important especially in testing context.
+        /// A reference to the logger used for internal log messages.
         /// </summary>
-        public static Mutex mutex = new Mutex();
+        private ILogger internalLogger = new EmptyLogger<Manifest>();
 
         /// <summary>
         /// Gets or sets the object factory that should be used for parsing the yaml file.
         /// </summary>
-        public static IObjectFactory? ObjectFactory;
+        private IObjectFactory? ObjectFactory;
 
         /// <summary>
         /// Reads the manifest from a yaml file.
@@ -38,49 +39,30 @@ namespace mqtt2otel.Manifest
         /// <param name="path">The path to the yaml file.</param>
         /// <param name="yaml">This parameter can be used to provide the yaml to be parsed directly. If this is not null, then the path parameter will be ignored.</param>
         /// <returns>The created manifest.</returns>
-        public static Manifest ReadFromYaml(ILogger internalLogger, string path = "Manifest.yaml", string? yaml = null)
+        public static Manifest ReadFromYaml(IObjectFactory objectFactory, ILogger internalLogger, string path = "Manifest.yaml", string? yaml = null)
         {
-            mutex.WaitOne(TimeSpan.FromSeconds(30));
-
-            try
+            if (yaml == null)
             {
-                if (Manifest.ObjectFactory == null)
-                {
-                    internalLogger.LogCritical($"Internal error: Calling {nameof(ReadFromYaml)} without initializíng {nameof(ObjectFactory)} first. Providing default manifest.");
-                    return new Manifest();
-                }
+                internalLogger.LogInformation("Reading {Path}", Path.GetFullPath(path).SanitizeForLog());
 
-                if (yaml == null)
-                {
-                    internalLogger.LogInformation("Reading {Path}", Path.GetFullPath(path).SanitizeForLog());
-
-                    yaml = File.ReadAllText(path);
-                }
-                else
-                {
-                    internalLogger.LogInformation("Reading manifest from provided yaml.");
-                }
-
-                var deserializer = new DeserializerBuilder().WithObjectFactory(Manifest.ObjectFactory).Build();
-
-                var result = deserializer.Deserialize<Manifest>(yaml);
-
-                if (result == null) result = new Manifest();
-
-                result.internalLogger = internalLogger;
-
-                return result;
+                yaml = File.ReadAllText(path);
             }
-            finally
+            else
             {
-                mutex.ReleaseMutex();
+                internalLogger.LogInformation("Reading manifest from provided yaml.");
             }
+
+            var deserializer = new DeserializerBuilder().WithObjectFactory(objectFactory).Build();
+
+            var result = deserializer.Deserialize<Manifest>(yaml);
+            result.ObjectFactory = objectFactory;
+
+            if (result == null) result = new Manifest();
+
+            result.internalLogger = internalLogger;
+
+            return result;
         }
-
-        /// <summary>
-        /// A reference to the logger used for internal log messages.
-        /// </summary>
-        private ILogger internalLogger = new EmptyLogger<Manifest>();
 
         /// <summary>
         /// Validates all settings.
@@ -183,10 +165,7 @@ namespace mqtt2otel.Manifest
         /// </summary>
         public void Initialize()
         {
-            if (Manifest.ObjectFactory == null)
-                return;
-
-            ImportEnabledList<NamedIdObject>.InitializeImports(this, this.internalLogger, Manifest.ObjectFactory);
+            ImportEnabledList<NamedIdObject>.InitializeImports(this, this.internalLogger, this.ObjectFactory);
 
             foreach (var subscriptionGroup in this.SubscriptionGroups)
             {
@@ -199,7 +178,7 @@ namespace mqtt2otel.Manifest
                 this.ApplyVariablesToSubscriptions(processor.Mqtt.Subscriptions, processor.Mqtt.Variables);
             }
 
-            Manifest.SetObjectHierarchy(this);
+            this.SetObjectHierarchy(this);
         }
 
         /// <summary>
@@ -281,7 +260,7 @@ namespace mqtt2otel.Manifest
         /// Sets the object parent child hierarchy of all <see cref="NamedIdObject"/> properties and sets all inherited attributes.
         /// </summary>
         /// <param name="current">The current object, on which the hierarchy should be set.</param>
-        private static void SetObjectHierarchy(object current)
+        private void SetObjectHierarchy(object current)
         {
             var type = current.GetType();
 
@@ -308,7 +287,7 @@ namespace mqtt2otel.Manifest
         /// <param name="prop">The property of the parent object, that contains the child objects. If null, nothing is executed. Must be of
         /// the provided propType type. If not, then execution is skipped."/></param>
         /// <param name="listType">The type of the list that should be updated.</param>
-        private static void UpdateProperty(object parent, PropertyInfo prop, Type listType)
+        private void UpdateProperty(object parent, PropertyInfo prop, Type listType)
         {
             var propType = prop.PropertyType;
 
@@ -339,13 +318,13 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="parent">The parent object.</param>
         /// <param name="child">The child object. If null, nothing is executed.</param>
-        private static void UpdateProperty(object parent, NamedIdObject? child)
+        private void UpdateProperty(object parent, NamedIdObject? child)
         {
 
             if (child == null) return;
             child.Parent = parent;
-            Manifest.UpdateInheritedProperties(parent, child);
-            Manifest.SetObjectHierarchy(child);
+            this.UpdateInheritedProperties(parent, child);
+            this.SetObjectHierarchy(child);
             return;
         }
 
@@ -357,7 +336,7 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="parent">The parent object, that may inherit its value to the child.</param>
         /// <param name="child">The child object, that may inherit a value from the parent.</param>
-        private static void UpdateInheritedProperties(object? parent, object child)
+        private void UpdateInheritedProperties(object? parent, object child)
         {
             if (child == null || parent == null) return;
 
@@ -383,7 +362,7 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="current">The object that should be searched.</param>
         /// <returns>An enumerable containing all propeties with the given attribute.</returns>
-        private static IEnumerable<PropertyInfo> GetInheritedProperties(object current)
+        private IEnumerable<PropertyInfo> GetInheritedProperties(object current)
         {
             var type = current.GetType();
 

@@ -73,13 +73,13 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             ProcessorMeter meter = new ProcessorMeter();
             UsageTelemetryMeter usageMeter = new UsageTelemetryMeter();
 
-            Manifest.Manifest.ObjectFactory = new mqtt2otel.Manifest.ObjectFactory(logger.Object, payloadParser, payloadTransformation, dataStores, meter, usageMeter, embeddedExpressionParser);
+            var objectFactory = new mqtt2otel.Manifest.ObjectFactory(logger.Object, payloadParser, payloadTransformation, dataStores, meter, usageMeter, embeddedExpressionParser);
 
             Manifest.Manifest manifest;
 
             try
             {
-                manifest = Manifest.Manifest.ReadFromYaml(logger.Object, yaml: request.Manifest);
+                manifest = Manifest.Manifest.ReadFromYaml(objectFactory, logger.Object, yaml: request.Manifest);
                 payloadParser.SetMappings(manifest.Mappings);
                 embeddedExpressionParser.SetMappings(manifest.Mappings);
             }

@@ -69,7 +69,6 @@ namespace mqtt2otel
             this.internalLogger = internalLogger;
             this.applicationSettings = settings;
             this.manifestCoordinator = manifestCoordinator;
-            Manifest.Manifest.ObjectFactory = objectFactory;
             this.InitializeInternalMeters(exporterBuilder, settings);
             this.InitializeUsageTelemtry(exporterBuilder, settings);
         }
@@ -150,7 +149,7 @@ namespace mqtt2otel
         {
             if (settings.DisableUsageTelemetry) return;
             
-            string usageTelemetryHeaders = Environment.GetEnvironmentVariable("usage-telemetry-headers");
+            string? usageTelemetryHeaders = Environment.GetEnvironmentVariable("usage-telemetry-headers");
             if (string.IsNullOrWhiteSpace(usageTelemetryHeaders)) return;
 
             var connection = new OtelServerConnection()
@@ -159,7 +158,7 @@ namespace mqtt2otel
                 OtlpExportProtocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf,
                 Endpoint = new OtelServerEndpoint()
                 {
-                    Headers = usageTelemetryHeaders;
+                    Headers = usageTelemetryHeaders,
                     Address = "https://ingress.europe-west4.gcp.dash0.com/"
                 }
             };
