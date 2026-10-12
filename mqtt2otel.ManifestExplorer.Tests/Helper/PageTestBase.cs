@@ -250,7 +250,7 @@ namespace mqtt2otel.ManifestExplorer.Tests.Helper
             {
                 await Expect(this.Page!.Locator(".monaco-editor")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions() { Timeout = 5000 });
             }
-            catch ()
+            catch (PlaywrightException)
             {
                 await this.Page.ReloadAsync();
                 await Expect(this.Page!.Locator(".monaco-editor")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions() { Timeout = 10000 });
