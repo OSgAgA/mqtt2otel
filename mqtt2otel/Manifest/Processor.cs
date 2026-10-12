@@ -48,6 +48,11 @@ namespace mqtt2otel.Manifest
         private ProcessorMeter processorMeter;
 
         /// <summary>
+        /// The meter for recording usage telemetry.
+        /// </summary>
+        private UsageTelemetryMeter usageTelemetryMeter;
+
+        /// <summary>
         /// The parser used for parsing expressions embedded in a subscription.
         /// </summary>
         private IEmbeddedExpressionParser embeddedExpressionParser;
@@ -61,9 +66,11 @@ namespace mqtt2otel.Manifest
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
         /// <param name="meter">The meter for recording internal metrics.</param>
         /// <param name="embeddedExpressionParser">The parser used for parsing expressions embedded in a subscription.</param>
-        public Processor(ILogger internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores, ProcessorMeter meter, IEmbeddedExpressionParser embeddedExpressionParser)
+        public Processor(ILogger internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores,
+                         ProcessorMeter meter, UsageTelemetryMeter usageTelemetryMeter, IEmbeddedExpressionParser embeddedExpressionParser)
         {
             this.processorMeter = meter;
+            this.usageTelemetryMeter = usageTelemetryMeter;
             this.internalLogger = internalLogger;
             this.payloadParser = payloadParser;
             this.payloadTransformation = payloadTransformation;
@@ -122,6 +129,8 @@ namespace mqtt2otel.Manifest
         public bool ProcessSubscriptionPayload(MqttMessage message, MqttSubscription subscription)
         {
             bool success = false;
+
+            this.usageTelemetryMeter.MessageCount.Add(1);
 
             var tags = new TagList();
             tags.Add("subscription.name", subscription.Name);
@@ -187,6 +196,7 @@ namespace mqtt2otel.Manifest
                     tags.Add("rule.connection", rule.OtelConnection);
                     tags.Add("rule.instrument", rule.Instrument);
                     this.processorMeter.ProcessingTimeMetricRule.Record(sw.ElapsedMicroseconds, tags);
+                    this.usageTelemetryMeter.MetricProcessingTime.Record(sw.ElapsedMicroseconds);
                     this.processorMeter.Metrics.Add(1, tags);
                 }
             }
@@ -252,6 +262,7 @@ namespace mqtt2otel.Manifest
                     tags.Add("rule.category", rule.CategoryName);
                     tags.Add("rule.payload_type", rule.PayloadType);
                     this.processorMeter.ProcessingTimeLoggingRule.Record(swTransform.ElapsedTicks + sw.ElapsedTicks, tags);
+                    this.usageTelemetryMeter.LogProcessingTime.Record(swTransform.ElapsedTicks + sw.ElapsedTicks);
                     this.processorMeter.LogEntries.Add(1, tags);
                 }
             }
@@ -453,7 +464,7 @@ namespace mqtt2otel.Manifest
                 nameContext.InternalVariables["Name"] = measurement.SignalName;
                 measurement.SignalName = this.payloadParser.Parse<string>(this.Name, measurement.NameFormatter, nameContext);
             }
-            
+
             //Then write the data.
             if (measurement.Value != null)
             {

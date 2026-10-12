@@ -9,6 +9,8 @@ using mqtt2otel.Transformation;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
+using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
 using YamlDotNet.Serialization;
 
 namespace mqtt2otel
@@ -36,6 +38,16 @@ namespace mqtt2otel
         private MeterProvider? meterProvider;
 
         /// <summary>
+        /// The internally used meter provider for usage telemetry.
+        /// </summary>
+        private MeterProvider? usageTelemetryMeterProvider;
+
+        /// <summary>
+        /// The ids used internally.
+        /// </summary>
+        private InternalIds ids;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Bootstrapper"/> class.
         /// 
         /// Bootstrapping the application should be done in the following order:
@@ -51,13 +63,15 @@ namespace mqtt2otel
         /// <param name="objectFactory">The object factory for creating objects from a yaml file.</param>
         /// <param name="settings">The application settings.</param>
         /// <param name="exporterBuilder">The exporter builder for connecting the metrics to an otel exporter.</param>
-        public Bootstrapper(ILogger<Bootstrapper> internalLogger, IManifestCoordinator manifestCoordinator, IObjectFactory objectFactory, ApplicationSettings settings, IOtelExporterBuilder exporterBuilder)
+        public Bootstrapper(ILogger<Bootstrapper> internalLogger, IManifestCoordinator manifestCoordinator, IObjectFactory objectFactory, ApplicationSettings settings, IOtelExporterBuilder exporterBuilder, InternalIds ids)
         {
+            this.ids = ids;
             this.internalLogger = internalLogger;
             this.applicationSettings = settings;
             this.manifestCoordinator = manifestCoordinator;
             Manifest.Manifest.ObjectFactory = objectFactory;
             this.InitializeInternalMeters(exporterBuilder, settings);
+            this.InitializeUsageTelemtry(exporterBuilder, settings);
         }
 
         /// <summary>
@@ -125,6 +139,64 @@ namespace mqtt2otel
             exporterBuilder.AddToMeterProviderBuilder(builder, settings.Metrics.Otel);
 
             this.meterProvider = builder.Build();
+        }
+
+        /// <summary>
+        /// Initializes all supported internal otel meters if otel logging is configured in the application settings.
+        /// </summary>
+        /// <param name="exporterBuilder">The exporter builder for configuring an exporter for the metrics.</param>
+        /// <param name="settings">The application settings.</param>
+        public void InitializeUsageTelemtry(IOtelExporterBuilder exporterBuilder, ApplicationSettings settings)
+        {
+            if (settings.DisableUsageTelemetry) return;
+            
+            string usageTelemetryHeaders = Environment.GetEnvironmentVariable("usage-telemetry-headers");
+            if (string.IsNullOrWhiteSpace(usageTelemetryHeaders)) return;
+
+            var connection = new OtelServerConnection()
+            {
+                ExportProcessorType = ExportProcessorType.Batch,
+                OtlpExportProtocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf,
+                Endpoint = new OtelServerEndpoint()
+                {
+                    Headers = usageTelemetryHeaders;
+                    Address = "https://ingress.europe-west4.gcp.dash0.com/"
+                }
+            };
+
+            string osName = "unknown";
+            var version = Environment.OSVersion.Version;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                osName = "windows";
+                if (version.Major == 10 && version.Build >= 22000) version = new Version(11, 0);
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) osName = "linux";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD)) osName = "freeBSD";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) osName = "OSX";
+
+            IEnumerable<KeyValuePair<string, object>> tags = new List<KeyValuePair<string, object>>()
+            {
+                new KeyValuePair<string, object> ( "instance-id", this.ids.InstanceId.ToString() ),
+                new KeyValuePair<string, object> ( "os-name",  osName ),
+                new KeyValuePair<string, object> ( "os-version",  $"{version.Major}.{version.Minor}" ),
+                new KeyValuePair<string, object> ( "mqtt2otel-version",  settings.Mqtt2OtelVersion ),
+                new KeyValuePair<string, object> ( "processor-architecture", RuntimeInformation.ProcessArchitecture.ToString() ),
+                new KeyValuePair<string, object> ( "logical-cpu-cores", Environment.ProcessorCount.ToString() ),
+            };
+
+            var builder = Sdk.CreateMeterProviderBuilder()
+                        .SetResourceBuilder(
+                                ResourceBuilder.CreateDefault()
+                                .AddService(serviceName: "mqtt2otel.Telemetry", serviceNamespace: "prod-mqtt2otel", serviceVersion: "1.0.0")
+                                .AddAttributes(tags))
+                        .AddMeter(nameof(UsageTelemetryMeter));
+
+            exporterBuilder.AddToMeterProviderBuilder(builder, connection);
+
+            this.usageTelemetryMeterProvider = builder.Build();
         }
 
         /// <summary>

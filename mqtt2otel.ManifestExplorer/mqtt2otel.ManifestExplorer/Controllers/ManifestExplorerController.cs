@@ -71,8 +71,9 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             ILoggerStore loggerStore = new LoggerStore(internalLogger.Object, payloadParser, payloadTransformation, embeddedExpressionParser);
             IDataStores dataStores = new DataStores(signalStore, loggerStore);
             ProcessorMeter meter = new ProcessorMeter();
+            UsageTelemetryMeter usageMeter = new UsageTelemetryMeter();
 
-            Manifest.Manifest.ObjectFactory = new mqtt2otel.Manifest.ObjectFactory(logger.Object, payloadParser, payloadTransformation, dataStores, meter, embeddedExpressionParser);
+            Manifest.Manifest.ObjectFactory = new mqtt2otel.Manifest.ObjectFactory(logger.Object, payloadParser, payloadTransformation, dataStores, meter, usageMeter, embeddedExpressionParser);
 
             Manifest.Manifest manifest;
 

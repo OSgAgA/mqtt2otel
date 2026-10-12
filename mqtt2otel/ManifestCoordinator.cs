@@ -53,6 +53,11 @@ namespace mqtt2otel
         private ManifestMeter manifestMeter;
 
         /// <summary>
+        /// The manifest meter used used for usage telemetry.
+        /// </summary>
+        private UsageTelemetryMeter usageTelemetryMeter;
+
+        /// <summary>
         /// The payload parser used by the applicatin.
         /// </summary>
         private IPayloadParser payloadParser;
@@ -75,9 +80,10 @@ namespace mqtt2otel
         /// <param name="manifestMeter">The manifest meter used for internal metrics.</param>
         public ManifestCoordinator(
             ILogger<Bootstrapper> internalLogger, IOtelCoordinator otelCoordinator, IMqttCoordinator mqttCoordinator, IDataStores dataStores, ApplicationSettings applicationSettings, 
-            ManifestMeter manifestMeter, IPayloadParser payloadParser, IEmbeddedExpressionParser embeddedPayloadParser)
+            ManifestMeter manifestMeter, UsageTelemetryMeter usageTelemetryMeter, IPayloadParser payloadParser, IEmbeddedExpressionParser embeddedPayloadParser)
         {
             this.manifestMeter = manifestMeter;
+            this.usageTelemetryMeter = usageTelemetryMeter; 
             this.applicationSettings = applicationSettings;
             this.otelCoordinator = otelCoordinator;
             this.dataStores = dataStores;
@@ -197,6 +203,22 @@ namespace mqtt2otel
             this.manifestMeter.ManifestReadDuration.Record(sw.ElapsedMicroseconds);
             this.manifestMeter.ProcessorsCount.Record(manifest.Processors.Count());
             this.manifestMeter.SubscriptionGroupsCount.Record(manifest.SubscriptionGroups.Count());
+
+            this.usageTelemetryMeter.ProcessorsCount.Record(manifest.Processors.Count());
+            this.usageTelemetryMeter.ManifestMqttConnections.Record(manifest.MqttConnections.Count());
+            this.usageTelemetryMeter.ManifestOtelConnections.Record(manifest.OtelConnections.Count());
+            this.usageTelemetryMeter.LogProcessorsCount.Record(manifest.Processors.Sum(p => p.Otel.Logs.Count));
+            this.usageTelemetryMeter.MetricProcessorsCount.Record(manifest.Processors.Sum(p => p.Otel.Metrics.Count));
+            this.usageTelemetryMeter.AvailableMemoryInBytes.Record(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes);
+
+            int count = 0;
+
+            foreach (var processor in manifest.Processors)
+            {
+                count += processor.Mqtt.Subscriptions.Count;
+            }
+
+            this.usageTelemetryMeter.MqttSubscriptions.Record(count);
 
             this.otelCoordinator.Connect(manifest);
 

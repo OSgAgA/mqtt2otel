@@ -54,6 +54,6 @@ It consists of the following settings:
 | Logging.MinimumLogLevel | Information         | The minimum log level that will be logged. Must be one of the following: Debug, Information, Warning, Error, Critical. |
 | Logging.Otel            | empty               | The connection data for the otel endpoint. [see otel server connection](../manifest/otelserver)                        |
 | Metrics.CollectMetrics  | true                | Enables the collection of internal metrics, that will be send to the Metrics.Otel endpoing.                            |
-| Metrics.Otel            | empty               | The connection data for the otel metrics endpoint. [see otel server connection](../manifest/otelserver)                |
-
+| Metrics.Otel            | empty               | The connection data for the otel metrics endpoint. [see otel server connection](../manifest/otelserver).               |
+| DisableUsageTelemetry   | false               | Disable the collection of usage telemetry [see usage telemetry](../observability/usagetelemetry).                      |
                                                   
