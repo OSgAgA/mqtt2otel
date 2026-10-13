@@ -189,7 +189,7 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
           build-args: |
-            EXPLORER_SECRET=${{ secrets.USAGE_TELEMETRY_HEADER }}
+            USAGE_TELEMETRY_HEADER=${{ secrets.USAGE_TELEMETRY_HEADER }}
           cache-from: type=registry,ref=osgaga/mqtt2otel:cache
           cache-to: type=registry,ref=osgaga/mqtt2otel:cache,mode=max
 
