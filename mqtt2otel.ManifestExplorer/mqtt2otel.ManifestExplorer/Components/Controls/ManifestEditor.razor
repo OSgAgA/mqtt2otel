@@ -16,7 +16,7 @@
             </button>
         </div>
     </CardHeader>
-    <StandaloneCodeEditor @ref="manifestEditor" Id="my-editor" ConstructionOptions="EditorOptions" OnDidInit="OnEditorInit" />
+    <StandaloneCodeEditor @ref="manifestEditor" Id="@editorId" CssClass="manifest-editor" ConstructionOptions="EditorOptions" OnDidInit="OnEditorInit" />
 </Card>
 
 @code
@@ -24,6 +24,12 @@
 
     [Parameter, EditorRequired]
     public string InitialText { get; set; }
+
+    /// <summary>
+    /// Gives the editor a unique id on each page load and avoids race conditions, when a page is reloaded and the dispose from the
+    /// old editor collides with the creation of a new editor with the same name.
+    /// </summary>
+    private readonly string editorId = $"manifest-editor-{Guid.NewGuid():N}";
 
     /// <summary>
     /// Contains a reference to the manifest editor
@@ -34,6 +40,11 @@
     /// A guard for testing, whether the manifest editor is initialized.
     /// </summary>
     private bool editorIsInitialized = false;
+
+    /// <summary>
+    /// A flag indicating whether disposed has been called.
+    /// </summary>
+    private bool disposed;
 
     /// <summary>
     /// Gets the value of the manifest editor as a simple text string.
@@ -47,28 +58,60 @@
     }
 
     /// <summary>
-    /// Sets the provided text in the monacco editor.
+    /// Disposes the editor.
     /// </summary>
-    /// <param name="text">The text that should be set.</param>
-    /// <param name="allowUninitialized">A flag indicating whether the <see cref="editorIsInitialized"/> flag should be ignored.</param>
-    public async Task SetValueAsText(string text, bool allowUninitialized = false)
+    public ValueTask DisposeAsync()
     {
-        if (manifestEditor != null && this.editorIsInitialized != allowUninitialized)
+        disposed = true;
+        return ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    /// Called when the editor init event is called. 
+    /// </summary>
+    private async Task OnEditorInit()
+    {
+        if (disposed || manifestEditor == null) return;
+        try
         {
             await JS.InvokeVoidAsync("waitForMonaco", null);
-            try
-            {
-                await manifestEditor.SetValue(text);
-                await manifestEditor.Layout();
-            }
+            if (disposed) return;
 
-            catch (Exception ex)
-            {
-                this.logger.LogError(ex, "Could not set value on monaco editor.");
-            }
+            await manifestEditor.SetValue(this.InitialText);
+            await manifestEditor.Layout();
+            await JS.InvokeVoidAsync("manifestCompletion.register",
+                new ManifestCompletionService().Generate());
+
+            editorIsInitialized = true;
+            StateHasChanged();
+        }
+        catch (JSException) when (disposed)
+        {
+            // torn down while initializing, nothing to do
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error on monaco editor init!");
         }
     }
 
+    /// <summary>
+    /// Sets the value of the editor as a text value.
+    /// </summary>
+    /// <param name="text">The text to be set.</param>
+    public async Task SetValueAsText(string text)
+    {
+        if (!editorIsInitialized || disposed || manifestEditor == null) return;
+        try
+        {
+            await manifestEditor.SetValue(text);
+            await manifestEditor.Layout();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Could not set value on monaco editor.");
+        }
+    }
     /// <summary>
     /// Adds server stubs to the manifest, so that a complete manifest is available that can be used for further processing.
     /// </summary>
@@ -132,34 +175,5 @@ OtelConnections:
                 UseShadows = true
             }
         };
-    }
-
-    /// <summary>
-    /// Called when the monacco editor has completed its init process.
-    /// </summary>
-    private async Task OnEditorInit()
-    {
-        if (manifestEditor != null)
-        {
-            await JS.InvokeVoidAsync("waitForMonaco", null);
-
-            try
-            {
-                await this.SetValueAsText(this.InitialText, allowUninitialized: true);
-                await manifestEditor.Layout();
-
-                string? manifestSchema = new ManifestCompletionService().Generate();
-
-                await JS.InvokeVoidAsync(
-                "manifestCompletion.register",
-                manifestSchema);
-
-                this.editorIsInitialized = true;
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogError(ex, "Error on monaco editor init!");
-            }
-        }
     }
 }

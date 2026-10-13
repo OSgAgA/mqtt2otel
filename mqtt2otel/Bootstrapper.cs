@@ -69,8 +69,27 @@ namespace mqtt2otel
             this.internalLogger = internalLogger;
             this.applicationSettings = settings;
             this.manifestCoordinator = manifestCoordinator;
+
+            this.SetVersion(settings);
             this.InitializeInternalMeters(exporterBuilder, settings);
             this.InitializeUsageTelemtry(exporterBuilder, settings);
+        }
+
+        /// <summary>
+        /// Sets the current version inside the application settings object.
+        /// </summary>
+        private void SetVersion(ApplicationSettings settings)
+        {
+            // Read version number file or set to not defined, if no file is found.
+            string version = "0.0.0";
+            string versionFilePath = "./version.txt";
+            if (Path.Exists(versionFilePath))
+            {
+                var lines = File.ReadLines(versionFilePath);
+                if (lines.Count() > 0) version = lines.First();
+            }
+
+            settings.Mqtt2OtelVersion = version;
         }
 
         /// <summary>
@@ -204,19 +223,8 @@ namespace mqtt2otel
         /// <returns>A return code.</returns>
         public async Task<int> Bootstrap(ApplicationSettings settings)
         {
-            // Read version number file or set to not defined, if no file is found.
-            string version = "0.0.0";
-            string versionFilePath = "./version.txt";
-            if (Path.Exists(versionFilePath))
-            {
-                var lines = File.ReadLines(versionFilePath);
-                if (lines.Count() > 0) version = lines.First();
-            }
-
-            this.internalLogger.LogInformation($"Starting application with version: {version}");
+            this.internalLogger.LogInformation($"Starting application with version: {settings.Mqtt2OtelVersion}");
             this.internalLogger.LogInformation("ApplicationSettings.yaml read.");
-
-            settings.Mqtt2OtelVersion = version;
 
             // Register ctrl-c
             Console.CancelKeyPress += (sender, e) =>
