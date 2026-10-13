@@ -194,8 +194,6 @@ jobs:
             osgaga/mqtt2otel.manifestexplorer:latest
           labels: |
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
-          build-args: |
-            EXPLORER_SECRET=${{ secrets.USAGE_TELEMETRY_HEADER }}
           cache-from: type=registry,ref=osgaga/mqtt2otel.manifestexplorer:cache
           cache-to: type=registry,ref=osgaga/mqtt2otel.manifestexplorer:cache,mode=max
 
