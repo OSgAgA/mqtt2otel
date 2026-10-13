@@ -1,6 +1,7 @@
 ﻿@using mqtt2otel.ManifestExplorer.Helper
 @inject IJSRuntime JS
 @inject NavigationManager NavManager
+@inject ILogger<ManifestEditor> logger
 
 <Card id="manifest-editor-container">
     <CardHeader class="d-flex justify-content-between align-items-center" style="background-color: #dbeaf1">
@@ -61,9 +62,9 @@
                 await manifestEditor.Layout();
             }
 
-            catch
+            catch (Exception ex)
             {
-                // NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+                this.logger.LogError(ex, "Could not set value on editor.");
             }
         }
     }
@@ -155,9 +156,9 @@ OtelConnections:
 
                 this.editorIsInitialized = true;
             }
-            catch
+            catch (Exception ex)
             {
-                NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+                this.logger.LogError(ex, "Error on editor init!");
             }
         }
     }

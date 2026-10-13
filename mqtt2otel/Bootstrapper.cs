@@ -149,7 +149,7 @@ namespace mqtt2otel
         {
             if (settings.DisableUsageTelemetry) return;
             
-            string? usageTelemetryHeaders = Environment.GetEnvironmentVariable("usage-telemetry-headers");
+            string? usageTelemetryHeaders = Environment.GetEnvironmentVariable("usage_telemetry_headers");
             if (string.IsNullOrWhiteSpace(usageTelemetryHeaders)) return;
 
             var connection = new OtelServerConnection()
