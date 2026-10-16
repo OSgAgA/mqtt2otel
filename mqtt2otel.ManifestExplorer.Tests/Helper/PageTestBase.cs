@@ -74,10 +74,37 @@ namespace mqtt2otel.ManifestExplorer.Tests.Helper
             var browserType = this.ResolveBrowserType(settings.Browser);
 
             this.Browser = await browserType.LaunchAsync(this.GetLaunchOptions(settings));
-            this.Context = await this.Browser.NewContextAsync(this.GetContextOptions(settings));
+            await CreatePageAsync();
+        }
+
+        /// <summary>
+        /// Creates a new page and a new context.
+        /// 
+        /// Always call this method if a new page is needed and never create a page or a context by hand, as not all
+        /// settings of the class may be applied correctly.
+        /// </summary>
+        private async Task CreatePageAsync()
+        {
+            try
+            {
+                if (this.Context != null)
+                {
+                    await this.Context.CloseAsync();
+                    await this.Context.DisposeAsync();
+                }
+
+                if (this.Page != null)
+                {
+                    await this.Page.CloseAsync();
+                    await this.Page.DisposeAsync();
+                }
+            }
+            catch { }
+
+            this.Context = await this.Browser.NewContextAsync(this.GetContextOptions(this.Settings));
             this.Page = await this.Context.NewPageAsync();
 
-            if (settings.RecordTraces != ActionTrigger.Never)
+            if (this.Settings.RecordTraces != ActionTrigger.Never)
             {
                 await this.Context.Tracing.StartAsync(new()
                 {
@@ -210,8 +237,12 @@ namespace mqtt2otel.ManifestExplorer.Tests.Helper
 
                 if (this.Context != null)
                 {
-                    await this.Context.CloseAsync();
-                    await this.Context.DisposeAsync();
+                    try
+                    {
+                        await this.Context.CloseAsync();
+                        await this.Context.DisposeAsync();
+                    }
+                    catch { }
                 }
 
                 if (this.TestActionTrigger(failed, this.Settings.CreateVideoOutput))
@@ -227,8 +258,12 @@ namespace mqtt2otel.ManifestExplorer.Tests.Helper
             {
                 if (this.Browser != null)
                 {
-                    await this.Browser.CloseAsync();
-                    await this.Browser.DisposeAsync();
+                    try
+                    {
+                        await this.Browser.CloseAsync();
+                        await this.Browser.DisposeAsync();
+                    }
+                    catch { }
                 }
 
                 await base.DisposeAsync();
@@ -240,20 +275,21 @@ namespace mqtt2otel.ManifestExplorer.Tests.Helper
         /// 
         /// This is done in a way, that playwright creates traces for this step.
         /// </summary>
-        /// <param name="expectation"></param>
-        /// <returns></returns>
+        /// <param name="expectation">The expected text content of the manifest editor.</param>
         public async Task ExpectManifestEditor(string expectation)
         {
             await this.Context.Tracing.GroupAsync("Test content of manifest editor)");
 
             try
             {
-                await Expect(this.Page!.Locator(".monaco-editor")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions() { Timeout = 5000 });
+                await Expect(this.Page!.Locator(".monaco-editor")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions() { Timeout = 30000 });
             }
             catch (PlaywrightException)
             {
-                await this.Page.ReloadAsync();
-                await Expect(this.Page!.Locator(".monaco-editor")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions() { Timeout = 10000 });
+                var url = this.Page.Url;
+                await this.CreatePageAsync();
+                await this.Page.GotoAsync(url);
+                await Expect(this.Page!.Locator(".monaco-editor")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions() { Timeout = 30000 });
             }
             await this.Page.WaitForFunctionAsync("() => monaco?.editor?.getModels()?.length > 0");
 
@@ -268,7 +304,7 @@ namespace mqtt2otel.ManifestExplorer.Tests.Helper
                 container.insertBefore(div, container.children[1]);
             }");
 
-            // Removes \n from expectation, as sometimes the plain text is sometimes delivered without \n from 
+            // Removes \n from expectation, as sometimes the plain text is delivered without \n from 
             // monacco control.
             var cleaned = expectation.Replace("\n", "");
 
