@@ -18,7 +18,7 @@
     <PackageReference Include="Moq" Version="4.21.0" />
     <PackageReference Include="MQTTnet" Version="5.2.0.1603" />
     <PackageReference Include="MQTTnet.Server" Version="5.2.0.1603" />
-    <PackageReference Include="OpenTelemetry.Exporter.InMemory" Version="1.19.1" />
+    <PackageReference Include="OpenTelemetry.Exporter.InMemory" Version="1.20.0" />
     <PackageReference Include="xunit.v3" Version="4.0.2" />
   </ItemGroup>
 
