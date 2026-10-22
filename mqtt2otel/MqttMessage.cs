@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace mqtt2otel
@@ -28,5 +29,37 @@ namespace mqtt2otel
         /// Gets or sets the user properties associated with this message.
         /// </summary>
         public List<UserProperty> UserProperties { get; set; } = userProperties ?? new List<UserProperty>();
+
+        /// <summary>
+        /// Provides a string representation of the message.
+        /// </summary>
+        /// <returns>The string reprentation of the message.</returns>
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+
+            sb.Append("Topic: '");
+            sb.Append(this.Topic);
+            sb.Append("', Payload: '");
+            sb.Append(this.Payload);
+            sb.Append("'");
+
+            if (this.UserProperties.Count > 0)
+            {
+                sb.Append("', User properties: ");
+                int count = 0;
+                foreach (var property in UserProperties)
+                {
+                    if (count++ != 0) sb.Append(", ");
+                    sb.Append("'");
+                    sb.Append(property.Name);
+                    sb.Append("': '");
+                    sb.Append(property.Value);
+                    sb.Append("'");
+                }
+            }
+
+            return sb.ToString();
+        }
     }
 }

@@ -63,12 +63,11 @@ namespace mqtt2otel
         /// <summary>
         /// Parses a payload by applying a NCalc expression.
         /// </summary>
-        /// <param name="name">The rule name to identify the settings in case of an error.</param>
         /// <param name="expressionString">The NCalc expression that will be applied to the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed expression.</returns>
         /// <exception cref="ExpressionParsingException">Thrown if the expression could not be parsed.</exception>
-        public object ParseExpression(string name, string expressionString, ParsingContext context)
+        public object ParseExpression(string expressionString, ParsingContext context)
         {
             try
             {
@@ -112,7 +111,7 @@ namespace mqtt2otel
             }
             catch (Exception ex)
             {
-                throw new ExpressionParsingException(ex, name, expressionString);
+                throw new ExpressionParsingException(ex, expressionString);
             }
         }
 
@@ -122,12 +121,11 @@ namespace mqtt2otel
         /// <typeparam name="TResult">The expected result type.</typeparam>
         /// <param name="name">The rule name to identify the settings in case of an error.</param>
         /// <param name="expressionString">The NCalc expression that will be applied to the payload.</param>
-        /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed expression.</returns>
         /// <exception cref="ExpressionParsingException">Thrown if the expression could not be parsed.</exception>
-        public TResult ParseExpression<TResult>(string name, string expressionString, ParsingContext context)
+        public TResult ParseExpression<TResult>(string expressionString, ParsingContext context)
         {
-            var result = this.ParseExpression(name, expressionString, context);
+            var result = this.ParseExpression(expressionString, context);
 
             try
             {
@@ -135,7 +133,7 @@ namespace mqtt2otel
             }
             catch (Exception ex)
             {
-                throw new Exception($"{name}: {expressionString} => Result is of type {result.GetType()} and could not be cast to expected type {typeof(TResult)}.", ex);
+                throw new Exception($"'{expressionString}' => Result is of type {result.GetType()} and could not be cast to expected type {typeof(TResult)}.", ex);
             }
         }
 

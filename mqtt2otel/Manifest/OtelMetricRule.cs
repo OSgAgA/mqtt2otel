@@ -11,7 +11,7 @@ namespace mqtt2otel.Manifest
     /// <summary>
     /// Provides open telemetry metric rules.
     /// </summary>
-    public class OtelMetricRule : NamedIdObject
+    public class OtelMetricRule : Rule
     {
 
         /// <summary>
@@ -73,20 +73,6 @@ namespace mqtt2otel.Manifest
         /// Gets or sets the value of the metric as a parse expression (<see cref="IPayloadParser"/>).
         /// </summary>
         public string Value { get; set; } = "Payload()";
-
-        /// <summary>
-        /// Gets or sets the name of the open telemetriy connection to be used for this rule. 
-        /// Set to null for using the default connection.
-        /// </summary>
-        [InheritedProperty]
-        public string? OtelConnection { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets the open telemetry scope that should be used for the metric.
-        /// Set to null to use the default scope of the <see cref="OtelConnection"/>.
-        /// </summary>
-        [InheritedProperty]
-        public string? OtelScope { get; set; } = null;
 
         /// <summary>
         /// Gets or sets a list of bucket boundaries used in a histogram instrument. If no histogram instrument is used, this

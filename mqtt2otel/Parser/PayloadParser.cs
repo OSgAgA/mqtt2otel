@@ -27,15 +27,15 @@ namespace mqtt2otel.Parser
         }
 
         /// <inheritdoc/>
-        public T Parse<T>(string name, string filterDefinition, ParsingContext context)
+        public T Parse<T>(string filterDefinition, ParsingContext context)
         {
-            return this.ParseExpression<T>(name, filterDefinition, context);
+            return this.ParseExpression<T>(filterDefinition, context);
         }
 
         /// <inheritdoc/>
-        public object Parse(string name, string filterDefinition, ParsingContext context)
+        public object Parse(string filterDefinition, ParsingContext context)
         {
-            return this.ParseExpression(name, filterDefinition, context);
+            return this.ParseExpression(filterDefinition, context);
         }
 
         /// <inheritdoc/>

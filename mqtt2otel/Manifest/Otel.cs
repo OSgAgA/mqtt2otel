@@ -53,6 +53,39 @@ namespace mqtt2otel.Manifest
         public string? OtelScope { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets a value indicating whether the mqtt message details should be logged in case of an error. Set to null to use the default value.
+        /// </summary>
+        [InheritedProperty]
+        public bool? LogMessageDetails { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the rule can be deactivated, when the error rate exceeds <see cref="MaxErrorRateInPercentage"/>.
+        /// Set to null to use default value.
+        /// </summary>
+        [InheritedProperty]
+        public bool? AllowRuleDeactivation { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the rule can deactivate topics from executing this rule, when the error rate for the topic is to high.
+        /// Set to null to use default value.
+        /// </summary>
+        [InheritedProperty]
+        public bool? AllowRuleDeactivationByTopic { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the rule can deactivate topics from executing this rule on a scpecific item (e.g. a property of a json message), when the error rate for the topic is to high.
+        /// Set to null to use default value.
+        /// </summary>
+        [InheritedProperty]
+        public bool? AllowRuleDeactivationByItem { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the maximum number of topics that are blocked for an item / rule. If this threshold is exceeded the whole item or rule is blocked.
+        /// </summary>
+        [InheritedProperty]
+        public int? BlockedTopicLimit { get; set; } = null;
+
+        /// <summary>
         /// Validates the object.
         /// </summary>
         /// <param name="context">The currently active context. This will be provided as a hint to the user, where a problem occured.</param>
