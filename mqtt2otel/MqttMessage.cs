@@ -41,8 +41,7 @@ namespace mqtt2otel
             sb.Append("Topic: '");
             sb.Append(this.Topic);
             sb.Append("', Payload: '");
-            var noNewLinePayload = this.Payload.ReplaceLineEndings("");
-            sb.Append(noNewLinePayload);
+            sb.Append(this.Payload);
             sb.Append("'");
 
             if (this.UserProperties.Count > 0)

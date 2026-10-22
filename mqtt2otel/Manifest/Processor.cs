@@ -452,7 +452,7 @@ namespace mqtt2otel.Manifest
         {
             if (rule.LogMessageDetails ?? true)
             {
-                this.internalLogger.LogError("Rule: '{Rule}', Processor: '{Processor}', Item: {Item}', Message: {Message}, Mqtt message details: [{MqttMessage}]", rule.Name, this.Name, itemName ?? "<<none>>", errorMessage, mqttMessage.ToString());
+                this.internalLogger.LogError("Rule: '{Rule}', Processor: '{Processor}', Item: {Item}', Message: {Message}, Mqtt message details: [{MqttMessage}]", rule.Name, this.Name, itemName ?? "<<none>>", errorMessage, mqttMessage.ToString().SanitizeForLog());
             }
             else
             {
@@ -465,7 +465,7 @@ namespace mqtt2otel.Manifest
                 {
                     rule.BlockedTopics.Add(mqttMessage.Topic);
                     this.internalLogger.LogError("Topic '{Topic}' has been blocked for " + type + " rule '{Rule}' inside processor '{Processor}'. Current blocked topic count is: {BlockedTopicCount}/{BlockedTopicLimit}.",
-                        mqttMessage.Topic, rule.Name, this.Name, rule.BlockedTopics.Count, rule.BlockedTopicLimit);
+                        mqttMessage.Topic.SanitizeForLog(), rule.Name, this.Name, rule.BlockedTopics.Count, rule.BlockedTopicLimit);
                 }
                 else
                 {
@@ -473,7 +473,7 @@ namespace mqtt2otel.Manifest
 
                     rule.BlockedItemTopics[itemName].Add(mqttMessage.Topic);
                     this.internalLogger.LogError("Topic '{Topic}' has been blocked for Item '{Item}' at " + type + " rule '{Rule}' inside processor '{Processor}'. Current blocked topic count is: {BlockedTopicCount}/{BlockedTopicLimit}.",
-                        mqttMessage.Topic, itemName, rule.Name, this.Name, rule.BlockedItemTopics[itemName].Count, rule.BlockedTopicLimit);
+                        mqttMessage.Topic.SanitizeForLog(), itemName, rule.Name, this.Name, rule.BlockedItemTopics[itemName].Count, rule.BlockedTopicLimit);
                 }
             }
 
