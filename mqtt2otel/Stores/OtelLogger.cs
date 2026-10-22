@@ -67,16 +67,15 @@ namespace mqtt2otel.Stores
         /// <param name="variables">Variables that can be applied to the payload.</param>
         /// <param name="internalLogger">The logger used for internal logging.</param>
         /// <param name="combinedAttributes">All attributes that should be applied to the log message.</param>
-        /// <returns>A value indicating whether the payload could be processed successfully.</returns>
-        public bool ProcessLogMessage(MqttMessage message, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<OtelAttribute> combinedAttributes)
+        public void ProcessLogMessage(MqttMessage message, OtelLoggingRule rule, IEnumerable<Variable> variables, ILogger internalLogger, IEnumerable<OtelAttribute> combinedAttributes)
         {
-            if (rule.Name == null) return false;
+            if (rule.Name == null) throw new Exception($"Internal error: rule name must not be null.");
 
             if (!string.IsNullOrWhiteSpace(rule.Transform))
             {
                 using (this.internalLogger.StartActivity("Logger rule transformation"))
                 {
-                    message.Payload = this.payloadTransformation.Apply(rule.Name, rule.Transform, new ParsingContext(variables, message));
+                    message.Payload = this.payloadTransformation.Apply(rule.Transform, new ParsingContext(variables, message));
                 }
             }
 
@@ -97,18 +96,9 @@ namespace mqtt2otel.Stores
                         break;
                     case OtelLoggingPayloadType.Json:
                         Dictionary<string, object?>? obj = null;
+                        obj = Newtonsoft.Json.Linq.JObject.Parse(message.Payload).ToObject<Dictionary<string, object?>>();
 
-                        try
-                        {
-                            obj = Newtonsoft.Json.Linq.JObject.Parse(message.Payload).ToObject<Dictionary<string, object?>>();
-                        }
-                        catch (Exception ex)
-                        {
-                            this.internalLogger.LogError("Could not parse message as json. The following error occured: {Message}", ex.Message.SanitizeForLog());
-                            return false;
-                        }
-
-                        if (obj == null) return false;
+                        if (obj == null) throw new Exception($"{rule.Name}: Cannot parse message payload as json.");
 
                         string messageKey = rule.MessageKey;
                         if (obj.ContainsKey(messageKey))
@@ -125,7 +115,7 @@ namespace mqtt2otel.Stores
 
                         break;
                     default:
-                        return false;
+                        throw new Exception($"Internal error. Unknown payload type: {rule.PayloadType.ToString()}.");
                 }
             }
 
@@ -133,8 +123,6 @@ namespace mqtt2otel.Stores
             {
                 ApplyLoglevelAndLogToOtel(internalLogger, attributes, body, rule);
             }
-
-            return true;
         }
 
         /// <summary>

@@ -64,7 +64,7 @@ namespace mqtt2otel.Tests._10_UnitTests
 
             embeddedExpressionParser.Expand(input, context);
 
-            payloadParserMock.Verify( parser => parser.Parse<string>(It.IsAny<string>(), expectedExpression, context));
+            payloadParserMock.Verify( parser => parser.Parse<string>(expectedExpression, context));
         }
 
         [Theory]
@@ -80,7 +80,7 @@ namespace mqtt2otel.Tests._10_UnitTests
 
             embeddedExpressionParser.Expand(input, context);
 
-            payloadParserMock.Verify(parser => parser.Parse<string>(It.IsAny<string>(), It.IsAny<string>(), context), Times.Never);
+            payloadParserMock.Verify(parser => parser.Parse<string>(It.IsAny<string>(), context), Times.Never);
         }
     }
 }

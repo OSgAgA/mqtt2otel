@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml.Linq;
 using YamlDotNet.Core.Tokens;
@@ -86,6 +87,39 @@ namespace mqtt2otel.Manifest
         public bool? CreateAttributesFromUserProperties { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets a value indicating whether the mqtt message details should be logged in case of an error. Set to null to use the default value.
+        /// </summary>
+        [InheritedProperty]
+        public bool? LogMessageDetails { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the rule can be deactivated, when the error rate exceeds <see cref="MaxErrorRateInPercentage"/>.
+        /// Set to null to use default value.
+        /// </summary>
+        [InheritedProperty]
+        public bool? AllowRuleDeactivation { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the rule can deactivate topics from executing this rule, when the error rate for the topic is to high.
+        /// Set to null to use default value.
+        /// </summary>
+        [InheritedProperty]
+        public bool? AllowRuleDeactivationByTopic { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the rule can deactivate topics from executing this rule on a scpecific item (e.g. a property of a json message), when the error rate for the topic is to high.
+        /// Set to null to use default value.
+        /// </summary>
+        [InheritedProperty]
+        public bool? AllowRuleDeactivationByItem { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the maximum number of topics that are blocked for an item / rule. If this threshold is exceeded the whole item or rule is blocked.
+        /// </summary>
+        [InheritedProperty]
+        public int? BlockedTopicLimit { get; set; } = null;
+
+        /// <summary>
         /// Gets or sets the otel settings for the processor.
         /// </summary>
         public Otel Otel { get; set; } = new();
@@ -128,7 +162,7 @@ namespace mqtt2otel.Manifest
         /// <returns>A value indicating whether the operation has been successful.</returns>
         public bool ProcessSubscriptionPayload(MqttMessage message, MqttSubscription subscription)
         {
-            bool success = false;
+            int errorCount = 0;
 
             this.usageTelemetryMeter.MessageCount.Add(1);
 
@@ -144,26 +178,27 @@ namespace mqtt2otel.Manifest
             {
                 using (this.internalLogger.StartActivity("Process metrics processors"))
                 {
-                    success = this.ProcessMetricsSubscription(message, subscription);
+                    errorCount += this.ProcessMetricsSubscription(message, subscription);
                 }
                 using (this.internalLogger.StartActivity("Process log processors"))
                 {
-                    success = success && this.ProcessLogsSubscription(message, subscription);
+                    errorCount += this.ProcessLogsSubscription(message, subscription);
                 }
             }
             catch
             {
                 sw.Stop();
                 this.processorMeter.ProcessingErrorCount.Add(1, tags);
-                throw;
+                return false;
             }
+
             sw.Stop();
 
             this.processorMeter.ProcessingTimeTotal.Record(sw.ElapsedMicroseconds, tags);
 
-            if (!success) this.processorMeter.ProcessingErrorCount.Add(1, tags);
+            if (errorCount > 0) this.processorMeter.ProcessingErrorCount.Add(errorCount, tags);
 
-            return success;
+            return errorCount == 0;
         }
 
         /// <summary>
@@ -171,37 +206,57 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="message">The received message.</param>
         /// <param name="subscription">The settings of the subscription that triggered this processor.</param>
-        /// <returns>A value indicating whether processing has been successful.</returns>
-        private bool ProcessMetricsSubscription(MqttMessage message, MqttSubscription subscription)
+        /// <returns>The number of rules, that run into an error.</returns>
+        private int ProcessMetricsSubscription(MqttMessage message, MqttSubscription subscription)
         {
+            int errorCount = 0;
 
             foreach (var rule in this.Otel.Metrics)
             {
+                lock (rule.BlockItemGate)
+                {
+                    if (!rule.IsActive || rule.BlockedTopics.Contains(message.Topic)) continue;
+                }
+
+                if (rule.Name == null) continue;
+
                 using (this.internalLogger.StartActivity("Process metrics rule"))
                 {
-                    if (rule.Name == null) continue;
+                    try
+                    {
+                        var sw = new Stopwatch();
+                        sw.Start();
+                        var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
+                        bool success = this.WriteValueToSignalStore(subscription, rule, this.Otel, message, combinedVariables);
 
-                    var sw = new Stopwatch();
-                    sw.Start();
-                    var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
-                    this.WriteValueToSignalStore(subscription, rule, this.Otel, message, combinedVariables);
-                    sw.Stop();
+                        if (!success)
+                        {
+                            errorCount++;
+                        }
 
-                    var tags = new TagList();
-                    tags.Add("processor.name", this.Name);
-                    tags.Add("processor.otel.connection", this.OtelConnection);
-                    tags.Add("subscription.name", subscription.Name);
-                    tags.Add("subscription.connection", subscription.BrokerConnection);
-                    tags.Add("rule.name", rule.Name);
-                    tags.Add("rule.connection", rule.OtelConnection);
-                    tags.Add("rule.instrument", rule.Instrument);
-                    this.processorMeter.ProcessingTimeMetricRule.Record(sw.ElapsedMicroseconds, tags);
-                    this.usageTelemetryMeter.MetricProcessingTime.Record(sw.ElapsedMicroseconds);
-                    this.processorMeter.Metrics.Add(1, tags);
+                        sw.Stop();
+
+                        var tags = new TagList();
+                        tags.Add("processor.name", this.Name);
+                        tags.Add("processor.otel.connection", this.OtelConnection);
+                        tags.Add("subscription.name", subscription.Name);
+                        tags.Add("subscription.connection", subscription.BrokerConnection);
+                        tags.Add("rule.name", rule.Name);
+                        tags.Add("rule.connection", rule.OtelConnection);
+                        tags.Add("rule.instrument", rule.Instrument);
+                        this.processorMeter.ProcessingTimeMetricRule.Record(sw.ElapsedMicroseconds, tags);
+                        this.usageTelemetryMeter.MetricProcessingTime.Record(sw.ElapsedMicroseconds);
+                        this.processorMeter.Metrics.Add(1, tags);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.HandleProcessingError("metric", rule, null, message, ex.Message);
+                        errorCount++;
+                    }
                 }
             }
 
-            return true;
+            return errorCount;
         }
 
         /// <summary>
@@ -209,65 +264,91 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="message">The message.</param>
         /// <param name="subscription">The subscription that triggered the event.</param>
-        /// <returns>A value indicating whether processing has been successful.</returns>
-        private bool ProcessLogsSubscription(MqttMessage message, MqttSubscription subscription)
+        /// <returns>The number of rules, that run into an error.</returns>
+        private int ProcessLogsSubscription(MqttMessage message, MqttSubscription subscription)
         {
+            int errorCount = 0;
             var swTransform = new Stopwatch();
 
+            Exception? transformException = null;
             using (this.internalLogger.StartActivity("Transform payload"))
             {
-                swTransform.Start();
-                if (!string.IsNullOrWhiteSpace(subscription.Transform))
+                try
                 {
-                    var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
-                    message.Payload = this.payloadTransformation.Apply(this.Name, subscription.Transform, new ParsingContext(combinedVariables, message));
+                    swTransform.Start();
+                    if (!string.IsNullOrWhiteSpace(subscription.Transform))
+                    {
+                        var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
+                        message.Payload = this.payloadTransformation.Apply(subscription.Transform, new ParsingContext(combinedVariables, message));
+                    }
+                    swTransform.Stop();
                 }
-                swTransform.Stop();
+                catch (Exception ex)
+                {
+                    swTransform.Stop();
+                    transformException = ex;
+                }
             }
-            bool success = true;
 
             foreach (var rule in this.Otel.Logs)
             {
+                lock (rule.BlockItemGate)
+                {
+                    if (!rule.IsActive || rule.BlockedTopics.Contains(message.Topic)) continue;
+                }
+
                 using (this.internalLogger.StartActivity("Process log rule"))
                 {
-                    var sw = new Stopwatch();
-                    sw.Start();
 
-                    var key = rule.Id;
-                    if (!this.dataStores.LoggerStore.ContainsKey(key))
+                    try
                     {
-                        this.internalLogger.LogError("Internal error: Could not get logger with id: {RuleId}. Skipping event.", key);
-                        return false;
+                        if (transformException != null) throw transformException;
+
+                        var sw = new Stopwatch();
+                        sw.Start();
+
+                        var key = rule.Id;
+                        if (!this.dataStores.LoggerStore.ContainsKey(key))
+                        {
+                            this.internalLogger.LogError("Internal error: Could not get logger with id: {RuleId}. Skipping event.", key);
+                            errorCount++;
+                            continue;
+                        }
+
+                        var logger = this.dataStores.LoggerStore.GetLogger(key);
+                        var combinedAttributes = rule.Attributes.Combine(this.Otel.Attributes);
+
+                        if (rule.CreateAttributesFromUserProperties.HasValue && rule.CreateAttributesFromUserProperties == true)
+                        {
+                            combinedAttributes = combinedAttributes.Combine(message.UserProperties.ToOtelAttributes());
+                        }
+
+                        logger.ProcessLogMessage(message, rule, subscription.Variables, this.internalLogger, combinedAttributes);
+
+                        sw.Stop();
+
+                        var tags = new TagList();
+                        tags.Add("processor.name", this.Name);
+                        tags.Add("processor.otel.connection", this.OtelConnection);
+                        tags.Add("subscription.name", subscription.Name);
+                        tags.Add("subscription.connection", subscription.BrokerConnection);
+                        tags.Add("rule.name", rule.Name);
+                        tags.Add("rule.connection", rule.OtelConnection);
+                        tags.Add("rule.category", rule.CategoryName);
+                        tags.Add("rule.payload_type", rule.PayloadType);
+                        this.processorMeter.ProcessingTimeLoggingRule.Record(swTransform.ElapsedTicks + sw.ElapsedTicks, tags);
+                        this.usageTelemetryMeter.LogProcessingTime.Record(swTransform.ElapsedTicks + sw.ElapsedTicks);
+                        this.processorMeter.LogEntries.Add(1, tags);
                     }
-
-                    var logger = this.dataStores.LoggerStore.GetLogger(key);
-                    var combinedAttributes = rule.Attributes.Combine(this.Otel.Attributes);
-
-                    if (rule.CreateAttributesFromUserProperties.HasValue && rule.CreateAttributesFromUserProperties == true)
+                    catch (Exception ex)
                     {
-                        combinedAttributes = combinedAttributes.Combine(message.UserProperties.ToOtelAttributes());
+                        this.HandleProcessingError("log", rule, null, message, ex.Message);
+                        errorCount++;
                     }
-
-                    success = logger.ProcessLogMessage(message, rule, subscription.Variables, this.internalLogger, combinedAttributes);
-
-                    sw.Stop();
-
-                    var tags = new TagList();
-                    tags.Add("processor.name", this.Name);
-                    tags.Add("processor.otel.connection", this.OtelConnection);
-                    tags.Add("subscription.name", subscription.Name);
-                    tags.Add("subscription.connection", subscription.BrokerConnection);
-                    tags.Add("rule.name", rule.Name);
-                    tags.Add("rule.connection", rule.OtelConnection);
-                    tags.Add("rule.category", rule.CategoryName);
-                    tags.Add("rule.payload_type", rule.PayloadType);
-                    this.processorMeter.ProcessingTimeLoggingRule.Record(swTransform.ElapsedTicks + sw.ElapsedTicks, tags);
-                    this.usageTelemetryMeter.LogProcessingTime.Record(swTransform.ElapsedTicks + sw.ElapsedTicks);
-                    this.processorMeter.LogEntries.Add(1, tags);
                 }
             }
 
-            return success;
+            return errorCount;
         }
 
         /// <summary>
@@ -278,10 +359,12 @@ namespace mqtt2otel.Manifest
         /// <param name="otelSettings">The otel settings that should be used to process this signal.</param>
         /// <param name="message">The received message.</param>
         /// <param name="variables">The variables that can be applied to the payload.</param>
-        /// <returns></returns>
-        private void WriteValueToSignalStore(MqttSubscription subscription, OtelMetricRule rule, Otel otelSettings, MqttMessage message, IEnumerable<Variable> variables)
+        /// <returns>A value indicating whether all values have been successfully written to the signal store.</returns>
+        private bool WriteValueToSignalStore(MqttSubscription subscription, OtelMetricRule rule, Otel otelSettings, MqttMessage message, IEnumerable<Variable> variables)
         {
-            if (rule.Name == null) return;
+            if (rule.Name == null) return false;
+
+            bool success = true;
 
             var combinedAttributes = otelSettings.Attributes.Combine(rule.Attributes);
 
@@ -329,6 +412,11 @@ namespace mqtt2otel.Manifest
 
                 foreach (var item in valueData)
                 {
+                    lock (rule.BlockItemGate)
+                    {
+                        if (rule.BlockedItems.Contains(item.Key) || (rule.BlockedItemTopics.ContainsKey(item.Key) && rule.BlockedItemTopics[item.Key].Contains(message.Topic))) continue;
+                    }
+
                     try
                     {
                         var newMeasurement = measurement.Clone();
@@ -336,23 +424,81 @@ namespace mqtt2otel.Manifest
                         newMeasurement.Value = item.Value;
                         CallUpdateSignalStoreValueWithType(subscription, rule, newMeasurement, context);
                     }
-                    catch (ExpressionParsingException ex)
-                    {
-                        this.internalLogger.LogError("{Message}. If message contains additional values (e.g. in a Json message) these will still be processed.", ex.Message.SanitizeForLog());
-                    }
                     catch (Exception ex)
                     {
-                        this.internalLogger.LogError(ex, "Internal error. Could not write signal to metricsContainer. {Message}. If message contains additional values (e.g. in a Json message) these will still be processed.", ex.Message.SanitizeForLog());
+                        this.HandleProcessingError("metric", rule, item.Key, message, ex.Message);
+                        success = false;
                     }
                 }
             }
-            catch (ExpressionParsingException ex)
-            {
-                this.internalLogger.LogError("{Message}. Further processing of this message is stopped.", ex.Message.SanitizeForLog());
-            }
             catch (Exception ex)
             {
-                this.internalLogger.LogError(ex, "Internal error. Could not write signal to metricsContainer. {Message}. Further processing of this message is stopped.", ex.Message.SanitizeForLog());
+                this.HandleProcessingError("metric", rule, null, message, ex.Message);
+                success = false;
+            }
+
+            return success;
+        }
+
+        /// <summary>
+        /// Handles a error, that appeared while processing a mqtt message inside this processor.
+        /// </summary>
+        /// <param name="type">The type namme (metric, log, or trace).</param>
+        /// <param name="rule">The rule that caused the error.</param>
+        /// <param name="itemName">The name of the item inside the rule, that caused the message (e.g. a json property). May be null if no item is involved.</param>
+        /// <param name="mqttMessage">The mqtt message.</param>
+        /// <param name="errorMessage">The error message.</param>
+        private void HandleProcessingError(string type, Rule rule, string? itemName, MqttMessage mqttMessage, string errorMessage)
+        {
+            if (rule.LogMessageDetails ?? true)
+            {
+                this.internalLogger.LogError("Rule: '{Rule}', Processor: '{Processor}', Item: {Item}', Message: {Message}, Mqtt message details: [{MqttMessage}]", rule.Name, this.Name, itemName ?? "<<none>>", errorMessage, mqttMessage.ToString());
+            }
+            else
+            {
+                this.internalLogger.LogError("Rule: '{RuleName}', Processor: '{ProcessorName}', Item: '{ItemName}', Message: {Message}", rule.Name, this.Name, itemName ?? "<<none>>", errorMessage);
+            }
+
+            if (rule.AllowRuleDeactivationByTopic ?? true)
+            {
+                if (itemName == null)
+                {
+                    rule.BlockedTopics.Add(mqttMessage.Topic);
+                    this.internalLogger.LogError("Topic '{Topic}' has been blocked for " + type + " rule '{Rule}' inside processor '{Processor}'. Current blocked topic count is: {BlockedTopicCount}/{BlockedTopicLimit}.",
+                        mqttMessage.Topic, rule.Name, this.Name, rule.BlockedTopics.Count, rule.BlockedTopicLimit);
+                }
+                else
+                {
+                    if (!rule.BlockedItemTopics.ContainsKey(itemName)) rule.BlockedItemTopics[itemName] = new();
+
+                    rule.BlockedItemTopics[itemName].Add(mqttMessage.Topic);
+                    this.internalLogger.LogError("Topic '{Topic}' has been blocked for Item '{Item}' at " + type + " rule '{Rule}' inside processor '{Processor}'. Current blocked topic count is: {BlockedTopicCount}/{BlockedTopicLimit}.",
+                        mqttMessage.Topic, itemName, rule.Name, this.Name, rule.BlockedItemTopics[itemName].Count, rule.BlockedTopicLimit);
+                }
+            }
+
+            lock (rule.BlockItemGate)
+            {
+                if (itemName == null)
+                {
+                    if (rule.BlockedTopics.Count > rule.BlockedTopicLimit && (rule.AllowRuleDeactivation ?? true))
+                    {
+                        rule.IsActive = false;
+                        this.internalLogger.LogError(type + " rule '{Rule}' inside processor '{Processor}' has exceeded the maximum blocked topic limit ({BlockedTopicLimit}) and is therefor disabled.", rule.Name, this.Name, rule.BlockedTopicLimit);
+                    }
+                }
+                else
+                {
+                    
+                    if (rule.BlockedItemTopics[itemName].Count > rule.BlockedTopicLimit)
+                    {
+                        if (rule.AllowRuleDeactivationByItem ?? true)
+                        {
+                            rule.BlockedItems.Add(itemName);
+                            this.internalLogger.LogError("Item '{Item}' on " + type + " rule '{Rule}' inside processor '{Processor}' has exceeded the maximum blocked topic limit ({BlockedTopicLimit}) and is therefor disabled.", itemName, rule.Name, this.Name, rule.BlockedTopicLimit);
+                        }
+                    }
+                }
             }
         }
 
@@ -369,36 +515,36 @@ namespace mqtt2otel.Manifest
             switch (rule.SignalDataType)
             {
                 case SignalDataType.Default:
-                    measurement.Value = measurement.Value != null ? measurement.Value : this.payloadParser.Parse(rule.Name, rule.Value, context);
+                    measurement.Value = measurement.Value != null ? measurement.Value : this.payloadParser.Parse(rule.Value, context);
                     break;
                 case SignalDataType.Float:
-                    measurement.Value = measurement.Value != null ? Convert.ToSingle(measurement.Value) : this.payloadParser.Parse<float>(rule.Name, rule.Value, context);
+                    measurement.Value = measurement.Value != null ? Convert.ToSingle(measurement.Value) : this.payloadParser.Parse<float>(rule.Value, context);
                     break;
                 case SignalDataType.Int:
-                    measurement.Value = measurement.Value != null ? TypeHelper.ConvertObject<int>(measurement.Value) : this.payloadParser.Parse<int>(rule.Name, rule.Value, context);
+                    measurement.Value = measurement.Value != null ? TypeHelper.ConvertObject<int>(measurement.Value) : this.payloadParser.Parse<int>(rule.Value, context);
                     break;
                 case SignalDataType.Bool:
-                    bool boolValue = measurement.Value != null ? TypeHelper.ConvertObject<bool>(measurement.Value) : this.payloadParser.Parse<bool>(rule.Name, rule.Value, context);
+                    bool boolValue = measurement.Value != null ? TypeHelper.ConvertObject<bool>(measurement.Value) : this.payloadParser.Parse<bool>(rule.Value, context);
                     measurement.Value = boolValue ? 1 : 0;
                     measurement.SignalDataType = SignalDataType.Int;
                     break;
                 case SignalDataType.Double:
-                    measurement.Value = measurement.Value != null ? Convert.ToDouble(measurement.Value) : this.payloadParser.Parse<double>(rule.Name, rule.Value, context);
+                    measurement.Value = measurement.Value != null ? Convert.ToDouble(measurement.Value) : this.payloadParser.Parse<double>(rule.Value, context);
                     break;
                 case SignalDataType.Long:
-                    measurement.Value = measurement.Value != null ? Convert.ToInt64(measurement.Value) : this.payloadParser.Parse<long>(rule.Name, rule.Value, context);
+                    measurement.Value = measurement.Value != null ? Convert.ToInt64(measurement.Value) : this.payloadParser.Parse<long>(rule.Value, context);
                     break;
                 case SignalDataType.Decimal:
-                    measurement.Value = measurement.Value != null ? Convert.ToDecimal(measurement.Value) : this.payloadParser.Parse<decimal>(rule.Name, rule.Value, context);
+                    measurement.Value = measurement.Value != null ? Convert.ToDecimal(measurement.Value) : this.payloadParser.Parse<decimal>(rule.Value, context);
                     break;
                 case SignalDataType.String:
-                    measurement.Value = measurement.Value != null ? (measurement.Value.ToString() ?? string.Empty) : this.payloadParser.Parse<string>(rule.Name, rule.Value, context);
+                    measurement.Value = measurement.Value != null ? (measurement.Value.ToString() ?? string.Empty) : this.payloadParser.Parse<string>(rule.Value, context);
                     break;
                 case SignalDataType.DateTime:
-                    measurement.Value = measurement.Value != null ? (DateTime)measurement.Value : this.payloadParser.Parse<DateTime>(rule.Name, rule.Value, context);
+                    measurement.Value = measurement.Value != null ? (DateTime)measurement.Value : this.payloadParser.Parse<DateTime>(rule.Value, context);
                     break;
                 default:
-                    throw new ExpressionParsingException(new Exception(), rule.Name, $"Signal type {rule.SignalDataType} not supported.");
+                    throw new ExpressionParsingException(new Exception(), $"Signal type {rule.SignalDataType} not supported.");
             }
 
             this.UpdateSignalStoreValue(subscription, rule, measurement, context);
@@ -429,7 +575,7 @@ namespace mqtt2otel.Manifest
                 {
                     if (!string.IsNullOrWhiteSpace(condition))
                     {
-                        checkResult &= this.payloadParser.Parse<bool>($"{rule.Name}.WhenCondition", condition, actionContext);
+                        checkResult &= this.payloadParser.Parse<bool>(condition, actionContext);
                     }
                 }
 
@@ -455,14 +601,14 @@ namespace mqtt2otel.Manifest
             {
                 var valueConverterContext = context.Clone();
                 valueConverterContext.InternalVariables["Value"] = measurement.Value;
-                measurement.Value = this.payloadParser.Parse(this.Name, measurement.ValueConverter, valueConverterContext);
+                measurement.Value = this.payloadParser.Parse(measurement.ValueConverter, valueConverterContext);
             }
 
             if (measurement.NameFormatter != null)
             {
                 var nameContext = context.Clone();
                 nameContext.InternalVariables["Name"] = measurement.SignalName;
-                measurement.SignalName = this.payloadParser.Parse<string>(this.Name, measurement.NameFormatter, nameContext);
+                measurement.SignalName = this.payloadParser.Parse<string>(measurement.NameFormatter, nameContext);
             }
 
             //Then write the data.

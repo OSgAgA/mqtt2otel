@@ -8,8 +8,9 @@ namespace mqtt2otel.Manifest
     /// <summary>
     /// Provides an open telemetry logging rules.
     /// </summary>
-    public class OtelLoggingRule : NamedIdObject
+    public class OtelLoggingRule : Rule
     {
+
         /// <summary>
         /// Gets or sets the category name, that should be used by the logger.
         /// </summary>
@@ -41,13 +42,6 @@ namespace mqtt2otel.Manifest
         /// Leave empty to not apply any transformation to the payload.
         /// </summary>
         public string Transform { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the name of the open telemetriy connection to be used for this rule. 
-        /// Set to null for using the default connection.
-        /// </summary>
-        [InheritedProperty]
-        public string? OtelConnection { get; set; } = null;
 
         /// <summary>
         /// Gets or sets a value indicating, whether attributes should be created from mqtt user properties (true), or not (false), or

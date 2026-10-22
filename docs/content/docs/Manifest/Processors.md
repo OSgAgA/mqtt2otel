@@ -53,15 +53,20 @@ Processors:
 
 The Processor consists of the following parameters:
 
-| Parameter                                                     | Description                                                                                                               |
-|---------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| Name                                                          | An optional name for the processor.                                                                                       |
-| Description                                                   | An optional description of the processor.                                                                                 |
-| OtelConnection                                                | A reference to an otel connection, if not set the default connection will be used.                                        |
-| OtelScope {{< version value="beta">}}                         | The (optional) name of the instrumentation scope to be used.                                                              | 
-| CreateAttributesFromUserProperties {{< version value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings. |
-| Mqtt                                                          | A section containing mqtt relevant parameters. {{< importFromLabel >}}                                                    |           
-| Otel                                                          | A section containint open telemetry relevant parameters. {{< importFromLabel >}}                                          |   
+| Parameter                                                     | Description                                                                                                                                         |
+|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| Name                                                          | An optional name for the processor.                                                                                                                 |
+| Description                                                   | An optional description of the processor.                                                                                                           |
+| OtelConnection                                                | A reference to an otel connection, if not set the default connection will be used.                                                                  |
+| OtelScope {{< version value="beta">}}                         | The (optional) name of the instrumentation scope to be used.                                                                                        | 
+| CreateAttributesFromUserProperties {{< version value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings.                           |
+| LogMessageDetails            {{< version value="beta">}}      | Indicates whether MQTT message details should be logged when an error occurs. Set to false, if data contains information that should not be logged. |
+| AllowRuleDeactivation        {{< version value="beta">}}      | Determines whether a rule may be deactivated.                                                                                                       |
+| AllowRuleDeactivationByTopic {{< version value="beta">}}      | Controls whether individual topics may be deactivated for a rule                                                                                    |
+| AllowRuleDeactivationByItem  {{< version value="beta">}}      | Controls whether individual topics may be deactivated for a specific item inside a rule.                                                            |
+| BlockedTopicLimit            {{< version value="beta">}}      | Defines the maximum number of topics that may be blocked for an item or rule before the entire item or rule becomes globally deactivated.           |
+| Mqtt                                                          | A section containing mqtt relevant parameters. {{< importFromLabel >}}                                                                              |           
+| Otel                                                          | A section containint open telemetry relevant parameters. {{< importFromLabel >}}                                                                    |   
 
 
 
@@ -124,17 +129,22 @@ A simple example for the Otel would look like this:
 
 It consists of the following parameters:
 
-| Parameter                                                                                | Description                                                                                                                                                               |
-|------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Name                                                                                     | An optional name for the otel configuration.                                                                                                                              |
-| Description                                                                              | An optional description.                                                                                                                                                  |
-| Attributes                                                                               | A list of otel attributes that will be added to the otel signal. {{< embeddedExpressionLabel >}}                                                                          |
-| TopicAttributes {{< version value="1.1">}}                                               | The (optional) [TopicAttribute expression](/docs/expressions/topicparsing/#the-topicattribute-syntax) that maps topics to attributes.                                     |  
-| CreateAttributesFromUserProperties {{< version value="1.1">}}                            | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings.                                                 |
-| OtelConnection                                                                           | The (optional) otel connection name that will be applied to all `Metrics` and `Logs` sections that do not explicitly state the connection name.                           | 
-| OtelScope {{< version value="beta">}}                                                    | The (optional) name of the instrumentation scope to be used.                                                                                                              | 
-| Metrics                                                                                  | An optional list of `Metrics` that will describe how the payload of a subscription message will be parsed into an otel metric signal. {{< importFromLabel >}}             | 
-| Logs                                                                                     | An optional list of `Logs` that will describe how the payload of a subscription message will be parsed into an otel log message. {{< importFromLabel >}}                  | 
+| Parameter                                                      | Description                                                                                                                                                               |
+|----------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Name                                                           | An optional name for the otel configuration.                                                                                                                              |
+| Description                                                    | An optional description.                                                                                                                                                  |
+| Attributes                                                     | A list of otel attributes that will be added to the otel signal. {{< embeddedExpressionLabel >}}                                                                          |
+| TopicAttributes {{< version value="1.1">}}                     | The (optional) [TopicAttribute expression](/docs/expressions/topicparsing/#the-topicattribute-syntax) that maps topics to attributes.                                     |  
+| CreateAttributesFromUserProperties {{< version value="1.1">}}  | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings.                                                 |
+| LogMessageDetails            {{< version value="beta">}}       | Indicates whether MQTT message details should be logged when an error occurs. Set to false, if data contains information that should not be logged.                       |
+| AllowRuleDeactivation        {{< version value="beta">}}       | Determines whether a rule may be deactivated.                                                                                                                             |
+| AllowRuleDeactivationByTopic {{< version value="beta">}}       | Controls whether individual topics may be deactivated for a rule                                                                                                          |
+| AllowRuleDeactivationByItem  {{< version value="beta">}}       | Controls whether individual topics may be deactivated for a specific item inside a rule.                                                                                  |
+| BlockedTopicLimit            {{< version value="beta">}}       | Defines the maximum number of topics that may be blocked for an item or rule before the entire item or rule becomes globally deactivated.                                 |
+| OtelConnection                                                 | The (optional) otel connection name that will be applied to all `Metrics` and `Logs` sections that do not explicitly state the connection name.                           | 
+| OtelScope {{< version value="beta">}}                          | The (optional) name of the instrumentation scope to be used.                                                                                                              | 
+| Metrics                                                        | An optional list of `Metrics` that will describe how the payload of a subscription message will be parsed into an otel metric signal. {{< importFromLabel >}}             | 
+| Logs                                                           | An optional list of `Logs` that will describe how the payload of a subscription message will be parsed into an otel log message. {{< importFromLabel >}}                  | 
 
 ## The Otel metrics section
 
@@ -142,24 +152,29 @@ When a mqtt message payload is received and a `Metric` section exists it will cr
 
 It consists of the following parameters:
 
-| Parameter                                                                                | Description                                                                                                                                                                |
-|------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Name                                                                                     | The name of the created metric that will be send to the open telemetry endpoint. {{< embeddedExpressionLabel >}}                                                           |
-| Description                                                                              | The optional description that will be send to the open telemetry endpoint. {{< embeddedExpressionLabel >}}                                                                 |
-| Attributes                                                                               | A list of otel attributes that will be added to the otel metric. {{< embeddedExpressionLabel >}}                                                                           |
-| TopicAttributes {{< version value="1.1">}}                                               | The (optional) [TopicAttribute expression](/docs/expressions/topicparsing/#the-topicattribute-syntax) that maps topics to attributes.                                      | 
-| CreateAttributesFromUserProperties {{< version value="1.1">}}                            | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings.                                                  |
-| OtelConnection                                                                           | The (optional) otel server connection that will be applied to the metric. If not set the default server is used.                                                           | 
-| OtelScope {{< version value="beta">}}                                                    | The (optional) name of the instrumentation scope to be used.                                                                                                               | 
-| Instrument                                                                               | Defines the otel metric instruments to be used. See [otel instruments](#otel-instruments) for details.                                                                     | 
-| SignalDataType                                                                           | The data type of the metric. See [otel data types](#otel-data-types) for details.                                                                                          | 
-| Unit                                                                                     | The optional unit that will be sent to the open telemetry endpoint as part of the metric. {{< embeddedExpressionLabel >}}                                                  | 
-| ValueConverter {{< version value="1.1">}}                                                | The optional converter pattern, that will be used to convert a value. See [Converter](/docs/expressions/converter-and-formatter).                                          | 
-| NameFormatter {{< version value="1.1">}}                                                 | The optional formatter pattern that will be used to format the name of the signal. See [Converter](/docs/expressions/converter-and-formatter).                             | 
-| ParseAs {{< version value="1.1">}}                                                       | This optional parameter tells the processor to automaticall detect the signals based on the payload type. Available values: Json and XML. See [ParseAs](#parseas).         | 
-| Actions {{< version value="1.1">}}                                                       | This optional parameter provides conditional actions that can be applied to a signal. See [Actions](/docs/expressions/actions).                                            | 
-| Value                                                                                    | The value of the metric. Must be of type `SignalDataType`. {{< expressionLabel >}}                                                                                         | 
-| HistogramBucketBoundaries                                                                | A list of bucket values for the `Histogram` instrument. See [histogram bucket boundaries](#histogram-bucket-boundaries).                                                   | 
+| Parameter                                                      | Description                                                                                                                                                                |
+|----------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Name                                                           | The name of the created metric that will be send to the open telemetry endpoint. {{< embeddedExpressionLabel >}}                                                           |
+| Description                                                    | The optional description that will be send to the open telemetry endpoint. {{< embeddedExpressionLabel >}}                                                                 |
+| Attributes                                                     | A list of otel attributes that will be added to the otel metric. {{< embeddedExpressionLabel >}}                                                                           |
+| TopicAttributes {{< version value="1.1">}}                     | The (optional) [TopicAttribute expression](/docs/expressions/topicparsing/#the-topicattribute-syntax) that maps topics to attributes.                                      | 
+| CreateAttributesFromUserProperties {{< version value="1.1">}}  | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings.                                                  |
+| LogMessageDetails            {{< version value="beta">}}       | Indicates whether MQTT message details should be logged when an error occurs. Set to false, if data contains information that should not be logged.                        |
+| AllowRuleDeactivation        {{< version value="beta">}}       | Determines whether a rule may be deactivated.                                                                                                                              |
+| AllowRuleDeactivationByTopic {{< version value="beta">}}       | Controls whether individual topics may be deactivated for a rule                                                                                                           |
+| AllowRuleDeactivationByItem  {{< version value="beta">}}       | Controls whether individual topics may be deactivated for a specific item inside a rule.                                                                                   |
+| BlockedTopicLimit            {{< version value="beta">}}       | Defines the maximum number of topics that may be blocked for an item or rule before the entire item or rule becomes globally deactivated.                                  |
+| OtelConnection                                                 | The (optional) otel server connection that will be applied to the metric. If not set the default server is used.                                                           | 
+| OtelScope {{< version value="beta">}}                          | The (optional) name of the instrumentation scope to be used.                                                                                                               | 
+| Instrument                                                     | Defines the otel metric instruments to be used. See [otel instruments](#otel-instruments) for details.                                                                     | 
+| SignalDataType                                                 | The data type of the metric. See [otel data types](#otel-data-types) for details.                                                                                          | 
+| Unit                                                           | The optional unit that will be sent to the open telemetry endpoint as part of the metric. {{< embeddedExpressionLabel >}}                                                  | 
+| ValueConverter {{< version value="1.1">}}                      | The optional converter pattern, that will be used to convert a value. See [Converter](/docs/expressions/converter-and-formatter).                                          | 
+| NameFormatter {{< version value="1.1">}}                       | The optional formatter pattern that will be used to format the name of the signal. See [Converter](/docs/expressions/converter-and-formatter).                             | 
+| ParseAs {{< version value="1.1">}}                             | This optional parameter tells the processor to automaticall detect the signals based on the payload type. Available values: Json and XML. See [ParseAs](#parseas).         | 
+| Actions {{< version value="1.1">}}                             | This optional parameter provides conditional actions that can be applied to a signal. See [Actions](/docs/expressions/actions).                                            | 
+| Value                                                          | The value of the metric. Must be of type `SignalDataType`. {{< expressionLabel >}}                                                                                         | 
+| HistogramBucketBoundaries                                      | A list of bucket values for the `Histogram` instrument. See [histogram bucket boundaries](#histogram-bucket-boundaries).                                                   | 
 
 ### Example:
 
@@ -233,8 +248,6 @@ Two metrics will be created:
 > formatting the signal name using a [`NameFormatter`](/docs/expressions/converter-and-formatter/#nameformatter).
 
 
-
-
 ### Histogram bucket boundaries
 
 When using a histogram instrument you can explicitly set the bucket boundaries for the instrument.
@@ -257,19 +270,24 @@ When a mqtt message payload is received and a `Logs` section exists it will crea
 
 It consists of the following parameters:
 
-| Parameter                                                                                | Description                                                                                                                                                                                   |
-|------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Name                                                                                     | The optional name of the log processor.                                                                                                                                                       |
-| Description                                                                              | The optional description.                                                                                                                                                                     |
-| Attributes                                                                               | A list of otel attributes that will be added to the otel log entry. {{< embeddedExpressionLabel >}}                                                                                           |
-| CreateAttributesFromUserProperties {{< version value="1.1">}}                            | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings.                                                                     |
-| OtelConnection                                                                           | The (optional) otel server connection of the otel endpoint where the log entry should be send. If not set the default connection is used.                                                     | 
-| Filter                                                                                   | Defines the filter expression that will be applied if the `PayloadType` is set to `Text`. {{< expressionLabel >}}                                                                             | 
-| PayloadType                                                                              | The type of the payload, that the processor will process. Must be one of the following: `Text` or `Json`                                                                                      | 
-| CategoryName                                                                             | The category name, that will be send with the open telemetry log entry. Default is `mqtt2otel`                                                                                                | 
-| Transform                                                                                | An optional transform expression that will be applied to the message payloads. {{< transformationLabel >}}                                                                                    | 
-| MessageKey                                                                               | If `PayloadType`is `Json` this is the key that will be used for identifying the message body. Default is: `otel_message`                                                                      | 
-| LogLevelKey                                                                              | If `PayloadType`is `Json` this is the key that will be used for identifying the log level. Default is: `otel_loglevel`                                                                        | 
+| Parameter                                                     | Description                                                                                                                                         |
+|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| Name                                                          | The optional name of the log processor.                                                                                                             |
+| Description                                                   | The optional description.                                                                                                                           |
+| Attributes                                                    | A list of otel attributes that will be added to the otel log entry. {{< embeddedExpressionLabel >}}                                                 |
+| CreateAttributesFromUserProperties {{< version value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings.                           |
+| LogMessageDetails            {{< version value="beta">}}      | Indicates whether MQTT message details should be logged when an error occurs. Set to false, if data contains information that should not be logged. |
+| AllowRuleDeactivation        {{< version value="beta">}}      | Determines whether a rule may be deactivated.                                                                                                       |
+| AllowRuleDeactivationByTopic {{< version value="beta">}}      | Controls whether individual topics may be deactivated for a rule                                                                                    |
+| AllowRuleDeactivationByItem  {{< version value="beta">}}      | Controls whether individual topics may be deactivated for a specific item inside a rule.                                                            |
+| BlockedTopicLimit            {{< version value="beta">}}      | Defines the maximum number of topics that may be blocked for an item or rule before the entire item or rule becomes globally deactivated.           |
+| OtelConnection                                                | The (optional) otel server connection of the otel endpoint where the log entry should be send. If not set the default connection is used.           | 
+| Filter                                                        | Defines the filter expression that will be applied if the `PayloadType` is set to `Text`. {{< expressionLabel >}}                                   | 
+| PayloadType                                                   | The type of the payload, that the processor will process. Must be one of the following: `Text` or `Json`                                            | 
+| CategoryName                                                  | The category name, that will be send with the open telemetry log entry. Default is `mqtt2otel`                                                      | 
+| Transform                                                     | An optional transform expression that will be applied to the message payloads. {{< transformationLabel >}}                                          | 
+| MessageKey                                                    | If `PayloadType`is `Json` this is the key that will be used for identifying the message body. Default is: `otel_message`                            | 
+| LogLevelKey                                                   | If `PayloadType`is `Json` this is the key that will be used for identifying the log level. Default is: `otel_loglevel`                              | 
 
 ### Example:
 

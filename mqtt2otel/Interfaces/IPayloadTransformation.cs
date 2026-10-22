@@ -12,10 +12,9 @@ namespace mqtt2otel.Interfaces
         /// Applies a transformation to a payload.
         /// </summary>
         /// <param name="category">The subscription type that triggered the transformation.</param>
-        /// <param name="name">An identifier to help the user to idnetify the correct position of the transformation in case of an error.</param>
         /// <param name="expression">The expression that should be used for transforming the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The transformed payload</returns>
-        string Apply(string name, string expression, ParsingContext context);
+        string Apply(string expression, ParsingContext context);
     }
 }
