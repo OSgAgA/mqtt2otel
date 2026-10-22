@@ -85,11 +85,11 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             }
             catch (YamlException ex)
             {
-                return new ApplyPatternToPayloadResult(new ErrorTestData(ex.Message, new Metadata.Position(ex.Start.Line, ex.Start.Column), new Metadata.Position(ex.End.Line, ex.End.Column)));
+                return new ApplyPatternToPayloadResult(error: new ErrorTestData(ex.Message, new Metadata.Position(ex.Start.Line, ex.Start.Column), new Metadata.Position(ex.End.Line, ex.End.Column)));
             }
             catch (Exception ex)
             {
-                return new ApplyPatternToPayloadResult(new ErrorTestData(ex.Message ?? ""));
+                return new ApplyPatternToPayloadResult(error: new ErrorTestData(ex.Message ?? ""));
             }
 
             if (manifest.MqttConnections.Count == 0)
@@ -118,7 +118,7 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             if (!validationResult.Success)
             {
-                return new ApplyPatternToPayloadResult(new ErrorTestData(validationResult.ToString() ?? ""));
+                return new ApplyPatternToPayloadResult(error: new ErrorTestData(validationResult.ToString() ?? ""));
             }
 
             ILogger<MqttCoordinator> mqttLogger = new Logger<MqttCoordinator>(new LoggerFactory());
@@ -140,12 +140,7 @@ namespace mqtt2otel.ManifestExplorer.Controllers
                     bool success = await mqtt.SimulateOnMqttMessageReceived(message);
                 }
 
-                if (processorErrors.Any())
-                {
-                    return new ApplyPatternToPayloadResult(processorErrors);
-                }
-
-                return new ApplyPatternToPayloadResult(exportBuilder);
+                return new ApplyPatternToPayloadResult(exportBuilder, processorErrors);
             }
             finally
             {

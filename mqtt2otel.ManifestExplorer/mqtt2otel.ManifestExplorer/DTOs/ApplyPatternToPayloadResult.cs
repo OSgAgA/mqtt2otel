@@ -36,7 +36,7 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// <summary>
         /// Gets a value indicating whether the reusult contains logs.
         /// </summary>
-        public bool HasLogs { get=> this.Logs.Count > 0; }
+        public bool HasLogs { get => this.Logs.Count > 0; }
 
         /// <summary>
         /// Gets a value indicating whether the result contains errors.
@@ -56,28 +56,57 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// <summary>
         /// Initializes a new instance of the <see cref="ApplyPatternToPayloadResult"/> class.        
         /// </summary>
-        /// <param name="metrics">The metrics result.</param>
-        /// <param name="logs">The logs result.</param>
-        public ApplyPatternToPayloadResult(OtelTestExporterBuilder exportBuilder)
+        /// <param name="exportBuilder">The export builder containing the metrics and log results.</param>
+        /// <param name="error">The error result.</param>
+        public ApplyPatternToPayloadResult(OtelTestExporterBuilder? exportBuilder = null, List<ErrorTestData>? errors = null)
         {
-            foreach (var connectionValue in exportBuilder.GetAllMetrics())
+            this.Initialize(exportBuilder, errors);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApplyPatternToPayloadResult"/> class.        
+        /// </summary>
+        /// <param name="exportBuilder">The export builder containing the metrics and log results.</param>
+        /// <param name="error">The error result.</param>
+        private void Initialize(OtelTestExporterBuilder? exportBuilder, List<ErrorTestData>? errors)
+        {
+            if (errors != null)
             {
-                    this.Metrics.Add(new MetricTestData(connectionValue.Value, connectionValue.Connection));
+                foreach (var error in errors)
+                {
+                    this.Errors.Add(error);
+                }
             }
 
-            foreach (var connectionValue in exportBuilder.GetAllLogs())
+            if (exportBuilder != null)
             {
-                this.Logs.Add(new LogTestData(connectionValue.Value, connectionValue.Connection));
+                foreach (var connectionValue in exportBuilder.GetAllMetrics())
+                {
+                    this.Metrics.Add(new MetricTestData(connectionValue.Value, connectionValue.Connection));
+                }
+
+                foreach (var connectionValue in exportBuilder.GetAllLogs())
+                {
+                    this.Logs.Add(new LogTestData(connectionValue.Value, connectionValue.Connection));
+                }
             }
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApplyPatternToPayloadResult"/> class.        
         /// </summary>
+        /// <param name="exportBuilder">The export builder containing the metrics and log results.</param>
         /// <param name="error">The error result.</param>
-        public ApplyPatternToPayloadResult(ErrorTestData error)
+        public ApplyPatternToPayloadResult(OtelTestExporterBuilder? exportBuilder = null, ErrorTestData? error = null)
         {
-            this.Errors.Add(error);
+            if (error == null)
+            {
+                this.Initialize(exportBuilder, new List<ErrorTestData>());
+            }
+            else
+            {
+                this.Initialize(exportBuilder, new List<ErrorTestData> { error });
+            }
         }
 
         /// <summary>
@@ -86,10 +115,7 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// <param name="errors">The error result.</param>
         public ApplyPatternToPayloadResult(List<ErrorTestData> errors)
         {
-            foreach (var error in errors)
-            {
-                this.Errors.Add(error);
-            }
+
         }
 
         /// <summary>
@@ -132,7 +158,7 @@ namespace mqtt2otel.ManifestExplorer.DTOs
 
             foreach (var error in this.Errors)
             {
-                sb.Append(error.ToString());
+                sb.AppendLine(error.ToString());
             }
             return sb.ToString();
         }

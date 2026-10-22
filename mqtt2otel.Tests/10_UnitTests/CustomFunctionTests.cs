@@ -24,7 +24,7 @@ namespace mqtt2otel.Tests._10_UnitTests
 
             var context = new ParsingContext(new List<Variable>(), new MqttMessage());
             var expr = $"{function}('{input}')";
-            var result = parser.ParseExpression<string>("Test", expr, context);
+            var result = parser.ParseExpression<string>(expr, context);
 
             Assert.Equal(expectedResult, result);
         }
@@ -71,7 +71,7 @@ namespace mqtt2otel.Tests._10_UnitTests
                 expr = $"{function}({input})";
             }
 
-            var result = parser.ParseExpression("Test", expr, context);
+            var result = parser.ParseExpression(expr, context);
 
             Assert.Equal(expectedResult, result);
             Assert.Equal(result.GetType(), expectedType);
@@ -87,7 +87,7 @@ namespace mqtt2otel.Tests._10_UnitTests
 
             var context = new ParsingContext(new List<Variable>(), new MqttMessage());
             var expr = $"{function}('{input}')";
-            var result = parser.ParseExpression<string>("Test", expr, context);
+            var result = parser.ParseExpression<string>(expr, context);
 
             Assert.Equal(expectedResult, result);
         }
@@ -112,7 +112,7 @@ namespace mqtt2otel.Tests._10_UnitTests
 
             var context = new ParsingContext(new List<Variable>(), new MqttMessage());
             var expr = $"{function}('{input}', '{parameter}')";
-            var result = parser.ParseExpression("Test", expr, context);
+            var result = parser.ParseExpression(expr, context);
 
             Assert.Equal(expectedResult, result);
         }
@@ -126,7 +126,7 @@ namespace mqtt2otel.Tests._10_UnitTests
 
             var context = new ParsingContext(new List<Variable>(), new MqttMessage());
             var expr = $"Replace('{input}', '{replace}', '{replaceWith}')";
-            var result = parser.ParseExpression("Test", expr, context);
+            var result = parser.ParseExpression(expr, context);
 
             Assert.Equal(expectedResult, result);
         }

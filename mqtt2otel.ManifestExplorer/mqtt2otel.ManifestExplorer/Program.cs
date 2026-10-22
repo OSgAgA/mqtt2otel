@@ -62,6 +62,16 @@ namespace mqtt2otel.ManifestExplorer
                                  options.ExportProcessorType = otelSettings.ExportProcessorType;
                                  options.Headers = otelSettings.Headers;
                              });
+                         })
+                         .WithLogging( logs =>
+                         {
+                             logs.AddOtlpExporter(options =>
+                             {
+                                 options.Endpoint = new Uri(otelSettings.Endpoint.Uri);
+                                 options.Protocol = otelSettings.OtlpExportProtocol;
+                                 options.ExportProcessorType = otelSettings.ExportProcessorType;
+                                 options.Headers = otelSettings.Headers;
+                             });
                          });
             }
 

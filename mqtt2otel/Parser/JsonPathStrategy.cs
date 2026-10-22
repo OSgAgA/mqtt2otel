@@ -29,14 +29,14 @@ namespace mqtt2otel.Parser
 
             if (token == null)
             {
-                throw new Exception($"Applying filter '{filter}' to payload '{context.Message.Payload}' returned no result.");
+                throw new Exception($"Applying filter '{filter}' to payload returned no result.");
             }
 
             object? result = ((JValue)token).Value;
 
             if (result == null)
             {
-                throw new Exception($"Result of applying filter: '{filter}' to payload '{context.Message.Payload}' could not be read.");
+                throw new Exception($"Result of applying filter: '{filter}' to payload could not be read.");
             }
 
             return result;

@@ -116,6 +116,36 @@ namespace mqtt2otel.Manifest
         public bool? CreateAttributesFromUserProperties { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets a value indicating whether the mqtt message details should be logged in case of an error.
+        /// </summary>
+        [InheritedProperty]
+        public bool? LogMessageDetails { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the rule can be deactivated, when the error rate exceeds <see cref="MaxErrorRateInPercentage"/>.
+        /// </summary>
+        [InheritedProperty]
+        public bool? AllowRuleDeactivation { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the rule can deactivate topics from executing this rule, when the error rate for the topic is to high.
+        /// </summary>
+        [InheritedProperty]
+        public bool? AllowRuleDeactivationByTopic { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the rule can deactivate topics from executing this rule on a scpecific item (e.g. a property of a json message), when the error rate for the topic is to high.
+        /// </summary>
+        [InheritedProperty]
+        public bool? AllowRuleDeactivationByItem { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the maximum number of topics that are blocked for an item / rule. If this threshold is exceeded the whole item or rule is blocked.
+        /// </summary>
+        [InheritedProperty]
+        public int? BlockedTopicLimit { get; set; } = 3;
+
+        /// <summary>
         /// Gets or sets the manifest version.
         /// </summary>
         public string Version { get; set; } = "";

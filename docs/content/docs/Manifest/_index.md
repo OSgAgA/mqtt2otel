@@ -50,6 +50,12 @@ As a starting point, this is an example manifest using logs, and metrics:
 
 The Manifest supports the following general settings:
 
-| Parameter                                                                                | Description                                                                                                  |
-|------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
-| CreateAttributesFromUserProperties {{< version value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes. Leave null to use parent settings. |
+| Parameter                                                     | Description                                                                                                                                         |
+|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| CreateAttributesFromUserProperties {{< version value="1.1">}} | A value indicating, whether attributes should be created for all mqtt user attributes.                                                              |
+| LogMessageDetails            {{< version value="beta">}}      | Indicates whether MQTT message details should be logged when an error occurs. Set to false, if data contains information that should not be logged. |
+| AllowRuleDeactivation        {{< version value="beta">}}      | Determines whether a rule may be deactivated.                                                                                                       |
+| AllowRuleDeactivationByTopic {{< version value="beta">}}      | Controls whether individual topics may be deactivated for a rule                                                                                    |
+| AllowRuleDeactivationByItem  {{< version value="beta">}}      | Controls whether individual topics may be deactivated for a specific item inside a rule.                                                            |
+| BlockedTopicLimit            {{< version value="beta">}}      | Defines the maximum number of topics that may be blocked for an item or rule before the entire item or rule becomes globally deactivated.           |
+

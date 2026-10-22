@@ -146,7 +146,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var logRule = manifest.Processors[0].Otel.Logs[0];
 
             var logger = dataStores.LoggerStore.GetLogger(logRule.Id);
-            bool success = logger.ProcessLogMessage(new MqttMessage( payload: "This is a test message", topic: "sensors/temperature"), logRule, new List<Variable>(), internalLogger.Object, logRule.Attributes);
+            logger.ProcessLogMessage(new MqttMessage( payload: "This is a test message", topic: "sensors/temperature"), logRule, new List<Variable>(), internalLogger.Object, logRule.Attributes);
 
             Assert.Single(exportBuilder.GetAllLogs());
             var logEntry = exportBuilder.GetAllLogs().First().Value;
@@ -201,7 +201,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var logRule = manifest.Processors[0].Otel.Logs[0];
 
             var logger = dataStores.LoggerStore.GetLogger(logRule.Id);
-            bool success = logger.ProcessLogMessage(new MqttMessage( payload: "2026-01-31T15:42Z WARN This is a simple log message.", topic: "sensors/temperature"), logRule, new List<Variable>(), internalLogger.Object, logRule.Attributes);
+            logger.ProcessLogMessage(new MqttMessage( payload: "2026-01-31T15:42Z WARN This is a simple log message.", topic: "sensors/temperature"), logRule, new List<Variable>(), internalLogger.Object, logRule.Attributes);
 
             Assert.Single(exportBuilder.GetAllLogs());
             var logEntry = exportBuilder.GetAllLogs().First().Value;

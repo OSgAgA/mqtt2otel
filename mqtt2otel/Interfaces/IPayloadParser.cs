@@ -25,19 +25,17 @@ namespace mqtt2otel.Interfaces
         /// Parses a string payload to a given type.
         /// </summary>
         /// <typeparam name="T">The expected result type.</typeparam>
-        /// <param name="name">An identifier identifying the context of the parser. This enables the user to find the cause of the error.</param>
         /// <param name="expression">The expression that should be applied to the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed value.</returns>
-        T Parse<T>(string name, string expression, ParsingContext context);
+        T Parse<T>(string expression, ParsingContext context);
 
         /// <summary>
         /// Parses a string payload to a given type.
         /// </summary>
-        /// <param name="name">An identifier identifying the context of the parser. This enables the user to find the cause of the error.</param>
         /// <param name="expression">The expression that should be applied to the payload.</param>
         /// <param name="context">The execution context in which the strategy will be exeucted.</param>
         /// <returns>The parsed value.</returns>
-        object Parse(string name, string expression, ParsingContext context);
+        object Parse(string expression, ParsingContext context);
     }
 }

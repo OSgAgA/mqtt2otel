@@ -471,8 +471,6 @@ namespace mqtt2otel
                     }
 
                     success = data.Processor.ProcessSubscriptionPayload(message, data.Subscription);
-
-                    if (!success) this.internalLogger.LogError("Could not process message. See previous errors. Message skipped. Payload: {Payload}", message.Payload.SanitizeForLog());
                 }
             }
 
@@ -481,7 +479,7 @@ namespace mqtt2otel
                 this.OnMessageProcessed(this, new MqttMessageReceivedEventArgs(message, null, null));
             }
 
-            return true;
+            return success;
         }
     }
 }
