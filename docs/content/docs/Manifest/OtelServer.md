@@ -45,6 +45,9 @@ It has the following parameters:
 | OtlpExportProtocol                 | Optional. The export protocol that should be used: Grpc or HttpProtobuf. Default is HttpProtobuf.                             |
 | ExportProcessorType                | Optional. The export processor type that should be used: Batch or Simple. Default is Batch.                                   |
 | ClientPrefix                       | A prefix that will be added to the client id when connecting to the server. Helps to identify the client.                     |
+| PeriodicExportIntervalInMs         | Sets the periodic export interval for asynchronous signals. Leave null to use default settings.                               | 
+| PeriodicExportTimeoutInMs          | Sets the periodic export timeout. Leave null to use default settings.                                                         | 
+| TemporalityPreference              | Sets the metric reader temporality preference (Cumulative, Delta, LowMemory). Default is Cumulative.                          |
 
 ## The export processor type
 

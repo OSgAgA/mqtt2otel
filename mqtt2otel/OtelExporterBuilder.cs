@@ -32,7 +32,14 @@ namespace mqtt2otel
         /// <param name="connection">The otel server connection data.</param>
         public void AddToMeterProviderBuilder(MeterProviderBuilder builder, OtelServerConnection connection)
         {
-            builder.AddOtlpExporter(otlpOptions => this.InitializeExporterOptions(otlpOptions, connection, "v1/metrics"));
+            var options = builder.AddOtlpExporter((otlpExporterOptions, metricReaderOptions) =>
+                {
+                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = connection.PeriodicExportIntervalInMs;
+                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportTimeoutMilliseconds = connection.PeriodicExportTimeoutInMs;
+                    metricReaderOptions.TemporalityPreference = connection.TemporalityPreference;
+                    
+                    this.InitializeExporterOptions(otlpExporterOptions, connection, "v1/metrics");
+                });
         }
 
         /// <summary>

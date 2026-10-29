@@ -29,9 +29,14 @@ namespace mqtt2otel.InternalMetrics
             this.LogProcessorsCount = this.meter.CreateGauge<long>("mqtt2otel.telemetry.manifest.log-procesors.count", description: "The amount of log processors read from manifest file.");
             this.MetricProcessorsCount = this.meter.CreateGauge<long>("mqtt2otel.telemetry.manifest.metric-procesors.count", description: "The amount of metric processors read from manifest file.");
             this.MqttSubscriptions = this.meter.CreateGauge<long>("mqtt2otel.telemetry.manifest.mqtt-subscriptions", description: "The amount of mqtt topic subscriptions.");
-            
-            this.AvailableMemoryInBytes = this.meter.CreateGauge<long>("mqtt2otel.telemetry.system.available_memory_in_bytes", description: "The amount of available memory in bytes.", unit: "B");
 
+            this.AvailableMemoryInBytes = this.meter.CreateGauge<long>("mqtt2otel.telemetry.system.available_memory_in_bytes", description: "The amount of available memory in bytes.", unit: "By");
+            this.MemoryConsumptionInByte = this.meter.CreateObservableGauge<long>("mqtt2otel.telemetry.system.memory_consumption_in_bytes", () => GC.GetTotalMemory(forceFullCollection: false),
+                description: "Gets the memory consumption of the appliaction in bytes.", unit: "By");
+            this.MemoryConumptionInPercentage = this.meter.CreateObservableGauge<long>("mqtt2otel.telemetry.system.memory_consumption_in_percentage",
+                () => 1 / GC.GetGCMemoryInfo().TotalAvailableMemoryBytes * GC.GetTotalMemory(forceFullCollection: false),
+                description: "Gets the total memory consumption of the application in percentage relative to the total available memory.", unit: "%");
+            
             this.MessageCount = this.meter.CreateCounter<long>("mqtt2otel.telemetry.messages.count", description: "The amount of messages received (either processed or failed or ignored.");
             this.LogProcessingTime = this.meter.CreateHistogram<double>("mqtt2otel.telemetry.message.log-processing", unit: "us", description: "The histogram of the log processing time.");
             this.MetricProcessingTime = this.meter.CreateHistogram<double>("mqtt2otel.telemetry.message.metric-processing", unit: "us", description: "The histogram of the metric processing time.");
@@ -86,5 +91,15 @@ namespace mqtt2otel.InternalMetrics
         /// Gets the histogram of the metric processing time.
         /// </summary>
         public Histogram<double> MetricProcessingTime { get; }
+
+        /// <summary>
+        /// Gets the total memory consumption of the application in bytes.
+        /// </summary>
+        public ObservableGauge<long> MemoryConsumptionInByte { get; }
+
+        /// <summary>
+        /// Gets the total memory consumption of the application in percentage relative to the total available memory.
+        /// </summary>
+        public ObservableGauge<long> MemoryConumptionInPercentage { get; }
     }
 }

@@ -20,11 +20,10 @@ The following data will be send to the server:
 * The processor architecture
 * The amount of logical cpu cores
 * The total available RAM
+* the memory consumption of the application
 * The amount of otel connections inside the manifest (not the connection itself, only a count)
 * The amount of mqtt connections inside the manifest (not the connection itself, only a count)
 * The amount of processors inside the manifest
-* The amount of log rules inside the manifest
-* The amount of metric rules inside the manifest
 * The amount of mqtt subscriptions used in parallel
 * The total message count
 * The logging rule processing time (as histogram data)

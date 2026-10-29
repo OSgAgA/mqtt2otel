@@ -7,6 +7,7 @@ using mqtt2otel.Parser;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using System.Reflection.PortableExecutable;
@@ -179,7 +180,8 @@ namespace mqtt2otel
                 {
                     Headers = usageTelemetryHeaders,
                     Address = "https://ingress.europe-west4.gcp.dash0.com/"
-                }
+                },
+                PeriodicExportIntervalInMs = 60000
             };
 
             string osName = "unknown";

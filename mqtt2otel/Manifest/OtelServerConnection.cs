@@ -2,6 +2,7 @@
 using mqtt2otel.Helper;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
+using OpenTelemetry.Metrics;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -56,12 +57,29 @@ namespace mqtt2otel.Manifest
         public LogLevel MinimumLogLevel { get; set; } = LogLevel.Information;
 
         /// <summary>
+        /// Gets or sets the scrape interval in milliseconds for the periodic metric reader. Set to null to use default
+        /// value.
+        /// </summary>
+        public int? PeriodicExportIntervalInMs { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the timeout in milliseconds for the periodic metric reader. Set to null to use default
+        /// value.
+        /// </summary>
+        public int? PeriodicExportTimeoutInMs { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the temporality preference of the metric reader.
+        /// </summary>
+        public MetricReaderTemporalityPreference TemporalityPreference { get; set; } = MetricReaderTemporalityPreference.Cumulative;
+
+        /// <summary>
         /// Validates the object.
         /// </summary>
         /// <param name="result">The validation results.</param>
         public void Validate(ValidationResult result)
         {
-            this.Endpoint.Validate("Otel server", result);
+            this.Endpoint.Validate("Otel server connection", result);
         }
     }
 }
