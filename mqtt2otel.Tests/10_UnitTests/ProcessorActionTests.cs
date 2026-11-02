@@ -90,7 +90,7 @@ namespace mqtt2otel.Tests._10_UnitTests
             var processor = manifest.Processors[0];
             var subscription = processor.Mqtt.Subscriptions[0];
 
-            processor.ProcessSubscriptionPayload(new MqttMessage(topic: "sensors/device", payload: payload), subscription);
+            processor.ProcessMessage(new MqttMessage(topic: "sensors/device", payload: payload), subscription);
 
             return storedSignals;
         }

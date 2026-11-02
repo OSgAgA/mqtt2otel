@@ -1,0 +1,162 @@
+﻿@using mqtt2otel.Metadata
+
+<div style="padding: 15px;">
+    @if (this.Spans != null)
+    {
+        <Card class="overflow-x-auto">
+            <CardHeader class="d-flex align-items-center">
+                <div><b>Spans</b></div>
+            </CardHeader>
+            <table data-testid="span-container" class="table overflow-x-auto">
+                <thead>
+                    <tr>
+                        <th>Trace Id</th>
+                        <th>Span Id</th>
+                        <th>Name</th>
+                        <th>Parent</th>
+                        <th>Start</th>
+                        <th>Duration</th>
+                        <th>Kind</th>
+                        <th>Status</th>
+                        <th>Attributes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var span in this.Spans)
+                    {
+                        <tr data-testid="span-entry">
+                            <td data-testid="span-traceId">@span.TraceId</td>
+                            <td data-testid="span-spanId">@span.SpanId</td>
+                            <td data-testid="span-name">@span.Name</td>
+                            <td data-testid="span-parent">@span.ParentSpanId</td>
+                            <td data-testid="span-started">@span.StartUtc</td>
+                            <td data-testid="span-duration">@span.Duration</td>
+                            <td data-testid="span-kind">@span.Kind</td>
+                            <td data-testid="span-status">@span.Status</td>
+                            <td>
+                                @foreach (var tag in span.Tags)
+                                {
+                                    <OtelAttribute Value="@(new KeyValuePair<string, object?>(tag.Key, tag.Value))" />
+                                }
+                            </td>
+                        </tr>
+
+                        @if (span.Events != null && span.Events.Any())
+                        {
+                            <tr>
+                                <td></td>
+                                <td colspan="8">
+                                    <Card class="overflow-x-auto">
+                                        <CardHeader class="d-flex align-items-center">
+                                            <div><b>Events</b></div>
+                                        </CardHeader>
+                                        <table data-testid="span-event-container" class="table overflow-x-auto">
+                                            <thead>
+                                                <tr>
+                                                    <th>Timestamp</th>
+                                                    <th>Name</th>
+                                                    <th>Attributes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var evt in span.Events)
+                                                {
+                                                    <tr>
+                                                        <td data-testid="span-event-timestamp">@evt.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ")</td>
+                                                        <td data-testid="span-event-name">@evt.Name</td>
+                                                        <td>
+                                                            @foreach (var tag in evt.Tags)
+                                                            {
+                                                                <OtelAttribute Value="@(new KeyValuePair<string, object?>(tag.Key, tag.Value))" />
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </Card>
+                                </td>
+                            </tr>
+                        }
+
+                        @if (span.Links != null && span.Links.Any())
+                        {
+                            <tr>
+                                <td></td>
+                                <td colspan="8">
+                                    <Card class="overflow-x-auto">
+                                        <CardHeader class="d-flex align-items-center">
+                                            <div><b>Links</b></div>
+                                        </CardHeader>
+                                        <table data-testid="span-links-container" class="table overflow-x-auto">
+                                            <thead>
+                                                <tr>
+                                                    <th>Target Trace Id</th>
+                                                    <th>Target Span Id</th>
+                                                    <th>Attributes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var link in span.Links)
+                                                {
+                                                    <tr>
+                                                        <td data-testid="span-link-target-trace-id">@link.TraceId</td>
+                                                        <td data-testid="span-link-target-span-id">@link.SpanId</td>
+                                                        <td>
+                                                            @if (link.Tags != null)
+                                                            {
+                                                                foreach (var tag in link.Tags)
+                                                                {
+                                                                    <OtelAttribute Value="@(new KeyValuePair<string, object?>(tag.Key, tag.Value))" />
+                                                                }
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </Card>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </Card>
+    }
+</div>
+
+
+@code {
+
+    /// <summary>
+    /// Gets or sets the internal application state that should be shown by the viewer.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public List<SpanTestData> Spans { get; set; }
+
+    /// <summary>
+    /// Gets a value indicating, whether all details should be shown.
+    /// </summary>
+    [Parameter]
+    public bool ShowDetails
+    {
+        get => field;
+
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                this.ShowDetailsChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Used for two way binding. Called, when ShowDetails has changed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> ShowDetailsChanged { get; set; }
+}

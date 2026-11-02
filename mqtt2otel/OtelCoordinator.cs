@@ -44,7 +44,17 @@ namespace mqtt2otel
         /// <summary>
         /// Ensures that the meter providers will not get garbage collected.
         /// </summary>
-        private List<MeterProvider> MeterProviders { get; set; } = new();
+        private List<MeterProvider> meterProviders { get; set; } = new();
+
+        /// <summary>
+        /// Ensures that the tracer providers will not get garbage collected.
+        /// </summary>
+        private List<TracerProvider> tracerProviders { get; set; } = new();
+
+        /// <summary>
+        /// Maps a connection name to an activity source.
+        /// </summary>
+        private Dictionary<string, ActivitySource> activitySources { get; set; } = new();
 
         /// <summary>
         /// The logger used for internal logging.
@@ -127,6 +137,65 @@ namespace mqtt2otel
             this.internalLogger.LogInformation("Initializing otel logging...");
             this.InitializeLogging(manifest);
             this.internalLogger.LogInformation("Otel logging initialization successful.");
+
+            this.internalLogger.LogInformation("Initializing otel tracing...");
+            this.InitializeTraces(manifest);
+            this.internalLogger.LogInformation("Otel tracing initialization successful.");
+        }
+
+        /// <summary>
+        /// Creates open telemetry spans from the provided list. Spans must be valid when used in this list.
+        /// </summary>
+        /// <param name="spans">The spans that should be created.</param>
+        public void CreateSpans(List<OtelSpan> spans)
+        {
+            foreach (var span in spans)
+            {
+                try
+                {
+                    if (span.OtelConnection == null || span.StartedAsDateTime == null || span.Kind == null || span.CompletedAsDateTime == null || span.Status == null || span.Context == null)
+                    {
+                        this.internalLogger.LogError("Cannot create trace as one of the following properties is null: {otelConnection}, {Started}, {Kind}, {Completed}, {Status}, {Context}",
+                                                       span.OtelConnection, span.StartedAsDateTime, span.Kind, span.CompletedAsDateTime, span.Status, span.Context);
+                        continue;
+                    }
+
+                    if (this.activitySources.TryGetValue(span.OtelConnection, out var source))
+                    {
+                        List<ActivityLink> links = new List<ActivityLink>();
+                        foreach (var link in span.LinkTo)
+                        {
+                            links.Add(new ActivityLink(link.Context, link.Attributes.ToActivityTagsCollection()));
+                        }
+
+                        using var activity = source.StartActivity(span.Name, span.Kind.Value, span.Context.Value, span.Attributes.ToKeyValuePairs(), links, span.StartedAsDateTime.Value);
+
+                        if (activity == null)
+                        {
+                            this.internalLogger.LogError("Could not create activity for trace. StartActivitity returned null.");
+                            continue;
+                        }
+
+                        if (span.ParentContext != null)
+                        {
+                            activity.SetParentId(span.ParentContext.Value.TraceId, span.ParentContext.Value.SpanId);
+                        }
+
+                        activity.SetStatus(span.Status.Value);
+
+                        foreach (var evt in span.Events)
+                        {
+                            activity.AddEvent(new ActivityEvent(evt.Name, evt.TimestampAsDateTime, evt.Attributes.ToActivityTagsCollection()));
+                        }
+
+                        activity.SetEndTime(span.CompletedAsDateTime.Value);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.internalLogger.LogError(ex, "Could not create span with name {SpanName}.", span.Name);
+                }
+            }
         }
 
         /// <summary>
@@ -134,7 +203,7 @@ namespace mqtt2otel
         /// </summary>
         public void FlushMeters()
         {
-            foreach (var meterProvider in this.MeterProviders)
+            foreach (var meterProvider in this.meterProviders)
             {
                 meterProvider.ForceFlush();
             }
@@ -162,7 +231,7 @@ namespace mqtt2otel
                 var builder = Sdk.CreateMeterProviderBuilder()
                     .SetResourceBuilder(
                             ResourceBuilder.CreateDefault()
-                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace));
+                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace, serviceVersion: otelConnection.ServiceVersion));
 
                 foreach (var meterName in this.otelMeterFactory.GetMeterNamesForConnection(otelConnection.Name))
                 {
@@ -173,7 +242,32 @@ namespace mqtt2otel
 
                 var provider = builder.Build();
 
-                this.MeterProviders.Add(provider);
+                this.meterProviders.Add(provider);
+            }
+        }
+
+        /// <summary>
+        /// Initializes the otel traces based on the provided settings.
+        /// </summary>
+        /// <param name="manifest">The rules for creating meters.</param>
+        private void InitializeTraces(Manifest.Manifest manifest)
+        {
+            // Create trace providers
+            foreach (var otelConnection in manifest.OtelConnections)
+            {
+                var builder = Sdk.CreateTracerProviderBuilder()
+                    .SetResourceBuilder(
+                            ResourceBuilder.CreateDefault()
+                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace, serviceVersion: otelConnection.ServiceVersion));
+
+                this.exporterBuilder.AddToTracerProviderBuilder(builder, otelConnection);
+                var source = new ActivitySource($"mqtt2otel.{otelConnection.Name.Replace("*", "").Replace("?", "")}");
+                builder.AddSource(source.Name);
+                this.activitySources[otelConnection.Name] = source;
+
+                var provider = builder.Build();
+
+                this.tracerProviders.Add(provider);
             }
         }
 
@@ -244,7 +338,7 @@ namespace mqtt2otel
                     {
                         options.SetResourceBuilder(
                             ResourceBuilder.CreateDefault()
-                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace))
+                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace, serviceVersion: otelConnection.ServiceVersion))
                             .IncludeScopes = true;
                         options.AddProcessor(new TimestampOverrideProcessor(this.otelMeter));
 
@@ -261,7 +355,7 @@ namespace mqtt2otel
                     if (otelLoggingRule.OtelConnection == null) throw new Exception($"Internal error: {nameof(otelLoggingRule.OtelConnection)} must not be null for logging rule: {otelLoggingRule.Name}");
 
                     var logger = this.loggerFactoryMap[otelLoggingRule.OtelConnection].CreateLogger(otelLoggingRule.CategoryName);
-                    this.dataStores.LoggerStore.StoreLogger(otelLoggingRule.Id, logger);
+                    this.dataStores.LoggerStore.StoreLogger(otelLoggingRule.InternalId, logger);
                 }
             }
         }
@@ -476,7 +570,7 @@ namespace mqtt2otel
 
             if (this.otelMeterFactory != null) this.otelMeterFactory.DisposeMeters();
 
-            foreach (var meterProvider in this.MeterProviders)
+            foreach (var meterProvider in this.meterProviders)
             {
                 meterProvider.Dispose();
             }

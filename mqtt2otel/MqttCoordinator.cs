@@ -470,7 +470,7 @@ namespace mqtt2otel
                         this.OnMessageReceived(this, new MqttMessageReceivedEventArgs(message, data.Subscription, data.Processor));
                     }
 
-                    success = data.Processor.ProcessSubscriptionPayload(message, data.Subscription);
+                    success = data.Processor.ProcessMessage(message, data.Subscription);
                 }
             }
 

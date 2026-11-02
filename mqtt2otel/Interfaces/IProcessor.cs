@@ -30,7 +30,7 @@ namespace mqtt2otel.Interfaces
         /// <param name="message">The received message.</param>
         /// <param name="subscription">The subscription that received the payload.</param>
         /// <returns>A value indicating whether the operation has been successful.</returns>
-        bool ProcessSubscriptionPayload(MqttMessage message, MqttSubscription subscription);
+        bool ProcessMessage(MqttMessage message, MqttSubscription subscription);
 
         /// <summary>
         /// Validates the object.

@@ -45,6 +45,7 @@ namespace mqtt2otel.Server
             builder.Services.AddSingleton<ProcessorMeter>(new ProcessorMeter());
             builder.Services.AddSingleton<InternalIds>(internalIds);
             builder.Services.AddSingleton<UsageTelemetryMeter>(new UsageTelemetryMeter());
+            builder.Services.AddSingleton<ITraceStore>(new LocalTraceStore());
 
             builder.Services.AddHttpClient("ServerAPI", (serviceProvider, client) =>
             {

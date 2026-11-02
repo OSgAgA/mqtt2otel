@@ -181,6 +181,31 @@ namespace mqtt2otel.Manifest
         public ImportEnabledList<Processor> Processors { get; set; } = new();
 
         /// <summary>
+        /// Gets or sets the timespan for how long a span will be kept alive.
+        /// </summary>
+        [InheritedProperty]
+        public int? RetentionInSeconds { get; set; } = 3600;
+
+        /// <summary>
+        /// Gets or sets the <see cref="SpanRetentionStrategy"/> used, when the retention time is exceeded.
+        /// </summary>
+        [InheritedProperty]
+        public SpanRetentionStrategy? RetentionStrategy { get; set; } = SpanRetentionStrategy.CompleteErrorWithEvent;
+
+        /// <summary>
+        /// Gets or sets the event that will be created, when the retention time is exceeded. Only applies if a strategy is chosen, 
+        /// that creates events.
+        /// </summary>
+        [InheritedProperty]
+        public OtelSpanEvent? RetentionExceededEvent { get; set; } = new OtelSpanEvent() { Name = "Retention time for span exceeded." };
+
+        /// <summary>
+        /// Gets or sets the time interval in seconds that is waited for late span events, before a span is send after it is completed.
+        /// </summary>
+        [InheritedProperty]
+        public int? WaitForLateSpanEventsInS { get; set; } = 5;
+
+        /// <summary>
         /// Gets the default otel server connection. That is the first server defined in <see cref="OtelConnections"/> or null, if no otel server
         /// is defined.
         /// </summary>
@@ -354,7 +379,6 @@ namespace mqtt2otel.Manifest
         {
 
             if (child == null) return;
-            child.Parent = parent;
             this.UpdateInheritedProperties(parent, child);
             this.SetObjectHierarchy(child);
             return;

@@ -1,0 +1,32 @@
+{
+  "Links": {
+    "Open telemetry metrics": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-metrics-section",
+    "Supported functions": "https://mqtt2otel.org/docs/expressions/#available-functions"
+  },
+  "Setup": {
+    "Id": "trace-01",
+    "Name": "Traces playground",
+    "Description": "Playground for traces.",
+    "MqttData": [
+      {
+        "Topic": "sensor/1234/raw",
+        "Payload": "42",
+        "UserProperties": []
+      }
+    ],
+    "Manifest": "\nProcessors:\n  - Name: \u0022Processor Temperature\u0022\n    Description: \u0022Reads raw payload data.\u0022\n    Mqtt: \n      Subscriptions:\n        - Topic: \u0022sensor/\u002B/raw\u0022\n    Otel:\n      Traces:\n        - CreateSpans: \n          - Id: \u00224711\u0022\n            Name: \u0022Start running\u0022\n            Parent: \u0022MyParent\u0022\n            Kind: Server\n            Status: Error\n            Attributes: \n              - Key: \u0022Hello\u0022\n                Value: \u0022world\u0022\n            LinkTo:\n              - Target: \u00224321\u0022\n        - EndSpans:\n          - Id: \u00224711\u0022\n        - CreateEvents: \n          - SpanId: 4711\n            Name: \u0022Something happened\u0022\n          - SpanId: 1234\n            Name: \u0022Something else happened\u0022",
+    "Category": "Traces",
+    "Tags": [
+      "text"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResults": [
+    {
+      "Metrics": [],
+      "Logs": []
+    }
+  ],
+  "ShowResultDetails": false
+}

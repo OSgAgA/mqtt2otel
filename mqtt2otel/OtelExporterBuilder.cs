@@ -3,6 +3,7 @@ using mqtt2otel.Manifest;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
@@ -40,6 +41,19 @@ namespace mqtt2otel
                     
                     this.InitializeExporterOptions(otlpExporterOptions, connection, "v1/metrics");
                 });
+        }
+
+        /// <summary>
+        /// Adds the exporter to the provided tracer builder.
+        /// </summary>
+        /// <param name="options">The open telemetry trace builder.</param>
+        /// <param name="connection">The otel server connection data.</param>
+        public void AddToTracerProviderBuilder(TracerProviderBuilder builder, OtelServerConnection connection)
+        {
+            var options = builder.AddOtlpExporter(otlpExporterOptions =>
+            {
+                this.InitializeExporterOptions(otlpExporterOptions, connection, "v1/traces");
+            });
         }
 
         /// <summary>

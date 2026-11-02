@@ -12,7 +12,7 @@ namespace mqtt2otel
     public class OtelAttribute
     {
         /// <summary>
-        /// Gets or sets the key under which teh variable can be identified.
+        /// Gets or sets the key under which the variable can be identified.
         /// </summary>
         public string Key { get; init; }
 
@@ -53,6 +53,15 @@ namespace mqtt2otel
         public void Validate(string context, ValidationResult result)
         {
             if (string.IsNullOrWhiteSpace(this.Key)) result.AddError($"{context}: An attribute with an empty Key found. Please set the key to a non empty value.");
+        }
+
+        /// <summary>
+        /// Clones the attribute.
+        /// </summary>
+        /// <returns>The created clone.</returns>
+        public OtelAttribute Clone()
+        {
+            return (OtelAttribute)this.MemberwiseClone();
         }
     }
 }

@@ -34,7 +34,16 @@
                 <LogResultViewer LogEntries="@this.Data?.Logs" @bind-ShowDetails="@ShowDetails" />
             </Content>
         </Tab>
-
+        <Tab data-testid="trace-result-header" @bind-Title="@this.tracesTitle">
+            <Content>
+                <TraceResultViewer Spans="@this.Data?.Spans" @bind-ShowDetails="@ShowDetails" />
+            </Content>
+        </Tab>
+        <Tab data-testid="logs-result-header" Title="Internal state">
+            <Content>
+                <InternalStateViewer State="@this.Data?.InternalState" @bind-ShowDetails="@ShowDetails" />
+            </Content>
+        </Tab>
     </Tabs>
 </Card>
 
@@ -91,6 +100,11 @@
     private string logsTitle = "Logs";
 
     /// <summary>
+    /// The title of the trace tab.
+    /// </summary>
+    private string tracesTitle = "Traces";
+
+    /// <summary>
     /// The text representation of the error result.
     /// </summary>
     private string errorText = string.Empty;
@@ -104,6 +118,7 @@
             this.errorTitle = $"Errors ({this.Data.Errors.Count})";
             this.metricsTitle = $"Metrics ({this.Data.Metrics.Count})";
             this.logsTitle = $"Logs ({this.Data.Logs.Count})";
+            this.tracesTitle = $"Traces ({this.Data.Spans.Count})";
 
             if (this.Data.HasErrors)
             {

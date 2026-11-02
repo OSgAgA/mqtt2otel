@@ -44,6 +44,11 @@ namespace mqtt2otel.Manifest
         private IPayloadTransformation payloadTransformation;
 
         /// <summary>
+        /// The store for keeping trace and span informations.
+        /// </summary>
+        private ITraceStore traceStore;
+
+        /// <summary>
         /// The meter for recording internal metrics.
         /// </summary>
         private ProcessorMeter processorMeter;
@@ -68,7 +73,7 @@ namespace mqtt2otel.Manifest
         /// <param name="meter">The meter for recording internal metrics.</param>
         /// <param name="embeddedExpressionParser">The parser used for parsing expressions embedded in a subscription.</param>
         public Processor(ILogger internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores,
-                         ProcessorMeter meter, UsageTelemetryMeter usageTelemetryMeter, IEmbeddedExpressionParser embeddedExpressionParser)
+                         ProcessorMeter meter, UsageTelemetryMeter usageTelemetryMeter, IEmbeddedExpressionParser embeddedExpressionParser, ITraceStore traceStore)
         {
             this.processorMeter = meter;
             this.usageTelemetryMeter = usageTelemetryMeter;
@@ -77,6 +82,7 @@ namespace mqtt2otel.Manifest
             this.payloadTransformation = payloadTransformation;
             this.dataStores = dataStores;
             this.embeddedExpressionParser = embeddedExpressionParser;
+            this.traceStore = traceStore;
         }
 
         /// <summary>
@@ -120,6 +126,31 @@ namespace mqtt2otel.Manifest
         public int? BlockedTopicLimit { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets the timespan for how long a span will be kept alive.
+        /// </summary>
+        [InheritedProperty]
+        public int? RetentionInSeconds { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the <see cref="SpanRetentionStrategy"/> used, when the retention time is exceeded.
+        /// </summary>
+        [InheritedProperty]
+        public SpanRetentionStrategy? RetentionStrategy { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the event that will be created, when the retention time is exceeded. Only applies if a strategy is chosen, 
+        /// that creates events.
+        /// </summary>
+        [InheritedProperty]
+        public OtelSpanEvent? RetentionExceededEvent { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the time interval in seconds that is waited for late span events, before a span is send after it is completed.
+        /// </summary>
+        [InheritedProperty]
+        public int? WaitForLateSpanEventsInS { get; set; } = null;
+
+        /// <summary>
         /// Gets or sets the otel settings for the processor.
         /// </summary>
         public Otel Otel { get; set; } = new();
@@ -160,7 +191,7 @@ namespace mqtt2otel.Manifest
         /// <param name="message">The received message.</param>
         /// <param name="subscription">The subscription that received the payload.</param>
         /// <returns>A value indicating whether the operation has been successful.</returns>
-        public bool ProcessSubscriptionPayload(MqttMessage message, MqttSubscription subscription)
+        public bool ProcessMessage(MqttMessage message, MqttSubscription subscription)
         {
             int errorCount = 0;
 
@@ -184,6 +215,10 @@ namespace mqtt2otel.Manifest
                 {
                     errorCount += this.ProcessLogsSubscription(message, subscription);
                 }
+                using(this.internalLogger.StartActivity("Process trace processors"))
+                {
+                    errorCount += this.ProcessTracesSubscriptions(message, subscription);
+                }
             }
             catch
             {
@@ -202,7 +237,123 @@ namespace mqtt2otel.Manifest
         }
 
         /// <summary>
-        /// Process a subscription message by applying all metric rules..
+        /// Process a message by applying tracing rules.
+        /// </summary>
+        /// <param name="message">The mqtt message received.</param>
+        /// <param name="subscription">The settings of the subscription that triggered this processor.</param>
+        /// <returns>The number of rules, that run into an error.</returns>
+        private int ProcessTracesSubscriptions(MqttMessage message, MqttSubscription subscription)
+        {
+            int errorCount = 0;
+
+            foreach (var rule in this.Otel.Traces)
+            {
+                lock (rule.BlockItemGate)
+                {
+                    if (!rule.IsActive || rule.BlockedTopics.Contains(message.Topic)) continue;
+                }
+
+                var parsingContext = new ParsingContext(new List<Variable>(), message);
+
+                using (this.internalLogger.StartActivity("Process trace rule"))
+                {
+                    try
+                    {
+                        var sw = new Stopwatch();
+                        sw.Start();
+                        var combinedVariables = this.Mqtt.Variables.Combine(subscription.Variables);
+
+                        foreach (var span in rule.CreateSpans)
+                        {
+                            lock (rule.BlockItemGate)
+                            {
+                                if (rule.BlockedItems.Contains(span.Name) || (rule.BlockedItemTopics.ContainsKey(span.Name) && rule.BlockedItemTopics[span.Name].Contains(message.Topic))) continue;
+                            }
+
+                            try
+                            {
+                                var clone = span.Clone();
+                                clone.Expand(this.embeddedExpressionParser, parsingContext);
+                                if (string.IsNullOrEmpty(clone.Started)) clone.Started = DateTime.UtcNow.ToString("O");
+                                if (clone.Kind == null) clone.Kind = ActivityKind.Internal;
+                                if (clone.Status == null) clone.Status = ActivityStatusCode.Unset;
+                                this.traceStore.StoreSpan(clone);
+                            }
+                            catch (Exception ex)
+                            {
+                                this.HandleProcessingError("trace", rule, span.Name, message, ex.Message);
+                                errorCount++;
+                            }
+                        }
+
+                        foreach(var span in rule.EndSpans)
+                        {
+                            lock (rule.BlockItemGate)
+                            {
+                                if (rule.BlockedItems.Contains(span.Name) || (rule.BlockedItemTopics.ContainsKey(span.Name) && rule.BlockedItemTopics[span.Name].Contains(message.Topic))) continue;
+                            }
+
+                            try
+                            {
+                                var clone = span.Clone();
+                                clone.Expand(this.embeddedExpressionParser, parsingContext);
+                                if (string.IsNullOrEmpty(clone.Completed)) clone.Completed = DateTime.UtcNow.ToString("O");
+                                this.traceStore.StoreSpan(clone, updateExisting: true);
+                            }
+                            catch (Exception ex)
+                            {
+                                this.HandleProcessingError("trace", rule, span.Name, message, ex.Message);
+                                errorCount++;
+                            }
+                        }
+
+                        foreach(var evt in rule.CreateEvents)
+                        {
+                            lock (rule.BlockItemGate)
+                            {
+                                if (rule.BlockedItems.Contains(evt.Name) || (rule.BlockedItemTopics.ContainsKey(evt.Name) && rule.BlockedItemTopics[evt.Name].Contains(message.Topic))) continue;
+                            }
+
+                            try
+                            {
+                                var clone = evt.Clone();
+                                clone.Expand(this.embeddedExpressionParser, parsingContext);
+
+                                this.traceStore.AddEvent(clone);
+                            }
+                            catch (Exception ex)
+                            {
+                                this.HandleProcessingError("trace", rule, evt.Name, message, ex.Message);
+                                errorCount++;
+                            }
+                        }
+
+                        sw.Stop();
+
+                        var tags = new TagList();
+                        tags.Add("processor.name", this.Name);
+                        tags.Add("processor.otel.connection", this.OtelConnection);
+                        tags.Add("subscription.name", subscription.Name);
+                        tags.Add("subscription.connection", subscription.BrokerConnection);
+                        tags.Add("rule.name", rule.Name);
+                        tags.Add("rule.connection", rule.OtelConnection);
+                        this.processorMeter.ProcessingTimeTraceRule.Record(sw.ElapsedMicroseconds, tags);
+                        this.usageTelemetryMeter.TraceProcessingTime.Record(sw.ElapsedMicroseconds);
+                        this.processorMeter.Metrics.Add(1, tags);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.HandleProcessingError("trace", rule, null, message, ex.Message);
+                        errorCount++;
+                    }
+                }
+            }
+
+            return errorCount;
+        }
+
+        /// <summary>
+        /// Process a subscription message by applying all metric rules.
         /// </summary>
         /// <param name="message">The received message.</param>
         /// <param name="subscription">The settings of the subscription that triggered this processor.</param>
@@ -307,7 +458,7 @@ namespace mqtt2otel.Manifest
                         var sw = new Stopwatch();
                         sw.Start();
 
-                        var key = rule.Id;
+                        var key = rule.InternalId;
                         if (!this.dataStores.LoggerStore.ContainsKey(key))
                         {
                             this.internalLogger.LogError("Internal error: Could not get logger with id: {RuleId}. Skipping event.", key);
@@ -383,7 +534,7 @@ namespace mqtt2otel.Manifest
                 combinedAttributes = combinedAttributes.Combine(TopicAttributeParser.Parse(message.Topic, rule.TopicAttributes));
             }
 
-            IEnumerable<OtelAttribute> expandedAttributes = this.embeddedExpressionParser.Expand(combinedAttributes, variables, message);
+            IEnumerable<OtelAttribute> expandedAttributes = this.embeddedExpressionParser.Expand(combinedAttributes, new ParsingContext(variables, message));
 
 
             try
