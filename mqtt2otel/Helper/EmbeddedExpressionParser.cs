@@ -1,10 +1,6 @@
 ﻿using mqtt2otel.Interfaces;
 using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
-using MQTTnet.Extensions.ManagedClient;
-using Parlot.Fluent;
-using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace mqtt2otel.Helper

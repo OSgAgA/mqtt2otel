@@ -1,17 +1,8 @@
 ﻿using mqtt2otel.Helper;
 using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
-using MQTTnet;
 using NCalc;
 using NCalc.Handlers;
-using Parlot.Fluent;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
 
 namespace mqtt2otel
 {
