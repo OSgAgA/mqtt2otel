@@ -75,7 +75,7 @@
                                 <td data-testid="internal-state-span-status">@span.Status.Value.ToString()</td>
                             }
                             <td>
-                                @foreach (var tag in span.Attributes)
+                                @foreach (var tag in span.Attributes.Where( attr => attr.IsInternal ))
                                 {
                                     <OtelAttribute Value="@(new KeyValuePair<string, object?>(tag.Key, tag.Value))" />
                                 }

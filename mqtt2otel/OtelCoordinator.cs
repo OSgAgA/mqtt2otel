@@ -6,6 +6,7 @@ using mqtt2otel.InternalLogging;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
+using mqtt2otel.Shared.Helper;
 using mqtt2otel.Stores;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
@@ -87,6 +88,11 @@ namespace mqtt2otel
         private ApplicationSettings settings;
 
         /// <summary>
+        /// The open telemetry collector helper.
+        /// </summary>
+        private OtelCollector collector;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OtelCoordinator"/> class.
         /// </summary>
         /// <param name="internalLogger">The logger used for internal logging.</param>
@@ -94,7 +100,9 @@ namespace mqtt2otel
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
         /// <param name="meter">The meter for reporting internal metrics.</param>
         /// <param name="embeddedExpressionParser">The parser used for parsing expressions embedded in a subscription.</param>
-        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IOtelExporterBuilder exporterBuilder, IDataStores dataStores, OtelInternalMeter meter, IEmbeddedExpressionParser embeddedExpressionParser, ApplicationSettings settings)
+        /// <param name="collector">The open telemetry collector helper.</param>
+        public OtelCoordinator(ILogger<OtelCoordinator> internalLogger, IOtelExporterBuilder exporterBuilder, IDataStores dataStores, OtelInternalMeter meter, IEmbeddedExpressionParser embeddedExpressionParser,
+            ApplicationSettings settings, OtelCollector collector)
         {
             this.otelMeter = meter;
             this.internalLogger = internalLogger;
@@ -103,6 +111,7 @@ namespace mqtt2otel
             this.dataStores.SignalStore.SignalCreator = this.CreateInstrument;
             this.embeddedExpressionParser = embeddedExpressionParser;
             this.settings = settings;
+            this.collector = collector;
         }
 
         /// <summary>
@@ -139,6 +148,7 @@ namespace mqtt2otel
             this.internalLogger.LogInformation("Otel logging initialization successful.");
 
             this.internalLogger.LogInformation("Initializing otel tracing...");
+            this.collector.CreateConfig(manifest.OtelConnections);
             this.InitializeTraces(manifest);
             this.internalLogger.LogInformation("Otel tracing initialization successful.");
         }
@@ -162,19 +172,66 @@ namespace mqtt2otel
 
                     if (this.activitySources.TryGetValue(span.OtelConnection, out var source))
                     {
+                        if (span.IsRetentionExceeded)
+                        {
+                            switch (span.RetentionStrategy)
+                            {
+                                case SpanRetentionStrategy.CompleteWithCurrentStatus:
+                                    break;
+                                case SpanRetentionStrategy.CompleteWithCurrentStatusAndEvent:
+                                    if (span.RetentionExceededEvent != null) span.Events.Add(span.RetentionExceededEvent);
+                                    break;
+                                case SpanRetentionStrategy.CompleteOk:
+                                    span.Status = ActivityStatusCode.Ok;
+                                    break;
+                                case SpanRetentionStrategy.CompleteOkWithEvent:
+                                    span.Status = ActivityStatusCode.Ok;
+                                    if (span.RetentionExceededEvent != null) span.Events.Add(span.RetentionExceededEvent);
+                                    break;
+                                case SpanRetentionStrategy.CompleteUnset:
+                                    span.Status = ActivityStatusCode.Unset;
+                                    break;
+                                case SpanRetentionStrategy.CompleteUnsetWithEvent:
+                                    span.Status = ActivityStatusCode.Unset;
+                                    if (span.RetentionExceededEvent != null) span.Events.Add(span.RetentionExceededEvent);
+                                    break;
+                                case SpanRetentionStrategy.CompleteError:
+                                    span.Status = ActivityStatusCode.Error;
+                                    break;
+                                case SpanRetentionStrategy.CompleteErrorWithEvent:
+                                    span.Status = ActivityStatusCode.Error;
+                                    if (span.RetentionExceededEvent != null) span.Events.Add(span.RetentionExceededEvent);
+                                    break;
+                                case SpanRetentionStrategy.Ignore:
+                                    continue;
+                                case SpanRetentionStrategy.ThrowError:
+                                    this.internalLogger.LogError("Span with id {SpanId} exceeded its retention time and is dropped.", span.Id);
+                                    break;
+                                case null:
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+
                         List<ActivityLink> links = new List<ActivityLink>();
                         foreach (var link in span.LinkTo)
                         {
                             links.Add(new ActivityLink(link.Context, link.Attributes.ToActivityTagsCollection()));
                         }
 
-                        using var activity = source.StartActivity(span.Name, span.Kind.Value, span.Context.Value, span.Attributes.ToKeyValuePairs(), links, span.StartedAsDateTime.Value);
+                        span.Attributes.AddInternalAttribute(InternalAttributes.TraceId, span.Context.TraceId);
+                        span.Attributes.AddInternalAttribute(InternalAttributes.SpanId, span.Context.SpanId);
+
+                        using var activity = source.StartActivity(name: span.Name, kind: span.Kind.Value, tags: span.Attributes.ToKeyValuePairs(), links: links, startTime: span.StartedAsDateTime.Value);
 
                         if (activity == null)
                         {
                             this.internalLogger.LogError("Could not create activity for trace. StartActivitity returned null.");
                             continue;
                         }
+
+                        activity.ActivityTraceFlags = ActivityTraceFlags.None;
 
                         if (span.ParentContext != null)
                         {
@@ -189,6 +246,8 @@ namespace mqtt2otel
                         }
 
                         activity.SetEndTime(span.CompletedAsDateTime.Value);
+                        activity.ActivityTraceFlags = ActivityTraceFlags.Recorded;
+
                     }
                 }
                 catch (Exception ex)
@@ -252,16 +311,33 @@ namespace mqtt2otel
         /// <param name="manifest">The rules for creating meters.</param>
         private void InitializeTraces(Manifest.Manifest manifest)
         {
-            // Create trace providers
             foreach (var otelConnection in manifest.OtelConnections)
             {
+                var resourceAttributes = new List<KeyValuePair<string, object>>()
+                {
+                    new KeyValuePair<string, object>(InternalAttributes.ExporterRoutingId, OtelCollectorConfig.CreateSlug(otelConnection.Name))
+                };
+
                 var builder = Sdk.CreateTracerProviderBuilder()
                     .SetResourceBuilder(
                             ResourceBuilder.CreateDefault()
-                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace, serviceVersion: otelConnection.ServiceVersion));
+                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace, serviceVersion: otelConnection.ServiceVersion)
+                            .AddAttributes(resourceAttributes));
 
-                this.exporterBuilder.AddToTracerProviderBuilder(builder, otelConnection);
-                var source = new ActivitySource($"mqtt2otel.{otelConnection.Name.Replace("*", "").Replace("?", "")}");
+                var connection = new OtelServerConnection()
+                {
+                    Endpoint = new OtelServerEndpoint()
+                    {
+                        Address = "http://localhost:4317"
+                    },
+                    OtlpExportProtocol = OtlpExportProtocol.Grpc,
+                    ExportProcessorType = ExportProcessorType.Simple
+                };
+               
+                this.exporterBuilder.AddToTracerProviderBuilder(builder, connection);
+
+                var source = new ActivitySource($"mqtt2otel.{otelConnection.Name.Replace("*", "star").Replace("?", "question")}");
+                builder.SetSampler(new AlwaysOnSampler()); // Needed otherwise root spans are dropped.
                 builder.AddSource(source.Name);
                 this.activitySources[otelConnection.Name] = source;
 

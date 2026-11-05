@@ -96,10 +96,10 @@ namespace mqtt2otel.Manifest
         /// <returns>The created object.</returns>
         public object Create(Type type)
         {
-            if (type == typeof(Processor))
-            {
-                return new Processor(this.internalLogger, this.payloadParser, this.payloadTransformation, this.dataStores, this.processorMeter, this.usageTelemetryMeter, this.embeddedExpressionParser, traceStore);
-            }
+            //if (type == typeof(Processor))
+            //{
+            //    return new Processor(this.internalLogger, this.payloadParser, this.payloadTransformation, this.dataStores, this.processorMeter, this.usageTelemetryMeter, this.embeddedExpressionParser, traceStore);
+            //}
 
             return fallback.Create(type);
         }

@@ -1,7 +1,5 @@
 ﻿using mqtt2otel.Manifest;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using mqtt2otel.Shared.Helper;
 
 namespace mqtt2otel
 {
@@ -12,14 +10,45 @@ namespace mqtt2otel
     public class OtelAttribute
     {
         /// <summary>
-        /// Gets or sets the key under which the variable can be identified.
+        /// The backing field of the <see cref="Key"/> property.
         /// </summary>
-        public string Key { get; init; }
+        private string key = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the key under which the variable can be identified.
+        /// 
+        /// A key that starts with the <see cref="InternalAttributePrefix"/> will be escaped by adding a 
+        /// preceeding underscore.
+        /// </summary>
+        public string Key
+        {
+            get
+            {
+                return key;
+            }
+            set
+            {
+                if (value.StartsWith(InternalAttributes.InternalAttributePrefix))
+                {
+                    key = "_" + InternalAttributes.InternalAttributePrefix;
+                }
+                else
+                {
+                    key = value;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets or sets the value of the variable. 
         /// </summary>
         public object Value { get; init; }
+
+        /// <summary>
+        /// Gets a value indicating whether this attribute is for internal use. These attributes exist
+        /// for technical reasons only and will be removed from the final result.
+        /// </summary>
+        public bool IsInternal { get; private set; } = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OtelAttribute"/> class.
@@ -44,6 +73,20 @@ namespace mqtt2otel
             this.Value = value;
         }
 
+        /// <summary>
+        /// Creates an internal attribute
+        /// </summary>
+        /// <param name="key">The key of the internal attribute.</param>
+        /// <param name="value">The value of the attribute as a string.</param>
+        /// <returns>The created attribute.</returns>
+        internal static OtelAttribute CreateInternalAttribute(string key, string value)
+        {
+            var attribute = new OtelAttribute(string.Empty, value);
+            attribute.key = key;
+            attribute.IsInternal = true;
+
+            return attribute;
+        }
 
         /// <summary>
         /// Validates the attribute..

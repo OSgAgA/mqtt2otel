@@ -59,7 +59,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
             var exportBuilder = new OtelTestExporterBuilder();
 
-            using (var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings()))
+            using (var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings(), new OtelCollector(isActive: false)))
             {
                 otelCoordinator.Connect(manifest);
 
@@ -140,7 +140,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
             var exportBuilder = new OtelTestExporterBuilder();
 
-            using var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
+            using var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings(), new OtelCollector(isActive: false));
             otelCoordinator.Connect(manifest);
 
             var logRule = manifest.Processors[0].Otel.Logs[0];
@@ -195,7 +195,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
             var exportBuilder = new OtelTestExporterBuilder();
 
-            using var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
+            using var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings(), new OtelCollector(isActive: false));
             otelCoordinator.Connect(manifest);
 
             var logRule = manifest.Processors[0].Otel.Logs[0];

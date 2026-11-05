@@ -79,5 +79,17 @@ namespace mqtt2otel.Helper
 
             return result;
         }
+
+        /// <summary>
+        /// Adds an internal attribute to the list.
+        /// </summary>
+        /// <param name="attributes">The attribute lists.</param>
+        /// <param name="key">The key of the internal attribute without the internal attribute prefix.</param>
+        /// <param name="value">The value of the attribute as a string.</param>
+        internal static void AddInternalAttribute(this List<OtelAttribute> attributes, string key, string value)
+        {
+            var attribute = OtelAttribute.CreateInternalAttribute(key, value);
+            attributes.Add(attribute);
+        }
     }
 }

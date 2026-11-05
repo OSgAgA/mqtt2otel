@@ -1,4 +1,5 @@
-﻿using mqtt2otel.Shated;
+﻿using mqtt2otel.Shared.Helper;
+using mqtt2otel.Shated;
 using OpenTelemetry.Metrics;
 using System;
 using System.Collections.Generic;
@@ -86,10 +87,10 @@ namespace mqtt2otel.Metadata
         {
             this.Connection = connection;
             this.StartUtc = activity.StartTimeUtc;
-            this.Tags = activity.Tags;
+            this.Tags = activity.Tags.Where( tag => !tag.Key.StartsWith(InternalAttributes.InternalAttributePrefix) );
             this.Duration = activity.Duration;
-            this.TraceId = activity.TraceId.ToString();
-            this.SpanId = activity.SpanId.ToString();
+            this.TraceId = InternalAttributes.GetValueFromTags( activity.Tags, InternalAttributes.TraceId);
+            this.SpanId = InternalAttributes.GetValueFromTags(activity.Tags, InternalAttributes.SpanId);
             this.ParentSpanId = activity.ParentSpanId.ToString();
             this.Name = activity.OperationName;
             this.Kind = activity.Kind.ToString();

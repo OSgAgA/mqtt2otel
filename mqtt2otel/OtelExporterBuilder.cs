@@ -67,7 +67,7 @@ namespace mqtt2otel
         {
             if (connection.Endpoint.Address == null) throw new Exception("Address of Otel server endpoint must be set!");
 
-            var address = connection.Endpoint.Uri.OriginalString;
+            var address = connection.Endpoint.FullAddress;
             if (connection.OtlpExportProtocol == OtlpExportProtocol.HttpProtobuf && !address.EndsWith(defaultHttpPath))
             {
                 if (!address.EndsWith("/")) address += "/";

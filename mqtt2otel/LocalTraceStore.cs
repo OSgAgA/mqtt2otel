@@ -43,7 +43,7 @@ namespace mqtt2otel
         {
             lock (contextGate)
             {
-                return CreateOrGetExistingSpanContext(id);
+                return GetOrCreateExistingSpanContextInternal(id);
             }
         }
 
@@ -55,21 +55,17 @@ namespace mqtt2otel
         /// </summary>
         /// <param name="id">The internal span id.</param>
         /// <param name="retentionTimeInSeconds">The retention timeout in seconds.</param>
-        /// <param name="strategy">The strategy that should apply, when the retention time is exceeded.</param>
-        /// <param name="retentionExceededEvent">The event that should be created when the retention time is exceeded (depending on strategy)</param>
         /// <returns>The span context.</returns>
 
-        public OtelSpanContext GetOrCreateSpanContext(string id, int retentionTimeInSeconds, SpanRetentionStrategy strategy, OtelSpanEvent retentionExceededEvent)
+        public OtelSpanContext GetOrCreateSpanContext(string id, int retentionTimeInSeconds)
         {
             OtelSpanContext result;
 
             lock (contextGate)
             {
-                result = CreateOrGetExistingSpanContext(id);
+                result = GetOrCreateExistingSpanContextInternal(id);
 
                 result.RetentionInSeconds = retentionTimeInSeconds;
-                result.RetentionStrategy = strategy;
-                result.RetentionExceededEvent = retentionExceededEvent;
 
                 this.spanContexts[id] = result;
 
@@ -123,11 +119,11 @@ namespace mqtt2otel
 
                 if (span.Parent != null && span.Parent != span.Id)
                 {
-                    parent = this.CreateOrGetExistingSpanContext(span.Parent);
+                    parent = this.GetOrCreateExistingSpanContextInternal(span.Parent);
                 }
 
-                context = this.CreateOrGetExistingSpanContext(span.Id);
-                span.Context = context.ToActivityContext();
+                context = this.GetOrCreateExistingSpanContextInternal(span.Id);
+                span.Context = context;
 
                 if (parent != null)
                 {
@@ -141,13 +137,18 @@ namespace mqtt2otel
 
                 foreach (var link in span.LinkTo)
                 {
-                    link.Context = this.CreateOrGetExistingSpanContext(link.Target).ToActivityContext();
+                    var linkContext = this.GetOrCreateExistingSpanContextInternal(link.Target);
+                    link.Context = linkContext.ToActivityContext();
+                    if (span.RetentionInSeconds != null)
+                    {
+                        linkContext.RetentionInSeconds = span.RetentionInSeconds.Value;
+                    }
                 }
 
                 foreach (var evt in span.Events)
                 {
                     if (evt.SpanId != span.Id) evt.SpanId = span.Id;
-                    this.CreateOrGetExistingSpanContext(evt.SpanId);
+                    this.GetOrCreateExistingSpanContextInternal(evt.SpanId);
                 }
             }
         }
@@ -221,10 +222,10 @@ namespace mqtt2otel
         }
 
         /// <summary>
-        /// Gets all completed spans from the store.
+        /// Gets all completed spans or spans that exceeded their retention timout from the store.
         /// </summary>
         /// <returns>All available completed spans.</returns>
-        public List<OtelSpan> GetCompletedSpans()
+        public List<OtelSpan> GetCompletedOrTimeOutSpans()
         {
             var result = new List<OtelSpan>();
 
@@ -232,14 +233,29 @@ namespace mqtt2otel
             {
                 foreach (var span in this.spans)
                 {
-                    if (span.Value.IsCompleted)
+                    if (span.Value.IsCompleted || span.Value.IsRetentionExceeded)
                     {
+                        span.Value.ApplyDefaultValues();
                         result.Add(span.Value);
                     }
                 }
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Removes all span contexts from the list, that have timed out.
+        /// </summary>
+        public void ClearTimedOutSpanContexts()
+        {
+            lock (spanGate)
+            {
+                foreach (var context in this.spanContexts)
+                {
+                    if (context.Value.IsExpired) this.spanContexts.Remove(context.Key);
+                }
+            }
         }
 
         /// <summary>
@@ -279,7 +295,7 @@ namespace mqtt2otel
         /// </summary>
         /// <param name="spanId">The span id.</param>
         /// <returns>The created, or existing span.</returns>
-        private OtelSpanContext CreateOrGetExistingSpanContext(string id)
+        private OtelSpanContext GetOrCreateExistingSpanContextInternal(string id)
         {
             OtelSpanContext result;
 

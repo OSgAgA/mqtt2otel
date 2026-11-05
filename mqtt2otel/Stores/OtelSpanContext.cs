@@ -41,17 +41,6 @@ namespace mqtt2otel.Stores
         public int RetentionInSeconds { get; set; } = 3600;
 
         /// <summary>
-        /// Gets or sets the <see cref="SpanRetentionStrategy"/> used, when the retention time is exceeded.
-        /// </summary>
-        public SpanRetentionStrategy RetentionStrategy { get; set; } = SpanRetentionStrategy.CompleteErrorWithEvent;
-
-        /// <summary>
-        /// Gets or sets the event that will be created, when the retention time is exceeded. Only applies if a strategy is chosen, 
-        /// that creates events.
-        /// </summary>
-        public OtelSpanEvent RetentionExceededEvent { get; set; } = new OtelSpanEvent() { Name = "Retention time for span exceeded." };
-
-        /// <summary>
         /// Gets the date and time, when this context was created.
         /// </summary>
         public DateTime Created { get; } = DateTime.UtcNow;
@@ -67,7 +56,7 @@ namespace mqtt2otel.Stores
         /// <returns></returns>
         public ActivityContext ToActivityContext()
         {
-            return new ActivityContext(ActivityTraceId.CreateFromString(this.TraceId), ActivitySpanId.CreateFromString(this.SpanId), ActivityTraceFlags.Recorded);
+            return new ActivityContext(ActivityTraceId.CreateFromString(this.TraceId), ActivitySpanId.CreateFromString(this.SpanId), ActivityTraceFlags.Recorded, isRemote: true);
         }
     }
 }

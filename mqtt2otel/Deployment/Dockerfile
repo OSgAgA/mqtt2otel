@@ -1,6 +1,8 @@
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS base
 WORKDIR /app
 
+COPY --from=otel/opentelemetry-collector-contrib:0.164.0 /otelcol-contrib /usr/local/bin/otelcol-contrib
+
 FROM base AS final
 WORKDIR /app
 

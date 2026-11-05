@@ -1,103 +1,103 @@
-using Microsoft.Extensions.Options;
-using mqtt2otel.ManifestExplorer.Components;
-using mqtt2otel.ManifestExplorer.Meters;
-using mqtt2otel.ManifestExplorer.Services;
-using mqtt2otel.ManifestExplorer.Settings;
-using OpenTelemetry;
-using OpenTelemetry.Logs;
-using OpenTelemetry.Metrics;
+    using Microsoft.Extensions.Options;
+    using mqtt2otel.ManifestExplorer.Components;
+    using mqtt2otel.ManifestExplorer.Meters;
+    using mqtt2otel.ManifestExplorer.Services;
+    using mqtt2otel.ManifestExplorer.Settings;
+    using OpenTelemetry;
+    using OpenTelemetry.Logs;
+    using OpenTelemetry.Metrics;
 
-namespace mqtt2otel.ManifestExplorer
-{
-    public class Program
+    namespace mqtt2otel.ManifestExplorer
     {
-        public static void Main(string[] args)
+        public class Program
         {
+            public static void Main(string[] args)
+            {
             
 
-            var builder = WebApplication.CreateBuilder(args);
+                var builder = WebApplication.CreateBuilder(args);
 
-            string configFileName = "/config/appsettings.json";
-            if (File.Exists(configFileName))
-            {
-                builder.Configuration.Sources.Clear(); // remove default appsettings.json
-                builder.Configuration.AddJsonFile(configFileName, optional: false, reloadOnChange: true);
-            }
+                string configFileName = "/config/appsettings.json";
+                if (File.Exists(configFileName))
+                {
+                    builder.Configuration.Sources.Clear(); // remove default appsettings.json
+                    builder.Configuration.AddJsonFile(configFileName, optional: false, reloadOnChange: true);
+                }
 
-            // Add services to the container.
-            builder.Services.AddRazorComponents()
-                .AddInteractiveServerComponents();
-            //.AddInteractiveWebAssemblyComponents();
+                // Add services to the container.
+                builder.Services.AddRazorComponents()
+                    .AddInteractiveServerComponents();
+                //.AddInteractiveWebAssemblyComponents();
 
-            builder.Services.AddControllers();
-            builder.Services.AddBlazorBootstrap();
+                builder.Services.AddControllers();
+                builder.Services.AddBlazorBootstrap();
 
-            builder.Services.Configure<ServerApiOptions>(builder.Configuration.GetSection("ServerApi"));
-            builder.Services.Configure<FeatureToggles>(builder.Configuration.GetSection("FeatureToggles"));
+                builder.Services.Configure<ServerApiOptions>(builder.Configuration.GetSection("ServerApi"));
+                builder.Services.Configure<FeatureToggles>(builder.Configuration.GetSection("FeatureToggles"));
 
-            var filePath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "version.txt");
-            builder.Services.AddSingleton<ApplicationInfo>(new ApplicationInfo(filePath ?? string.Empty));
-            builder.Services.AddSingleton<UsageMeter>();
-            builder.Services.AddSingleton<RealUserMonitoring>();
+                var filePath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "version.txt");
+                builder.Services.AddSingleton<ApplicationInfo>(new ApplicationInfo(filePath ?? string.Empty));
+                builder.Services.AddSingleton<UsageMeter>();
+                builder.Services.AddSingleton<RealUserMonitoring>();
 
-            builder.Services.AddHttpClient("ServerAPI", (serviceProvider, client) =>
-            {
-                var opts = serviceProvider.GetRequiredService<IOptions<ServerApiOptions>>().Value;
-                client.BaseAddress = new Uri(opts.BaseAddress);
-            });
+                builder.Services.AddHttpClient("ServerAPI", (serviceProvider, client) =>
+                {
+                    var opts = serviceProvider.GetRequiredService<IOptions<ServerApiOptions>>().Value;
+                    client.BaseAddress = new Uri(opts.BaseAddress);
+                });
 
-            var otelSettings = builder.Configuration.GetSection("Otel").Get<OtelSettings>();
+                var otelSettings = builder.Configuration.GetSection("Otel").Get<OtelSettings>();
 
-            if (otelSettings != null)
-            {
-                builder.Services.AddOpenTelemetry()
-                         .WithMetrics(metrics =>
-                         {
-                             metrics.AddMeter(nameof(UsageMeter));
-
-                             metrics.AddOtlpExporter(options =>
+                if (otelSettings != null)
+                {
+                    builder.Services.AddOpenTelemetry()
+                             .WithMetrics(metrics =>
                              {
-                                 options.Endpoint = new Uri(otelSettings.Endpoint.Uri);
-                                 options.Protocol = otelSettings.OtlpExportProtocol;
-                                 options.ExportProcessorType = otelSettings.ExportProcessorType;
-                                 options.Headers = otelSettings.Headers;
-                             });
-                         })
-                         .WithLogging( logs =>
-                         {
-                             logs.AddOtlpExporter(options =>
+                                 metrics.AddMeter(nameof(UsageMeter));
+
+                                 metrics.AddOtlpExporter(options =>
+                                 {
+                                     options.Endpoint = new Uri(otelSettings.Endpoint.Uri);
+                                     options.Protocol = otelSettings.OtlpExportProtocol;
+                                     options.ExportProcessorType = otelSettings.ExportProcessorType;
+                                     options.Headers = otelSettings.Headers;
+                                 });
+                             })
+                             .WithLogging( logs =>
                              {
-                                 options.Endpoint = new Uri(otelSettings.Endpoint.Uri);
-                                 options.Protocol = otelSettings.OtlpExportProtocol;
-                                 options.ExportProcessorType = otelSettings.ExportProcessorType;
-                                 options.Headers = otelSettings.Headers;
+                                 logs.AddOtlpExporter(options =>
+                                 {
+                                     options.Endpoint = new Uri(otelSettings.Endpoint.Uri);
+                                     options.Protocol = otelSettings.OtlpExportProtocol;
+                                     options.ExportProcessorType = otelSettings.ExportProcessorType;
+                                     options.Headers = otelSettings.Headers;
+                                 });
                              });
-                         });
+                }
+
+                var app = builder.Build();
+
+                // Configure the HTTP request pipeline.
+                if (app.Environment.IsDevelopment())
+                {
+                    app.UseWebAssemblyDebugging();
+                }
+                else
+                {
+                    app.UseExceptionHandler("/Error");
+                }
+
+                app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+                app.UseAntiforgery();
+
+                app.MapStaticAssets();
+                app.MapControllers();
+                app.MapRazorComponents<App>()
+                    //.AddInteractiveWebAssemblyRenderMode()
+                    .AddInteractiveServerRenderMode();
+                    //.AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
+
+                app.Run();
             }
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseWebAssemblyDebugging();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-            }
-
-            app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-            app.UseAntiforgery();
-
-            app.MapStaticAssets();
-            app.MapControllers();
-            app.MapRazorComponents<App>()
-                //.AddInteractiveWebAssemblyRenderMode()
-                .AddInteractiveServerRenderMode();
-                //.AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
-
-            app.Run();
         }
     }
-}

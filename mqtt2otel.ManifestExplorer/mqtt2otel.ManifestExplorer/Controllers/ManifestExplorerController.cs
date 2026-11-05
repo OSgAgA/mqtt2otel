@@ -41,20 +41,8 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             List<ErrorTestData> processorErrors = new List<ErrorTestData>();
 
-            var logger = new Mock<ILogger<Processor>>();
-            logger.Setup(x => x.Log(
-                                    It.Is<LogLevel>(l => l == LogLevel.Error || l == LogLevel.Critical),
-                                    It.IsAny<EventId>(),
-                                    It.IsAny<It.IsAnyType>(),
-                                    It.IsAny<Exception>(),
-                                    (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()))
-                                .Callback((LogLevel level, EventId id, object state, Exception ex, object formatter) =>
-                                {
-                                    if (level == LogLevel.Error || level == LogLevel.Critical)
-                                    {
-                                        processorErrors.Add(new ErrorTestData(state.ToString() ?? string.Empty));
-                                    }
-                                });
+            Mock<ILogger<Processor>> logger = this.CreateLoggerMock<Processor>(processorErrors);
+            Mock<ILogger<OtelCollector>> otelCollectorLogger = this.CreateLoggerMock<OtelCollector>();
 
             IPayloadParser payloadParser = new PayloadParser();
             IEmbeddedExpressionParser embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
@@ -119,7 +107,9 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             }
 
             ILogger<MqttCoordinator> mqttLogger = new Logger<MqttCoordinator>(new LoggerFactory());
-            var mqtt = new MqttCoordinator(mqttLogger, new MqttMeter(), isSimulator: true);
+
+            var messageProcessor = new MessageProcessor(new Mock<ILogger<MessageProcessor>>().Object, payloadParser, new PayloadTransformation(), dataStores, meter, new UsageTelemetryMeter(), embeddedExpressionParser, traceStore);
+            var mqtt = new MqttCoordinator(mqttLogger, new MqttMeter(), messageProcessor, isSimulator: true);
             await mqtt.ConnectAndSubscribe(manifest);
 
             ILogger<OtelCoordinator> otelLogger = new Logger<OtelCoordinator>(new LoggerFactory());
@@ -129,13 +119,13 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
             try
             {
-                using (var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings()))
+                using (var otel = new OtelCoordinator(otelLogger, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings(), new OtelCollector(otelCollectorLogger.Object, isActive: false)))
                 {
                     otel.Connect(manifest);
 
                     var message = new MqttMessage(subscriptionId: 0, topic: request.MqttData.Topic, payload: request.MqttData.Payload, userProperties: request.MqttData.UserProperties);
                     bool success = await mqtt.SimulateOnMqttMessageReceived(message);
-                    otel.CreateSpans(traceStore.GetCompletedSpans());
+                    otel.CreateSpans(traceStore.GetCompletedOrTimeOutSpans());
                 }
 
                 return new ApplyPatternToPayloadResult(exportBuilder, processorErrors, state: traceStore.GetFullState());
@@ -145,5 +135,33 @@ namespace mqtt2otel.ManifestExplorer.Controllers
                 processorMutex.ReleaseMutex();
             }
         }
+
+        /// <summary>
+        /// Creates a mock for an <see cref="ILogger"/> of type T.
+        /// </summary>
+        /// <typeparam name="T">The logger type.</typeparam>
+        /// <param name="processorErrors"></param>
+        /// <returns>The created logger.</returns>
+        private Mock<ILogger<T>> CreateLoggerMock<T>(List<ErrorTestData>? errorCollector = null)
+        {
+            if (errorCollector == null) errorCollector = new List<ErrorTestData>();
+
+            var logger = new Mock<ILogger<T>>();
+            logger.Setup(x => x.Log(
+                                    It.Is<LogLevel>(l => l == LogLevel.Error || l == LogLevel.Critical),
+                                    It.IsAny<EventId>(),
+                                    It.IsAny<It.IsAnyType>(),
+                                    It.IsAny<Exception>(),
+                                    (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()))
+                                .Callback((LogLevel level, EventId id, object state, Exception ex, object formatter) =>
+                                {
+                                    if (level == LogLevel.Error || level == LogLevel.Critical)
+                                    {
+                                        errorCollector.Add(new ErrorTestData(state.ToString() ?? string.Empty));
+                                    }
+                                });
+            return logger;
+        }
+
     }
 }

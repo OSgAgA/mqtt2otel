@@ -76,6 +76,8 @@ namespace mqtt2otel.Manifest
             if (string.IsNullOrEmpty(this.Version)) return result.AddError($"No or empty Version property in file. Version must allways be set! {supportedVersions}");
             if (this.Version != "1.0" && this.Version != "1.1") return result.AddError($"Provided version {this.Version} is not supported. {supportedVersions}");
 
+            this.EnsureNoNameDuplicate(result, $"{nameof(this.OtelConnections)}", this.OtelConnections, connection => connection.Name);
+            this.EnsureNoNameDuplicate(result, $"{nameof(this.MqttConnections)}", this.MqttConnections, connection => connection.Name);
             this.MqttConnections.ForEach(broker => broker.Validate(result));
             this.OtelConnections.ForEach(connection => connection.Validate(result));
             this.SubscriptionGroups.ForEach(group => group.Validate("Subscription groups", result));
@@ -106,6 +108,19 @@ namespace mqtt2otel.Manifest
             }
 
             return result;
+        }
+
+        private void EnsureNoNameDuplicate<T>(ValidationResult validation, string identifier, ImportEnabledList<T> list, Func<T, string> nameAccessor) where T : NamedIdObject
+        {
+            HashSet<string> store = new();
+
+            foreach (var item in list)
+            {
+                if (store.Contains(nameAccessor(item)))
+                {
+                    validation.AddError($"{identifier} name '{nameAccessor(item)}' already exists.");
+                }
+            }
         }
 
         /// <summary>

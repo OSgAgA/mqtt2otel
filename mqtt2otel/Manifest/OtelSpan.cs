@@ -1,6 +1,7 @@
 ﻿using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
 using mqtt2otel.Parser;
+using mqtt2otel.Stores;
 using OpenTelemetry.Context.Propagation;
 using OpenTelemetry.Trace;
 using System;
@@ -17,9 +18,14 @@ namespace mqtt2otel.Manifest
     public class OtelSpan : NamedIdObject
     {
         /// <summary>
+        /// Gets the date and time, when the object was created.
+        /// </summary>
+        public DateTime Created { get; private set; } = DateTime.Now;
+
+        /// <summary>
         /// Gets the activity context of the span.
         /// </summary>
-        public ActivityContext? Context { get; internal set; } = null;
+        public OtelSpanContext? Context { get; internal set; } = null;
 
         /// <summary>
         /// Gets the activity context of the parent if existing.
@@ -208,7 +214,21 @@ namespace mqtt2otel.Manifest
             get
             {
                 if (this.CompletedAsDateTime == null) return false;
-                if (this.CompletedAsDateTime.Value.AddSeconds(this.WaitForLateSpanEventsInS ?? 5) < DateTime.UtcNow) return false;
+                if (this.CompletedAsDateTime.Value.AddSeconds(this.WaitForLateSpanEventsInS ?? 5) > DateTime.UtcNow) return false;
+
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the span has fully completed and can be created.
+        /// </summary>
+        public bool IsRetentionExceeded
+        {
+            get
+            {
+                var start = this.CompletedAsDateTime ?? this.Created;
+                if (start.AddSeconds(this.RetentionInSeconds ?? 3600) > DateTime.UtcNow) return false;
 
                 return true;
             }
@@ -259,13 +279,13 @@ namespace mqtt2otel.Manifest
         /// </summary>
         public void ApplyDefaultValues()
         {
-            if (this.Name != null) this.Name = "No name provided.";
-            if (this.Description != null) this.Description = string.Empty;
-            if (this.Kind != null) this.Kind = ActivityKind.Internal;
-            if (this.Status != null) this.Status = ActivityStatusCode.Unset;
-            if (this.RetentionInSeconds != null) this.RetentionInSeconds = 3600;
-            if (this.RetentionStrategy != null) this.RetentionStrategy = SpanRetentionStrategy.CompleteErrorWithEvent;
-            if (this.RetentionExceededEvent != null) this.RetentionExceededEvent = new OtelSpanEvent() { SpanId = this.Id, Name = "Span retention time expired." };
+            if (string.IsNullOrWhiteSpace(this.Name)) this.Name = "No name provided.";
+            if (this.Description == null) this.Description = string.Empty;
+            if (this.Kind == null) this.Kind = ActivityKind.Internal;
+            if (this.Status == null) this.Status = ActivityStatusCode.Unset;
+            if (this.RetentionInSeconds == null) this.RetentionInSeconds = 3600;
+            if (this.RetentionStrategy == null) this.RetentionStrategy = SpanRetentionStrategy.CompleteErrorWithEvent;
+            if (this.RetentionExceededEvent == null) this.RetentionExceededEvent = new OtelSpanEvent() { SpanId = this.Id, Name = "Span retention time expired." };
 
             var now = DateTime.UtcNow;
 

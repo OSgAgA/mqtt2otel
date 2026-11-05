@@ -79,6 +79,15 @@ namespace mqtt2otel.Manifest
         /// <param name="result">The validation results.</param>
         public void Validate(ValidationResult result)
         {
+            this.Name = this.Name.Trim();
+
+            if (this.Name.Contains('"')) result.AddError("OtelConnection name must not contain a '\"' character.");
+            if (this.Name.Contains("'")) result.AddError("OtelConnection name must not contain a ' character.");
+            if (this.Name.Contains("*")) result.AddError("OtelConnection name must not contain a * character.");
+            if (this.Name.Contains("?")) result.AddError("OtelConnection name must not contain a ? character.");
+            if (this.Name.Length > 128) result.AddError("OtelConnection name must not be longer than 128 characters.");
+            if (this.Name.Contains("\n") || this.Name.Contains("\r")) result.AddError("OtelConnection name must not contain a new line or carriage return.");
+
             this.Endpoint.Validate("Otel server connection", result);
         }
     }

@@ -28,11 +28,9 @@ namespace mqtt2otel.Interfaces
         /// </summary>
         /// <param name="id">The internal span id.</param>
         /// <param name="retentionTimeInSeconds">The retention timeout in seconds.</param>
-        /// <param name="strategy">The strategy that should apply, when the retention time is exceeded.</param>
-        /// <param name="retentionExceededEvent">The event that should be created when the retention time is exceeded (depending on strategy)</param>
         /// <returns>The span context.</returns>
 
-        public OtelSpanContext GetOrCreateSpanContext(string id, int retentionTimeInSeconds, SpanRetentionStrategy strategy, OtelSpanEvent retentionExceededEvent);
+        public OtelSpanContext GetOrCreateSpanContext(string id, int retentionTimeInSeconds);
 
         /// <summary>
         /// Gets the span with the given id from the store. If none is existing a new one is created and stored.
@@ -72,10 +70,15 @@ namespace mqtt2otel.Interfaces
         public void RemoveSpans(List<OtelSpan> spans);
 
         /// <summary>
-        /// Gets all completed spans from the store.
+        /// Gets all completed spans or spans that exceeded their retention timout from the store.
         /// </summary>
         /// <returns>All available completed spans.</returns>
-        public List<OtelSpan> GetCompletedSpans();
+        public List<OtelSpan> GetCompletedOrTimeOutSpans();
+
+        /// <summary>
+        /// Removes all span contexts from the list, that have timed out.
+        /// </summary>
+        public void ClearTimedOutSpanContexts();
 
         /// <summary>
         /// Gets the full internal state of the application. This is meant for testing only and should not be used in production code.
