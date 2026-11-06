@@ -47,7 +47,7 @@ namespace mqtt2otel.Parser
         /// <param name="topic">The topic to be parsed.</param>
         /// <param name="pattern">The pattern that should be applied to the topic.</param>
         /// <returns>The generated attributes, or an empty list, if the pattern could not be matched.</returns>
-        public static IEnumerable<OtelAttribute> Parse(string topic, string pattern)
+        public static List<OtelAttribute> Parse(string topic, string pattern)
         {
             var result = new List<OtelAttribute>();
 

@@ -91,15 +91,21 @@ namespace mqtt2otel
         private bool isSimulator = false;
 
         /// <summary>
+        /// Holds an instance of the current message processor.
+        /// </summary>
+        private MessageProcessor messageProcessor;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MqttCoordinator"/> class.
         /// </summary>
         /// <param name="internalLogger">The logger for internal log messages.</param>
         /// <param name="meter">The meter used for internal metrics.</param>
         /// <param name="isSimulator">A value indicating whether this class only simulates processing of data, but does not connect to a real mqtt broker.</param>
-        public MqttCoordinator(ILogger<MqttCoordinator> internalLogger, MqttMeter meter, bool isSimulator = false)
+        public MqttCoordinator(ILogger<MqttCoordinator> internalLogger, MqttMeter meter, MessageProcessor messageProcessor, bool isSimulator = false)
         {
             this.internalLogger = internalLogger;
             this.mqttMeter = meter;
+            this.messageProcessor = messageProcessor;
             this.isSimulator = isSimulator;
         }
 
@@ -470,7 +476,7 @@ namespace mqtt2otel
                         this.OnMessageReceived(this, new MqttMessageReceivedEventArgs(message, data.Subscription, data.Processor));
                     }
 
-                    success = data.Processor.ProcessSubscriptionPayload(message, data.Subscription);
+                    success = this.messageProcessor.ProcessMessage(message, data.Subscription, data.Processor);
                 }
             }
 

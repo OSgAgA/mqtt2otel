@@ -57,6 +57,9 @@ namespace mqtt2otel.Metadata
         /// </summary>
         public List<MetricPointTestData> MetricPoints { get; set; } = new();
 
+        /// <summary>
+        /// Gets or sets the server connection.
+        /// </summary>
         public OtelServerConnectionInfo Connection { get; set; } = new();
 
         /// <summary>

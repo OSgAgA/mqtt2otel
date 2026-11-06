@@ -24,10 +24,12 @@ namespace mqtt2otel.InternalMetrics
 
             this.ProcessingTimeTotal = this.meter.CreateHistogram<double>("mqtt2otel.processor.total.duration_in_us", unit: "us", description: "The total duration of processing all metric and otel rules of a single processor.");
             this.ProcessingTimeMetricRule = this.meter.CreateHistogram<double>("mqtt2otel.processor.metrics.rule.duration_in_us", unit: "us", description: "The duration of processing a single metrics rule inside a processor.");
+            this.ProcessingTimeTraceRule = this.meter.CreateHistogram<double>("mqtt2otel.processor.traces.rule.duration_in_us", unit: "us", description: "The duration of processing a single trace rule inside a processor.");
             this.ProcessingTimeLoggingRule = this.meter.CreateHistogram<double>("mqtt2otel.processor.logging.rule.duration_in_us", unit: "us", description: "The duration of processing a single logging rule inside a processor.");
             this.ProcessingErrorCount = this.meter.CreateCounter<int>("mqtt2otel.processor.processing_errors", "A counter for measuring the amount of errors, that appeared while processing incoming data.");
             this.LogEntries = this.meter.CreateCounter<int>("mqtt2otel.processor.log_entries.count", description: "This is the count of created log entries.");
             this.Metrics = this.meter.CreateCounter<int>("mqtt2otel.processor.metrics.count", description: "This is the count of all created metrics.");
+            this.Traces = this.meter.CreateCounter<int>("mqtt2otel.processor.traces.count", description: "This is the count of all created traces.");
         }
 
         /// <summary>
@@ -39,6 +41,11 @@ namespace mqtt2otel.InternalMetrics
         /// Gets the histogram to record the duration of processing a single metrics rule inside a processor.
         /// </summary>
         public Histogram<double> ProcessingTimeMetricRule { get; }
+
+        /// <summary>
+        /// Gets the histogram to record the duration of processing a single metrics rule inside a processor.
+        /// </summary>
+        public Histogram<double> ProcessingTimeTraceRule { get; }
 
         /// <summary>
         /// Gets the histogram to record the duration of processing a single logging rule inside a processor.
@@ -59,5 +66,10 @@ namespace mqtt2otel.InternalMetrics
         /// Gets the counter to record all created metrics.
         /// </summary>
         public Counter<int> Metrics { get; }
+
+        /// <summary>
+        /// Gets the counter to record all created metrics.
+        /// </summary>
+        public Counter<int> Traces { get; }
     }
 }

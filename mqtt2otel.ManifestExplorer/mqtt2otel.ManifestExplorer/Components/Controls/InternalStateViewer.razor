@@ -1,0 +1,255 @@
+﻿@using mqtt2otel.Stores
+
+<div style="padding: 15px;">
+    @if (this.State?.SpanContexts != null)
+    {
+        <Card class="overflow-x-auto">
+            <CardHeader class="d-flex align-items-center">
+                <div><b>Internal spans</b></div>
+            </CardHeader>
+            <table data-testid="internal-state-span-container" class="table overflow-x-auto">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Parent</th>
+                        <th>Started</th>
+                        <th>Completed</th>
+                        <th>Kind</th>
+                        <th>Status</th>
+                        <th>Attributes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var span in this.State.Spans)
+                    {
+                        <tr data-testid="internal-state-span-entry">
+                            <td data-testid="internal-state-span-id">@span.Id</td>
+                            @if (string.IsNullOrWhiteSpace(span.Name))
+                            {
+                                <td data-testid="internal-state-span-name"><i>NULL</i></td>
+                            }
+                            else
+                            {
+                                <td data-testid="internal-state-span-name">@span.Name</td>
+                            }
+                            @if (string.IsNullOrWhiteSpace(span.Parent))
+                            {
+                                <td data-testid="internal-state-span-parent"><i>NULL</i></td>
+                            }
+                            else
+                            {
+                                <td data-testid="internal-state-span-parent">@span.Parent</td>
+                            }
+                            @if (span.StartedAsDateTime != null)
+                            {
+                                <td data-testid="internal-state-span-started">@span.StartedAsDateTime.Value.ToString("yyyy-MM-ddTHH:mm:ssZ")</td>
+                            }
+                            else
+                            {
+                                <td data-testid="internal-state-span-started"><i>NULL</i></td>
+                            }
+                            @if (span.CompletedAsDateTime != null)
+                            {
+                                <td data-testid="internal-state-span-completed">@span.CompletedAsDateTime.Value.ToString("yyyy-MM-ddTHH:mm:ssZ")</td>
+                            }
+                            else
+                            {
+                                <td data-testid="internal-state-span-started"><i>NULL</i></td>
+                            }
+
+                            @if (span.Kind == null)
+                            {
+                                <td data-testid="internal-state-span-kind"><i>NULL</i></td>
+                            }
+                            else
+                            {
+                                <td data-testid="internal-state-span-kind">@span.Kind.ToString()</td>
+                            }
+                            @if (span.Status == null)
+                            {
+                                <td data-testid="internal-state-span-status"><i>NULL</i></td>
+                            }
+                            else
+                            {
+                                <td data-testid="internal-state-span-status">@span.Status.Value.ToString()</td>
+                            }
+                            <td>
+                                @foreach (var tag in span.Attributes.Where( attr => attr.IsInternal ))
+                                {
+                                    <OtelAttribute Value="@(new KeyValuePair<string, object?>(tag.Key, tag.Value))" />
+                                }
+                            </td>
+                        </tr>
+
+                        @if (this.ShowDetails)
+                        {
+                            <tr>
+                                <td></td>
+                                <td colspan="7">
+                                    <Card class="overflow-x-auto">
+                                        <CardHeader class="d-flex align-items-center">
+                                            <div><b>Details</b></div>
+                                        </CardHeader>
+                                        <table data-testid="internal-state-span-details-container" class="table overflow-x-auto">
+                                            <thead>
+                                                <tr>
+                                                    <th>Retention (s)</th>
+                                                    <th>Retention strategy</th>
+                                                    <th>Wait time for late spans (s)</th>
+                                                    <th>Otel connection</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td data-testid="internal-state-span-datails-retentiont-time">@span.RetentionInSeconds</td>
+                                                    <td data-testid="internal-state-span-datails-retentiont-strategy">@span.RetentionStrategy.ToString()</td>
+                                                    <td data-testid="internal-state-span-datails-retentiont-late-events">@span.WaitForLateSpanEventsInS</td>
+                                                    <td data-testid="internal-state-span-datails-otel-connection">@span.OtelConnection</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </Card>
+                                </td>
+                            </tr>
+                        }
+
+                        @if (span.Events != null && span.Events.Any())
+                        {
+                            <tr>
+                                <td></td>
+                                <td colspan="7">
+                                    <Card class="overflow-x-auto">
+                                        <CardHeader class="d-flex align-items-center">
+                                            <div><b>Events</b></div>
+                                        </CardHeader>
+                                        <table data-testid="internal-state-span-event-container" class="table overflow-x-auto">
+                                            <thead>
+                                                <tr>
+                                                    <th>Timestamp</th>
+                                                    <th>Name</th>
+                                                    <th>Attributes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var evt in span.Events)
+                                                {
+                                                    <tr>
+                                                        <td data-testid="internal-state-span-event-timestamp">@evt.TimestampAsDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ")</td>
+                                                        <td data-testid="internal-state-span-event-name">@evt.Name</td>
+                                                        <td>
+                                                            @foreach (var tag in evt.Attributes)
+                                                            {
+                                                                <OtelAttribute Value="@(new KeyValuePair<string, object?>(tag.Key, tag.Value))" />
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </Card>
+                                </td>
+                            </tr>
+                        }
+
+                        @if (span.LinkTo != null && span.LinkTo.Any())
+                        {
+                            <tr>
+                                <td></td>
+                                <td colspan="7">
+                                    <Card class="overflow-x-auto">
+                                        <CardHeader class="d-flex align-items-center">
+                                            <div><b>Links</b></div>
+                                        </CardHeader>
+                                        <table data-testid="internal-state-span-links-container" class="table overflow-x-auto">
+                                            <thead>
+                                                <tr>
+                                                    <th>Target</th>
+                                                    <th>Attributes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var link in span.LinkTo)
+                                                {
+                                                    <tr>
+                                                        <td data-testid="internal-state-span-link-target">@link.Target</td>
+                                                        <td>
+                                                            @foreach (var tag in link.Attributes)
+                                                            {
+                                                                <OtelAttribute Value="@(new KeyValuePair<string, object?>(tag.Key, tag.Value))" />
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </Card>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </Card>
+
+        <Card class="overflow-x-auto" style="margin-top: 10px">
+            <CardHeader class="d-flex align-items-center">
+                <div><b>Internal span contexts</b></div>
+            </CardHeader>
+            <table data-testid="internal-state-span-context-container" class="table overflow-x-auto">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Trace Id</th>
+                        <th>Span Id</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var context in this.State.SpanContexts)
+                    {
+                        <tr data-testid="internal-state-span-context-entry">
+                            <td data-testid="internal-state-span-context-id">@context.Id</td>
+                            <td data-testid="internal-state-span-context-trace-id">@context.TraceId.ToString()</td>
+                            <td data-testid="internal-state-span-context-span-id">@context.SpanId.ToString()</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </Card>
+    }
+</div>
+
+
+@code {
+
+    /// <summary>
+    /// Gets or sets the internal application state that should be shown by the viewer.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public InternalState State { get; set; }
+
+    /// <summary>
+    /// Gets a value indicating, whether all details should be shown.
+    /// </summary>
+    [Parameter]
+    public bool ShowDetails
+    {
+        get => field;
+
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                this.ShowDetailsChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Used for two way binding. Called, when ShowDetails has changed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> ShowDetailsChanged { get; set; }
+}

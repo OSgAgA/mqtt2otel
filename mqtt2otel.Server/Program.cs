@@ -45,6 +45,9 @@ namespace mqtt2otel.Server
             builder.Services.AddSingleton<ProcessorMeter>(new ProcessorMeter());
             builder.Services.AddSingleton<InternalIds>(internalIds);
             builder.Services.AddSingleton<UsageTelemetryMeter>(new UsageTelemetryMeter());
+            builder.Services.AddSingleton<ITraceStore>(new LocalTraceStore());
+            builder.Services.AddSingleton<OtelCollector>();
+            builder.Services.AddSingleton<MessageProcessor>();
 
             builder.Services.AddHttpClient("ServerAPI", (serviceProvider, client) =>
             {
@@ -52,12 +55,20 @@ namespace mqtt2otel.Server
             });
 
             builder.Services.AddControllers();
+            builder.Services.AddHostedService<TraceHandlingService>();
+
             builder.WebHost.UseUrls(appSettings.BaseAddress);
 
 
             var app = builder.Build();
 
             app.MapControllers();
+
+            app.Lifetime.ApplicationStopping.Register(() =>
+            {
+                var collector = app.Services.GetRequiredService<OtelCollector>();
+                collector.Stop();
+            });
 
             app.Run();
         }

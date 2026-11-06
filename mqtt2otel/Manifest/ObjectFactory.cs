@@ -61,6 +61,11 @@ namespace mqtt2otel.Manifest
         private IEmbeddedExpressionParser embeddedExpressionParser;
 
         /// <summary>
+        /// The trace store.
+        /// </summary>
+        private ITraceStore traceStore;
+
+        /// <summary>
         /// Creates a new instance of the <see cref="ObjectFactory"/> class.
         /// </summary>
         /// <param name="signalStore">The store used for storing data for otel signals.</param>
@@ -71,7 +76,7 @@ namespace mqtt2otel.Manifest
         /// <param name="meter">The processor meter for recording internal processor metrics.</param>
         /// <param name="embeddedExpressionParser">The parser for parsing expressions embedded inside a text field.</param>
         public ObjectFactory(ILogger<Processor> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores, 
-            ProcessorMeter meter, UsageTelemetryMeter usageTelemetryMeter, IEmbeddedExpressionParser embeddedExpressionParser)
+            ProcessorMeter meter, UsageTelemetryMeter usageTelemetryMeter, IEmbeddedExpressionParser embeddedExpressionParser, ITraceStore traceStore)
         {
             this.processorMeter = meter;
             this.usageTelemetryMeter = usageTelemetryMeter;
@@ -81,6 +86,7 @@ namespace mqtt2otel.Manifest
             this.payloadTransformation = payloadTransformation;
             this.dataStores = dataStores;
             this.embeddedExpressionParser = embeddedExpressionParser;
+            this.traceStore = traceStore;
         }
 
         /// <summary>
@@ -90,10 +96,10 @@ namespace mqtt2otel.Manifest
         /// <returns>The created object.</returns>
         public object Create(Type type)
         {
-            if (type == typeof(Processor))
-            {
-                return new Processor(this.internalLogger, this.payloadParser, this.payloadTransformation, this.dataStores, this.processorMeter, this.usageTelemetryMeter, this.embeddedExpressionParser);
-            }
+            //if (type == typeof(Processor))
+            //{
+            //    return new Processor(this.internalLogger, this.payloadParser, this.payloadTransformation, this.dataStores, this.processorMeter, this.usageTelemetryMeter, this.embeddedExpressionParser, traceStore);
+            //}
 
             return fallback.Create(type);
         }

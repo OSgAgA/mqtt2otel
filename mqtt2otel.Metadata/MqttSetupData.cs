@@ -23,5 +23,23 @@ namespace mqtt2otel.Metadata
         /// Gets or sets the example user properies.
         /// </summary>
         public List<UserProperty> UserProperties { get; set; } = new();
+
+        /// <summary>
+        /// Clones the object.
+        /// </summary>
+        /// <returns>The created clone.</returns>
+        public MqttSetupData Clone()
+        {
+            var result = (MqttSetupData)this.MemberwiseClone();
+
+            result.UserProperties = new List<UserProperty>();
+
+            foreach(var property in this.UserProperties)
+            {
+                result.UserProperties.Add(new UserProperty(property.Name, property.Value));
+            }
+
+            return result;
+        }
     }
 }

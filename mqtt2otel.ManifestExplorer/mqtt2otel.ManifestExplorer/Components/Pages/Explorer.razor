@@ -25,15 +25,27 @@
     <div class="row g-4">
         <div class="col-12 col-lg-5">
             <h3 style="text-align: center;">MQTT</h3>
+            <div style="padding:10px;">
+                <MqttInput Data="this.Data.Setup.MqttData[this.CurrentMessage]" />
 
-            <MqttInput Data="this.Data.Setup" />
-            <ExampleLinksViewer Data="this.Data"/>
+                <div class="col" style="text-align: right; margin-top:20px;">
+                    <button title="Go to previous message" class="btn btn-primary withShadow" style="background-color: #44b8e7" @onclick="GotoPreviousMessage"><i class="bi bi-play-fill" style="transform: scaleX(-1); display: inline-block;"></i></button>
+                    <button Active="false" class="btn btn-outline-primary">@(this.CurrentMessage + 1)/@this.Data.Setup.MqttData.Count</button>
+                    <button title="Go to next message" class="btn btn-primary withShadow" style="background-color: #44b8e7" @onclick="GotoNextMessage"><i class="bi bi-play-fill"></i></button>
+                    <button title="Add new empty message" class="btn btn-primary withShadow" style="background-color: #44b8e7" @onclick="AddEmptyMessage"><i class="bi bi-plus-lg"></i></button>
+                    <button title="Clone current message" class="btn btn-primary withShadow" style="background-color: #44b8e7" @onclick="CloneCurrentMessage"><i class="bi bi-copy"></i></button>
+                    <button title="Delete current message" class="btn btn-primary withShadow" style="background-color: #44b8e7" @onclick="DeleteCurrentMessage"><i class="bi bi-trash3"></i></button>
+                    <button title="Move current message left" class="btn btn-primary withShadow" style="background-color: #44b8e7" @onclick="MoveCurrentMessageLeft"><i class="bi bi-arrow-bar-left"></i></button>
+                    <button title="Move current message right" class="btn btn-primary withShadow" style="background-color: #44b8e7" @onclick="MoveCurrentMessageRight"><i class="bi bi-arrow-bar-right"></i></button>
+                </div>
+            </div>
+            <ExampleLinksViewer Data="this.Data" />
         </div>
 
         <div class="col-12 col-lg-7">
             <h3 class="add-top-margin-on-mobile" style="text-align: center;">mqtt2otel</h3>
 
-            <ManifestEditor @ref="@this.manifestEditor" InitialText="@this.Data.Setup.Manifest"/>
+            <ManifestEditor @ref="@this.manifestEditor" InitialText="@this.Data.Setup.Manifest" />
 
             <div class="row">
                 <div class="col" style="text-align: center">
@@ -53,7 +65,7 @@
 
             <div class="row">
                 <div class="col">
-                    <ResultViewer Data="@this.Result" @bind-ShowDetails="@this.Data.ShowResultDetails"/>
+                    <ResultViewer Data="@this.Result" @bind-ShowDetails="@this.Data.ShowResultDetails" />
                 </div>
             </div>
 
@@ -63,7 +75,7 @@
 
 @code
 {
-     /// <summary>
+    /// <summary>
     /// The modal dialog used for creating json data.
     /// </summary>
     CreateJsonDialog modal = new();
@@ -95,6 +107,11 @@
     private TestCaseData Data = new TestCaseData();
 
     /// <summary>
+    /// The (zero-based) index of the current message shown.
+    /// </summary>
+    private int CurrentMessage = 0;
+
+    /// <summary>
     /// Apply the provided data and set the result tabs.
     /// </summary>
     private async Task Apply()
@@ -112,7 +129,7 @@
             this.logger.LogError(ex, "Could not read monacco editor text.");
         }
 
-        var request = new ApplyPatternToPayloadData(this.Data.Setup.MqttData, this.Data.Setup.Manifest);
+        var request = new ApplyPatternToPayloadData(this.Data.Setup.MqttData[this.CurrentMessage], this.Data.Setup.Manifest);
         var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/ApplyPatternToPayload", request);
         this.Result = await response.Content.ReadFromJsonAsync<ApplyPatternToPayloadResult>();
 
@@ -169,4 +186,80 @@
         await modal.Show();
     }
 
+    /// <summary>
+    /// Goes to the previous mqtt message (stays at number 1, if no previous message exists).
+    /// </summary>
+    private void GotoPreviousMessage()
+    {
+        if (this.CurrentMessage > 0) this.CurrentMessage--;
+
+        this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Goes to the next mqtt message (if existing).
+    /// </summary>
+    private void GotoNextMessage()
+    {
+        if (this.Data.Setup.MqttData.Count > this.CurrentMessage + 1) this.CurrentMessage++;
+    }
+
+
+    /// <summary>
+    /// Adds a new empty mqtt message.
+    /// </summary>
+    private void AddEmptyMessage()
+    {
+        this.Data.Setup.MqttData.Add(new Metadata.MqttSetupData());
+
+        this.CurrentMessage++;
+    }
+
+    /// <summary>
+    /// Clones the current message and adds it right after the current message.
+    /// </summary>
+    private void CloneCurrentMessage()
+    {
+        this.Data.Setup.MqttData.Add(this.Data.Setup.MqttData[this.CurrentMessage].Clone());
+
+        this.CurrentMessage++;
+    }
+
+    /// <summary>
+    /// Deletes current message. Creates new empty message if no messages are left.
+    /// </summary>
+    private void DeleteCurrentMessage()
+    {
+        this.Data.Setup.MqttData.RemoveAt(this.CurrentMessage);
+
+        if (this.Data.Setup.MqttData.Count == 0) this.AddEmptyMessage();
+
+        if (this.Data.Setup.MqttData.Count - 1 <= this.CurrentMessage && this.CurrentMessage > 0) this.CurrentMessage--;
+    }
+
+    /// <summary>
+    /// Moves the current message to the left.
+    /// </summary>
+    private void MoveCurrentMessageLeft()
+    {
+        if (this.CurrentMessage < 1) return;
+
+        var message = this.Data.Setup.MqttData[this.CurrentMessage];
+
+        this.Data.Setup.MqttData.RemoveAt(this.CurrentMessage);
+        this.Data.Setup.MqttData.Insert(--this.CurrentMessage, message);
+    }
+
+    /// <summary>
+    /// Moves the current message to the right.
+    /// </summary>
+    private void MoveCurrentMessageRight()
+    {
+        if (this.CurrentMessage >= this.Data.Setup.MqttData.Count - 1) return;
+
+        var message = this.Data.Setup.MqttData[this.CurrentMessage];
+
+        this.Data.Setup.MqttData.RemoveAt(this.CurrentMessage);
+        this.Data.Setup.MqttData.Insert(++this.CurrentMessage, message);
+    }
 }

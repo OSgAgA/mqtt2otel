@@ -76,6 +76,8 @@ namespace mqtt2otel.Manifest
             if (string.IsNullOrEmpty(this.Version)) return result.AddError($"No or empty Version property in file. Version must allways be set! {supportedVersions}");
             if (this.Version != "1.0" && this.Version != "1.1") return result.AddError($"Provided version {this.Version} is not supported. {supportedVersions}");
 
+            this.EnsureNoNameDuplicate(result, $"{nameof(this.OtelConnections)}", this.OtelConnections, connection => connection.Name);
+            this.EnsureNoNameDuplicate(result, $"{nameof(this.MqttConnections)}", this.MqttConnections, connection => connection.Name);
             this.MqttConnections.ForEach(broker => broker.Validate(result));
             this.OtelConnections.ForEach(connection => connection.Validate(result));
             this.SubscriptionGroups.ForEach(group => group.Validate("Subscription groups", result));
@@ -106,6 +108,19 @@ namespace mqtt2otel.Manifest
             }
 
             return result;
+        }
+
+        private void EnsureNoNameDuplicate<T>(ValidationResult validation, string identifier, ImportEnabledList<T> list, Func<T, string> nameAccessor) where T : NamedIdObject
+        {
+            HashSet<string> store = new();
+
+            foreach (var item in list)
+            {
+                if (store.Contains(nameAccessor(item)))
+                {
+                    validation.AddError($"{identifier} name '{nameAccessor(item)}' already exists.");
+                }
+            }
         }
 
         /// <summary>
@@ -179,6 +194,31 @@ namespace mqtt2otel.Manifest
         /// Gets or sets all metrics.
         /// </summary>
         public ImportEnabledList<Processor> Processors { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the timespan for how long a span will be kept alive.
+        /// </summary>
+        [InheritedProperty]
+        public int? RetentionInSeconds { get; set; } = 3600;
+
+        /// <summary>
+        /// Gets or sets the <see cref="SpanRetentionStrategy"/> used, when the retention time is exceeded.
+        /// </summary>
+        [InheritedProperty]
+        public SpanRetentionStrategy? RetentionStrategy { get; set; } = SpanRetentionStrategy.CompleteErrorWithEvent;
+
+        /// <summary>
+        /// Gets or sets the event that will be created, when the retention time is exceeded. Only applies if a strategy is chosen, 
+        /// that creates events.
+        /// </summary>
+        [InheritedProperty]
+        public OtelSpanEvent? RetentionExceededEvent { get; set; } = new OtelSpanEvent() { Name = "Retention time for span exceeded." };
+
+        /// <summary>
+        /// Gets or sets the time interval in seconds that is waited for late span events, before a span is send after it is completed.
+        /// </summary>
+        [InheritedProperty]
+        public int? WaitForLateSpanEventsInS { get; set; } = 5;
 
         /// <summary>
         /// Gets the default otel server connection. That is the first server defined in <see cref="OtelConnections"/> or null, if no otel server
@@ -354,7 +394,6 @@ namespace mqtt2otel.Manifest
         {
 
             if (child == null) return;
-            child.Parent = parent;
             this.UpdateInheritedProperties(parent, child);
             this.SetObjectHierarchy(child);
             return;

@@ -28,6 +28,22 @@ namespace mqtt2otel.Helper
         }
 
         /// <summary>
+        /// Combines two attribute lists to one.
+        /// </summary>
+        /// <param name="a">The fist enumerable.</param>
+        /// <param name="b">The second enumerable.</param>
+        /// <returns>The combined list.</returns>
+        public static List<OtelAttribute> Combine(this List<OtelAttribute> a, List<OtelAttribute> b)
+        {
+            var combined = new List<OtelAttribute>();
+
+            combined.AddRange(a.ToList());
+            combined.AddRange(b.ToList());
+
+            return combined;
+        }
+
+        /// <summary>
         /// Converts an <see cref="IEnumerable{OtelAttribute}"/> to an <see cref="IEnumerable{KeyValuePair{String, Object}}"/>.
         /// </summary>
         /// <param name="source">the source.</param>
@@ -35,6 +51,16 @@ namespace mqtt2otel.Helper
         public static IEnumerable<KeyValuePair<string, object?>> ToKeyValuePairs(this IEnumerable<OtelAttribute> source)
         {
             return source.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value));
+        }
+
+        /// <summary>
+        /// Converts an <see cref="IEnumerable{OtelAttribute}"/> to an <see cref="ActivityTagsCollection"/>.
+        /// </summary>
+        /// <param name="source">the source.</param>
+        /// <returns>The converted enumerable.</returns>
+        public static ActivityTagsCollection ToActivityTagsCollection(this IEnumerable<OtelAttribute> source)
+        {
+            return new ActivityTagsCollection(source.ToKeyValuePairs());
         }
 
         /// <summary>
@@ -52,6 +78,18 @@ namespace mqtt2otel.Helper
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Adds an internal attribute to the list.
+        /// </summary>
+        /// <param name="attributes">The attribute lists.</param>
+        /// <param name="key">The key of the internal attribute without the internal attribute prefix.</param>
+        /// <param name="value">The value of the attribute as a string.</param>
+        internal static void AddInternalAttribute(this List<OtelAttribute> attributes, string key, string value)
+        {
+            var attribute = OtelAttribute.CreateInternalAttribute(key, value);
+            attributes.Add(attribute);
         }
     }
 }
