@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
 using mqtt2otel.InternalLogging;
@@ -9,21 +8,13 @@ using mqtt2otel.Parser;
 using mqtt2otel.Shared.Helper;
 using mqtt2otel.Stores;
 using OpenTelemetry;
-using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using Parlot.Fluent;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading;
 
 namespace mqtt2otel
 {
