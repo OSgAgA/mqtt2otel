@@ -5,7 +5,9 @@ using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace mqtt2otel.Manifest
 {
@@ -32,14 +34,13 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets the open telemetry server endpoint.
         /// </summary>
-        public OtelServerEndpoint Endpoint { get; set; } = new ();
+        public OtelServerEndpoint Endpoint { get; set; } = new();
 
         /// <summary>
         /// Gets or sets a prefix that will be prepended to the client id used to connect to the server. This helps in tracking down issues,
         /// when mutliple connections to clients are active.
         /// </summary>
         public string ClientPrefix { get; set; } = ApplicationStringConstants.ApplicationName;
-
 
         /// <summary>
         /// Gets or sets the export protocoll that should be used when connecting to the server.

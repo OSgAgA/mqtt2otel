@@ -55,11 +55,6 @@ namespace mqtt2otel
         }
 
         /// <summary>
-        /// A regular expression that checks whether a character is invalid for a otel collector name.
-        /// </summary>
-        private static readonly Regex InvalidCharsForCollectorNames = new("[^a-z0-9_-]+", RegexOptions.Compiled);
-
-        /// <summary>
         /// Get the name of the exporter for the provided connection.
         /// </summary>
         /// <param name="connection">The otel server connection data.</param>
@@ -68,34 +63,11 @@ namespace mqtt2otel
         {
             if (connection.OtlpExportProtocol == OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf)
             {
-                return $"otlp_http/{CreateSlug(connection.Name)}";
+                return $"otlp_http/{connection.Slug}";
             }
 
-            return $"otlp_grpc/{CreateSlug(connection.Name)}";
-        }
-        /// <summary>
-        /// Converts a string into a valid component name.
-        /// </summary>
-        /// <param name="input">The input string.</param>
-        /// <param name="maxLength">Maximum amount of allowed characters.</param>
-        /// <returns>The created component name.</returns>
-        public static string CreateSlug(string input, int maxLength = 64)
-        {
-            // 1. normalize: lower case, replace every run of invalid characters with a single underscore
-            var slug = InvalidCharsForCollectorNames.Replace(input.Trim().ToLowerInvariant(), "_").Trim('_', '-');
-            if (slug.Length == 0) slug = "x";
-
-            // 2. add a short hash of the ORIGINAL string, so different inputs never collapse into the same name
-            var hash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(input)))[..8];
-
-            // 3. cut the slug so slug + "_" + hash fits
-            var max = maxLength - hash.Length - 1;
-            if (slug.Length > max) slug = slug[..max].TrimEnd('_', '-');
-
-            return $"{slug}_{hash}";
-        }
-
-        
+            return $"otlp_grpc/{connection.Slug}";
+        }        
 
         /// <summary>
         /// Create and store the collector config.
@@ -340,8 +312,8 @@ namespace mqtt2otel
 
             foreach (OtelServerConnection connection in connections)
             {
-                sb.AppendLine($"{indent(3)}- condition: resource.attributes[\"{InternalAttributes.ExporterRoutingId}\"] == \"{CreateSlug(connection.Name)}\"");
-                sb.AppendLine($"{indent(3)}  pipelines: [traces/{CreateSlug(connection.Name)}]");
+                sb.AppendLine($"{indent(3)}- condition: resource.attributes[\"{InternalAttributes.ExporterRoutingId}\"] == \"{connection.Slug}\"");
+                sb.AppendLine($"{indent(3)}  pipelines: [traces/{connection.Slug}]");
             }
 
             sb.AppendLine();
@@ -350,8 +322,8 @@ namespace mqtt2otel
 
             foreach (OtelServerConnection connection in connections)
             {
-                sb.AppendLine($"{indent(3)}- condition: resource.attributes[\"{InternalAttributes.ExporterRoutingId}\"] == \"{CreateSlug(connection.Name)}\"");
-                sb.AppendLine($"{indent(3)}  pipelines: [logs/{CreateSlug(connection.Name)}]");
+                sb.AppendLine($"{indent(3)}- condition: resource.attributes[\"{InternalAttributes.ExporterRoutingId}\"] == \"{connection.Slug}\"");
+                sb.AppendLine($"{indent(3)}  pipelines: [logs/{connection.Slug}]");
             }
 
         }
@@ -379,18 +351,17 @@ namespace mqtt2otel
             foreach (var connection in connections)
             {
                 sb.AppendLine();
-                sb.AppendLine($"{indent(2)}traces/{CreateSlug(connection.Name)}:");
+                sb.AppendLine($"{indent(2)}traces/{connection.Slug}:");
                 sb.AppendLine($"{indent(3)}receivers: [{routingReceiverName}/traces]");
                 sb.AppendLine($"{indent(3)}processors: [{traceTransformProcessorName}, {resourceStripInternalProcessorName}]");
                 sb.AppendLine($"{indent(3)}exporters: [{GetExporterName(connection)}]");
                 sb.AppendLine();
 
-                sb.AppendLine($"{indent(2)}logs/{CreateSlug(connection.Name)}:");
+                sb.AppendLine($"{indent(2)}logs/{connection.Slug}:");
                 sb.AppendLine($"{indent(3)}receivers: [{routingReceiverName}/logs]");
                 sb.AppendLine($"{indent(3)}processors: [{logTransformProcessorName}, {resourceStripInternalProcessorName}]");
                 sb.AppendLine($"{indent(3)}exporters: [{GetExporterName(connection)}]");
             }
-
         }
     }
 }

@@ -15,7 +15,7 @@ namespace mqtt2otel.Manifest
     /// <summary>
     /// Represents an open telemetry span.
     /// </summary>
-    public class OtelSpan : NamedIdObject
+    public class OtelSpan : Rule
     {
         /// <summary>
         /// Gets the date and time, when the object was created.
@@ -160,53 +160,6 @@ namespace mqtt2otel.Manifest
         public int? WaitForLateSpanEventsInS { get; set; } = null;
 
         /// <summary>
-        /// Gets or sets the name of the open telemetriy server connection to be used for this rule. 
-        /// Set to null for using the default server connection.
-        /// </summary>
-        [InheritedProperty]
-        public string? OtelConnection { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets the open telemetry scope that should be used for the metric.
-        /// Set to null to use the default scope of the <see cref="OtelConnection"/>.
-        /// </summary>
-        [InheritedProperty]
-        public string? OtelScope { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the mqtt message details should be logged in case of an error. Set to null to use the default value.
-        /// </summary>
-        [InheritedProperty]
-        public bool? LogMessageDetails { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the rule can be deactivated, when the error rate exceeds <see cref="MaxErrorRateInPercentage"/>.
-        /// Set to null to use default value.
-        /// </summary>
-        [InheritedProperty]
-        public bool? AllowRuleDeactivation { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the rule can deactivate topics from executing this rule, when the error rate for the topic is to high.
-        /// Set to null to use default value.
-        /// </summary>
-        [InheritedProperty]
-        public bool? AllowRuleDeactivationByTopic { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the rule can deactivate topics from executing this rule on a scpecific item (e.g. a property of a json message), when the error rate for the topic is to high.
-        /// Set to null to use default value.
-        /// </summary>
-        [InheritedProperty]
-        public bool? AllowRuleDeactivationByItem { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets the maximum number of topics that are blocked for an item / rule. If this threshold is exceeded the whole item or rule is blocked.
-        /// </summary>
-        [InheritedProperty]
-        public int? BlockedTopicLimit { get; set; } = null;
-
-        /// <summary>
         /// Gets a value indicating whether the span has fully completed and can be created.
         /// </summary>
         public bool IsCompleted
@@ -337,9 +290,9 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="embeddedExpressionParser">The embedded expressions parser.</param>
         /// <param name="context">The parsing context.</param>
-        public void Expand(IEmbeddedExpressionParser embeddedExpressionParser, ParsingContext context)
+        public void Expand(IEmbeddedExpressionParser embeddedExpressionParser, IPayloadParser parser, ParsingContext context)
         {
-            this.Id = embeddedExpressionParser.Expand(this.Id, context);
+            this.Id = parser.Parse(this.Id, context).ToString() ?? string.Empty;
             this.Name = embeddedExpressionParser.Expand(this.Name, context);
             this.Description = embeddedExpressionParser.Expand(this.Description, context);
             this.Attributes = embeddedExpressionParser.Expand(this.Attributes, context);

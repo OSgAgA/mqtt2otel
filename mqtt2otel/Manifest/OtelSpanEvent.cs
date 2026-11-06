@@ -9,13 +9,8 @@ namespace mqtt2otel.Manifest
     /// <summary>
     /// Represents an open telemetry span event.
     /// </summary>
-    public class OtelSpanEvent
+    public class OtelSpanEvent : Rule
     {
-        /// <summary>
-        /// Gets or sets the name of the event.
-        /// </summary>
-        public string Name { get; set; } = "Event";
-
         /// <summary>
         /// Gets or sets the span id of the event.
         /// </summary>

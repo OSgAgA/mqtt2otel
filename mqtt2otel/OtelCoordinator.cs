@@ -8,6 +8,7 @@ using mqtt2otel.Parser;
 using mqtt2otel.Shared.Helper;
 using mqtt2otel.Stores;
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -278,10 +279,16 @@ namespace mqtt2otel
             // Create meter providers and add metrics
             foreach (var otelConnection in manifest.OtelConnections)
             {
+                var resourceAttributes = new List<KeyValuePair<string, object>>()
+                {
+                    new KeyValuePair<string, object>(InternalAttributes.ExporterRoutingId, otelConnection.Slug)
+                };
+
                 var builder = Sdk.CreateMeterProviderBuilder()
                     .SetResourceBuilder(
                             ResourceBuilder.CreateDefault()
-                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace, serviceVersion: otelConnection.ServiceVersion));
+                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace, serviceVersion: otelConnection.ServiceVersion)
+                            .AddAttributes(resourceAttributes));
 
                 foreach (var meterName in this.otelMeterFactory.GetMeterNamesForConnection(otelConnection.Name))
                 {
@@ -306,7 +313,7 @@ namespace mqtt2otel
             {
                 var resourceAttributes = new List<KeyValuePair<string, object>>()
                 {
-                    new KeyValuePair<string, object>(InternalAttributes.ExporterRoutingId, OtelCollectorConfig.CreateSlug(otelConnection.Name))
+                    new KeyValuePair<string, object>(InternalAttributes.ExporterRoutingId, otelConnection.Slug)
                 };
 
                 var builder = Sdk.CreateTracerProviderBuilder()
@@ -327,7 +334,7 @@ namespace mqtt2otel
                
                 this.exporterBuilder.AddToTracerProviderBuilder(builder, connection);
 
-                var source = new ActivitySource($"mqtt2otel.{otelConnection.Name.Replace("*", "star").Replace("?", "question")}");
+                var source = new ActivitySource($"mqtt2otel.{otelConnection.Slug}");
                 builder.SetSampler(new AlwaysOnSampler()); // Needed otherwise root spans are dropped.
                 builder.AddSource(source.Name);
                 this.activitySources[otelConnection.Name] = source;
@@ -398,6 +405,11 @@ namespace mqtt2otel
             // Create log factories for each connection
             foreach (var otelConnection in manifest.OtelConnections)
             {
+                var resourceAttributes = new List<KeyValuePair<string, object>>()
+                {
+                    new KeyValuePair<string, object>(InternalAttributes.ExporterRoutingId, otelConnection.Slug)
+                };
+
                 this.loggerFactoryMap[otelConnection.Name] = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
                 {
                     builder.SetMinimumLevel(otelConnection.MinimumLogLevel);
@@ -405,11 +417,22 @@ namespace mqtt2otel
                     {
                         options.SetResourceBuilder(
                             ResourceBuilder.CreateDefault()
-                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace, serviceVersion: otelConnection.ServiceVersion))
+                            .AddService(otelConnection.ServiceName, serviceNamespace: otelConnection.ServiceNamespace, serviceVersion: otelConnection.ServiceVersion)
+                            .AddAttributes(resourceAttributes))
                             .IncludeScopes = true;
                         options.AddProcessor(new TimestampOverrideProcessor(this.otelMeter));
 
-                        this.exporterBuilder.AddToLoggerOptions(options, otelConnection);
+                        var connection = new OtelServerConnection()
+                        {
+                            Endpoint = new OtelServerEndpoint()
+                            {
+                                Address = "http://localhost:4317"
+                            },
+                            OtlpExportProtocol = OtlpExportProtocol.Grpc,
+                            ExportProcessorType = ExportProcessorType.Simple
+                        };
+
+                        this.exporterBuilder.AddToLoggerOptions(options, connection);
                     });
                 });
             }
