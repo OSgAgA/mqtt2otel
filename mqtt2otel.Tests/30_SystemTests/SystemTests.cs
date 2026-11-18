@@ -83,7 +83,7 @@ namespace mqtt2otel.Tests._30_SystemTests
 
                     string topic = "sensors/logEntry";
                     string payload = "2026-01-31T15:42Z WARN This is a simple log message.";
-                    await mqttHelper.PublishPayload(topic, payload);
+                    await mqttHelper.PublishPayload(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
 
                     var completedTask = await Task.WhenAny(
                                        tcs.Task,

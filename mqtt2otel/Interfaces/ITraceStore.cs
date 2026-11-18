@@ -1,4 +1,5 @@
 ﻿using mqtt2otel.Manifest;
+using mqtt2otel.Metadata;
 using mqtt2otel.Stores;
 using System;
 using System.Collections.Generic;

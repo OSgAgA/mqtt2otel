@@ -4,6 +4,7 @@ using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
+using mqtt2otel.Provider;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
 using System;
@@ -37,7 +38,7 @@ namespace mqtt2otel.Tests.Helper
             if (usageTelemetryMeter == null) usageTelemetryMeter = new UsageTelemetryMeter();
             if (internalLogger == null) internalLogger = new Mock<ILogger<MessageProcessor>>().Object;
             if (payloadTransformation == null) payloadTransformation = new PayloadTransformation();
-            if (traceStore == null) traceStore = new LocalTraceStore();
+            if (traceStore == null) traceStore = new LocalTraceStore(new FakeTraceIdProvider(null));
 
             return new MessageProcessor(internalLogger, payloadParser, payloadTransformation, dataStores, meter, usageTelemetryMeter, embeddedExpressionParser, traceStore);
         }

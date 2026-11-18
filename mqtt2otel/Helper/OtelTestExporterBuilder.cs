@@ -93,12 +93,12 @@ namespace mqtt2otel.Helper
         }
 
         /// <summary>
-        /// Gets all traces as key value pairs consisting of the connection name as key and the trace as the value.
+        /// Gets all spans as key value pairs consisting of the connection name as key and the trace as the value.
         /// </summary>
         /// <returns>The key value pairs.</returns>
-        public IEnumerable<ConnectionValue<Activity>> GetAllTraces()
+        public IEnumerable<ConnectionValue<Activity>> GetAllSpans()
         {
-            Task.Delay(10);  // Ensure, that all metrics have been processed.
+            Task.Delay(10);  // Ensure, that all traces have been processed.
 
             foreach (var keyValue in this.Traces)
             {

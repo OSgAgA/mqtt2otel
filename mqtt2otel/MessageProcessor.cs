@@ -7,6 +7,7 @@ using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 using mqtt2otel.Shared.Helper;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -174,31 +175,10 @@ namespace mqtt2otel
                             {
                                 var clone = span.Clone();
                                 clone.Expand(this.embeddedExpressionParser, this.payloadParser, parsingContext);
-                                if (string.IsNullOrEmpty(clone.Started)) clone.Started = DateTime.UtcNow.ToString("O");
+                                if (string.IsNullOrEmpty(clone.Started)) clone.Started = this.GetTimestampFromMessageOrUtcNow(message).ToString("O");
                                 if (clone.Kind == null) clone.Kind = ActivityKind.Internal;
                                 if (clone.Status == null) clone.Status = ActivityStatusCode.Unset;
                                 this.traceStore.StoreSpan(clone);
-                            }
-                            catch (Exception ex)
-                            {
-                                this.errorManager.HandleProcessingError("trace", span, span.Name, message, ex.Message, processor);
-                                errorCount++;
-                            }
-                        }
-
-                        foreach (var span in rule.EndSpans)
-                        {
-                            lock (span.BlockItemGate)
-                            {
-                                if (span.BlockedItems.Contains(span.Name) || (span.BlockedItemTopics.ContainsKey(span.Name) && span.BlockedItemTopics[span.Name].Contains(message.Topic))) continue;
-                            }
-
-                            try
-                            {
-                                var clone = span.Clone();
-                                clone.Expand(this.embeddedExpressionParser, this.payloadParser, parsingContext);
-                                if (string.IsNullOrEmpty(clone.Completed)) clone.Completed = DateTime.UtcNow.ToString("O");
-                                this.traceStore.StoreSpan(clone, updateExisting: true);
                             }
                             catch (Exception ex)
                             {
@@ -217,6 +197,7 @@ namespace mqtt2otel
                             try
                             {
                                 var clone = evt.Clone();
+                                if (string.IsNullOrEmpty(clone.Timestamp)) clone.Timestamp = this.GetTimestampFromMessageOrUtcNow(message).ToString("O");
                                 clone.Expand(this.embeddedExpressionParser, parsingContext);
 
                                 this.traceStore.AddEvent(clone);
@@ -224,6 +205,27 @@ namespace mqtt2otel
                             catch (Exception ex)
                             {
                                 this.errorManager.HandleProcessingError("trace", evt, evt.Name, message, ex.Message, processor);
+                                errorCount++;
+                            }
+                        }
+
+                        foreach (var span in rule.EndSpans)
+                        {
+                            lock (span.BlockItemGate)
+                            {
+                                if (span.BlockedItems.Contains(span.Name) || (span.BlockedItemTopics.ContainsKey(span.Name) && span.BlockedItemTopics[span.Name].Contains(message.Topic))) continue;
+                            }
+
+                            try
+                            {
+                                var clone = span.Clone();
+                                clone.Expand(this.embeddedExpressionParser, this.payloadParser, parsingContext);
+                                if (string.IsNullOrEmpty(clone.Completed)) clone.Completed = this.GetTimestampFromMessageOrUtcNow(message).ToString("O");
+                                this.traceStore.StoreSpan(clone, updateExisting: true);
+                            }
+                            catch (Exception ex)
+                            {
+                                this.errorManager.HandleProcessingError("trace", span, span.Name, message, ex.Message, processor);
                                 errorCount++;
                             }
                         }
@@ -639,6 +641,31 @@ namespace mqtt2otel
                         new object[] { measurement, context });
                 }
             }
+        }
+
+        /// <summary>
+        /// A list of identifiers used to identify a timestamp inside a message.
+        /// </summary>
+        private List<string> timestampIdentifiers = new List<string>() { "timestamp", "ts", "time" };
+
+        /// <summary>
+        /// Get the timestamp from a message or utc now if no timestamp was found.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <returns>The timestamp from the message or utc now.</returns>
+        private DateTime GetTimestampFromMessageOrUtcNow(MqttMessage message)
+        {
+            DateTime result = DateTime.UtcNow;
+
+            foreach (var prop in message.UserProperties)
+            {
+                if (this.timestampIdentifiers.Any(s => s.Contains(prop.Name.ToLower())))
+                {
+                    DateTimeHelper.TryParseToUtc(prop.Value, out result);
+                }
+            }
+
+            return result;
         }
     }
 }

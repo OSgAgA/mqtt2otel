@@ -22,6 +22,16 @@ namespace mqtt2otel.Metadata
         public List<LogTestData> Logs { get; set; } = new();
 
         /// <summary>
+        /// Gets or sets the expectation for spans.
+        /// </summary>
+        public List<SpanTestData> Spans { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the expectation for the internal state.
+        /// </summary>
+        public InternalState State { get; set; } = new();
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ExpectedTestResult"/> class.
         /// 
         /// This constructor is for serialization only, and should not be used directly.
@@ -33,10 +43,14 @@ namespace mqtt2otel.Metadata
         /// </summary>
         /// <param name="metrics">The expected metric results.</param>
         /// <param name="logs">The expected log results.</param>
-        public ExpectedTestResult(List<MetricTestData> metrics, List<LogTestData> logs)
+        /// <param name="spans">The expected span results.</param>
+        /// <param name="state">The internal state.</param>
+        public ExpectedTestResult(List<MetricTestData> metrics, List<LogTestData> logs, List<SpanTestData> spans, InternalState state)
         {
             this.Metrics = metrics;
             this.Logs = logs;
+            this.Spans = spans;
+            this.State = state;
         }
     }
 }

@@ -3,6 +3,7 @@
 @using mqtt2otel.ManifestExplorer.Helper
 @using mqtt2otel.Metadata
 @using mqtt2otel.Shared
+@inject IHttpClientFactory Factory
 @inject IJSRuntime JS
 
 <Modal @ref="modal" Title="Enter Json Data" IsVerticallyCentered="true" Size="ModalSize.Large">
@@ -63,7 +64,7 @@
             <div class="col-8">
                 <select class="form-select" @onchange="OnLinkSelectedChanged">
                     <option value="<<Please select>>"></option>
-                    @foreach (var kvp in LinkLibrary.GetAll().OrderBy( keyValue => keyValue.Key ))
+                    @foreach (var kvp in LinkLibrary.GetAll().OrderBy(keyValue => keyValue.Key))
                     {
                         <option value="@kvp.Key">@kvp.Key</option>
                     }
@@ -138,28 +139,41 @@
     /// </summary>
     private async Task CreateJson()
     {
-        if (this.Result != null)
+        var httpClient = Factory.CreateClient("ServerAPI");
+
+        var expectedResults = new List<ExpectedTestResult>();
+        var internalState = new Metadata.InternalState();
+        internalState.TraceIdProviderState?.ForceReset = true;
+
+        foreach (var message in this.Data.Setup.MqttData)
         {
-            var testcase = new TestCaseData()
-            {
-                Setup = new ExampleData(this.Data.Setup.Id, this.Data.Setup.Name, this.Data.Setup.Description, this.Data.Setup.MqttData, this.Data.Setup.Manifest, this.Data.Setup.Category,
-                    this.Data.Setup.Tags, this.Data.Setup.CreateExample, this.Data.Setup.ValidateManifestOnly),
-                ExpectedResults = new List<ExpectedTestResult>() { new ExpectedTestResult(this.Result.Metrics, this.Result.Logs) },
-                ShowResultDetails = this.Data.ShowResultDetails,
-                Links = this.Data.Links
-            };
-
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-            };
-
-            var jsonString = JsonSerializer.Serialize(testcase, options);
-
-            await JS.InvokeVoidAsync("copyToClipboard", jsonString);
-
-            await modal.HideAsync();
+            var request = new ApplyPatternToPayloadData(message, this.Data.Setup.Manifest, internalState);
+            request.UseFakeProviders = true;
+            var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/ApplyPatternToPayload", request);
+            var result = await response.Content.ReadFromJsonAsync<ApplyPatternToPayloadResult>() ?? new ApplyPatternToPayloadResult();
+            internalState = result.InternalState;
+            expectedResults.Add(new ExpectedTestResult(result.Metrics, result.Logs, result.Spans, result.InternalState));
         }
+
+        var testcase = new TestCaseData()
+        {
+            Setup = new ExampleData(this.Data.Setup.Id, this.Data.Setup.Name, this.Data.Setup.Description, this.Data.Setup.MqttData, this.Data.Setup.Manifest, this.Data.Setup.Category,
+                this.Data.Setup.Tags, this.Data.Setup.CreateExample, this.Data.Setup.ValidateManifestOnly),
+            ExpectedResults = expectedResults,
+            ShowResultDetails = this.Data.ShowResultDetails,
+            Links = this.Data.Links
+        };
+
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+        };
+
+        var jsonString = JsonSerializer.Serialize(testcase, options);
+
+        await JS.InvokeVoidAsync("copyToClipboard", jsonString);
+
+        await modal.HideAsync();
     }
 
     /// <summary>

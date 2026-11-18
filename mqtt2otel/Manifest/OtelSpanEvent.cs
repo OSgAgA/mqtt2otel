@@ -31,14 +31,18 @@ namespace mqtt2otel.Manifest
             {
                 timestamp = value;
 
-                if (value == null) this.TimestampAsDateTime = DateTime.UtcNow;
-
-                if (DateTime.TryParse(value, out var result))
+                if (value == null)
+                {
+                    return;
+                }
+                else if (DateTimeHelper.TryParseToUtc(value, out var result))
                 {
                     this.TimestampAsDateTime = result;
                 }
-
-                this.TimestampAsDateTime = TimestampAsDateTime;
+                else
+                {
+                    return;
+                }
             }
         }
 
@@ -80,6 +84,16 @@ namespace mqtt2otel.Manifest
             this.SpanId = embeddedExpressionParser.Expand(this.SpanId, context);
             this.Attributes = embeddedExpressionParser.Expand(this.Attributes, context);
             this.Timestamp = embeddedExpressionParser.Expand(this.Timestamp ?? string.Empty, context);
+        }
+
+        /// <summary>
+        /// Gets the default retention exceeded event for the span with the provided id.
+        /// </summary>
+        /// <param name="spanId">The id of the span, that holds the event.</param>
+        /// <returns>The default retention exceeded event.</returns>
+        public static OtelSpanEvent DefaultRetentionExceededEvent
+        {
+            get => new OtelSpanEvent() { Name = "Span retention time expired." };
         }
     }
 }

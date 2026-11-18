@@ -1,5 +1,7 @@
-﻿using MQTTnet;
+﻿using mqtt2otel.Metadata;
+using MQTTnet;
 using MQTTnet.Server;
+using System.Data;
 using System.Text;
 
 
@@ -79,21 +81,19 @@ namespace mqtt2otel.Server.Helper
         /// <param name="payload">The message payload.</param>
         /// <param name="userProperties">The message user properties.</param>
         /// <exception cref="Exception">Thrown when client is not connected.</exception>
-        public async Task PublishPayload(string topic, string payload, List<UserProperty>? userProperties = null)
+        public async Task PublishPayload(MqttSetupData data)
         {
-            if (userProperties == null) userProperties = new();
-
             if (mqttClient == null)
             {
                 throw new Exception($"{nameof(PublishPayload)} can only be called, when mqttClient is set. Please call {nameof(EnsureServerIsStarted)} first.");
             }
 
             var message = new MqttApplicationMessageBuilder()
-                                .WithTopic(topic)
-                                .WithPayload(payload)
-                                .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce);
+                                .WithTopic(data.Topic)
+                                .WithPayload(data.Payload)
+                                .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
 
-            foreach (var property in userProperties)
+            foreach (var property in data.UserProperties)
             {
                 ReadOnlyMemory<byte> value = new ReadOnlyMemory<byte>(Encoding.UTF8.GetBytes(property.Value));
                 message.WithUserProperty(property.Name, value);

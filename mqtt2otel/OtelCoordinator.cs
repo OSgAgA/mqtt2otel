@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
 using mqtt2otel.InternalLogging;
@@ -209,11 +210,19 @@ namespace mqtt2otel
                         List<ActivityLink> links = new List<ActivityLink>();
                         foreach (var link in span.LinkTo)
                         {
-                            links.Add(new ActivityLink(link.Context, link.Attributes.ToActivityTagsCollection()));
+                            if (link.Context != null)
+                            {
+                                links.Add(new ActivityLink(link.Context.ToActivityContext(), link.Attributes.ToActivityTagsCollection()));
+                            } else
+                            {
+                                this.internalLogger.LogError("Internal error: Span link was provided without a context. Skipping link creation.");
+                            }
                         }
 
                         span.Attributes.AddInternalAttribute(InternalAttributes.TraceId, span.Context.TraceId);
                         span.Attributes.AddInternalAttribute(InternalAttributes.SpanId, span.Context.SpanId);
+
+                        var test = span.Attributes.ToKeyValuePairs();
 
                         using var activity = source.StartActivity(name: span.Name, kind: span.Kind.Value, tags: span.Attributes.ToKeyValuePairs(), links: links, startTime: span.StartedAsDateTime.Value);
 
@@ -295,7 +304,17 @@ namespace mqtt2otel
                     builder.AddMeter(meterName);
                 }
 
-                this.exporterBuilder.AddToMeterProviderBuilder(builder, otelConnection);
+                var connection = new OtelServerConnection()
+                {
+                    Endpoint = new OtelServerEndpoint()
+                    {
+                        Address = "http://localhost:4317"
+                    },
+                    OtlpExportProtocol = OtlpExportProtocol.Grpc,
+                    ExportProcessorType = ExportProcessorType.Simple
+                };
+
+                this.exporterBuilder.AddToMeterProviderBuilder(builder, connection);
 
                 var provider = builder.Build();
 
@@ -668,6 +687,12 @@ namespace mqtt2otel
             foreach (var loggerFactory in this.loggerFactoryMap.Values)
             {
                 loggerFactory.Dispose();
+            }
+
+            foreach (var tracerProvider in this.tracerProviders)
+            {
+                tracerProvider.ForceFlush();
+                tracerProvider.Dispose();
             }
         }
     }

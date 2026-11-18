@@ -5,6 +5,7 @@ using mqtt2otel.Interfaces;
 using mqtt2otel.InternalLogging;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
+using mqtt2otel.Provider;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
 using System.Runtime.InteropServices;
@@ -21,6 +22,8 @@ namespace mqtt2otel.Server
             var internalIds = InternalIds.ReadOrCreate(appSettings);
 
             var builder = WebApplication.CreateBuilder(args);
+
+            var result = builder.Configuration.GetValue<bool>("UseTestMode");
 
             builder.Logging.ClearProviders();
             builder.Services.AddHostedService<Mqtt2OtelService>();
@@ -45,7 +48,9 @@ namespace mqtt2otel.Server
             builder.Services.AddSingleton<ProcessorMeter>(new ProcessorMeter());
             builder.Services.AddSingleton<InternalIds>(internalIds);
             builder.Services.AddSingleton<UsageTelemetryMeter>(new UsageTelemetryMeter());
-            builder.Services.AddSingleton<ITraceStore>(new LocalTraceStore());
+            builder.Services.AddSingleton<ITraceIdProvider, DefaultTraceIdProvider>();
+            builder.Services.AddSingleton<IDateTimeProvider, DefaultDateTimeProvider>();
+            builder.Services.AddSingleton<ITraceStore, LocalTraceStore>();
             builder.Services.AddSingleton<OtelCollector>();
             builder.Services.AddSingleton<MessageProcessor>();
 

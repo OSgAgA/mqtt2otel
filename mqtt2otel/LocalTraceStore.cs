@@ -1,6 +1,7 @@
 ﻿using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
 using mqtt2otel.Manifest;
+using mqtt2otel.Metadata;
 using mqtt2otel.Stores;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,20 @@ namespace mqtt2otel
         /// Ensures threat safety when changing the span store.
         /// </summary>
         private readonly Lock spanGate = new();
+
+        /// <summary>
+        /// The provider used for generating trace and span ids.
+        /// </summary>
+        private ITraceIdProvider traceIdProvider;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LocalTraceStore"/> class.
+        /// </summary>
+        /// <param name="traceIdProvider">The provider used for generating trace and span ids.</param>
+        public LocalTraceStore(ITraceIdProvider traceIdProvider)
+        {
+            this.traceIdProvider = traceIdProvider; 
+        }
 
         /// <summary>
         /// Gets the span contexted with the provided internal id. If none is found a new context is created and stored.
@@ -138,7 +153,7 @@ namespace mqtt2otel
                 foreach (var link in span.LinkTo)
                 {
                     var linkContext = this.GetOrCreateExistingSpanContextInternal(link.Target);
-                    link.Context = linkContext.ToActivityContext();
+                    link.Context = linkContext;
                     if (span.RetentionInSeconds != null)
                     {
                         linkContext.RetentionInSeconds = span.RetentionInSeconds.Value;
@@ -166,8 +181,7 @@ namespace mqtt2otel
                     span = new OtelSpan();
                     span.Id = evt.SpanId;
                     this.spans[evt.SpanId] = span;
-                    var context = new OtelSpanContext();
-                    context.Id = span.Id;
+                    var context = this.GetOrCreateExistingSpanContextInternal(span.Id);
                     this.spanContexts[span.Id] = context;
                 }
 
@@ -236,6 +250,12 @@ namespace mqtt2otel
                     if (span.Value.IsCompleted || span.Value.IsRetentionExceeded)
                     {
                         span.Value.ApplyDefaultValues();
+                        span.Value.Context = this.GetOrCreateExistingSpanContextInternal(span.Value.Id);
+
+                        foreach (var link in span.Value.LinkTo)
+                        {
+                            link.Context = this.GetOrCreateExistingSpanContextInternal(link.Target);
+                        }
                         result.Add(span.Value);
                     }
                 }
@@ -266,7 +286,10 @@ namespace mqtt2otel
         {
             lock (spanGate)
             {
-                return new InternalState(this.spans.Values, this.spanContexts.Values);
+                var result = new InternalState(this.spans.Values.ToList(), this.spanContexts.Values.ToList());
+                result.TraceIdProviderState = this.traceIdProvider.GetState();
+
+                return result;
             }
         }
 
@@ -307,6 +330,8 @@ namespace mqtt2otel
             {
                 result = new OtelSpanContext();
                 result.Id = id;
+                result.SpanId = this.traceIdProvider.CreateSpanId();
+                result.TraceId = this.traceIdProvider.CreateTraceId();
                 this.spanContexts[id] = result;
             }
 

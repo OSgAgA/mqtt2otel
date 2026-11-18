@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 
 namespace mqtt2otel.Helper
 {
@@ -51,6 +53,57 @@ namespace mqtt2otel.Helper
         public static IEnumerable<KeyValuePair<string, object?>> ToKeyValuePairs(this IEnumerable<OtelAttribute> source)
         {
             return source.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value));
+        }
+
+        /// <summary>
+        /// Converts an  <see cref="IEnumerable{KeyValuePair{String, Object}}"/> to an <see cref="IEnumerable{OtelAttribute}"/>.
+        /// </summary>
+        /// <param name="source">the source.</param>
+        /// <returns>The converted enumerable.</returns>
+        public static List<OtelAttribute> ToOtelAttributes<T>(this IEnumerable<KeyValuePair<string,T>> source) 
+        {
+            var result = new List<OtelAttribute>();
+
+            foreach (var pair in source)
+            {
+                if (pair.Value != null) result.Add(new OtelAttribute(pair.Key, pair.Value));
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Converts an enumerable of attributes into a dictionary.
+        /// </summary>
+        /// <param name="source">The source.</param>
+        /// <returns>The converted enumerable.</returns>
+        public static Dictionary<string, T> ToAttributeDictionary<T>(this IEnumerable<OtelAttribute> source)
+        {
+            var result = new Dictionary<string, T>();
+
+            foreach (var pair in source)
+            {
+                result.Add(pair.Key, (T)pair.Value);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Converts an enumerable of attributes into a dictionary.
+        /// </summary>
+        /// <param name="source">The source.</param>
+        /// <returns>The converted enumerable.</returns>
+        public static Dictionary<string, string?> ToAttributeStringDictionary(this IEnumerable<OtelAttribute> source)
+        {
+            var result = new Dictionary<string, string?>();
+
+            foreach (var pair in source)
+            {
+                if (pair.Value != null) result.Add(pair.Key, pair.Value.ToString() ?? string.Empty);
+            }
+
+            return result;
         }
 
         /// <summary>

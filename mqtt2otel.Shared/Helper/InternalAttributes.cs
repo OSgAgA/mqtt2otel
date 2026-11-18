@@ -31,6 +31,11 @@ namespace mqtt2otel.Shared.Helper
         public const string SpanId = InternalAttributePrefix + "span_id";
 
         /// <summary>
+        /// The timespan identifier.
+        /// </summary>
+        public const string TimespanId = InternalAttributePrefix + "timespan";
+
+        /// <summary>
         /// Gets an internal attribute from a list of key value pairs.
         /// </summary>
         /// <param name="tags">The tags.</param>

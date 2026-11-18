@@ -53,10 +53,7 @@ namespace mqtt2otel.Helper
                 if (timestampObject is string timestampAsString)
                 {
                     DateTime result;
-                    DateTime.TryParse(timestampAsString,
-                        CultureInfo.InvariantCulture,
-                        DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-                        out result);
+                    DateTimeHelper.TryParseToUtc(timestampAsString, out result);
 
                     timestamp = result;
                 }
@@ -75,7 +72,7 @@ namespace mqtt2otel.Helper
         private void GetScope(LogRecordScope scope, object? state)
         {
             if (scope.Scope is List<KeyValuePair<string, object>> typedScope && typedScope != null)
-            { 
+            {
                 this.scope = typedScope.ToDictionary<string, object>();
             }
         }

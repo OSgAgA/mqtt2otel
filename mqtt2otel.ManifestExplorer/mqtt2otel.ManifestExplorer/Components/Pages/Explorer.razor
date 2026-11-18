@@ -129,9 +129,11 @@
             this.logger.LogError(ex, "Could not read monacco editor text.");
         }
 
-        var request = new ApplyPatternToPayloadData(this.Data.Setup.MqttData[this.CurrentMessage], this.Data.Setup.Manifest);
+        var request = new ApplyPatternToPayloadData(this.Data.Setup.MqttData[this.CurrentMessage], this.Data.Setup.Manifest, this.Result?.InternalState ?? new Metadata.InternalState());
         var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/ApplyPatternToPayload", request);
         this.Result = await response.Content.ReadFromJsonAsync<ApplyPatternToPayloadResult>();
+
+        this.GotoNextMessage();
 
         this.StateHasChanged();
     }

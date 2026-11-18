@@ -95,7 +95,7 @@ namespace mqtt2otel.Helper
             if (int.TryParse(raw, out var i)) return i;
             if (double.TryParse(raw, out var d)) return d;
             if (bool.TryParse(raw, out var b)) return b;
-            if (DateTime.TryParse(raw, out var dt)) return dt;
+            if (DateTimeHelper.TryParseToUtc(raw, out var dt)) return dt;
 
             return raw; // fallback: string
         }

@@ -1,5 +1,6 @@
 ﻿using mqtt2otel.Helper;
 using mqtt2otel.Parser;
+using mqtt2otel.Stores;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets the activity context of the link.
         /// </summary>
-        public ActivityContext Context { get; internal set; } = new ActivityContext();
+        public OtelSpanContext? Context { get; internal set; } = null;
 
         /// <summary>
         /// Clones the object.

@@ -15,7 +15,7 @@ namespace mqtt2otel.Metadata
         /// <summary>
         /// Gets the tags associated to this event.
         /// </summary>
-        public IEnumerable<KeyValuePair<string, object?>> Tags { get; set; } = new List<KeyValuePair<string, object?>>();
+        public IEnumerable<KeyValuePair<string, object?>> Attributes { get; set; } = new List<KeyValuePair<string, object?>>();
 
         /// <summary>
         /// Gets the timestamp of the event.
@@ -35,7 +35,7 @@ namespace mqtt2otel.Metadata
         public SpanEventTestData(ActivityEvent evt)
         {
             this.Name = evt.Name;
-            this.Tags = evt.Tags;
+            this.Attributes = evt.Tags;
             this.Timestamp = evt.Timestamp;
         }
     }

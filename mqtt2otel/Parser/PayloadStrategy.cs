@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using mqtt2otel.Helper;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -31,7 +32,7 @@ namespace mqtt2otel.Parser
             if (long.TryParse(context.Message.Payload, out var i)) return i;
             if (double.TryParse(context.Message.Payload, out var d)) return d;
             if (bool.TryParse(context.Message.Payload, out var b)) return b;
-            if (DateTime.TryParse(context.Message.Payload, out var dt)) return dt;
+            if (DateTimeHelper.TryParseToUtc(context.Message.Payload, out var dt)) return dt;
 
             return context.Message.Payload; 
         }

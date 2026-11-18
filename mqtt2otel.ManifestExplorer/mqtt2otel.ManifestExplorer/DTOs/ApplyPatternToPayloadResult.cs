@@ -1,6 +1,7 @@
 ﻿using mqtt2otel.Helper;
 using mqtt2otel.Manifest;
 using mqtt2otel.Metadata;
+using mqtt2otel.Provider;
 using mqtt2otel.Stores;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -50,6 +51,11 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// Gets a value indicating whether the reusult contains logs.
         /// </summary>
         public bool HasLogs { get => this.Logs.Count > 0; }
+
+        /// <summary>
+        /// Gets a value indicating whether the reusult contains spans.
+        /// </summary>
+        public bool HasSpans { get => this.Spans.Count > 0; }
 
         /// <summary>
         /// Gets a value indicating whether the result contains errors.
@@ -105,7 +111,7 @@ namespace mqtt2otel.ManifestExplorer.DTOs
                     this.Logs.Add(new LogTestData(connectionValue.Value, connectionValue.Connection));
                 }
 
-                foreach (var connectionValue in exportBuilder.GetAllTraces())
+                foreach (var connectionValue in exportBuilder.GetAllSpans())
                 {
                     this.Spans.Add(new SpanTestData(connectionValue.Value, connectionValue.Connection));
                 }

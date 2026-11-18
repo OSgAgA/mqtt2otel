@@ -5,8 +5,11 @@ using mqtt2otel.Interfaces;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Manifest;
 using mqtt2otel.ManifestExplorer.DTOs;
+using mqtt2otel.ManifestExplorer.Settings;
 using mqtt2otel.Metadata;
 using mqtt2otel.Parser;
+using mqtt2otel.Provider;
+using mqtt2otel.Shared;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
 using System.Globalization;
@@ -26,6 +29,21 @@ namespace mqtt2otel.ManifestExplorer.Controllers
         /// associated to the wrong processor.
         /// </summary>
         public static Mutex processorMutex = new Mutex();
+
+        /// <summary>
+        /// A value indicating, whether the application is currently in test mode. If this is the case, the fake data providers should be used instead
+        /// of the default ones.
+        /// </summary>
+        private bool isTestEnvironment = false;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ManifestExplorerController"/> class.
+        /// </summary>
+        /// <param name="appInfo">The application info object.</param>
+        public ManifestExplorerController(ApplicationInfo appInfo)
+        {
+            this.isTestEnvironment = appInfo.IsTestEnvironment;
+        }
 
         /// <summary>
         /// Applies the provided pattern to the provided payload.
@@ -54,7 +72,16 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             IDataStores dataStores = new DataStores(signalStore, loggerStore);
             ProcessorMeter meter = new ProcessorMeter();
             UsageTelemetryMeter usageMeter = new UsageTelemetryMeter();
-            LocalTraceStore traceStore = new LocalTraceStore();
+
+            LocalTraceStore traceStore;
+            if (request.UseFakeProviders == true || (request.UseFakeProviders == null && this.isTestEnvironment))
+            {
+                traceStore = new LocalTraceStore(new FakeTraceIdProvider(request.State.TraceIdProviderState));
+            }
+            else
+            {
+                traceStore = new LocalTraceStore(new DefaultTraceIdProvider());
+            }
             traceStore.Initialize(request.State);
 
             var objectFactory = new mqtt2otel.Manifest.ObjectFactory(logger.Object, payloadParser, payloadTransformation, dataStores, meter, usageMeter, embeddedExpressionParser, traceStore);

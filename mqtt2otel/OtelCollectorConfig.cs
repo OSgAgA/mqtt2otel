@@ -35,6 +35,11 @@ namespace mqtt2otel
         private const string logTransformProcessorName = "transform/logs";
 
         /// <summary>
+        /// The name of the transform processor for traces.
+        /// </summary>
+        private const string metricTransformProcessorName = "transform/metrics";
+
+        /// <summary>
         /// The name of the resource processor that strips internal attributes.
         /// </summary>
         private const string resourceStripInternalProcessorName = "resource/strip_internal";
@@ -117,6 +122,8 @@ namespace mqtt2otel
             sb.AppendLine();
             CreateLogProcessor(sb);
             sb.AppendLine();
+            CreateMetricProcessor(sb);
+            sb.AppendLine();
             CreateResoureceStripInternalProcessor(sb);
         }
 
@@ -143,7 +150,7 @@ namespace mqtt2otel
         }
 
         /// <summary>
-        /// Create the config trace processor section.
+        /// Create the config log processor section.
         /// </summary>
         /// <param name="sb">The string builder.</param>
         /// <param name="connections">The connections.</param>
@@ -162,6 +169,25 @@ namespace mqtt2otel
             sb.AppendLine($"{indent(4)}  - set(log.trace_id, TraceID(log.attributes[{traceIdAttribute}])) where log.attributes[{traceIdAttribute}] != nil");
             sb.AppendLine($"{indent(4)}  - delete_key(log.attributes, {spanIdAttribute})");
             sb.AppendLine($"{indent(4)}  - delete_key(log.attributes, {traceIdAttribute})");
+        }
+
+        /// <summary>
+        /// Create the config metric processor section.
+        /// </summary>
+        /// <param name="sb">The string builder.</param>
+        /// <param name="connections">The connections.</param>
+        private static void CreateMetricProcessor(StringBuilder sb)
+        {
+            string timespanAttribute = $"\"{InternalAttributes.TimespanId}\"";
+
+            sb.AppendLine($"{indent(1)}{metricTransformProcessorName}:");
+            sb.AppendLine($"{indent(2)}error_mode: ignore          # a failing statement skips that log instead of dropping the batch");
+            sb.AppendLine($"{indent(2)}metric_statements:");
+            sb.AppendLine($"{indent(3)}- context: datapoint");
+            sb.AppendLine($"{indent(3)}  statements:");
+
+            sb.AppendLine($"{indent(4)}  - set(datapoint.time_unix_nano, Int(datapoint.attributes[{timespanAttribute}]) * 100) where datapoint.attributes[{timespanAttribute}] != nil     # just a test. Do not use --> Cardinality issue at .net sdk.");
+            sb.AppendLine($"{indent(4)}  - delete_key(datapoint.attributes, {timespanAttribute})");
         }
 
         /// <summary>
@@ -326,6 +352,16 @@ namespace mqtt2otel
                 sb.AppendLine($"{indent(3)}  pipelines: [logs/{connection.Slug}]");
             }
 
+            sb.AppendLine();
+            sb.AppendLine($"{indent(1)}{routingReceiverName}/metrics:");
+            sb.AppendLine($"{indent(2)}table:");
+
+            foreach (OtelServerConnection connection in connections)
+            {
+                sb.AppendLine($"{indent(3)}- condition: resource.attributes[\"{InternalAttributes.ExporterRoutingId}\"] == \"{connection.Slug}\"");
+                sb.AppendLine($"{indent(3)}  pipelines: [metrics/{connection.Slug}]");
+            }
+
         }
 
         /// <summary>
@@ -347,6 +383,11 @@ namespace mqtt2otel
             sb.AppendLine($"{indent(2)}logs/in:");
             sb.AppendLine($"{indent(3)}receivers: [otlp]");
             sb.AppendLine($"{indent(3)}exporters: [routing/logs]");
+            sb.AppendLine();
+
+            sb.AppendLine($"{indent(2)}metrics/in:");
+            sb.AppendLine($"{indent(3)}receivers: [otlp]");
+            sb.AppendLine($"{indent(3)}exporters: [routing/metrics]");
 
             foreach (var connection in connections)
             {
@@ -360,6 +401,12 @@ namespace mqtt2otel
                 sb.AppendLine($"{indent(2)}logs/{connection.Slug}:");
                 sb.AppendLine($"{indent(3)}receivers: [{routingReceiverName}/logs]");
                 sb.AppendLine($"{indent(3)}processors: [{logTransformProcessorName}, {resourceStripInternalProcessorName}]");
+                sb.AppendLine($"{indent(3)}exporters: [{GetExporterName(connection)}]");
+                sb.AppendLine();
+
+                sb.AppendLine($"{indent(2)}metrics/{connection.Slug}:");
+                sb.AppendLine($"{indent(3)}receivers: [{routingReceiverName}/metrics]");
+                sb.AppendLine($"{indent(3)}processors: [{metricTransformProcessorName}, {resourceStripInternalProcessorName}]");
                 sb.AppendLine($"{indent(3)}exporters: [{GetExporterName(connection)}]");
             }
         }

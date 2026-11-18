@@ -11,6 +11,11 @@
         public string Version { get; private set; } = "N/A";
 
         /// <summary>
+        /// Gets or sets a value indicating whehter this is a test environment.
+        /// </summary>
+        public bool IsTestEnvironment { get; set; } = false;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ApplicationInfo"/> class.
         /// </summary>
         /// <param name="pathToVersionFile">The path to the version file. If not found, N/A will be set as a default value. The file must contain at least
