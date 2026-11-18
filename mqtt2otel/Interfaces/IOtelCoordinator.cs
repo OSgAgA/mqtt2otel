@@ -1,4 +1,6 @@
-﻿namespace mqtt2otel.Interfaces
+﻿using mqtt2otel.Manifest;
+
+namespace mqtt2otel.Interfaces
 {
     /// <summary>
     /// The main class for communicating with the open telemetry endpoint
@@ -15,5 +17,11 @@
         /// Flushes all meter data to the otel exporter.
         /// </summary>
         public void FlushMeters();
+
+        /// <summary>
+        /// Creates open telemetry spans from the provided list. Spans must be valid when used in this list.
+        /// </summary>
+        /// <param name="spans">The spans that should be created.</param>
+        public void CreateSpans(List<OtelSpan> spans);
     }
 }

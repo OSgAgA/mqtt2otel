@@ -40,6 +40,7 @@ namespace mqtt2otel.InternalMetrics
             this.MessageCount = this.meter.CreateCounter<long>("mqtt2otel.telemetry.messages.count", description: "The amount of messages received (either processed or failed or ignored.");
             this.LogProcessingTime = this.meter.CreateHistogram<double>("mqtt2otel.telemetry.message.log-processing", unit: "us", description: "The histogram of the log processing time.");
             this.MetricProcessingTime = this.meter.CreateHistogram<double>("mqtt2otel.telemetry.message.metric-processing", unit: "us", description: "The histogram of the metric processing time.");
+            this.TraceProcessingTime = this.meter.CreateHistogram<double>("mqtt2otel.telemetry.message.trace-processing", unit: "us", description: "The histogram of the trace processing time.");
         }
 
         /// <summary>
@@ -91,6 +92,11 @@ namespace mqtt2otel.InternalMetrics
         /// Gets the histogram of the metric processing time.
         /// </summary>
         public Histogram<double> MetricProcessingTime { get; }
+
+        /// <summary>
+        /// Gets the histogram of the metric processing time.
+        /// </summary>
+        public Histogram<double> TraceProcessingTime { get; }
 
         /// <summary>
         /// Gets the total memory consumption of the application in bytes.

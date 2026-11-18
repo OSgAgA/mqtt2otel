@@ -1,9 +1,12 @@
 ﻿using mqtt2otel.Helper;
+using mqtt2otel.Manifest;
 using mqtt2otel.Metadata;
+using mqtt2otel.Stores;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Text;
 
 namespace mqtt2otel.ManifestExplorer.DTOs
@@ -27,6 +30,16 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// Gets or sets the created errors.
         /// </summary>
         public List<ErrorTestData> Errors { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets all created spans.
+        /// </summary>
+        public List<SpanTestData> Spans { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the internal state of the application.
+        /// </summary>
+        public InternalState InternalState { get; set; } = new InternalState();
 
         /// <summary>
         /// Gets  a value indicating whether the result contains metrics.
@@ -58,9 +71,10 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// </summary>
         /// <param name="exportBuilder">The export builder containing the metrics and log results.</param>
         /// <param name="error">The error result.</param>
-        public ApplyPatternToPayloadResult(OtelTestExporterBuilder? exportBuilder = null, List<ErrorTestData>? errors = null)
+        /// <param name="state">The internall application state.</param>
+        public ApplyPatternToPayloadResult(OtelTestExporterBuilder? exportBuilder = null, List<ErrorTestData>? errors = null, InternalState? state = null)
         {
-            this.Initialize(exportBuilder, errors);
+            this.Initialize(exportBuilder, errors, state);
         }
 
         /// <summary>
@@ -68,7 +82,8 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// </summary>
         /// <param name="exportBuilder">The export builder containing the metrics and log results.</param>
         /// <param name="error">The error result.</param>
-        private void Initialize(OtelTestExporterBuilder? exportBuilder, List<ErrorTestData>? errors)
+        /// <param name="state">The internall application state.</param>
+        private void Initialize(OtelTestExporterBuilder? exportBuilder, List<ErrorTestData>? errors, InternalState? state)
         {
             if (errors != null)
             {
@@ -89,7 +104,14 @@ namespace mqtt2otel.ManifestExplorer.DTOs
                 {
                     this.Logs.Add(new LogTestData(connectionValue.Value, connectionValue.Connection));
                 }
+
+                foreach (var connectionValue in exportBuilder.GetAllTraces())
+                {
+                    this.Spans.Add(new SpanTestData(connectionValue.Value, connectionValue.Connection));
+                }
             }
+
+            if (state != null) this.InternalState = state;
         }
 
         /// <summary>
@@ -97,25 +119,17 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         /// </summary>
         /// <param name="exportBuilder">The export builder containing the metrics and log results.</param>
         /// <param name="error">The error result.</param>
-        public ApplyPatternToPayloadResult(OtelTestExporterBuilder? exportBuilder = null, ErrorTestData? error = null)
+        /// <param name="state">The internall application state.</param>
+        public ApplyPatternToPayloadResult(OtelTestExporterBuilder? exportBuilder = null, ErrorTestData? error = null, InternalState? state = null)
         {
             if (error == null)
             {
-                this.Initialize(exportBuilder, new List<ErrorTestData>());
+                this.Initialize(exportBuilder, new List<ErrorTestData>(), state);
             }
             else
             {
-                this.Initialize(exportBuilder, new List<ErrorTestData> { error });
+                this.Initialize(exportBuilder, new List<ErrorTestData> { error }, state);
             }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ApplyPatternToPayloadResult"/> class.        
-        /// </summary>
-        /// <param name="errors">The error result.</param>
-        public ApplyPatternToPayloadResult(List<ErrorTestData> errors)
-        {
-
         }
 
         /// <summary>

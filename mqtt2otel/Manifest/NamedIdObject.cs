@@ -12,17 +12,12 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets the unique id of this setting. This is mainly used internally.
         /// </summary>
-        public Guid Id { get; set; } = Guid.NewGuid();
-
-        /// <summary>
-        /// Gets or sets the parent object, if existing, or null otherwise.
-        /// </summary>
-        public object? Parent { get; set; } = null;
+        public Guid InternalId { get; private set; } = Guid.NewGuid();
 
         /// <summary>
         /// Gets or sets the human readable name of the setting.
         /// </summary>
-        public string Name { get; set; } = Guid.NewGuid().ToString();
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets an (optional) description of the setting item.

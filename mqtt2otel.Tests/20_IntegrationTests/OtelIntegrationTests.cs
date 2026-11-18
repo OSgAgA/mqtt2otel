@@ -59,7 +59,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
             var exportBuilder = new OtelTestExporterBuilder();
 
-            using (var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings()))
+            using (var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings(), new OtelCollector(isActive: false)))
             {
                 otelCoordinator.Connect(manifest);
 
@@ -140,12 +140,12 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
             var exportBuilder = new OtelTestExporterBuilder();
 
-            using var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
+            using var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings(), new OtelCollector(isActive: false));
             otelCoordinator.Connect(manifest);
 
             var logRule = manifest.Processors[0].Otel.Logs[0];
 
-            var logger = dataStores.LoggerStore.GetLogger(logRule.Id);
+            var logger = dataStores.LoggerStore.GetLogger(logRule.InternalId);
             logger.ProcessLogMessage(new MqttMessage( payload: "This is a test message", topic: "sensors/temperature"), logRule, new List<Variable>(), internalLogger.Object, logRule.Attributes);
 
             Assert.Single(exportBuilder.GetAllLogs());
@@ -195,12 +195,12 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var dataStores = GenericHelper.GetDataStores(payloadParser, embeddedExpressionParser);
             var exportBuilder = new OtelTestExporterBuilder();
 
-            using var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings());
+            using var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings(), new OtelCollector(isActive: false));
             otelCoordinator.Connect(manifest);
 
             var logRule = manifest.Processors[0].Otel.Logs[0];
 
-            var logger = dataStores.LoggerStore.GetLogger(logRule.Id);
+            var logger = dataStores.LoggerStore.GetLogger(logRule.InternalId);
             logger.ProcessLogMessage(new MqttMessage( payload: "2026-01-31T15:42Z WARN This is a simple log message.", topic: "sensors/temperature"), logRule, new List<Variable>(), internalLogger.Object, logRule.Attributes);
 
             Assert.Single(exportBuilder.GetAllLogs());

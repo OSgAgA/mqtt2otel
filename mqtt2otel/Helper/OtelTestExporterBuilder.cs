@@ -2,9 +2,11 @@
 using mqtt2otel.Manifest;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
@@ -26,6 +28,12 @@ namespace mqtt2otel.Helper
         /// collection to get informed about new log entries.
         /// </summary>
         private Dictionary<OtelServerConnection, ObservableCollection<LogRecord>> Logs { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the metrics that are collected via this exporter. You can subscribe to the observable
+        /// collection to get informed about new metrics.
+        /// </summary>
+        private Dictionary<OtelServerConnection, ObservableCollection<Activity>> Traces { get; set; } = new();
 
         /// <summary>
         /// Gets the current scope used by the logger. Will be set via the <see cref="GetScope(LogRecordScope, object?)"/> callback.
@@ -54,6 +62,17 @@ namespace mqtt2otel.Helper
             builder.AddInMemoryExporter(this.Metrics[connection]);
         }
 
+        /// <inheritdoc/>
+        public void AddToTracerProviderBuilder(TracerProviderBuilder builder, OtelServerConnection connection)
+        {
+            if (!this.Traces.ContainsKey(connection))
+            {
+                this.Traces[connection] = new();
+            }
+
+            builder.AddInMemoryExporter(this.Traces[connection]);
+        }
+
         /// <summary>
         /// Gets all metrics as key value pairs consisting of the connection name as key and the metric as the value.
         /// </summary>
@@ -69,6 +88,25 @@ namespace mqtt2otel.Helper
                 foreach (var metric in keyValue.Value)
                 {
                     yield return new ConnectionValue<Metric>(connection, metric);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets all traces as key value pairs consisting of the connection name as key and the trace as the value.
+        /// </summary>
+        /// <returns>The key value pairs.</returns>
+        public IEnumerable<ConnectionValue<Activity>> GetAllTraces()
+        {
+            Task.Delay(10);  // Ensure, that all metrics have been processed.
+
+            foreach (var keyValue in this.Traces)
+            {
+                var connection = keyValue.Key;
+
+                foreach (var trace in keyValue.Value)
+                {
+                    yield return new ConnectionValue<Activity>(connection, trace);
                 }
             }
         }

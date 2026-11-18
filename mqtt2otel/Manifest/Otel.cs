@@ -39,6 +39,36 @@ namespace mqtt2otel.Manifest
         public ImportEnabledList<OtelLoggingRule> Logs { get; set; } = new();
 
         /// <summary>
+        /// Gets or sets the rules for creating open telemetry traces and spans.
+        /// </summary>
+        public ImportEnabledList<OtelTraceRule> Traces { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the timespan for how long a span will be kept alive.
+        /// </summary>
+        [InheritedProperty]
+        public int? RetentionInSeconds { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the <see cref="SpanRetentionStrategy"/> used, when the retention time is exceeded.
+        /// </summary>
+        [InheritedProperty]
+        public SpanRetentionStrategy? RetentionStrategy { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the event that will be created, when the retention time is exceeded. Only applies if a strategy is chosen, 
+        /// that creates events.
+        /// </summary>
+        [InheritedProperty]
+        public OtelSpanEvent? RetentionExceededEvent { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the time interval in seconds that is waited for late span events, before a span is send after it is completed.
+        /// </summary>
+        [InheritedProperty]
+        public int? WaitForLateSpanEventsInS { get; set; } = null;
+
+        /// <summary>
         /// Gets or sets the name of the open telemetriy server connection to be used for this rule. 
         /// Set to null for using the default server connection.
         /// </summary>

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using mqtt2otel.Helper;
+using mqtt2otel.Interfaces;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
 using mqtt2otel.Stores;
@@ -19,7 +20,7 @@ namespace mqtt2otel.Tests.Helper
         /// </summary>
         public static Mutex mutex = new();
 
-        public static Manifest.Manifest ReadManifestFromString(string yaml, DataStores? dataStores = null, PayloadParser? payloadParser = null, EmbeddedExpressionParser? embeddedExpressionParser = null)
+        public static Manifest.Manifest ReadManifestFromString(string yaml, DataStores? dataStores = null, PayloadParser? payloadParser = null, EmbeddedExpressionParser? embeddedExpressionParser = null, ITraceStore? traceStore = null)
         {
             mutex.WaitOne(TimeSpan.FromSeconds(30));
             try
@@ -38,7 +39,8 @@ namespace mqtt2otel.Tests.Helper
                     dataStores = new DataStores(signalStore, loggerStore);
                 }
 
-                var objectFactory = new Manifest.ObjectFactory(objFactoryLoggerMock.Object, payloadParser, new PayloadTransformation(), dataStores, new ProcessorMeter(), new UsageTelemetryMeter(), embeddedExpressionParser);
+                var objectFactory = new Manifest.ObjectFactory(objFactoryLoggerMock.Object, payloadParser, new PayloadTransformation(), dataStores, new ProcessorMeter(), new UsageTelemetryMeter(), 
+                    embeddedExpressionParser, traceStore ?? new LocalTraceStore());
 
                 var loggerMock = new Mock<ILogger>();
 

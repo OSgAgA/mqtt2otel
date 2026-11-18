@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
+using mqtt2otel.Helper;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
 using mqtt2otel.Server.Helper;
@@ -48,7 +49,10 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var manifest = ManifestHelper.ReadManifestFromString(yaml);
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
+
+            var payloadParser = new PayloadParser();
+            var messageProcessor = MessageProcessorAccessor.CreateNew(new PayloadParser(), new EmbeddedExpressionParser(new PayloadParser()), GenericHelper.GetDataStores(payloadParser, new EmbeddedExpressionParser(payloadParser)));
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor);
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
             mqttCoordinator.OnMessageReceived += (sender, args) => tcs.SetResult(args);
 
@@ -106,7 +110,10 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var manifest = ManifestHelper.ReadManifestFromString(yaml);
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
+
+            var payloadParser = new PayloadParser();
+            var messageProcessor = MessageProcessorAccessor.CreateNew(new PayloadParser(), new EmbeddedExpressionParser(new PayloadParser()), GenericHelper.GetDataStores(payloadParser, new EmbeddedExpressionParser(payloadParser)));
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor);
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
             mqttCoordinator.OnMessageReceived += (sender, args) => tcs.SetResult(args);
 
@@ -167,7 +174,10 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var manifest = ManifestHelper.ReadManifestFromString(yaml);
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
+
+            var payloadParser = new PayloadParser();
+            var messageProcessor = MessageProcessorAccessor.CreateNew(new PayloadParser(), new EmbeddedExpressionParser(new PayloadParser()), GenericHelper.GetDataStores(payloadParser, new EmbeddedExpressionParser(payloadParser)));
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor);
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
 
             mqttCoordinator.OnMessageReceived += (sender, args) => tcs.SetResult(args);
@@ -229,7 +239,9 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var manifest = ManifestHelper.ReadManifestFromString(yaml);
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
+            var payloadParser = new PayloadParser();
+            var messageProcessor = MessageProcessorAccessor.CreateNew(new PayloadParser(), new EmbeddedExpressionParser(new PayloadParser()), GenericHelper.GetDataStores(payloadParser, new EmbeddedExpressionParser(payloadParser)));
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor);
             var tcs = new TaskCompletionSource<List<MqttMessageReceivedEventArgs>>();
             List<MqttMessageReceivedEventArgs> results = new();
 

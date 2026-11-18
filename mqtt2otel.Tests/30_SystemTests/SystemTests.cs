@@ -64,7 +64,8 @@ namespace mqtt2otel.Tests._30_SystemTests
             manifest.Initialize();
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter());
+            var messageProcessor = MessageProcessorAccessor.CreateNew(payloadParser, embeddedExpressionParser, dataStores);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor);
 
             try
             {
@@ -76,7 +77,7 @@ namespace mqtt2otel.Tests._30_SystemTests
                 var internalLogger = new Mock<ILogger<OtelCoordinator>>();
                 var exportBuilder = new OtelTestExporterBuilder();
 
-                using (var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings()))
+                using (var otelCoordinator = new OtelCoordinator(internalLogger.Object, exportBuilder, dataStores, new OtelInternalMeter(), embeddedExpressionParser, new ApplicationSettings(), new OtelCollector(isActive: false)))
                 {
                     otelCoordinator.Connect(manifest);
 

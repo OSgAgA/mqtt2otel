@@ -61,6 +61,11 @@ namespace mqtt2otel.Manifest
         public string LogLevelKey { get; set; } = "otel_loglevel";
 
         /// <summary>
+        /// Gets or sets the id of the span with which the log entry should be corelated. Leave null to not corelate to any span.
+        /// </summary>
+        public string? SpanId { get; set; } = null;
+
+        /// <summary>
         /// Validates the object.
         /// </summary>
         /// <param name="context">The currently active context. This will be provided as a hint to the user, where a problem occured.</param>
