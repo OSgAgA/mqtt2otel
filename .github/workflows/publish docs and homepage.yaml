@@ -50,6 +50,10 @@ jobs:
         with:
           hugo-version: 'latest'
           extended: true
+
+      # Install Sass
+      - name: Install Dart Sass
+        run: npm install -g sass
   
       # Build the static html via hugo. The static html is written to the public directory inside ./docs.
       - name: Build Hugo site
