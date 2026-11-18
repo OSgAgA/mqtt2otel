@@ -60,8 +60,8 @@ namespace mqtt2otel.Tests._20_IntegrationTests
 
             string topic = "sensors/temperature";
             string payload = "42";
-            
-            await mqttHelper.PublishPayload(topic, payload);
+
+            await mqttHelper.PublishPayload(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
@@ -122,7 +122,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             string topic = "sensors/temperature";
             string payload = "42";
 
-            await mqttHelper.PublishPayload(topic, payload);
+            await mqttHelper.PublishPayload(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
@@ -187,7 +187,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             string topic = "sensors/temperature";
             string payload = "42";
 
-            await mqttHelper.PublishPayload(topic, payload);
+            await mqttHelper.PublishPayload(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
@@ -259,7 +259,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             string topic = "sensors/temperature";
             string payload = "42";
 
-            await mqttHelper.PublishPayload(topic, payload);
+            await mqttHelper.PublishPayload(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,

@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\mqtt2otel.Shared\mqtt2otel.Shared.csproj" />
+    <ProjectReference Include="..\mqtt2otel\mqtt2otel.csproj" />
   </ItemGroup>
 
 </Project>

@@ -52,7 +52,8 @@ namespace mqtt2otel.Manifest
                 internalLogger.LogInformation("Reading manifest from provided yaml.");
             }
 
-            var deserializer = new DeserializerBuilder().WithObjectFactory(objectFactory).Build();
+            var builder = new DeserializerBuilder().WithObjectFactory(objectFactory);
+            var deserializer = builder.Build();
 
             var result = deserializer.Deserialize<Manifest>(yaml);
             result.ObjectFactory = objectFactory;
@@ -110,6 +111,14 @@ namespace mqtt2otel.Manifest
             return result;
         }
 
+        /// <summary>
+        /// Ensures, that no name is provided twice.
+        /// </summary>
+        /// <typeparam name="T">The type on which the name should be checked.</typeparam>
+        /// <param name="validation">The validation result.</param>
+        /// <param name="identifier">An identifier to be used to identify the position of the error.</param>
+        /// <param name="list">The list with the possible duplicates.</param>
+        /// <param name="nameAccessor">An accessor function for accessing the name on type <typeparamref name="T"/>.
         private void EnsureNoNameDuplicate<T>(ValidationResult validation, string identifier, ImportEnabledList<T> list, Func<T, string> nameAccessor) where T : NamedIdObject
         {
             HashSet<string> store = new();
@@ -212,7 +221,7 @@ namespace mqtt2otel.Manifest
         /// that creates events.
         /// </summary>
         [InheritedProperty]
-        public OtelSpanEvent? RetentionExceededEvent { get; set; } = new OtelSpanEvent() { Name = "Retention time for span exceeded." };
+        public OtelSpanEvent? RetentionExceededEvent { get; set; } = OtelSpanEvent.DefaultRetentionExceededEvent;
 
         /// <summary>
         /// Gets or sets the time interval in seconds that is waited for late span events, before a span is send after it is completed.
@@ -232,7 +241,7 @@ namespace mqtt2otel.Manifest
 
         /// <summary>
         /// Initializes the manifest. This will apply all inherited informations, like variables and group subscriptions to child elements.
-        /// </summary>
+        /// </summary>#
         public void Initialize()
         {
             if (this.ObjectFactory == null) throw new Exception("Could not initialize manifest as no object factory is set.");
@@ -338,8 +347,10 @@ namespace mqtt2otel.Manifest
 
             foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
+                if (prop.PropertyType == typeof(OtelAttribute))
+                {
 
-                // Case 1: Property type derives from NamedIdObject
+                }
                 if (typeof(NamedIdObject).IsAssignableFrom(prop.PropertyType))
                 {
                     var child = prop.GetValue(current) as NamedIdObject;
@@ -368,6 +379,26 @@ namespace mqtt2otel.Manifest
             {
                 var genericArg = propType.GetGenericArguments()[0];
 
+                // Handle otel attributes.
+                if (typeof(OtelAttribute).IsAssignableFrom(genericArg))
+                {
+                    var typedAttributeList = prop.GetValue(parent) as IEnumerable<object>;
+
+                    if (typedAttributeList == null) return;
+
+                    foreach (var item in typedAttributeList)
+                    {
+                        var child = item as OtelAttribute;
+                        if (child != null)
+                        {
+                            child.EnsureNotInternal();
+                        }
+                    }
+
+                    return;
+                }
+
+                // Handle inherited properties.
                 if (!typeof(NamedIdObject).IsAssignableFrom(genericArg)) return;
 
                 var typedList = prop.GetValue(parent) as IEnumerable<object>;

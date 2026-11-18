@@ -1,7 +1,8 @@
 ﻿using mqtt2otel.Manifest;
+using mqtt2otel.Provider;
 using mqtt2otel.Stores;
 
-namespace mqtt2otel.Stores
+namespace mqtt2otel.Metadata
 {
     /// <summary>
     /// Represents the internal state of the application.
@@ -19,7 +20,7 @@ namespace mqtt2otel.Stores
         /// <param name="spans">The spans.</param>
         /// <param name="contexts">The span contexts.</param>
 
-        public InternalState(IEnumerable<OtelSpan> spans, IEnumerable<OtelSpanContext> contexts)
+        public InternalState(List<OtelSpan> spans, List<OtelSpanContext> contexts)
         {
             this.Spans = spans;
             this.SpanContexts = contexts;
@@ -28,11 +29,17 @@ namespace mqtt2otel.Stores
         /// <summary>
         /// Gets or sets the internally created spans.
         /// </summary>
-        public IEnumerable<OtelSpan> Spans { get; set; } = new List<OtelSpan>();
+        public List<OtelSpan> Spans { get; set; } = new List<OtelSpan>();
 
         /// <summary>
         /// Gets or sets the internally created span contexts.
         /// </summary>
-        public IEnumerable<OtelSpanContext> SpanContexts { get; set; } = new List<OtelSpanContext>();
+        public List<OtelSpanContext> SpanContexts { get; set; } = new List<OtelSpanContext>();
+
+        /// <summary>
+        /// Gets or sets the curren state of the trace id provider.
+        /// </summary>
+        public ProviderState? TraceIdProviderState { get; set; }
+
     }
 }

@@ -5,8 +5,11 @@ using mqtt2otel.InternalLogging;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
+using mqtt2otel.Shared.Helper;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Text;
 
@@ -55,6 +58,11 @@ namespace mqtt2otel
         private IEmbeddedExpressionParser embeddedExpressionParser;
 
         /// <summary>
+        /// The message handling error manager.
+        /// </summary>
+        private MessageProcessingErrorManager errorManager;
+
+        /// <summary>
         /// Creates a new instance of the <see cref="Processor"/> type.
         /// </summary>
         /// <param name="internalLogger">The logger used internaly for logging.</param>
@@ -62,7 +70,9 @@ namespace mqtt2otel
         /// <param name="payloadTransformation">The object used for processing payload transformations.</param>
         /// <param name="dataStores">The data stores used by the application to exchange data asynchronously.</param>
         /// <param name="meter">The meter for recording internal metrics.</param>
+        /// <param name="usageTelemetryMeter">The meter for tracking usage telemetry.</param>
         /// <param name="embeddedExpressionParser">The parser used for parsing expressions embedded in a subscription.</param>
+        /// <param name="traceStore">The trace store</param>
         public MessageProcessor(ILogger<MessageProcessor> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores,
                          ProcessorMeter meter, UsageTelemetryMeter usageTelemetryMeter, IEmbeddedExpressionParser embeddedExpressionParser, ITraceStore traceStore)
         {
@@ -74,6 +84,7 @@ namespace mqtt2otel
             this.dataStores = dataStores;
             this.embeddedExpressionParser = embeddedExpressionParser;
             this.traceStore = traceStore;
+            this.errorManager = new MessageProcessingErrorManager(this.internalLogger);
         }
 
         /// <summary>
@@ -89,11 +100,7 @@ namespace mqtt2otel
 
             this.usageTelemetryMeter.MessageCount.Add(1);
 
-            var tags = new TagList();
-            tags.Add("subscription.name", subscription.Name);
-            tags.Add("subscription.connection", subscription.BrokerConnection);
-            tags.Add("processor.name", processor.Name);
-            tags.Add("processor.otel.connection", processor.OtelConnection);
+            TagList tags = CreateDefaultTags(subscription, processor, null);
 
             var sw = new Stopwatch();
             sw.Start();
@@ -146,7 +153,6 @@ namespace mqtt2otel
                     if (!rule.IsActive || rule.BlockedTopics.Contains(message.Topic)) continue;
                 }
 
-                var parsingContext = new ParsingContext(new List<Variable>(), message);
 
                 using (this.internalLogger.StartActivity("Process trace rule"))
                 {
@@ -156,87 +162,84 @@ namespace mqtt2otel
                         sw.Start();
                         var combinedVariables = processor.Mqtt.Variables.Combine(subscription.Variables);
 
+                        var parsingContext = new ParsingContext(combinedVariables, message);
+
                         foreach (var span in rule.CreateSpans)
                         {
-                            lock (rule.BlockItemGate)
+                            lock (span.BlockItemGate)
                             {
-                                if (rule.BlockedItems.Contains(span.Name) || (rule.BlockedItemTopics.ContainsKey(span.Name) && rule.BlockedItemTopics[span.Name].Contains(message.Topic))) continue;
+                                if (span.BlockedItems.Contains(span.Name) || (span.BlockedItemTopics.ContainsKey(span.Name) && span.BlockedItemTopics[span.Name].Contains(message.Topic))) continue;
                             }
 
                             try
                             {
                                 var clone = span.Clone();
-                                clone.Expand(this.embeddedExpressionParser, parsingContext);
-                                if (string.IsNullOrEmpty(clone.Started)) clone.Started = DateTime.UtcNow.ToString("O");
+                                clone.Expand(this.embeddedExpressionParser, this.payloadParser, parsingContext);
+                                if (string.IsNullOrEmpty(clone.Started)) clone.Started = this.GetTimestampFromMessageOrUtcNow(message).ToString("O");
                                 if (clone.Kind == null) clone.Kind = ActivityKind.Internal;
                                 if (clone.Status == null) clone.Status = ActivityStatusCode.Unset;
                                 this.traceStore.StoreSpan(clone);
                             }
                             catch (Exception ex)
                             {
-                                this.HandleProcessingError("trace", rule, span.Name, message, ex.Message, processor);
-                                errorCount++;
-                            }
-                        }
-
-                        foreach (var span in rule.EndSpans)
-                        {
-                            lock (rule.BlockItemGate)
-                            {
-                                if (rule.BlockedItems.Contains(span.Name) || (rule.BlockedItemTopics.ContainsKey(span.Name) && rule.BlockedItemTopics[span.Name].Contains(message.Topic))) continue;
-                            }
-
-                            try
-                            {
-                                var clone = span.Clone();
-                                clone.Expand(this.embeddedExpressionParser, parsingContext);
-                                if (string.IsNullOrEmpty(clone.Completed)) clone.Completed = DateTime.UtcNow.ToString("O");
-                                this.traceStore.StoreSpan(clone, updateExisting: true);
-                            }
-                            catch (Exception ex)
-                            {
-                                this.HandleProcessingError("trace", rule, span.Name, message, ex.Message, processor);
+                                this.errorManager.HandleProcessingError("trace", span, span.Name, message, ex.Message, processor);
                                 errorCount++;
                             }
                         }
 
                         foreach (var evt in rule.CreateEvents)
                         {
-                            lock (rule.BlockItemGate)
+                            lock (evt.BlockItemGate)
                             {
-                                if (rule.BlockedItems.Contains(evt.Name) || (rule.BlockedItemTopics.ContainsKey(evt.Name) && rule.BlockedItemTopics[evt.Name].Contains(message.Topic))) continue;
+                                if (evt.BlockedItems.Contains(evt.Name) || (evt.BlockedItemTopics.ContainsKey(evt.Name) && evt.BlockedItemTopics[evt.Name].Contains(message.Topic))) continue;
                             }
 
                             try
                             {
                                 var clone = evt.Clone();
+                                if (string.IsNullOrEmpty(clone.Timestamp)) clone.Timestamp = this.GetTimestampFromMessageOrUtcNow(message).ToString("O");
                                 clone.Expand(this.embeddedExpressionParser, parsingContext);
 
                                 this.traceStore.AddEvent(clone);
                             }
                             catch (Exception ex)
                             {
-                                this.HandleProcessingError("trace", rule, evt.Name, message, ex.Message, processor);
+                                this.errorManager.HandleProcessingError("trace", evt, evt.Name, message, ex.Message, processor);
+                                errorCount++;
+                            }
+                        }
+
+                        foreach (var span in rule.EndSpans)
+                        {
+                            lock (span.BlockItemGate)
+                            {
+                                if (span.BlockedItems.Contains(span.Name) || (span.BlockedItemTopics.ContainsKey(span.Name) && span.BlockedItemTopics[span.Name].Contains(message.Topic))) continue;
+                            }
+
+                            try
+                            {
+                                var clone = span.Clone();
+                                clone.Expand(this.embeddedExpressionParser, this.payloadParser, parsingContext);
+                                if (string.IsNullOrEmpty(clone.Completed)) clone.Completed = this.GetTimestampFromMessageOrUtcNow(message).ToString("O");
+                                this.traceStore.StoreSpan(clone, updateExisting: true);
+                            }
+                            catch (Exception ex)
+                            {
+                                this.errorManager.HandleProcessingError("trace", span, span.Name, message, ex.Message, processor);
                                 errorCount++;
                             }
                         }
 
                         sw.Stop();
 
-                        var tags = new TagList();
-                        tags.Add("processor.name", processor.Name);
-                        tags.Add("processor.otel.connection", processor.OtelConnection);
-                        tags.Add("subscription.name", subscription.Name);
-                        tags.Add("subscription.connection", subscription.BrokerConnection);
-                        tags.Add("rule.name", rule.Name);
-                        tags.Add("rule.connection", rule.OtelConnection);
+                        TagList tags = CreateDefaultTags(subscription, processor, rule);
                         this.processorMeter.ProcessingTimeTraceRule.Record(sw.ElapsedMicroseconds, tags);
                         this.usageTelemetryMeter.TraceProcessingTime.Record(sw.ElapsedMicroseconds);
                         this.processorMeter.Metrics.Add(1, tags);
                     }
                     catch (Exception ex)
                     {
-                        this.HandleProcessingError("trace", rule, null, message, ex.Message, processor);
+                        this.errorManager.HandleProcessingError("trace", rule, null, message, ex.Message, processor);
                         errorCount++;
                     }
                 }
@@ -281,13 +284,7 @@ namespace mqtt2otel
 
                         sw.Stop();
 
-                        var tags = new TagList();
-                        tags.Add("processor.name", processor.Name);
-                        tags.Add("processor.otel.connection", processor.OtelConnection);
-                        tags.Add("subscription.name", subscription.Name);
-                        tags.Add("subscription.connection", subscription.BrokerConnection);
-                        tags.Add("rule.name", rule.Name);
-                        tags.Add("rule.connection", rule.OtelConnection);
+                        TagList tags = CreateDefaultTags(subscription, processor, rule);
                         tags.Add("rule.instrument", rule.Instrument);
                         this.processorMeter.ProcessingTimeMetricRule.Record(sw.ElapsedMicroseconds, tags);
                         this.usageTelemetryMeter.MetricProcessingTime.Record(sw.ElapsedMicroseconds);
@@ -295,13 +292,36 @@ namespace mqtt2otel
                     }
                     catch (Exception ex)
                     {
-                        this.HandleProcessingError("metric", rule, null, message, ex.Message, processor);
+                        this.errorManager.HandleProcessingError("metric", rule, null, message, ex.Message, processor);
                         errorCount++;
                     }
                 }
             }
 
             return errorCount;
+        }
+
+        /// <summary>
+        /// Creates the default tags that will be added to every internal metric signal.
+        /// </summary>
+        /// <param name="subscription">The subscription information.</param>
+        /// <param name="processor">The processor that triggered the event.</param>
+        /// <param name="rule">The rule.</param>
+        /// <returns>The created default tags.</returns>
+        private static TagList CreateDefaultTags(MqttSubscription subscription, Processor processor, Manifest.Rule? rule)
+        {
+            var tags = new TagList();
+            tags.Add("processor.name", processor.Name);
+            tags.Add("processor.otel.connection", processor.OtelConnection);
+            tags.Add("subscription.name", subscription.Name);
+            tags.Add("subscription.connection", subscription.BrokerConnection);
+            if (rule != null)
+            {
+                tags.Add("rule.name", rule.Name);
+                tags.Add("rule.connection", rule.OtelConnection);
+            }
+
+            return tags;
         }
 
         /// <summary>
@@ -368,17 +388,23 @@ namespace mqtt2otel
                             combinedAttributes = combinedAttributes.Combine(message.UserProperties.ToOtelAttributes());
                         }
 
+                        if (rule.SpanId != null)
+                        {
+                            var spanId = this.payloadParser.Parse(rule.SpanId, new ParsingContext(subscription.Variables, message))?.ToString() ?? string.Empty;
+
+                            if (!string.IsNullOrWhiteSpace(spanId))
+                            {
+                                var context = this.traceStore.GetOrCreateSpanContext(spanId);
+                                combinedAttributes.AddInternalAttribute(InternalAttributes.TraceId, context.TraceId);
+                                combinedAttributes.AddInternalAttribute(InternalAttributes.SpanId, context.SpanId);
+                            }
+                        }
+
                         logger.ProcessLogMessage(message, rule, subscription.Variables, this.internalLogger, combinedAttributes);
 
                         sw.Stop();
 
-                        var tags = new TagList();
-                        tags.Add("processor.name", processor.Name);
-                        tags.Add("processor.otel.connection", processor.OtelConnection);
-                        tags.Add("subscription.name", subscription.Name);
-                        tags.Add("subscription.connection", subscription.BrokerConnection);
-                        tags.Add("rule.name", rule.Name);
-                        tags.Add("rule.connection", rule.OtelConnection);
+                        TagList tags = CreateDefaultTags(subscription, processor, rule);
                         tags.Add("rule.category", rule.CategoryName);
                         tags.Add("rule.payload_type", rule.PayloadType);
                         this.processorMeter.ProcessingTimeLoggingRule.Record(swTransform.ElapsedTicks + sw.ElapsedTicks, tags);
@@ -387,7 +413,7 @@ namespace mqtt2otel
                     }
                     catch (Exception ex)
                     {
-                        this.HandleProcessingError("log", rule, null, message, ex.Message, processor);
+                        this.errorManager.HandleProcessingError("log", rule, null, message, ex.Message, processor);
                         errorCount++;
                     }
                 }
@@ -472,81 +498,18 @@ namespace mqtt2otel
                     }
                     catch (Exception ex)
                     {
-                        this.HandleProcessingError("metric", rule, item.Key, message, ex.Message, processor);
+                        this.errorManager.HandleProcessingError("metric", rule, item.Key, message, ex.Message, processor);
                         success = false;
                     }
                 }
             }
             catch (Exception ex)
             {
-                this.HandleProcessingError("metric", rule, null, message, ex.Message, processor);
+                this.errorManager.HandleProcessingError("metric", rule, null, message, ex.Message, processor);
                 success = false;
             }
 
             return success;
-        }
-
-        /// <summary>
-        /// Handles a error, that appeared while processing a mqtt message inside this processor.
-        /// </summary>
-        /// <param name="type">The type namme (metric, log, or trace).</param>
-        /// <param name="rule">The rule that caused the error.</param>
-        /// <param name="itemName">The name of the item inside the rule, that caused the message (e.g. a json property). May be null if no item is involved.</param>
-        /// <param name="mqttMessage">The mqtt message.</param>
-        /// <param name="errorMessage">The error message.</param>
-        /// <param name="processor">The manifest processor.</param>
-        private void HandleProcessingError(string type, Rule rule, string? itemName, MqttMessage mqttMessage, string errorMessage, Processor processor)
-        {
-            if (rule.LogMessageDetails ?? true)
-            {
-                this.internalLogger.LogError("Rule: '{Rule}', Processor: '{Processor}', Item: {Item}', Message: {Message}, Mqtt message details: [{MqttMessage}]", rule.Name, processor.Name, itemName ?? "<<none>>", errorMessage, mqttMessage.ToString().SanitizeForLog());
-            }
-            else
-            {
-                this.internalLogger.LogError("Rule: '{RuleName}', Processor: '{ProcessorName}', Item: '{ItemName}', Message: {Message}", rule.Name, processor.Name, itemName ?? "<<none>>", errorMessage);
-            }
-
-            if (rule.AllowRuleDeactivationByTopic ?? true)
-            {
-                if (itemName == null)
-                {
-                    rule.BlockedTopics.Add(mqttMessage.Topic);
-                    this.internalLogger.LogError("Topic '{Topic}' has been blocked for " + type + " rule '{Rule}' inside processor '{Processor}'. Current blocked topic count is: {BlockedTopicCount}/{BlockedTopicLimit}.",
-                        mqttMessage.Topic.SanitizeForLog(), rule.Name, processor.Name, rule.BlockedTopics.Count, rule.BlockedTopicLimit);
-                }
-                else
-                {
-                    if (!rule.BlockedItemTopics.ContainsKey(itemName)) rule.BlockedItemTopics[itemName] = new();
-
-                    rule.BlockedItemTopics[itemName].Add(mqttMessage.Topic);
-                    this.internalLogger.LogError("Topic '{Topic}' has been blocked for Item '{Item}' at " + type + " rule '{Rule}' inside processor '{Processor}'. Current blocked topic count is: {BlockedTopicCount}/{BlockedTopicLimit}.",
-                        mqttMessage.Topic.SanitizeForLog(), itemName, rule.Name, processor.Name, rule.BlockedItemTopics[itemName].Count, rule.BlockedTopicLimit);
-                }
-            }
-
-            lock (rule.BlockItemGate)
-            {
-                if (itemName == null)
-                {
-                    if (rule.BlockedTopics.Count > rule.BlockedTopicLimit && (rule.AllowRuleDeactivation ?? true))
-                    {
-                        rule.IsActive = false;
-                        this.internalLogger.LogError(type + " rule '{Rule}' inside processor '{Processor}' has exceeded the maximum blocked topic limit ({BlockedTopicLimit}) and is therefor disabled.", rule.Name, processor.Name, rule.BlockedTopicLimit);
-                    }
-                }
-                else
-                {
-
-                    if (rule.BlockedItemTopics[itemName].Count > rule.BlockedTopicLimit)
-                    {
-                        if (rule.AllowRuleDeactivationByItem ?? true)
-                        {
-                            rule.BlockedItems.Add(itemName);
-                            this.internalLogger.LogError("Item '{Item}' on " + type + " rule '{Rule}' inside processor '{Processor}' has exceeded the maximum blocked topic limit ({BlockedTopicLimit}) and is therefor disabled.", itemName, rule.Name, processor.Name, rule.BlockedTopicLimit);
-                        }
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -678,6 +641,31 @@ namespace mqtt2otel
                         new object[] { measurement, context });
                 }
             }
+        }
+
+        /// <summary>
+        /// A list of identifiers used to identify a timestamp inside a message.
+        /// </summary>
+        private List<string> timestampIdentifiers = new List<string>() { "timestamp", "ts", "time" };
+
+        /// <summary>
+        /// Get the timestamp from a message or utc now if no timestamp was found.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <returns>The timestamp from the message or utc now.</returns>
+        private DateTime GetTimestampFromMessageOrUtcNow(MqttMessage message)
+        {
+            DateTime result = DateTime.UtcNow;
+
+            foreach (var prop in message.UserProperties)
+            {
+                if (this.timestampIdentifiers.Any(s => s.Contains(prop.Name.ToLower())))
+                {
+                    DateTimeHelper.TryParseToUtc(prop.Value, out result);
+                }
+            }
+
+            return result;
         }
     }
 }

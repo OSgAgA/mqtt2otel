@@ -7,6 +7,7 @@ using OpenTelemetry.Trace;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
@@ -15,7 +16,7 @@ namespace mqtt2otel.Manifest
     /// <summary>
     /// Represents an open telemetry span.
     /// </summary>
-    public class OtelSpan : NamedIdObject
+    public class OtelSpan : Rule
     {
         /// <summary>
         /// Gets the date and time, when the object was created.
@@ -61,9 +62,8 @@ namespace mqtt2otel.Manifest
             set
             {
                 started = value;
-                if (value == null) this.StartedAsDateTime = null;
 
-                if (DateTime.TryParse(value, out var result))
+                if (value != null && DateTimeHelper.TryParseToUtc(value, out var result))
                 {
                     this.StartedAsDateTime = result;
                 }
@@ -89,9 +89,7 @@ namespace mqtt2otel.Manifest
             {
                 completed = value;
 
-                if (value == null) this.CompletedAsDateTime = null;
-
-                if (DateTime.TryParse(value, out var result))
+                if (value != null && DateTimeHelper.TryParseToUtc(value, out var result))
                 {
                     this.CompletedAsDateTime = result;
                 }
@@ -106,13 +104,13 @@ namespace mqtt2otel.Manifest
         /// Gets the date and time when the span started as a parsed string. If parsing is not 
         /// successful null is returned.
         /// </summary>
-        public DateTime? StartedAsDateTime { get; private set; } = null;
+        public DateTime? StartedAsDateTime { get; internal set; } = null;
 
         /// <summary>
         /// Gets the date and time when the span sompleted as a parsed string. If parsing is not 
         /// successful null is returned.
         /// </summary>
-        public DateTime? CompletedAsDateTime { get; private set; } = null;
+        public DateTime? CompletedAsDateTime { get; internal set; } = null;
 
         /// <summary>
         /// Gets or sets a list of linked spans.
@@ -160,59 +158,13 @@ namespace mqtt2otel.Manifest
         public int? WaitForLateSpanEventsInS { get; set; } = null;
 
         /// <summary>
-        /// Gets or sets the name of the open telemetriy server connection to be used for this rule. 
-        /// Set to null for using the default server connection.
-        /// </summary>
-        [InheritedProperty]
-        public string? OtelConnection { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets the open telemetry scope that should be used for the metric.
-        /// Set to null to use the default scope of the <see cref="OtelConnection"/>.
-        /// </summary>
-        [InheritedProperty]
-        public string? OtelScope { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the mqtt message details should be logged in case of an error. Set to null to use the default value.
-        /// </summary>
-        [InheritedProperty]
-        public bool? LogMessageDetails { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the rule can be deactivated, when the error rate exceeds <see cref="MaxErrorRateInPercentage"/>.
-        /// Set to null to use default value.
-        /// </summary>
-        [InheritedProperty]
-        public bool? AllowRuleDeactivation { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the rule can deactivate topics from executing this rule, when the error rate for the topic is to high.
-        /// Set to null to use default value.
-        /// </summary>
-        [InheritedProperty]
-        public bool? AllowRuleDeactivationByTopic { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the rule can deactivate topics from executing this rule on a scpecific item (e.g. a property of a json message), when the error rate for the topic is to high.
-        /// Set to null to use default value.
-        /// </summary>
-        [InheritedProperty]
-        public bool? AllowRuleDeactivationByItem { get; set; } = null;
-
-        /// <summary>
-        /// Gets or sets the maximum number of topics that are blocked for an item / rule. If this threshold is exceeded the whole item or rule is blocked.
-        /// </summary>
-        [InheritedProperty]
-        public int? BlockedTopicLimit { get; set; } = null;
-
-        /// <summary>
         /// Gets a value indicating whether the span has fully completed and can be created.
         /// </summary>
         public bool IsCompleted
         {
             get
             {
+                if (this.StartedAsDateTime == null) return false;
                 if (this.CompletedAsDateTime == null) return false;
                 if (this.CompletedAsDateTime.Value.AddSeconds(this.WaitForLateSpanEventsInS ?? 5) > DateTime.UtcNow) return false;
 
@@ -279,40 +231,51 @@ namespace mqtt2otel.Manifest
         /// </summary>
         public void ApplyDefaultValues()
         {
+            bool modified = false;
+
             if (string.IsNullOrWhiteSpace(this.Name)) this.Name = "No name provided.";
             if (this.Description == null) this.Description = string.Empty;
             if (this.Kind == null) this.Kind = ActivityKind.Internal;
             if (this.Status == null) this.Status = ActivityStatusCode.Unset;
             if (this.RetentionInSeconds == null) this.RetentionInSeconds = 3600;
             if (this.RetentionStrategy == null) this.RetentionStrategy = SpanRetentionStrategy.CompleteErrorWithEvent;
-            if (this.RetentionExceededEvent == null) this.RetentionExceededEvent = new OtelSpanEvent() { SpanId = this.Id, Name = "Span retention time expired." };
+            if (this.RetentionExceededEvent == null) this.RetentionExceededEvent = OtelSpanEvent.DefaultRetentionExceededEvent;
+            this.RetentionExceededEvent.SpanId = this.Id;
 
             var now = DateTime.UtcNow;
 
             if (this.CompletedAsDateTime == null || this.CompletedAsDateTime > now)
             {
                 this.CompletedAsDateTime = now;
-                this.Attributes.Add(new OtelAttribute("mqtt2otel_error_prop_completed", "End timestamp was not set or in the future."));
+                this.Attributes.Add(new OtelAttribute("mqtt2otel_error_prop_span_completed", "End timestamp was not set or in the future."));
+                modified = true;
             }
 
             if (this.StartedAsDateTime == null || this.StartedAsDateTime > now)
             {
                 this.StartedAsDateTime = now;
-                this.Attributes.Add(new OtelAttribute("mqtt2otel_error_prop_start", "Start timestamp was not set or in the future."));
+                this.Attributes.Add(new OtelAttribute("mqtt2otel_error_prop_span_start", "Start timestamp was not set or in the future."));
+                modified = true;
             }
 
             DateTime minDate = this.StartedAsDateTime.Value;
             DateTime maxDate = this.CompletedAsDateTime.Value;
 
-            if (this.CompletedAsDateTime < minDate) minDate = this.CompletedAsDateTime.Value;
-            if (this.StartedAsDateTime > maxDate) maxDate = this.StartedAsDateTime.Value;
+            if (this.CompletedAsDateTime < minDate)
+            {
+                minDate = this.CompletedAsDateTime.Value;
+                this.StartedAsDateTime = this.CompletedAsDateTime.Value.AddSeconds(-1);
+                this.Attributes.Add(new OtelAttribute("mqtt2otel_error_prop_span_start", "Start timestamp was later than completed timestamp. Set to completed minus one second."));
+                modified = true;
+            }
 
             foreach (var evt in this.Events)
             {
                 if (evt.TimestampAsDateTime > now)
                 {
-                    evt.TimestampAsDateTime = now;
-                    evt.Attributes.Add(new OtelAttribute("mqtt2otel_error_prop_timestamp", "Timestamp was in the future."));
+                    evt.TimestampAsDateTime = maxDate;
+                    evt.Attributes.Add(new OtelAttribute("mqtt2otel_error_prop_event_timestamp", "Timestamp was in the future."));
+                    modified = true;
                 }
 
                 if (evt.TimestampAsDateTime < minDate) minDate = evt.TimestampAsDateTime;
@@ -322,13 +285,20 @@ namespace mqtt2otel.Manifest
             if (this.StartedAsDateTime > minDate)
             {
                 this.StartedAsDateTime = minDate;
-                this.Attributes.Add(new OtelAttribute("mqtt2otel_error_prop_started", "Start timestamp was smaller than end timestamp or a timestamp inside a span event."));
+                this.Attributes.Add(new OtelAttribute("mqtt2otel_error_prop_started", "Start timestamp was later than end timestamp or a timestamp inside a span event."));
+                modified = true;
             }
 
             if (this.CompletedAsDateTime < maxDate)
             {
                 this.CompletedAsDateTime = maxDate;
-                this.Attributes.Add(new OtelAttribute("mqtt2otel_error_prop_completed", "End timestamp was smaller than a timestamp inside a span event."));
+                this.Attributes.Add(new OtelAttribute("mqtt2otel_error_prop_completed", "End timestamp was earlier than a timestamp inside a span event."));
+                modified = true;
+            }
+
+            if (modified)
+            {
+                this.Attributes.Add(new OtelAttribute("mqtt2otel_modified", true));
             }
         }
 
@@ -337,9 +307,9 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="embeddedExpressionParser">The embedded expressions parser.</param>
         /// <param name="context">The parsing context.</param>
-        public void Expand(IEmbeddedExpressionParser embeddedExpressionParser, ParsingContext context)
+        public void Expand(IEmbeddedExpressionParser embeddedExpressionParser, IPayloadParser parser, ParsingContext context)
         {
-            this.Id = embeddedExpressionParser.Expand(this.Id, context);
+            this.Id = parser.Parse(this.Id, context).ToString() ?? string.Empty;
             this.Name = embeddedExpressionParser.Expand(this.Name, context);
             this.Description = embeddedExpressionParser.Expand(this.Description, context);
             this.Attributes = embeddedExpressionParser.Expand(this.Attributes, context);
@@ -367,7 +337,7 @@ namespace mqtt2otel.Manifest
             var attributes = new List<OtelAttribute>();
             foreach (OtelAttribute attribute in this.Attributes)
             {
-               attributes.Add(attribute.Clone());
+                attributes.Add(attribute.Clone());
             }
 
             clone.Attributes = attributes;

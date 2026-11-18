@@ -7,7 +7,7 @@
             <CardHeader class="d-flex align-items-center">
                 <div><b>Spans</b></div>
             </CardHeader>
-            <table data-testid="span-container" class="table overflow-x-auto">
+            <table data-testid="span-result-container" class="table overflow-x-auto">
                 <thead>
                     <tr>
                         <th>Trace Id</th>
@@ -21,9 +21,9 @@
                         <th>Attributes</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach (var span in this.Spans)
-                    {
+                @foreach (var span in this.Spans)
+                {
+                    <tbody data-testid="span-item-container">
                         <tr data-testid="span-entry">
                             <td data-testid="span-traceId">@span.TraceId</td>
                             <td data-testid="span-spanId">@span.SpanId</td>
@@ -34,7 +34,7 @@
                             <td data-testid="span-kind">@span.Kind</td>
                             <td data-testid="span-status">@span.Status</td>
                             <td>
-                                @foreach (var tag in span.Tags)
+                                @foreach (var tag in span.Attributes)
                                 {
                                     <OtelAttribute Value="@(new KeyValuePair<string, object?>(tag.Key, tag.Value))" />
                                 }
@@ -61,11 +61,11 @@
                                             <tbody>
                                                 @foreach (var evt in span.Events)
                                                 {
-                                                    <tr>
+                                                    <tr data-testid="span-event-entry">
                                                         <td data-testid="span-event-timestamp">@evt.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ")</td>
                                                         <td data-testid="span-event-name">@evt.Name</td>
                                                         <td>
-                                                            @foreach (var tag in evt.Tags)
+                                                            @foreach (var tag in evt.Attributes)
                                                             {
                                                                 <OtelAttribute Value="@(new KeyValuePair<string, object?>(tag.Key, tag.Value))" />
                                                             }
@@ -99,7 +99,7 @@
                                             <tbody>
                                                 @foreach (var link in span.Links)
                                                 {
-                                                    <tr>
+                                                    <tr data-testid="span-link-entry">
                                                         <td data-testid="span-link-target-trace-id">@link.TraceId</td>
                                                         <td data-testid="span-link-target-span-id">@link.SpanId</td>
                                                         <td>
@@ -119,8 +119,9 @@
                                 </td>
                             </tr>
                         }
-                    }
-                </tbody>
+                    </tbody>
+
+                }
             </table>
         </Card>
     }

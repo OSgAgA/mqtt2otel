@@ -1,6 +1,11 @@
 ﻿using Microsoft.Playwright;
+using mqtt2otel.Manifest;
 using mqtt2otel.ManifestExplorer.Tests.Helper;
+using mqtt2otel.Metadata;
 using mqtt2otel.Shared;
+using mqtt2otel.Stores;
+using System.Drawing;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace mqtt2otel.ManifestExplorer.Tests.JsonTestCases
 {
@@ -44,43 +49,194 @@ namespace mqtt2otel.ManifestExplorer.Tests.JsonTestCases
             // Act and assert
             await this.NavigateToExplorerWithExample(testCase);
 
-            await CheckExampleSetup(testCase);
-
             await CheckDocumentationLinks(testCase);
 
-            await this.Page.GetByTestId("button-apply").ClickAsync();
+            await ExpectManifestEditor(testCase.Setup.Manifest);
 
-            await CheckTestResults(testCase);
+            for (int i = 0; i < testCase.ExpectedResults.Count; i++)
+            {
+                await CheckExampleSetup(testCase.Setup.MqttData[i]);
+
+                await this.Page.GetByTestId("button-apply").ClickAsync();
+
+                await CheckTestResults(testCase.ExpectedResults[i]);
+            }
         }
 
         /// <summary>
         /// Tests if the expected results are shown on the UI.
         /// </summary>
-        /// <param name="testCase">The current test case.</param>
-        private async Task CheckTestResults(TestCaseData testCase)
+        /// <param name="result">The expected test result.</param>
+        private async Task CheckTestResults(ExpectedTestResult result)
         {
             // Check result headers
             var logResultsHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(2);
-            await Expect(logResultsHeader).ToHaveTextAsync($"Logs ({testCase.ExpectedResults[0].Logs.Count})", new LocatorAssertionsToHaveTextOptions() { Timeout = 10000 });
+            await Expect(logResultsHeader).ToHaveTextAsync($"Logs ({result.Logs.Count})", new LocatorAssertionsToHaveTextOptions() { Timeout = 10000 });
 
             var metricsResultHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(1);
-            await Expect(metricsResultHeader).ToHaveTextAsync($"Metrics ({testCase.ExpectedResults[0].Metrics.Count})");
+            await Expect(metricsResultHeader).ToHaveTextAsync($"Metrics ({result.Metrics.Count})");
+
+            var spanResultHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(3);
+            await Expect(spanResultHeader).ToHaveTextAsync($"Spans ({result.Spans.Count})");
 
             var errorResultHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(0);
             await Expect(errorResultHeader).ToHaveTextAsync($"Errors (0)");
 
             // Check test results
-            if (testCase.ExpectedResults[0].Metrics.Count > 0)
+            if (result.Metrics.Count > 0)
             {
                 await metricsResultHeader.ClickAsync();
-                await CheckMetricResults(testCase, metricsResultHeader);
+                await CheckMetricResults(result.Metrics);
             }
 
-            if (testCase.ExpectedResults[0].Logs.Count > 0)
+            if (result.Logs.Count > 0)
             {
                 await logResultsHeader.ClickAsync();
-                await CheckLogResults(testCase);
+                await CheckLogResults(result.Logs);
             }
+
+            if (result.Spans.Count > 0)
+            {
+                await spanResultHeader.ClickAsync();
+                await CheckSpanResults(result.Spans);
+            }
+
+            var internalResultHeader = this.Page.GetByTestId("result-container").GetByRole(AriaRole.Tab).Nth(4);
+            await internalResultHeader.ClickAsync();
+            await CheckInternalStateResults(result.State);
+        }
+
+        /// <summary>
+        /// Checks if all expected span results for the current test case are available on the UI.
+        /// 
+        /// The span data must be visible on the UI for this step.
+        /// </summary>
+        /// <param name="expectedSpans">The epected span results.</param>
+        private async Task CheckSpanResults(List<SpanTestData> expectedSpans)
+        {
+            var spanResultsContainer = this.Page.GetByTestId("span-result-container");
+            var spanItemContainer = spanResultsContainer.GetByTestId("span-item-container");
+
+            await Iterate(spanItemContainer, expectedSpans, "span-entry", async (span, locator) =>
+            {
+                await Expect(locator.GetByTestId("span-traceId")).ToHaveTextAsync(span.TraceId);
+                await Expect(locator.GetByTestId("span-spanId")).ToHaveTextAsync(span.SpanId);
+                await Expect(locator.GetByTestId("span-name")).ToHaveTextAsync(span.Name);
+                await Expect(locator.GetByTestId("span-kind")).ToHaveTextAsync(span.Kind);
+                await Expect(locator.GetByTestId("span-status")).ToHaveTextAsync(span.Status);
+
+                await this.Iterate(locator, span.Attributes, "attribute", async (tag, locator) =>
+                {
+                    await Expect(locator.GetByTestId("attribute-key")).ToHaveTextAsync(tag.Key);
+                    await Expect(locator.GetByTestId("attribute-value")).ToHaveTextAsync(tag.Value?.ToString() ?? string.Empty);
+                });
+
+                await Iterate(spanItemContainer.GetByTestId("span-event-container"), span.Events, "span-event-entry", async (evt, locator) =>
+                {
+                    await Expect(locator.GetByTestId("span-event-name")).ToHaveTextAsync(evt.Name);
+
+                    await this.Iterate(locator, evt.Attributes, "attribute", async (tag, locator) =>
+                    {
+                        await Expect(locator.GetByTestId("attribute-key")).ToHaveTextAsync(tag.Key);
+                        await Expect(locator.GetByTestId("attribute-value")).ToHaveTextAsync(tag.Value?.ToString() ?? string.Empty);
+                    });
+                });
+
+                await Iterate(spanItemContainer.GetByTestId("span-links-container"), span.Events, "span-link-entry", async (evt, locator) =>
+                {
+                    await this.Iterate(locator, evt.Attributes, "attribute", async (tag, locator) =>
+                    {
+                        await Expect(locator.GetByTestId("attribute-key")).ToHaveTextAsync(tag.Key);
+                        await Expect(locator.GetByTestId("attribute-value")).ToHaveTextAsync(tag.Value?.ToString() ?? string.Empty);
+                    });
+                });
+            });
+        }
+
+        /// <summary>
+        /// Checks if all expected internal state results for the current test case are available on the UI.
+        /// 
+        /// The internal state data must be visible on the UI for this step.
+        /// </summary>
+        /// <param name="expectedState">The epected metric results.</param>
+        private async Task CheckInternalStateResults(InternalState expectedState)
+        {
+            await CheckInternalStateResultsForSpans(expectedState.Spans);
+            await CheckInternalStateResultsForSpanContexts(expectedState.SpanContexts);
+        }
+
+        /// <summary>
+        /// Checks the internal state results for spans.
+        /// </summary>
+        /// <param name="expectedSpans">The expected spans.</param>
+        private async Task CheckInternalStateResultsForSpans(List<OtelSpan> expectedSpans)
+        {
+            var spanHeader = this.Page.GetByTestId("internal-state-spans-header");
+            await Expect(this.Page.GetByTestId("internal-state-spans-header-text")).ToHaveTextAsync($"Internal spans ({expectedSpans.Count})");
+
+            await spanHeader.ClickAsync(); // Make span results visible.
+
+            var spanContainer = this.Page.GetByTestId("internal-state-span-container");
+
+            await Iterate(spanContainer, expectedSpans, "internal-state-span-item-container", async (span, itemContainer) =>
+            {
+                var spanEntry = itemContainer.GetByTestId("internal-state-span-entry");
+
+                await Expect(spanEntry.GetByTestId("internal-state-span-id")).ToHaveTextAsync(span.Id);
+                var expectedName = string.IsNullOrWhiteSpace(span.Name) ? "NULL" : span.Name;
+
+                await Expect(spanEntry.GetByTestId("internal-state-span-name")).ToHaveTextAsync(expectedName);
+                await Expect(spanEntry.GetByTestId("internal-state-span-parent")).ToHaveTextAsync(span.Parent ?? "NULL");
+                await Expect(spanEntry.GetByTestId("internal-state-span-kind")).ToHaveTextAsync(span.Kind?.ToString() ?? "NULL");
+                await Expect(spanEntry.GetByTestId("internal-state-span-status")).ToHaveTextAsync(span.Status?.ToString() ?? "NULL");
+
+                await this.Iterate(spanEntry, span.Attributes.Where(attribute => !attribute.IsInternal), "attribute", async (tag, locator) =>
+                {
+                    await Expect(locator.GetByTestId("attribute-key")).ToHaveTextAsync(tag.Key);
+                    await Expect(locator.GetByTestId("attribute-value")).ToHaveTextAsync(tag.Value?.ToString() ?? string.Empty);
+                });
+
+                await Iterate(itemContainer.GetByTestId("internal-state-span-event-container"), span.Events, "internal-state-span-event-entry", async (evt, locator) =>
+                {
+                    await Expect(locator.GetByTestId("internal-state-span-event-name")).ToHaveTextAsync(evt.Name);
+
+                    await this.Iterate(locator, evt.Attributes.Where(attribute => !attribute.IsInternal), "attribute", async (tag, locator) =>
+                    {
+                        await Expect(locator.GetByTestId("attribute-key")).ToHaveTextAsync(tag.Key);
+                        await Expect(locator.GetByTestId("attribute-value")).ToHaveTextAsync(tag.Value?.ToString() ?? string.Empty);
+                    });
+                });
+
+                await Iterate(itemContainer.GetByTestId("internal-state-span-links-container"), span.Events, "internal-state-span-links-entry", async (evt, locator) =>
+                {
+                    await this.Iterate(locator, evt.Attributes.Where(attribute => !attribute.IsInternal), "attribute", async (tag, locator) =>
+                    {
+                        await Expect(locator.GetByTestId("attribute-key")).ToHaveTextAsync(tag.Key);
+                        await Expect(locator.GetByTestId("attribute-value")).ToHaveTextAsync(tag.Value?.ToString() ?? string.Empty);
+                    });
+                });
+            });
+        }
+
+        /// <summary>
+        /// Checks the internal state results for span contexts.
+        /// </summary>
+        /// <param name="expectedContexts">The expected span contexts.</param>
+        private async Task CheckInternalStateResultsForSpanContexts(List<OtelSpanContext> expectedContexts)
+        {
+            var contextHeader = this.Page.GetByTestId("internal-state-span-context-header");
+            await Expect(this.Page.GetByTestId("internal-state-span-context-header-text")).ToHaveTextAsync($"Internal span contexts ({expectedContexts.Count})");
+
+            await contextHeader.ClickAsync(); // Make span context results visible.
+
+            var spanContainer = this.Page.GetByTestId("internal-state-span-context-container");
+
+            await Iterate(spanContainer, expectedContexts, "internal-state-span-context-entry", async (ctx, itemContainer) =>
+            {
+                await Expect(itemContainer.GetByTestId("internal-state-span-context-id")).ToHaveTextAsync(ctx.Id);
+                await Expect(itemContainer.GetByTestId("internal-state-span-context-span-id")).ToHaveTextAsync(ctx.SpanId);
+                await Expect(itemContainer.GetByTestId("internal-state-span-context-trace-id")).ToHaveTextAsync(ctx.TraceId);
+            });
         }
 
         /// <summary>
@@ -88,12 +244,12 @@ namespace mqtt2otel.ManifestExplorer.Tests.JsonTestCases
         /// 
         /// The log result data must be visible on the UI for this step.
         /// </summary>
-        /// <param name="testCase">The current test case.</param>
-        private async Task CheckLogResults(TestCaseData testCase)
+        /// <param name="expectedLogEntries">The expected log data.</param>
+        private async Task CheckLogResults(List<LogTestData> expectedLogEntries)
         {
             var logResultContainer = this.Page.GetByTestId("log-result-container");
 
-            await Iterate(logResultContainer, testCase.ExpectedResults[0].Logs, "log-result-entry", async (log, locator) =>
+            await Iterate(logResultContainer, expectedLogEntries, "log-result-entry", async (log, locator) =>
             {
                 await Expect(locator.GetByTestId("log-result-timestamp")).ToHaveTextAsync(log.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ"));
                 await Expect(locator.GetByTestId("log-result-level")).ToHaveTextAsync(log.LogLevel.ToString());
@@ -130,22 +286,20 @@ namespace mqtt2otel.ManifestExplorer.Tests.JsonTestCases
         /// <summary>
         /// Tests if all setup information is set correctly in the UI.
         /// </summary>
-        /// <param namee="testCase">The current test case.</param>
-        private async Task CheckExampleSetup(TestCaseData testCase)
+        /// <param namee="data">The current test case.</param>
+        private async Task CheckExampleSetup(MqttSetupData data)
         {
-            await Expect(this.Page.GetByTestId("input-topic")).ToHaveValueAsync(testCase.Setup.MqttData[0].Topic);
+            await Expect(this.Page.GetByTestId("input-topic")).ToHaveValueAsync(data.Topic);
 
-            await Expect(this.Page.GetByTestId("input-payload")).ToHaveValueAsync(testCase.Setup.MqttData[0].Payload.Replace("\r", ""));
+            await Expect(this.Page.GetByTestId("input-payload")).ToHaveValueAsync(data.Payload.Replace("\r", ""));
 
             var userPropertiesContainer = this.Page.GetByTestId("user-properties-container");
 
-            await Iterate(userPropertiesContainer, testCase.Setup.MqttData[0].UserProperties, "user-property-item-container", async (prop, propItem) =>
+            await Iterate(userPropertiesContainer, data.UserProperties, "user-property-item-container", async (prop, propItem) =>
             {
                 await Expect(propItem.GetByTestId("input-user-property-name")).ToHaveValueAsync(prop.Name);
                 await Expect(propItem.GetByTestId("input-user-property-value")).ToHaveValueAsync(prop.Value);
             });
-
-            await ExpectManifestEditor(testCase.Setup.Manifest);
         }
 
         /// <summary>
@@ -162,12 +316,12 @@ namespace mqtt2otel.ManifestExplorer.Tests.JsonTestCases
 
                 var link = this.Page.Locator($"a[href$='exampleId={testCase.Setup.Id}']").First;
 
-                    await link.ClickAsync();
+                await link.ClickAsync();
             }
             else
             {
                 string uri = $"{this.ServerAddress}Explorer/?exampleId={testCase.Setup.Id}";
-                await this.Page.GotoAsync(uri, new PageGotoOptions() {  Timeout = 60000 });
+                await this.Page.GotoAsync(uri, new PageGotoOptions() { Timeout = 60000 });
             }
         }
 
@@ -176,12 +330,12 @@ namespace mqtt2otel.ManifestExplorer.Tests.JsonTestCases
         /// 
         /// The metric data must be visible on the UI for this step.
         /// </summary>
-        /// <param name="testCase">The current test case.</param>
-        private async Task CheckMetricResults(TestCaseData testCase, ILocator metricsResultHeader)
+        /// <param name="expectedMetrics">The epected metric results.</param>
+        private async Task CheckMetricResults(List<MetricTestData> expectedMetrics)
         {
             var metricResultsContainer = this.Page.GetByTestId("metric-result-container");
 
-            await Iterate(metricResultsContainer, testCase.ExpectedResults[0].Metrics, "metric-result-entry", async (metric, locator) =>
+            await Iterate(metricResultsContainer, expectedMetrics, "metric-result-entry", async (metric, locator) =>
             {
                 await Expect(locator.GetByTestId("metric-name")).ToHaveTextAsync(metric.Name);
                 await Expect(locator.GetByTestId("metric-type")).ToHaveTextAsync(metric.MetricType.ToString());

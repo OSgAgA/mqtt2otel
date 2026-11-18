@@ -102,7 +102,7 @@
     /// <summary>
     /// The title of the trace tab.
     /// </summary>
-    private string tracesTitle = "Traces";
+    private string tracesTitle = "Spans";
 
     /// <summary>
     /// The text representation of the error result.
@@ -118,7 +118,7 @@
             this.errorTitle = $"Errors ({this.Data.Errors.Count})";
             this.metricsTitle = $"Metrics ({this.Data.Metrics.Count})";
             this.logsTitle = $"Logs ({this.Data.Logs.Count})";
-            this.tracesTitle = $"Traces ({this.Data.Spans.Count})";
+            this.tracesTitle = $"Spans ({this.Data.Spans.Count})";
 
             if (this.Data.HasErrors)
             {
@@ -131,6 +131,9 @@
             else if (this.Data.HasLogs)
             {
                 await this.tabs.ShowTabByIndexAsync(2);
+            } else if (this.Data.HasSpans)
+            {
+                await this.tabs.ShowTabByIndexAsync(3);
             }
 
             this.StateHasChanged();

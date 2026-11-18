@@ -34,7 +34,7 @@ namespace mqtt2otel.Parser
                 if (long.TryParse(result, out var i)) return i;
                 if (double.TryParse(result, out var d)) return d;
                 if (bool.TryParse(result, out var b)) return b;
-                if (DateTime.TryParse(result, out var dt)) return dt;
+                if (DateTimeHelper.TryParseToUtc(result, out var dt)) return dt;
 
                 return result;
             }

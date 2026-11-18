@@ -4,7 +4,9 @@ using Moq;
 using mqtt2otel.Helper;
 using mqtt2otel.Interfaces;
 using mqtt2otel.InternalMetrics;
+using mqtt2otel.Metadata;
 using mqtt2otel.Parser;
+using mqtt2otel.Provider;
 using mqtt2otel.Stores;
 using mqtt2otel.Transformation;
 using System;
@@ -40,7 +42,7 @@ namespace mqtt2otel.Tests.Helper
                 }
 
                 var objectFactory = new Manifest.ObjectFactory(objFactoryLoggerMock.Object, payloadParser, new PayloadTransformation(), dataStores, new ProcessorMeter(), new UsageTelemetryMeter(), 
-                    embeddedExpressionParser, traceStore ?? new LocalTraceStore());
+                    embeddedExpressionParser, traceStore ?? new LocalTraceStore(new FakeTraceIdProvider(null)));
 
                 var loggerMock = new Mock<ILogger>();
 

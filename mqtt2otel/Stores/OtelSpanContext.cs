@@ -28,12 +28,12 @@ namespace mqtt2otel.Stores
         /// <summary>
         /// Gets or sets the trace id.
         /// </summary>
-        public string TraceId { get; set; } = ActivityTraceId.CreateRandom().ToString();
+        public string TraceId { get; set; } = "1234";
 
         /// <summary>
         /// Gets or sets the span id.
         /// </summary>
-        public string SpanId { get; set; } = ActivitySpanId.CreateRandom().ToString();
+        public string SpanId { get; set; } = "4321";
 
         /// <summary>
         /// Gets or sets the timespan for how long a span will be kept alive.

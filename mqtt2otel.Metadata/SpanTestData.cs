@@ -1,4 +1,5 @@
-﻿using mqtt2otel.Shared.Helper;
+﻿using mqtt2otel.Helper;
+using mqtt2otel.Shared.Helper;
 using mqtt2otel.Shated;
 using OpenTelemetry.Metrics;
 using System;
@@ -24,7 +25,7 @@ namespace mqtt2otel.Metadata
         /// <summary>
         /// Gets the tags associated with the span.
         /// </summary>
-        public IEnumerable<KeyValuePair<string, string?>> Tags { get; set; } = new List<KeyValuePair<string, string?>>();
+        public List<OtelAttribute> Attributes { get; set; } = new List<OtelAttribute>();
 
         /// <summary>
         /// Gets the span duration.
@@ -87,7 +88,7 @@ namespace mqtt2otel.Metadata
         {
             this.Connection = connection;
             this.StartUtc = activity.StartTimeUtc;
-            this.Tags = activity.Tags.Where( tag => !tag.Key.StartsWith(InternalAttributes.InternalAttributePrefix) );
+            this.Attributes = activity.TagObjects.Where(tag => !tag.Key.StartsWith(InternalAttributes.InternalAttributePrefix)).ToOtelAttributes();
             this.Duration = activity.Duration;
             this.TraceId = InternalAttributes.GetValueFromTags( activity.Tags, InternalAttributes.TraceId);
             this.SpanId = InternalAttributes.GetValueFromTags(activity.Tags, InternalAttributes.SpanId);
