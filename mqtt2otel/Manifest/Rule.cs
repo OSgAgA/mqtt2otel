@@ -62,19 +62,19 @@ namespace mqtt2otel.Manifest
         /// Gets all blocked items for this rule.
         /// Use the <see cref="BlockItemGate"/> for accessing.
         /// </summary>
-        internal HashSet<string> BlockedItems { get; private set; } = new();
+        internal HashSet<string> BlockedItems { get; set; } = new();
 
         /// <summary>
         /// Gets all blocked topics for this rule.
         /// Use the <see cref="BlockItemGate"/> for accessing.
         /// </summary>
-        internal HashSet<string> BlockedTopics { get; private set; } = new();
+        internal HashSet<string> BlockedTopics { get; set; } = new();
 
         /// <summary>
         /// Gets a dictionary with an item name as the key and a list of topics that are blocked for this item as the value.
         /// Use the <see cref="BlockItemMutex"/> for accessing.
         /// </summary>
-        internal Dictionary<string, HashSet<string>> BlockedItemTopics { get; private set; } = new(StringComparer.Ordinal);
+        internal Dictionary<string, HashSet<string>> BlockedItemTopics { get; set; } = new(StringComparer.Ordinal);
 
         /// <summary>
         /// Gets the lock that can be used to ensure, that access to either <see cref="BlockedItems"/> or <see cref="BlockedItemTopics"/> is thread safe.

@@ -38,7 +38,7 @@ namespace mqtt2otel.Manifest
         /// <summary>
         /// Gets or sets the unique id of this setting. This is mainly used internally.
         /// </summary>
-        public Guid InternalId { get; private set; } = Guid.NewGuid();
+        public Guid InternalId { get; protected set; } = Guid.NewGuid();
 
         /// <summary>
         /// Gets or sets the human readable name of the setting.

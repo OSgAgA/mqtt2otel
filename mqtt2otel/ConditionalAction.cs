@@ -8,7 +8,7 @@ namespace mqtt2otel
     /// <summary>
     /// Represents a rule, that checks for a given condition and, if successful, applies the given action.
     /// </summary>
-    public class ConditionalAction : NamedIdObject
+    public class ConditionalAction<T> : NamedIdObject where T: new()
     {
         /// <summary>
         /// Gets or sets the condition that must be matched to apply the <see cref="ThenAction"/>.
@@ -18,6 +18,6 @@ namespace mqtt2otel
         /// <summary>
         /// Gets or sets the action that should be applied, when the condition matches.
         /// </summary>
-        public ThenAction Then { get; set; } = new();
+        public T Then { get; set; } = new();
     }
 }

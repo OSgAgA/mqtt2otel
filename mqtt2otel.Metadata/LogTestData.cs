@@ -1,10 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
+using mqtt2otel.Shared.Helper;
 using mqtt2otel.Shated;
 using OpenTelemetry.Logs;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text;
+using YamlDotNet.Serialization;
 
 namespace mqtt2otel.Metadata
 {
@@ -89,8 +92,6 @@ namespace mqtt2otel.Metadata
                 entry.ForEachScope<object?>((scope, state) => this.GetScope(scope, state), null);
             }
 
-            this.SpanId = entry.SpanId.ToString();
-            this.TraceId = entry.TraceId.ToString();
             this.TraceState = entry.TraceState;
             this.TraceFlags = entry.TraceFlags;
         }
@@ -147,7 +148,18 @@ namespace mqtt2otel.Metadata
             {
                 foreach (var attribute in typedScope.ToDictionary<string, object>())
                 {
-                    this.Attributes.Add(attribute.Key, attribute.Value);
+                    if (attribute.Key == InternalAttributes.SpanId)
+                    {
+                        this.SpanId = attribute.Value.ToString() ?? string.Empty;
+                    }
+                    else if (attribute.Key == InternalAttributes.TraceId)
+                    {
+                        this.TraceId = attribute.Value.ToString() ?? string.Empty;
+                    } else
+                    {
+                        this.Attributes.Add(attribute.Key, attribute.Value);
+
+                    }
                 }
             }
         }

@@ -1,0 +1,322 @@
+{
+  "Links": {
+    "Open telemetry metrics": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-metrics-section",
+    "Supported functions": "https://mqtt2otel.org/docs/expressions/#available-functions"
+  },
+  "Setup": {
+    "Id": "trace-03",
+    "Name": "Traces playground 3",
+    "Description": "Playground for traces.",
+    "MqttData": [
+      {
+        "Topic": "FactoryA/ProductionLine01/Device_1234/message",
+        "Payload": "Booting up device",
+        "UserProperties": []
+      },
+      {
+        "Topic": "FactoryA/ProductionLine01/Device_1234/sensor/234",
+        "Payload": "Sensor is now available",
+        "UserProperties": []
+      },
+      {
+        "Topic": "FactoryA/ProductionLine01/Device_1234/message",
+        "Payload": "Device up and running",
+        "UserProperties": []
+      }
+    ],
+    "Manifest": "Processors:\n  - Mqtt: \n      Subscriptions:\n        - Topic: \u0022\u002B/\u002B/\u002B/sensor/\u002B\u0022\n    Otel:\n      Logs:\n        - PayloadType: \u0022Text\u0022\n          SpanId: \u0022TopicPath(\u0027[2]\u0027)\u0022\n  - Mqtt: \n      Subscriptions:\n        - Topic: \u0022\u002B/\u002B/\u002B/message\u0022\n    Otel:\n      Traces:\n        - Actions:\n            - When:\n               - \u0022Payload() == \u0027Booting up device\u0027\u0022\n              Then:\n                CreateSpans:\n                 - Id: \u0022TopicPath(\u0027[2]\u0027)\u0022\n                   Name: \u0022Booting\u0022\n            - When:\n               - \u0022Payload() == \u0027Device up and running\u0027\u0022\n              Then:\n                EndSpans:\n                 - Id: \u0022TopicPath(\u0027[2]\u0027)\u0022\n",
+    "Category": "Traces",
+    "Tags": [
+      "text"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResults": [
+    {
+      "Metrics": [],
+      "Logs": [],
+      "Spans": [],
+      "State": {
+        "Spans": [
+          {
+            "Created": "2026-11-19T21:56:11.9265293+01:00",
+            "Context": null,
+            "ParentContext": null,
+            "Attributes": [],
+            "Id": "Device_1234",
+            "Parent": null,
+            "Started": "2026-11-19T20:56:11.8090658Z",
+            "Completed": "",
+            "StartedAsDateTime": "2026-11-19T20:56:11.8090658Z",
+            "CompletedAsDateTime": null,
+            "LinkTo": [],
+            "Events": [],
+            "Kind": 0,
+            "Status": 0,
+            "RetentionInSeconds": 3600,
+            "RetentionStrategy": 7,
+            "RetentionExceededEvent": {
+              "SpanId": "",
+              "Timestamp": null,
+              "TimestampAsDateTime": "2026-11-19T20:56:11.9286293Z",
+              "Attributes": [],
+              "IsActive": true,
+              "OtelConnection": "default-connection",
+              "OtelScope": null,
+              "LogMessageDetails": true,
+              "AllowRuleDeactivation": true,
+              "AllowRuleDeactivationByTopic": true,
+              "AllowRuleDeactivationByItem": true,
+              "BlockedTopicLimit": 3,
+              "Slug": "span_retention_time_expired_6b81d70a",
+              "InternalId": "8d2a47f5-1966-41f6-8931-71f085e7a784",
+              "Name": "Span retention time expired.",
+              "Description": "",
+              "ImportFrom": null
+            },
+            "WaitForLateSpanEventsInS": 0,
+            "IsCompleted": false,
+            "IsRetentionExceeded": false,
+            "IsActive": true,
+            "OtelConnection": "default-connection",
+            "OtelScope": null,
+            "LogMessageDetails": null,
+            "AllowRuleDeactivation": null,
+            "AllowRuleDeactivationByTopic": null,
+            "AllowRuleDeactivationByItem": null,
+            "BlockedTopicLimit": null,
+            "Slug": "booting_189960a6",
+            "InternalId": "f59e45c2-f5d5-4de2-b6fc-e33eb9805b9b",
+            "Name": "Booting",
+            "Description": "",
+            "ImportFrom": null
+          }
+        ],
+        "SpanContexts": [
+          {
+            "Id": "Device_1234",
+            "Sent": null,
+            "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
+            "SpanId": "8ad9cd275e9262b9",
+            "RetentionInSeconds": 3600,
+            "Created": "2026-11-19T20:56:11.9296007Z",
+            "IsExpired": false
+          }
+        ],
+        "TraceIdProviderState": {
+          "ForceReset": false,
+          "State": "0;0"
+        }
+      }
+    },
+    {
+      "Metrics": [],
+      "Logs": [
+        {
+          "Timestamp": "2026-11-19T20:56:12.0346016Z",
+          "LogLevel": 2,
+          "Body": "Sensor is now available",
+          "CategoryName": "mqtt2otel",
+          "Attributes": {},
+          "SpanId": "8ad9cd275e9262b9",
+          "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
+          "TraceState": null,
+          "TraceFlags": 2,
+          "Connection": {
+            "Name": "",
+            "ServiceName": "mqtt2otel",
+            "ServiceVersion": "1.0.0",
+            "ServiceNamespace": null,
+            "MinimumLogLevel": "Information",
+            "EndpointAddress": "http://localhost:4317"
+          }
+        }
+      ],
+      "Spans": [],
+      "State": {
+        "Spans": [
+          {
+            "Created": "2026-11-19T21:56:12.0600171+01:00",
+            "Context": null,
+            "ParentContext": null,
+            "Attributes": [],
+            "Id": "Device_1234",
+            "Parent": null,
+            "Started": "2026-11-19T20:56:11.8090658Z",
+            "Completed": "",
+            "StartedAsDateTime": "2026-11-19T20:56:11.8090658Z",
+            "CompletedAsDateTime": null,
+            "LinkTo": [],
+            "Events": [],
+            "Kind": 0,
+            "Status": 0,
+            "RetentionInSeconds": 3600,
+            "RetentionStrategy": 7,
+            "RetentionExceededEvent": {
+              "SpanId": "",
+              "Timestamp": null,
+              "TimestampAsDateTime": "2026-11-19T20:56:12.0600578Z",
+              "Attributes": [],
+              "IsActive": true,
+              "OtelConnection": "default-connection",
+              "OtelScope": null,
+              "LogMessageDetails": true,
+              "AllowRuleDeactivation": true,
+              "AllowRuleDeactivationByTopic": true,
+              "AllowRuleDeactivationByItem": true,
+              "BlockedTopicLimit": 3,
+              "Slug": "span_retention_time_expired_6b81d70a",
+              "InternalId": "7f12327e-1277-4a98-82b6-02e78fd5b630",
+              "Name": "Span retention time expired.",
+              "Description": "",
+              "ImportFrom": null
+            },
+            "WaitForLateSpanEventsInS": 0,
+            "IsCompleted": false,
+            "IsRetentionExceeded": false,
+            "IsActive": true,
+            "OtelConnection": "default-connection",
+            "OtelScope": null,
+            "LogMessageDetails": null,
+            "AllowRuleDeactivation": null,
+            "AllowRuleDeactivationByTopic": null,
+            "AllowRuleDeactivationByItem": null,
+            "BlockedTopicLimit": null,
+            "Slug": "booting_189960a6",
+            "InternalId": "35617982-20ed-4667-b774-bff209e7d094",
+            "Name": "Booting",
+            "Description": "",
+            "ImportFrom": null
+          }
+        ],
+        "SpanContexts": [
+          {
+            "Id": "Device_1234",
+            "Sent": null,
+            "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
+            "SpanId": "8ad9cd275e9262b9",
+            "RetentionInSeconds": 3600,
+            "Created": "2026-11-19T20:56:12.060125Z",
+            "IsExpired": false
+          }
+        ],
+        "TraceIdProviderState": {
+          "ForceReset": false,
+          "State": "0;0"
+        }
+      }
+    },
+    {
+      "Metrics": [],
+      "Logs": [],
+      "Spans": [
+        {
+          "Connection": {
+            "Name": "",
+            "ServiceName": "mqtt2otel",
+            "ServiceVersion": "1.0.0",
+            "ServiceNamespace": null,
+            "MinimumLogLevel": "Information",
+            "EndpointAddress": "http://localhost:4317"
+          },
+          "StartUtc": "2026-11-19T20:56:11.8090658Z",
+          "Attributes": [],
+          "Duration": "00:00:00.3286624",
+          "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
+          "SpanId": "8ad9cd275e9262b9",
+          "ParentSpanId": "0000000000000000",
+          "Name": "Booting",
+          "Kind": "Internal",
+          "Status": "Unset",
+          "Events": [],
+          "Links": []
+        }
+      ],
+      "State": {
+        "Spans": [
+          {
+            "Created": "2026-11-19T21:56:12.1646867+01:00",
+            "Context": null,
+            "ParentContext": null,
+            "Attributes": [
+              {
+                "Key": "__mqtt2otel__internal__trace_id",
+                "Value": "dc60fcb9f59f80b41180ada8aaa3de36",
+                "IsInternal": true
+              },
+              {
+                "Key": "__mqtt2otel__internal__span_id",
+                "Value": "8ad9cd275e9262b9",
+                "IsInternal": true
+              }
+            ],
+            "Id": "Device_1234",
+            "Parent": null,
+            "Started": "2026-11-19T20:56:11.8090658Z",
+            "Completed": "2026-11-19T20:56:12.1377282Z",
+            "StartedAsDateTime": "2026-11-19T20:56:11.8090658Z",
+            "CompletedAsDateTime": "2026-11-19T20:56:12.1377282Z",
+            "LinkTo": [],
+            "Events": [],
+            "Kind": 0,
+            "Status": 0,
+            "RetentionInSeconds": 3600,
+            "RetentionStrategy": 7,
+            "RetentionExceededEvent": {
+              "SpanId": "Device_1234",
+              "Timestamp": null,
+              "TimestampAsDateTime": "2026-11-19T20:56:12.1650329Z",
+              "Attributes": [],
+              "IsActive": true,
+              "OtelConnection": "default-connection",
+              "OtelScope": null,
+              "LogMessageDetails": true,
+              "AllowRuleDeactivation": true,
+              "AllowRuleDeactivationByTopic": true,
+              "AllowRuleDeactivationByItem": true,
+              "BlockedTopicLimit": 3,
+              "Slug": "span_retention_time_expired_6b81d70a",
+              "InternalId": "33808ab0-ef46-440d-b2b9-29fdfe2dd0bd",
+              "Name": "Span retention time expired.",
+              "Description": "",
+              "ImportFrom": null
+            },
+            "WaitForLateSpanEventsInS": 0,
+            "IsCompleted": true,
+            "IsRetentionExceeded": false,
+            "IsActive": true,
+            "OtelConnection": "default-connection",
+            "OtelScope": null,
+            "LogMessageDetails": null,
+            "AllowRuleDeactivation": null,
+            "AllowRuleDeactivationByTopic": null,
+            "AllowRuleDeactivationByItem": null,
+            "BlockedTopicLimit": null,
+            "Slug": "booting_189960a6",
+            "InternalId": "62954f99-b2f7-4a6f-ad84-c088c587cedd",
+            "Name": "Booting",
+            "Description": "",
+            "ImportFrom": null
+          }
+        ],
+        "SpanContexts": [
+          {
+            "Id": "Device_1234",
+            "Sent": null,
+            "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
+            "SpanId": "8ad9cd275e9262b9",
+            "RetentionInSeconds": 3600,
+            "Created": "2026-11-19T20:56:12.1650785Z",
+            "IsExpired": false
+          }
+        ],
+        "TraceIdProviderState": {
+          "ForceReset": false,
+          "State": "0;0"
+        }
+      }
+    }
+  ],
+  "ShowResultDetails": false
+}

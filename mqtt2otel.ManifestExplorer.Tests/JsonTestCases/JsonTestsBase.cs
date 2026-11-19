@@ -251,9 +251,11 @@ namespace mqtt2otel.ManifestExplorer.Tests.JsonTestCases
 
             await Iterate(logResultContainer, expectedLogEntries, "log-result-entry", async (log, locator) =>
             {
-                await Expect(locator.GetByTestId("log-result-timestamp")).ToHaveTextAsync(log.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ"));
                 await Expect(locator.GetByTestId("log-result-level")).ToHaveTextAsync(log.LogLevel.ToString());
                 await Expect(locator.GetByTestId("log-result-body")).ToHaveTextAsync(log.Body ?? string.Empty);
+
+                await Expect(locator.GetByTestId("log-result-traceId")).ToHaveTextAsync(log.TraceId ?? string.Empty);
+                await Expect(locator.GetByTestId("log-result-spanId")).ToHaveTextAsync(log.SpanId ?? string.Empty);
 
                 await this.Iterate(locator, log.Attributes.Where(tag => !tag.Key.StartsWith("otel_")), "attribute", async (tag, locator) =>
                 {

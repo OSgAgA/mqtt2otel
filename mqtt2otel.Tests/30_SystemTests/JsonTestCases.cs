@@ -113,7 +113,7 @@ namespace mqtt2otel.Tests._30_SystemTests
                     } // explicit dispose triggers flush.
 
                     this.AssertMetricsExpectations(testCase.ExpectedResults[currentIndex].Metrics, exportBuilder);
-                    this.AssertLogExpectations(testCase, exportBuilder);
+                    this.AssertLogExpectations(testCase.ExpectedResults[currentIndex], exportBuilder);
                     this.AssertTraceExpectations(testCase.ExpectedResults[currentIndex].Spans, exportBuilder);
                     this.AssertInternalStateExpectations(testCase.ExpectedResults[currentIndex].State, traceStore.GetFullState());
 
@@ -138,24 +138,27 @@ namespace mqtt2otel.Tests._30_SystemTests
         /// <summary>
         /// Asserts that all expectations of logs are meat.
         /// </summary>
-        /// <param name="testCase"></param>
+        /// <param name="result">The expected test result.</param>
         /// <param name="exportBuilder"></param>
-        private void AssertLogExpectations(TestCaseData testCase, OtelTestExporterBuilder exportBuilder)
+        private void AssertLogExpectations(ExpectedTestResult result, OtelTestExporterBuilder exportBuilder)
         {
             this._output.WriteLine($"{DateTime.UtcNow}: Asserting expected log results.");
 
-            AssertEqual(testCase.ExpectedResults[0].Logs.Count, exportBuilder.GetAllLogs().Count(), "Logs.Count");
+            AssertEqual(result.Logs.Count, exportBuilder.GetAllLogs().Count(), "Logs.Count");
 
             var logs = exportBuilder.GetAllLogs().Select(keyValue => keyValue.Value).ToList();
 
             int logCount = 0;
-            foreach (var expectedLogEntry in testCase.ExpectedResults[0].Logs)
+            foreach (var expectedLogEntry in result.Logs)
             {
                 Assert.True(exportBuilder.GetAllLogs().Count() > logCount);
                 var logEntry = logs[logCount++];
                 AssertEqual(expectedLogEntry.Body, logEntry.Body, "LogEntry.Body");
                 AssertEqual(expectedLogEntry.LogLevel, logEntry.LogLevel, "LogEntry.LogLevel");
-                AssertEqual(expectedLogEntry.Timestamp, logEntry.Timestamp, "LogLevel.Timestamp");
+
+                var testData = new LogTestData(logEntry, new Shated.OtelServerConnectionInfo());
+                AssertEqual(expectedLogEntry.TraceId, testData.TraceId, "LogEntry.TraceId");
+                AssertEqual(expectedLogEntry.SpanId, testData.SpanId, "LogEntry.SpanId");
             }
 
             this._output.WriteLine($"{DateTime.UtcNow}: Assert logs completed.");

@@ -213,7 +213,8 @@ namespace mqtt2otel
                             if (link.Context != null)
                             {
                                 links.Add(new ActivityLink(link.Context.ToActivityContext(), link.Attributes.ToActivityTagsCollection()));
-                            } else
+                            }
+                            else
                             {
                                 this.internalLogger.LogError("Internal error: Span link was provided without a context. Skipping link creation.");
                             }
@@ -224,7 +225,10 @@ namespace mqtt2otel
 
                         var test = span.Attributes.ToKeyValuePairs();
 
-                        using var activity = source.StartActivity(name: span.Name, kind: span.Kind.Value, tags: span.Attributes.ToKeyValuePairs(), links: links, startTime: span.StartedAsDateTime.Value);
+                        var previous = Activity.Current;
+                        Activity.Current = null;
+                        using var activity = source.StartActivity( name: span.Name, kind: span.Kind.Value, tags: span.Attributes.ToKeyValuePairs(), links: links, startTime: span.StartedAsDateTime.Value);
+                        Activity.Current = previous;
 
                         if (activity == null)
                         {
@@ -238,7 +242,7 @@ namespace mqtt2otel
                         {
                             activity.SetParentId(span.ParentContext.Value.TraceId, span.ParentContext.Value.SpanId);
                         }
-
+                        
                         activity.SetStatus(span.Status.Value);
 
                         foreach (var evt in span.Events)
@@ -350,7 +354,7 @@ namespace mqtt2otel
                     OtlpExportProtocol = OtlpExportProtocol.Grpc,
                     ExportProcessorType = ExportProcessorType.Simple
                 };
-               
+
                 this.exporterBuilder.AddToTracerProviderBuilder(builder, connection);
 
                 var source = new ActivitySource($"mqtt2otel.{otelConnection.Slug}");
@@ -694,6 +698,8 @@ namespace mqtt2otel
                 tracerProvider.ForceFlush();
                 tracerProvider.Dispose();
             }
+
+            this.dataStores.LoggerStore.DeleteStore();
         }
     }
 }

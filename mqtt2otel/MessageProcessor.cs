@@ -11,6 +11,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace mqtt2otel
@@ -164,7 +165,26 @@ namespace mqtt2otel
 
                         var parsingContext = new ParsingContext(combinedVariables, message);
 
-                        foreach (var span in rule.CreateSpans)
+                        var ruleClone = rule.Clone();
+                        foreach (var action in ruleClone.Actions)
+                        {
+                            bool success = true;
+
+                            foreach (var condition in action.When)
+                            {
+                                if (!string.IsNullOrWhiteSpace(condition))
+                                {
+                                    success &= this.payloadParser.Parse<bool>(condition, parsingContext);
+                                }
+                            }
+
+                            if (success)
+                            {
+                                action.Then.Apply(ruleClone, this.embeddedExpressionParser, this.payloadParser, parsingContext);
+                            }
+                        }
+
+                        foreach (var span in ruleClone.CreateSpans)
                         {
                             lock (span.BlockItemGate)
                             {
@@ -174,7 +194,7 @@ namespace mqtt2otel
                             try
                             {
                                 var clone = span.Clone();
-                                clone.Expand(this.embeddedExpressionParser, this.payloadParser, parsingContext);
+                                clone.Expand(this.embeddedExpressionParser, this.payloadParser, parsingContext);                                
                                 if (string.IsNullOrEmpty(clone.Started)) clone.Started = this.GetTimestampFromMessageOrUtcNow(message).ToString("O");
                                 if (clone.Kind == null) clone.Kind = ActivityKind.Internal;
                                 if (clone.Status == null) clone.Status = ActivityStatusCode.Unset;
@@ -187,7 +207,7 @@ namespace mqtt2otel
                             }
                         }
 
-                        foreach (var evt in rule.CreateEvents)
+                        foreach (var evt in ruleClone.CreateEvents)
                         {
                             lock (evt.BlockItemGate)
                             {
@@ -209,7 +229,7 @@ namespace mqtt2otel
                             }
                         }
 
-                        foreach (var span in rule.EndSpans)
+                        foreach (var span in ruleClone.EndSpans)
                         {
                             lock (span.BlockItemGate)
                             {

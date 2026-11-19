@@ -10,6 +10,8 @@
                         <th>Timestamp</th>
                         <th>Level</th>
                         <th>Body</th>
+                        <th>TraceId</th>
+                        <th>SpanId</th>
                         <th>Attribute</th>
                     </tr>
                 </thead>
@@ -29,6 +31,8 @@
                             <td data-testid="log-result-timestamp">@logEntry.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ")</td>
                             <td data-testid="log-result-level">@logEntry.LogLevel</td>
                             <td data-testid="log-result-body">@logEntry.Body</td>
+                            <td data-testid="log-result-traceId">@logEntry.TraceId</td>
+                            <td data-testid="log-result-spanId">@logEntry.SpanId</td>
                             <td>
                                 @foreach (var tag in logEntry.Attributes.Where(tag => !tag.Key.StartsWith("otel_")))
                                 {
