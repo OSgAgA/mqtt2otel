@@ -114,7 +114,10 @@
     /// </summary>
     private string errorText = string.Empty;
 
-    protected override async Task OnParametersSetAsync()
+    /// <summary>
+    /// Automatically selects a tab based on the current input. The first tab containing values will be selected. 
+    /// </summary>
+    public async Task AutoSelectTab()
     {
         if (this.Data != null)
         {

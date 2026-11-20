@@ -69,7 +69,7 @@
 
             <div class="row">
                 <div class="col">
-                    <ResultViewer Data="@this.Result" @bind-ShowDetails="@this.Data.ShowResultDetails" />
+                    <ResultViewer @ref="resultViewer" Data="@this.Result" @bind-ShowDetails="@this.Data.ShowResultDetails" />
                 </div>
             </div>
 
@@ -131,6 +131,11 @@
     private bool isAnimating;
 
     /// <summary>
+    /// Reference to the result viewer control.
+    /// </summary>
+    private ResultViewer? resultViewer = null;
+
+    /// <summary>
     /// Apply the provided data and set the result tabs.
     /// </summary>
     private async Task Apply()
@@ -155,6 +160,12 @@
         await this.GotoNextMessage();
 
         this.StateHasChanged();
+
+        if (this.resultViewer != null)
+        {
+            await this.resultViewer.AutoSelectTab();
+        }
+
     }
 
     /// <summary>
