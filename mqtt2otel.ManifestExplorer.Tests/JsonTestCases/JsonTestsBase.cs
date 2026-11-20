@@ -142,9 +142,9 @@ namespace mqtt2otel.ManifestExplorer.Tests.JsonTestCases
                     });
                 });
 
-                await Iterate(spanItemContainer.GetByTestId("span-links-container"), span.Events, "span-link-entry", async (evt, locator) =>
+                await Iterate(spanItemContainer.GetByTestId("span-links-container"), span.Links, "span-link-entry", async (link, locator) =>
                 {
-                    await this.Iterate(locator, evt.Attributes, "attribute", async (tag, locator) =>
+                    await this.Iterate(locator, link.Tags ?? new List<KeyValuePair<string, object?>>(), "attribute", async (tag, locator) =>
                     {
                         await Expect(locator.GetByTestId("attribute-key")).ToHaveTextAsync(tag.Key);
                         await Expect(locator.GetByTestId("attribute-value")).ToHaveTextAsync(tag.Value?.ToString() ?? string.Empty);
@@ -207,7 +207,7 @@ namespace mqtt2otel.ManifestExplorer.Tests.JsonTestCases
                     });
                 });
 
-                await Iterate(itemContainer.GetByTestId("internal-state-span-links-container"), span.Events, "internal-state-span-links-entry", async (evt, locator) =>
+                await Iterate(itemContainer.GetByTestId("internal-state-span-links-container"), span.LinkTo, "internal-state-span-links-entry", async (evt, locator) =>
                 {
                     await this.Iterate(locator, evt.Attributes.Where(attribute => !attribute.IsInternal), "attribute", async (tag, locator) =>
                     {

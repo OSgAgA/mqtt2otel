@@ -109,6 +109,7 @@ namespace mqtt2otel.Tests._30_SystemTests
                         await this.SendMessage(mqttCoordinator, mqttData);
                         var completedSpans = traceStore.GetCompletedOrTimeOutSpans();
                         otelCoordinator.CreateSpans(completedSpans);
+                        traceStore.RemoveSpans(completedSpans);
                         
                     } // explicit dispose triggers flush.
 

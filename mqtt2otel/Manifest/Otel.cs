@@ -19,6 +19,7 @@ namespace mqtt2otel.Manifest
         /// 
         /// Set to null if no topic parsing should be applied.
         /// </summary>
+        [InheritedProperty]
         public string? TopicAttributes { get; set; } = null;
 
         /// <summary>

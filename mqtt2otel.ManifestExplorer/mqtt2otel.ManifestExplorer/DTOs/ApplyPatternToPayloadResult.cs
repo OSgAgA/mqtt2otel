@@ -63,6 +63,11 @@ namespace mqtt2otel.ManifestExplorer.DTOs
         public bool HasErrors { get => this.Errors.Count > 0; }
 
         /// <summary>
+        /// Gets a value indicating whether the result contains internal state information.
+        /// </summary>
+        public bool HasInternalState { get => this.InternalState.Spans.Count > 0 || this.InternalState.SpanContexts.Count > 0; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ApplyPatternToPayloadResult"/> class.
         /// 
         /// This constructor is for serialization only and should not be used directly.

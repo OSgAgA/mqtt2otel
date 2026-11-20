@@ -26,7 +26,11 @@
         <div class="col-12 col-lg-5">
             <h3 style="text-align: center;">MQTT</h3>
             <div style="padding:10px;">
-                <MqttInput Data="this.Data.Setup.MqttData[this.CurrentMessage]" />
+                <div class="slider-viewport">
+                    <div class="slider @slideClass" @key="slideKey">
+                        <MqttInput Data="this.Data.Setup.MqttData[this.CurrentMessage]" />
+                    </div>
+                </div>
 
                 <div class="col" style="text-align: right; margin-top:20px;">
                     <button title="Go to previous message" class="btn btn-primary withShadow" style="background-color: #44b8e7" @onclick="GotoPreviousMessage"><i class="bi bi-play-fill" style="transform: scaleX(-1); display: inline-block;"></i></button>
@@ -112,6 +116,21 @@
     private int CurrentMessage = 0;
 
     /// <summary>
+    /// Enables the code to set a slide animation class.
+    /// </summary>
+    private string slideClass = "";
+
+    /// <summary>
+    /// Changes the div key, to ensure, that the animation is successful.
+    /// </summary>
+    private int slideKey;
+
+    /// <summary>
+    /// Protects an animation to be started twice.
+    /// </summary>
+    private bool isAnimating;
+
+    /// <summary>
     /// Apply the provided data and set the result tabs.
     /// </summary>
     private async Task Apply()
@@ -133,7 +152,7 @@
         var response = await httpClient.PostAsJsonAsync("api/ManifestExplorer/ApplyPatternToPayload", request);
         this.Result = await response.Content.ReadFromJsonAsync<ApplyPatternToPayloadResult>();
 
-        this.GotoNextMessage();
+        await this.GotoNextMessage();
 
         this.StateHasChanged();
     }
@@ -189,79 +208,133 @@
     }
 
     /// <summary>
+    /// Represents the available slide directions.
+    /// </summary>
+    private enum SlideDirection 
+    { 
+        /// <summary>
+        /// Slide to the next element.
+        /// </summary>
+        Forward, 
+
+        /// <summary>
+        /// Slide to the previous element.
+        /// </summary>
+        Back 
+    }
+
+    /// <summary>
+    /// Slides the mqtt input cards to the given direction, executes the changeData action and then slides the 
+    /// cards back in.
+    /// </summary>
+    /// <param name="direction">The direction forward: to the left, back: to the right.</param>
+    /// <param name="changeData">The aciton that will be executed, after the first animation is completed and before the second animation is started.</param>
+    private async Task Slide(SlideDirection direction, Action changeData)
+    {
+        if (isAnimating) return;
+        isAnimating = true;
+
+        bool forward = direction == SlideDirection.Forward;
+
+        // Phase 1: old content leaves (forward -> left, back -> right)
+        slideClass = forward ? "slide-out-left" : "slide-out-right";
+        StateHasChanged();
+        await Task.Delay(250);
+
+        changeData();
+
+        // Phase 2: new content enters from the opposite side
+        // (forward -> from the right, back -> from the left)
+        slideKey++;
+        slideClass = forward ? "slide-in-right" : "slide-in-left";
+        isAnimating = false;
+    }
+
+    /// <summary>
     /// Goes to the previous mqtt message (stays at number 1, if no previous message exists).
     /// </summary>
-    private void GotoPreviousMessage()
+    private async Task GotoPreviousMessage()
     {
-        if (this.CurrentMessage > 0) this.CurrentMessage--;
+        if (this.CurrentMessage <= 0) return;
 
-        this.StateHasChanged();
+        await this.Slide(SlideDirection.Back, () => this.CurrentMessage--);
     }
 
     /// <summary>
     /// Goes to the next mqtt message (if existing).
     /// </summary>
-    private void GotoNextMessage()
+    private async Task GotoNextMessage()
     {
-        if (this.Data.Setup.MqttData.Count > this.CurrentMessage + 1) this.CurrentMessage++;
+        if (this.Data.Setup.MqttData.Count <= this.CurrentMessage + 1) return;
+
+        await this.Slide(SlideDirection.Forward, () => this.CurrentMessage++);
     }
 
 
     /// <summary>
     /// Adds a new empty mqtt message.
     /// </summary>
-    private void AddEmptyMessage()
+    private async Task AddEmptyMessage()
     {
-        this.Data.Setup.MqttData.Add(new Metadata.MqttSetupData());
+        this.Data.Setup.MqttData.Insert(this.CurrentMessage+1, new Metadata.MqttSetupData());
 
-        this.CurrentMessage++;
+        await this.Slide(SlideDirection.Forward, () => this.CurrentMessage++);
     }
 
     /// <summary>
     /// Clones the current message and adds it right after the current message.
     /// </summary>
-    private void CloneCurrentMessage()
+    private async Task CloneCurrentMessage()
     {
-        this.Data.Setup.MqttData.Add(this.Data.Setup.MqttData[this.CurrentMessage].Clone());
+        this.Data.Setup.MqttData.Insert(this.CurrentMessage+1, this.Data.Setup.MqttData[this.CurrentMessage].Clone());
 
-        this.CurrentMessage++;
+        await this.Slide(SlideDirection.Forward, () => this.CurrentMessage++);
     }
 
     /// <summary>
     /// Deletes current message. Creates new empty message if no messages are left.
     /// </summary>
-    private void DeleteCurrentMessage()
+    private async Task DeleteCurrentMessage()
     {
-        this.Data.Setup.MqttData.RemoveAt(this.CurrentMessage);
+        await this.Slide(SlideDirection.Back, () =>
+        {
+            this.Data.Setup.MqttData.RemoveAt(this.CurrentMessage);
 
-        if (this.Data.Setup.MqttData.Count == 0) this.AddEmptyMessage();
+            if (this.Data.Setup.MqttData.Count == 0) this.Data.Setup.MqttData.Add(new Metadata.MqttSetupData());
 
-        if (this.Data.Setup.MqttData.Count - 1 <= this.CurrentMessage && this.CurrentMessage > 0) this.CurrentMessage--;
+            if (this.Data.Setup.MqttData.Count - 1 <= this.CurrentMessage && this.CurrentMessage > 0) this.CurrentMessage--;
+        });
     }
 
     /// <summary>
     /// Moves the current message to the left.
     /// </summary>
-    private void MoveCurrentMessageLeft()
+    private async Task MoveCurrentMessageLeft()
     {
         if (this.CurrentMessage < 1) return;
 
-        var message = this.Data.Setup.MqttData[this.CurrentMessage];
+        await this.Slide(SlideDirection.Back, () =>
+        {
+            var message = this.Data.Setup.MqttData[this.CurrentMessage];
 
-        this.Data.Setup.MqttData.RemoveAt(this.CurrentMessage);
-        this.Data.Setup.MqttData.Insert(--this.CurrentMessage, message);
+            this.Data.Setup.MqttData.RemoveAt(this.CurrentMessage);
+            this.Data.Setup.MqttData.Insert(--this.CurrentMessage, message);
+        });
     }
 
     /// <summary>
     /// Moves the current message to the right.
     /// </summary>
-    private void MoveCurrentMessageRight()
+    private async Task MoveCurrentMessageRight()
     {
         if (this.CurrentMessage >= this.Data.Setup.MqttData.Count - 1) return;
 
-        var message = this.Data.Setup.MqttData[this.CurrentMessage];
+        await this.Slide(SlideDirection.Forward, () =>
+        {
+            var message = this.Data.Setup.MqttData[this.CurrentMessage];
 
-        this.Data.Setup.MqttData.RemoveAt(this.CurrentMessage);
-        this.Data.Setup.MqttData.Insert(++this.CurrentMessage, message);
+            this.Data.Setup.MqttData.RemoveAt(this.CurrentMessage);
+            this.Data.Setup.MqttData.Insert(++this.CurrentMessage, message);
+        });
     }
 }

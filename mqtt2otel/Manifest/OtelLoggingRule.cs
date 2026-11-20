@@ -17,12 +17,12 @@ namespace mqtt2otel.Manifest
         public string CategoryName { get; set; } = "mqtt2otel";
 
         /// <summary>
-        /// Gets or sets a filter expression (<see cref="IPayloadParser"/> for the processed payload.
+        /// Gets or sets a <see cref="TopicAttributeParser"/> pattern for parsing a topic into attributes.
         /// 
-        /// This filter is applied to every payload received by the logger and reduces the data to the result
-        /// of the expression. This will be applied after <see cref="Transform"/>.
+        /// Set to null if no topic parsing should be applied.
         /// </summary>
-        public string Filter { get; set; } = "TEXT:.";
+        [InheritedProperty]
+        public string? TopicAttributes { get; set; } = null;
 
         /// <summary>
         /// Gets or sets all attributes that should be added to the open telemetry log message.
@@ -36,8 +36,7 @@ namespace mqtt2otel.Manifest
         public OtelLoggingPayloadType PayloadType { get; set; } = OtelLoggingPayloadType.Text;
 
         /// <summary>
-        /// Gets or sets a transformation expression (<see cref="Interfaces.IPayloadTransformation"/>) that will be applied to the payload before 
-        /// the <see cref="Filter"/> expression.
+        /// Gets or sets a transformation expression (<see cref="Interfaces.IPayloadTransformation"/>) that will be applied to the payload.
         /// 
         /// Leave empty to not apply any transformation to the payload.
         /// </summary>
@@ -72,7 +71,6 @@ namespace mqtt2otel.Manifest
         /// <param name="result">The validation result.</param>
         public void Validate(string context, ValidationResult result)
         {
-            if (string.IsNullOrWhiteSpace(this.Filter)) result.AddError($"{this.Name}: Filter may not be empty.");
             this.Attributes.ForEach(attribute => attribute.Validate($"{this.Name}/Attributes", result));
         }
     }

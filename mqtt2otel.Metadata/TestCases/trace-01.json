@@ -36,7 +36,7 @@
             "MinimumLogLevel": "Information",
             "EndpointAddress": "http://localhost:4317"
           },
-          "StartUtc": "2026-11-18T14:30:20.2527247Z",
+          "StartUtc": "2026-11-20T16:17:24.5693193Z",
           "Attributes": [
             {
               "Key": "Hello",
@@ -54,10 +54,10 @@
               "IsInternal": false
             }
           ],
-          "Duration": "00:00:00.0036534",
+          "Duration": "00:00:00.0000506",
           "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
           "SpanId": "ba74db659763c09f",
-          "ParentSpanId": "d24e557bb23a6eaa",
+          "ParentSpanId": "0000000000000000",
           "Name": "Start running",
           "Kind": "Server",
           "Status": "Error",
@@ -65,7 +65,7 @@
             {
               "Name": "Something happened",
               "Attributes": [],
-              "Timestamp": "2026-11-18T14:30:20.2563781+00:00"
+              "Timestamp": "2026-11-20T16:17:24.5693699+00:00"
             }
           ],
           "Links": [
@@ -80,115 +80,11 @@
       "State": {
         "Spans": [
           {
-            "Created": "2026-11-18T15:30:20.3922055+01:00",
-            "Context": null,
-            "ParentContext": null,
-            "Attributes": [
-              {
-                "Key": "Hello",
-                "Value": "world",
-                "IsInternal": false
-              },
-              {
-                "Key": "mqtt2otel_error_prop_completed",
-                "Value": "End timestamp was earlier than a timestamp inside a span event.",
-                "IsInternal": false
-              },
-              {
-                "Key": "mqtt2otel_modified",
-                "Value": true,
-                "IsInternal": false
-              },
-              {
-                "Key": "__mqtt2otel__internal__trace_id",
-                "Value": "dc60fcb9f59f80b41180ada8aaa3de36",
-                "IsInternal": true
-              },
-              {
-                "Key": "__mqtt2otel__internal__span_id",
-                "Value": "ba74db659763c09f",
-                "IsInternal": true
-              }
-            ],
-            "Id": "4711",
-            "Parent": "MyParent",
-            "Started": "2026-11-18T14:30:20.2527247Z",
-            "Completed": "2026-11-18T14:30:20.2549446Z",
-            "StartedAsDateTime": "2026-11-18T14:30:20.2527247Z",
-            "CompletedAsDateTime": "2026-11-18T14:30:20.2549446Z",
-            "LinkTo": [
-              {
-                "Target": "4321",
-                "Attributes": [],
-                "Context": null
-              }
-            ],
-            "Events": [
-              {
-                "SpanId": "4711",
-                "Timestamp": "2026-11-18T14:30:20.2563781Z",
-                "TimestampAsDateTime": "2026-11-18T14:30:20.2563781Z",
-                "Attributes": [],
-                "IsActive": true,
-                "OtelConnection": "default-connection",
-                "OtelScope": null,
-                "LogMessageDetails": true,
-                "AllowRuleDeactivation": true,
-                "AllowRuleDeactivationByTopic": true,
-                "AllowRuleDeactivationByItem": true,
-                "BlockedTopicLimit": 3,
-                "Slug": "something_happened_cab63b1e",
-                "InternalId": "ba018048-846d-40c0-863b-b70bb15e7ffe",
-                "Name": "Something happened",
-                "Description": "",
-                "ImportFrom": null
-              }
-            ],
-            "Kind": 1,
-            "Status": 2,
-            "RetentionInSeconds": 3600,
-            "RetentionStrategy": 7,
-            "RetentionExceededEvent": {
-              "SpanId": "4711",
-              "Timestamp": null,
-              "TimestampAsDateTime": "2026-11-18T14:30:20.3965927Z",
-              "Attributes": [],
-              "IsActive": true,
-              "OtelConnection": "default-connection",
-              "OtelScope": null,
-              "LogMessageDetails": true,
-              "AllowRuleDeactivation": true,
-              "AllowRuleDeactivationByTopic": true,
-              "AllowRuleDeactivationByItem": true,
-              "BlockedTopicLimit": 3,
-              "Slug": "span_retention_time_expired_6b81d70a",
-              "InternalId": "44ae7203-8904-42fc-8213-1b9484ac5a0b",
-              "Name": "Span retention time expired.",
-              "Description": "",
-              "ImportFrom": null
-            },
-            "WaitForLateSpanEventsInS": 0,
-            "IsCompleted": true,
-            "IsRetentionExceeded": false,
-            "IsActive": true,
-            "OtelConnection": "default-connection",
-            "OtelScope": null,
-            "LogMessageDetails": true,
-            "AllowRuleDeactivation": true,
-            "AllowRuleDeactivationByTopic": true,
-            "AllowRuleDeactivationByItem": true,
-            "BlockedTopicLimit": 3,
-            "Slug": "start_running_19af2d87",
-            "InternalId": "10ca3c18-2217-4d35-8a95-0ddb7a717f6a",
-            "Name": "Start running",
-            "Description": "",
-            "ImportFrom": null
-          },
-          {
-            "Created": "2026-11-18T15:30:20.3967475+01:00",
+            "Created": "2026-11-20T17:17:24.5754357+01:00",
             "Context": null,
             "ParentContext": null,
             "Attributes": [],
+            "TopicAttributes": null,
             "Id": "1234",
             "Parent": null,
             "Started": null,
@@ -199,8 +95,9 @@
             "Events": [
               {
                 "SpanId": "1234",
-                "Timestamp": "2026-11-18T14:30:20.2573671Z",
-                "TimestampAsDateTime": "2026-11-18T14:30:20.2573671Z",
+                "TopicAttributes": null,
+                "Timestamp": "2026-11-20T16:17:24.5694276Z",
+                "TimestampAsDateTime": "2026-11-20T16:17:24.5694276Z",
                 "Attributes": [],
                 "IsActive": true,
                 "OtelConnection": "default-connection",
@@ -211,7 +108,7 @@
                 "AllowRuleDeactivationByItem": true,
                 "BlockedTopicLimit": 3,
                 "Slug": "something_else_happened_7913a030",
-                "InternalId": "70af6f8b-7fc6-4cac-b0ff-b15d2ef1c9e3",
+                "InternalId": "904e8346-c3ff-47a9-aeaf-c9ced3ee23d3",
                 "Name": "Something else happened",
                 "Description": "",
                 "ImportFrom": null
@@ -234,7 +131,7 @@
             "AllowRuleDeactivationByItem": null,
             "BlockedTopicLimit": null,
             "Slug": "x_e3b0c442",
-            "InternalId": "cf2cdf6c-c261-4f56-8729-e0f41eed725f",
+            "InternalId": "c5dce63f-5308-4a2b-afef-e4c66252f09d",
             "Name": "",
             "Description": "",
             "ImportFrom": null
@@ -247,16 +144,7 @@
             "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
             "SpanId": "8ad9cd275e9262b9",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-18T14:30:20.3968369Z",
-            "IsExpired": false
-          },
-          {
-            "Id": "4711",
-            "Sent": null,
-            "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
-            "SpanId": "ba74db659763c09f",
-            "RetentionInSeconds": 3600,
-            "Created": "2026-11-18T14:30:20.3970883Z",
+            "Created": "2026-11-20T16:17:24.5755011Z",
             "IsExpired": false
           },
           {
@@ -265,7 +153,7 @@
             "TraceId": "145fcce57bdedf99c500859790298775",
             "SpanId": "a1589e0ad0dee6ac",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-18T14:30:20.39709Z",
+            "Created": "2026-11-20T16:17:24.5755076Z",
             "IsExpired": false
           },
           {
@@ -274,7 +162,7 @@
             "TraceId": "244d5459f93ce26a5099e5d5b242f37c",
             "SpanId": "a5ab7b5b13bce3de",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-18T14:30:20.3970907Z",
+            "Created": "2026-11-20T16:17:24.5755091Z",
             "IsExpired": false
           }
         ],

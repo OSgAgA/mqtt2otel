@@ -19,7 +19,7 @@
             <Content>
                 <div>
                     <Card style="margin:10px;">
-                        <TextAreaInput class="form-control w-100" title="Errors" @bind-Value="@this.errorText" style="color: #660000; font-weight:500;" readonly Rows="10"/>
+                        <TextAreaInput class="form-control w-100" title="Errors" @bind-Value="@this.errorText" style="color: #660000; font-weight:500;" readonly Rows="10" />
                     </Card>
                 </div>
             </Content>
@@ -39,7 +39,7 @@
                 <TraceResultViewer Spans="@this.Data?.Spans" @bind-ShowDetails="@ShowDetails" />
             </Content>
         </Tab>
-        <Tab data-testid="logs-result-header" Title="Internal state">
+        <Tab data-testid="logs-result-header" Title="@this.internalStateTitle">
             <Content>
                 <InternalStateViewer State="@this.Data?.InternalState" @bind-ShowDetails="@ShowDetails" />
             </Content>
@@ -105,6 +105,11 @@
     private string tracesTitle = "Spans";
 
     /// <summary>
+    /// The title of the internal state tab.
+    /// </summary>
+    private string internalStateTitle = "Internal state";
+
+    /// <summary>
     /// The text representation of the error result.
     /// </summary>
     private string errorText = string.Empty;
@@ -119,6 +124,7 @@
             this.metricsTitle = $"Metrics ({this.Data.Metrics.Count})";
             this.logsTitle = $"Logs ({this.Data.Logs.Count})";
             this.tracesTitle = $"Spans ({this.Data.Spans.Count})";
+            this.internalStateTitle = $"Internal state ({this.Data.InternalState.Spans.Count + this.Data.InternalState.SpanContexts.Count})";
 
             if (this.Data.HasErrors)
             {
@@ -131,9 +137,14 @@
             else if (this.Data.HasLogs)
             {
                 await this.tabs.ShowTabByIndexAsync(2);
-            } else if (this.Data.HasSpans)
+            }
+            else if (this.Data.HasSpans)
             {
                 await this.tabs.ShowTabByIndexAsync(3);
+            }
+            else if (this.Data.HasInternalState)
+            {
+                await this.tabs.ShowTabByIndexAsync(4);
             }
 
             this.StateHasChanged();

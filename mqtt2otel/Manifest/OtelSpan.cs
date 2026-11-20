@@ -6,6 +6,7 @@ using OpenTelemetry.Context.Propagation;
 using OpenTelemetry.Trace;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.Security.Cryptography.X509Certificates;
@@ -37,6 +38,14 @@ namespace mqtt2otel.Manifest
         /// Gets or sets the attributes associated with this span.
         /// </summary>
         public List<OtelAttribute> Attributes { get; set; } = new List<OtelAttribute>();
+
+        /// <summary>
+        /// Gets or sets a <see cref="TopicAttributeParser"/> pattern for parsing a topic into attributes.
+        /// 
+        /// Set to null if no topic parsing should be applied.
+        /// </summary>
+        [InheritedProperty]
+        public string? TopicAttributes { get; set; } = null;
 
         /// <summary>
         /// Gets or sets the id of the span.
@@ -200,7 +209,7 @@ namespace mqtt2otel.Manifest
         /// <param name="overrideValues">A value indicating whether the existing values should be overriden if not null.</param>
         public void CombineWith(OtelSpan other, bool overrideValues = false)
         {
-            this.Attributes = this.Attributes.Combine(other.Attributes);
+            this.Attributes = this.Attributes.Combine(other.Attributes, overwriteExising: true);
             this.LinkTo.AddRange(other.LinkTo);
             this.Events.AddRange(other.Events);
 
@@ -309,10 +318,15 @@ namespace mqtt2otel.Manifest
         /// <param name="context">The parsing context.</param>
         public void Expand(IEmbeddedExpressionParser embeddedExpressionParser, IPayloadParser parser, ParsingContext context)
         {
-            this.Id = parser.Parse(this.Id, context).ToString() ?? string.Empty;
+            this.Id = embeddedExpressionParser.Expand(this.Id, context).ToString() ?? string.Empty;
             this.Name = embeddedExpressionParser.Expand(this.Name, context);
             this.Description = embeddedExpressionParser.Expand(this.Description, context);
             this.Attributes = embeddedExpressionParser.Expand(this.Attributes, context);
+            if (this.TopicAttributes != null)
+            {
+                this.Attributes = this.Attributes.Combine(TopicAttributeParser.Parse(context.Message.Topic, this.TopicAttributes), overwriteExising: true);
+            }
+
             this.Started = embeddedExpressionParser.Expand(this.Started ?? string.Empty, context);
             this.Completed = embeddedExpressionParser.Expand(this.Completed ?? string.Empty, context);
 
@@ -323,7 +337,7 @@ namespace mqtt2otel.Manifest
 
             foreach (var evt in this.Events)
             {
-                evt.Expand(embeddedExpressionParser, context);
+                evt.Expand(parser, embeddedExpressionParser, context);
             }
         }
 

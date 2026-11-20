@@ -57,6 +57,14 @@ namespace mqtt2otel.Manifest
         public int? WaitForLateSpanEventsInS { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets a <see cref="TopicAttributeParser"/> pattern for parsing a topic into attributes.
+        /// 
+        /// Set to null if no topic parsing should be applied.
+        /// </summary>
+        [InheritedProperty]
+        public string? TopicAttributes { get; set; } = null;
+
+        /// <summary>
         /// Clones the rule.
         /// </summary>
         /// <returns>The cloned rule.</returns>

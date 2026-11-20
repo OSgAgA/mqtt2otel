@@ -34,13 +34,33 @@ namespace mqtt2otel.Helper
         /// </summary>
         /// <param name="a">The fist enumerable.</param>
         /// <param name="b">The second enumerable.</param>
+        /// <param name="overwriteExising">A value indicating whether values of b, that are already existing in a, should not be added, but override the existing value.</param>
         /// <returns>The combined list.</returns>
-        public static List<OtelAttribute> Combine(this List<OtelAttribute> a, List<OtelAttribute> b)
+        public static List<OtelAttribute> Combine(this List<OtelAttribute> a, List<OtelAttribute> b, bool overwriteExising = false)
         {
             var combined = new List<OtelAttribute>();
 
             combined.AddRange(a.ToList());
-            combined.AddRange(b.ToList());
+
+            if (overwriteExising)
+            {
+                foreach (var item in b)
+                {
+                    var query = combined.Where(attr => attr.Key == item.Key);
+                    if (query.Any())
+                    {
+                        query.First().Value = item.Value;
+                    }
+                    else
+                    {
+                        combined.Add(item);
+                    }
+                }
+            }
+            else
+            {
+                combined.AddRange(b.ToList());
+            }
 
             return combined;
         }
@@ -60,7 +80,7 @@ namespace mqtt2otel.Helper
         /// </summary>
         /// <param name="source">the source.</param>
         /// <returns>The converted enumerable.</returns>
-        public static List<OtelAttribute> ToOtelAttributes<T>(this IEnumerable<KeyValuePair<string,T>> source) 
+        public static List<OtelAttribute> ToOtelAttributes<T>(this IEnumerable<KeyValuePair<string, T>> source)
         {
             var result = new List<OtelAttribute>();
 

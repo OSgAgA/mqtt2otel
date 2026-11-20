@@ -11,6 +11,14 @@ namespace mqtt2otel
     public class ConditionalAction<T> : NamedIdObject where T: new()
     {
         /// <summary>
+        /// Gets or sets a <see cref="TopicAttributeParser"/> pattern for parsing a topic into attributes.
+        /// 
+        /// Set to null if no topic parsing should be applied.
+        /// </summary>
+        [InheritedProperty]
+        public string? TopicAttributes { get; set; } = null;
+
+        /// <summary>
         /// Gets or sets the condition that must be matched to apply the <see cref="ThenAction"/>.
         /// </summary>
         public List<string> When { get; set; } = new();

@@ -218,7 +218,7 @@ namespace mqtt2otel
                             {
                                 var clone = evt.Clone();
                                 if (string.IsNullOrEmpty(clone.Timestamp)) clone.Timestamp = this.GetTimestampFromMessageOrUtcNow(message).ToString("O");
-                                clone.Expand(this.embeddedExpressionParser, parsingContext);
+                                clone.Expand(this.payloadParser, this.embeddedExpressionParser, parsingContext);
 
                                 this.traceStore.AddEvent(clone);
                             }
@@ -402,6 +402,10 @@ namespace mqtt2otel
 
                         var logger = this.dataStores.LoggerStore.GetLogger(key);
                         var combinedAttributes = rule.Attributes.Combine(processor.Otel.Attributes);
+                        if (rule.TopicAttributes != null)
+                        {
+                            combinedAttributes = combinedAttributes.Combine(TopicAttributeParser.Parse(message.Topic, rule.TopicAttributes));
+                        }
 
                         if (rule.CreateAttributesFromUserProperties.HasValue && rule.CreateAttributesFromUserProperties == true)
                         {
@@ -410,7 +414,7 @@ namespace mqtt2otel
 
                         if (rule.SpanId != null)
                         {
-                            var spanId = this.payloadParser.Parse(rule.SpanId, new ParsingContext(subscription.Variables, message))?.ToString() ?? string.Empty;
+                            var spanId = this.embeddedExpressionParser.Expand(rule.SpanId, new ParsingContext(subscription.Variables, message))?.ToString() ?? string.Empty;
 
                             if (!string.IsNullOrWhiteSpace(spanId))
                             {

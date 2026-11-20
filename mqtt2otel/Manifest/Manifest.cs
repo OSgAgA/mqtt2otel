@@ -347,10 +347,6 @@ namespace mqtt2otel.Manifest
 
             foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                if (prop.PropertyType == typeof(OtelAttribute))
-                {
-
-                }
                 if (typeof(NamedIdObject).IsAssignableFrom(prop.PropertyType))
                 {
                     var child = prop.GetValue(current) as NamedIdObject;

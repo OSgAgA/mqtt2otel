@@ -9,12 +9,12 @@
     "Description": "Playground for traces.",
     "MqttData": [
       {
-        "Topic": "FactoryA/ProductionLine01/Device_1234/message",
+        "Topic": "Factory-A/ProductionLine-01/Device_1234/message",
         "Payload": "Booting up device",
         "UserProperties": []
       },
       {
-        "Topic": "FactoryA/ProductionLine01/Device_1234/sensor/234",
+        "Topic": "FactoryA/ProductionLine01/Device_1234/sensor/234/ready",
         "Payload": "Sensor is now available",
         "UserProperties": []
       },
@@ -24,7 +24,7 @@
         "UserProperties": []
       }
     ],
-    "Manifest": "Processors:\n  - Mqtt: \n      Subscriptions:\n        - Topic: \u0022\u002B/\u002B/\u002B/sensor/\u002B\u0022\n    Otel:\n      Logs:\n        - PayloadType: \u0022Text\u0022\n          SpanId: \u0022TopicPath(\u0027[2]\u0027)\u0022\n  - Mqtt: \n      Subscriptions:\n        - Topic: \u0022\u002B/\u002B/\u002B/message\u0022\n    Otel:\n      Traces:\n        - Actions:\n            - When:\n               - \u0022Payload() == \u0027Booting up device\u0027\u0022\n              Then:\n                CreateSpans:\n                 - Id: \u0022TopicPath(\u0027[2]\u0027)\u0022\n                   Name: \u0022Booting\u0022\n            - When:\n               - \u0022Payload() == \u0027Device up and running\u0027\u0022\n              Then:\n                EndSpans:\n                 - Id: \u0022TopicPath(\u0027[2]\u0027)\u0022\n",
+    "Manifest": "Processors:\n  - Mqtt: \n      Subscriptions:\n        - Topic: \u0022\u002B/\u002B/\u002B/sensor/\u002B/ready\u0022\n    Otel:\n      TopicAttributes: \u0022factory/line/device-id/_/sensor-id/_\u0022\n      Logs:\n        - PayloadType: \u0022Text\u0022\n          SpanId: \u0022Booting $(TopicPath(\u0027[2]\u0027))\u0022\n      Traces:\n        - CreateEvents:\n          - SpanId: \u0022Booting $(TopicPath(\u0027[2]\u0027))\u0022\n            Name: \u0022Sensor $(TopicPath(\u0027[4]\u0027)) reported ready.\u0022\n  - Mqtt: \n      Subscriptions:\n        - Topic: \u0022\u002B/\u002B/\u002B/message\u0022\n    Otel:\n      Traces:\n        - TopicAttributes: \u0022factory/line/device-id/_\u0022\n          Actions:\n            - When:\n               - \u0022Payload() == \u0027Booting up device\u0027\u0022\n              Then:\n                CreateSpans:\n                 - Id: \u0022Booting $(TopicPath(\u0027[2]\u0027))\u0022\n                   Name: \u0022Booting device\u0022\n            - When:\n               - \u0022Payload() == \u0027Device up and running\u0027\u0022\n              Then:\n                EndSpans:\n                 - Id: \u0022Booting $(TopicPath(\u0027[2]\u0027))\u0022\n\n",
     "Category": "Traces",
     "Tags": [
       "text"
@@ -40,15 +40,32 @@
       "State": {
         "Spans": [
           {
-            "Created": "2026-11-19T21:56:11.9265293+01:00",
+            "Created": "2026-11-20T17:39:16.1122951+01:00",
             "Context": null,
             "ParentContext": null,
-            "Attributes": [],
-            "Id": "Device_1234",
+            "Attributes": [
+              {
+                "Key": "factory",
+                "Value": "Factory-A",
+                "IsInternal": false
+              },
+              {
+                "Key": "line",
+                "Value": "ProductionLine-01",
+                "IsInternal": false
+              },
+              {
+                "Key": "device-id",
+                "Value": "Device_1234",
+                "IsInternal": false
+              }
+            ],
+            "TopicAttributes": "factory/line/device-id/_",
+            "Id": "Booting Device_1234",
             "Parent": null,
-            "Started": "2026-11-19T20:56:11.8090658Z",
+            "Started": "2026-11-20T16:39:16.1056863Z",
             "Completed": "",
-            "StartedAsDateTime": "2026-11-19T20:56:11.8090658Z",
+            "StartedAsDateTime": "2026-11-20T16:39:16.1056863Z",
             "CompletedAsDateTime": null,
             "LinkTo": [],
             "Events": [],
@@ -58,8 +75,9 @@
             "RetentionStrategy": 7,
             "RetentionExceededEvent": {
               "SpanId": "",
+              "TopicAttributes": "factory/line/device-id/_/sensor-id/_",
               "Timestamp": null,
-              "TimestampAsDateTime": "2026-11-19T20:56:11.9286293Z",
+              "TimestampAsDateTime": "2026-11-20T16:39:16.1123493Z",
               "Attributes": [],
               "IsActive": true,
               "OtelConnection": "default-connection",
@@ -70,7 +88,7 @@
               "AllowRuleDeactivationByItem": true,
               "BlockedTopicLimit": 3,
               "Slug": "span_retention_time_expired_6b81d70a",
-              "InternalId": "8d2a47f5-1966-41f6-8931-71f085e7a784",
+              "InternalId": "e525585d-89ea-4252-ae2d-34a5f9aec951",
               "Name": "Span retention time expired.",
               "Description": "",
               "ImportFrom": null
@@ -86,21 +104,21 @@
             "AllowRuleDeactivationByTopic": null,
             "AllowRuleDeactivationByItem": null,
             "BlockedTopicLimit": null,
-            "Slug": "booting_189960a6",
-            "InternalId": "f59e45c2-f5d5-4de2-b6fc-e33eb9805b9b",
-            "Name": "Booting",
+            "Slug": "booting_device_0d4f46aa",
+            "InternalId": "92a937c7-3a39-42d9-a78f-4279a5fba597",
+            "Name": "Booting device",
             "Description": "",
             "ImportFrom": null
           }
         ],
         "SpanContexts": [
           {
-            "Id": "Device_1234",
+            "Id": "Booting Device_1234",
             "Sent": null,
             "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
             "SpanId": "8ad9cd275e9262b9",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-19T20:56:11.9296007Z",
+            "Created": "2026-11-20T16:39:16.1124153Z",
             "IsExpired": false
           }
         ],
@@ -114,11 +132,16 @@
       "Metrics": [],
       "Logs": [
         {
-          "Timestamp": "2026-11-19T20:56:12.0346016Z",
+          "Timestamp": "2026-11-20T16:39:16.2149159Z",
           "LogLevel": 2,
           "Body": "Sensor is now available",
           "CategoryName": "mqtt2otel",
-          "Attributes": {},
+          "Attributes": {
+            "factory": "FactoryA",
+            "line": "ProductionLine01",
+            "device-id": "Device_1234",
+            "sensor-id": "234"
+          },
           "SpanId": "8ad9cd275e9262b9",
           "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
           "TraceState": null,
@@ -137,26 +160,86 @@
       "State": {
         "Spans": [
           {
-            "Created": "2026-11-19T21:56:12.0600171+01:00",
+            "Created": "2026-11-20T17:39:16.2189044+01:00",
             "Context": null,
             "ParentContext": null,
-            "Attributes": [],
-            "Id": "Device_1234",
+            "Attributes": [
+              {
+                "Key": "factory",
+                "Value": "Factory-A",
+                "IsInternal": false
+              },
+              {
+                "Key": "line",
+                "Value": "ProductionLine-01",
+                "IsInternal": false
+              },
+              {
+                "Key": "device-id",
+                "Value": "Device_1234",
+                "IsInternal": false
+              }
+            ],
+            "TopicAttributes": "factory/line/device-id/_",
+            "Id": "Booting Device_1234",
             "Parent": null,
-            "Started": "2026-11-19T20:56:11.8090658Z",
+            "Started": "2026-11-20T16:39:16.1056863Z",
             "Completed": "",
-            "StartedAsDateTime": "2026-11-19T20:56:11.8090658Z",
+            "StartedAsDateTime": "2026-11-20T16:39:16.1056863Z",
             "CompletedAsDateTime": null,
             "LinkTo": [],
-            "Events": [],
+            "Events": [
+              {
+                "SpanId": "Booting Device_1234",
+                "TopicAttributes": "factory/line/device-id/_/sensor-id/_",
+                "Timestamp": "2026-11-20T16:39:16.2150055Z",
+                "TimestampAsDateTime": "2026-11-20T16:39:16.2150055Z",
+                "Attributes": [
+                  {
+                    "Key": "factory",
+                    "Value": "FactoryA",
+                    "IsInternal": false
+                  },
+                  {
+                    "Key": "line",
+                    "Value": "ProductionLine01",
+                    "IsInternal": false
+                  },
+                  {
+                    "Key": "device-id",
+                    "Value": "Device_1234",
+                    "IsInternal": false
+                  },
+                  {
+                    "Key": "sensor-id",
+                    "Value": "234",
+                    "IsInternal": false
+                  }
+                ],
+                "IsActive": true,
+                "OtelConnection": "default-connection",
+                "OtelScope": null,
+                "LogMessageDetails": true,
+                "AllowRuleDeactivation": true,
+                "AllowRuleDeactivationByTopic": true,
+                "AllowRuleDeactivationByItem": true,
+                "BlockedTopicLimit": 3,
+                "Slug": "sensor_234_reported_ready_1c5bc1d8",
+                "InternalId": "38b6424b-1635-4e1a-9ec5-c0ab89021c34",
+                "Name": "Sensor 234 reported ready.",
+                "Description": "",
+                "ImportFrom": null
+              }
+            ],
             "Kind": 0,
             "Status": 0,
             "RetentionInSeconds": 3600,
             "RetentionStrategy": 7,
             "RetentionExceededEvent": {
               "SpanId": "",
+              "TopicAttributes": "factory/line/device-id/_/sensor-id/_",
               "Timestamp": null,
-              "TimestampAsDateTime": "2026-11-19T20:56:12.0600578Z",
+              "TimestampAsDateTime": "2026-11-20T16:39:16.2189864Z",
               "Attributes": [],
               "IsActive": true,
               "OtelConnection": "default-connection",
@@ -167,7 +250,7 @@
               "AllowRuleDeactivationByItem": true,
               "BlockedTopicLimit": 3,
               "Slug": "span_retention_time_expired_6b81d70a",
-              "InternalId": "7f12327e-1277-4a98-82b6-02e78fd5b630",
+              "InternalId": "3af50bf0-0faf-45ce-9f9d-f2d4549f6252",
               "Name": "Span retention time expired.",
               "Description": "",
               "ImportFrom": null
@@ -183,21 +266,21 @@
             "AllowRuleDeactivationByTopic": null,
             "AllowRuleDeactivationByItem": null,
             "BlockedTopicLimit": null,
-            "Slug": "booting_189960a6",
-            "InternalId": "35617982-20ed-4667-b774-bff209e7d094",
-            "Name": "Booting",
+            "Slug": "booting_device_0d4f46aa",
+            "InternalId": "becfc3f8-c3fc-4789-a6e8-954001acaf87",
+            "Name": "Booting device",
             "Description": "",
             "ImportFrom": null
           }
         ],
         "SpanContexts": [
           {
-            "Id": "Device_1234",
+            "Id": "Booting Device_1234",
             "Sent": null,
             "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
             "SpanId": "8ad9cd275e9262b9",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-19T20:56:12.060125Z",
+            "Created": "2026-11-20T16:39:16.2190327Z",
             "IsExpired": false
           }
         ],
@@ -220,97 +303,61 @@
             "MinimumLogLevel": "Information",
             "EndpointAddress": "http://localhost:4317"
           },
-          "StartUtc": "2026-11-19T20:56:11.8090658Z",
-          "Attributes": [],
-          "Duration": "00:00:00.3286624",
+          "StartUtc": "2026-11-20T16:39:16.1056863Z",
+          "Attributes": [
+            {
+              "Key": "factory",
+              "Value": "FactoryA",
+              "IsInternal": false
+            },
+            {
+              "Key": "line",
+              "Value": "ProductionLine01",
+              "IsInternal": false
+            },
+            {
+              "Key": "device-id",
+              "Value": "Device_1234",
+              "IsInternal": false
+            }
+          ],
+          "Duration": "00:00:00.1772059",
           "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
           "SpanId": "8ad9cd275e9262b9",
           "ParentSpanId": "0000000000000000",
-          "Name": "Booting",
+          "Name": "Booting device",
           "Kind": "Internal",
           "Status": "Unset",
-          "Events": [],
+          "Events": [
+            {
+              "Name": "Sensor 234 reported ready.",
+              "Attributes": [
+                {
+                  "Key": "factory",
+                  "Value": "FactoryA"
+                },
+                {
+                  "Key": "line",
+                  "Value": "ProductionLine01"
+                },
+                {
+                  "Key": "device-id",
+                  "Value": "Device_1234"
+                },
+                {
+                  "Key": "sensor-id",
+                  "Value": "234"
+                }
+              ],
+              "Timestamp": "2026-11-20T16:39:16.2150055+00:00"
+            }
+          ],
           "Links": []
         }
       ],
       "State": {
-        "Spans": [
-          {
-            "Created": "2026-11-19T21:56:12.1646867+01:00",
-            "Context": null,
-            "ParentContext": null,
-            "Attributes": [
-              {
-                "Key": "__mqtt2otel__internal__trace_id",
-                "Value": "dc60fcb9f59f80b41180ada8aaa3de36",
-                "IsInternal": true
-              },
-              {
-                "Key": "__mqtt2otel__internal__span_id",
-                "Value": "8ad9cd275e9262b9",
-                "IsInternal": true
-              }
-            ],
-            "Id": "Device_1234",
-            "Parent": null,
-            "Started": "2026-11-19T20:56:11.8090658Z",
-            "Completed": "2026-11-19T20:56:12.1377282Z",
-            "StartedAsDateTime": "2026-11-19T20:56:11.8090658Z",
-            "CompletedAsDateTime": "2026-11-19T20:56:12.1377282Z",
-            "LinkTo": [],
-            "Events": [],
-            "Kind": 0,
-            "Status": 0,
-            "RetentionInSeconds": 3600,
-            "RetentionStrategy": 7,
-            "RetentionExceededEvent": {
-              "SpanId": "Device_1234",
-              "Timestamp": null,
-              "TimestampAsDateTime": "2026-11-19T20:56:12.1650329Z",
-              "Attributes": [],
-              "IsActive": true,
-              "OtelConnection": "default-connection",
-              "OtelScope": null,
-              "LogMessageDetails": true,
-              "AllowRuleDeactivation": true,
-              "AllowRuleDeactivationByTopic": true,
-              "AllowRuleDeactivationByItem": true,
-              "BlockedTopicLimit": 3,
-              "Slug": "span_retention_time_expired_6b81d70a",
-              "InternalId": "33808ab0-ef46-440d-b2b9-29fdfe2dd0bd",
-              "Name": "Span retention time expired.",
-              "Description": "",
-              "ImportFrom": null
-            },
-            "WaitForLateSpanEventsInS": 0,
-            "IsCompleted": true,
-            "IsRetentionExceeded": false,
-            "IsActive": true,
-            "OtelConnection": "default-connection",
-            "OtelScope": null,
-            "LogMessageDetails": null,
-            "AllowRuleDeactivation": null,
-            "AllowRuleDeactivationByTopic": null,
-            "AllowRuleDeactivationByItem": null,
-            "BlockedTopicLimit": null,
-            "Slug": "booting_189960a6",
-            "InternalId": "62954f99-b2f7-4a6f-ad84-c088c587cedd",
-            "Name": "Booting",
-            "Description": "",
-            "ImportFrom": null
-          }
-        ],
-        "SpanContexts": [
-          {
-            "Id": "Device_1234",
-            "Sent": null,
-            "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
-            "SpanId": "8ad9cd275e9262b9",
-            "RetentionInSeconds": 3600,
-            "Created": "2026-11-19T20:56:12.1650785Z",
-            "IsExpired": false
-          }
-        ],
+        "Spans": [],
+        "SpanContexts": [],
         "TraceIdProviderState": {
           "ForceReset": false,
           "State": "0;0"

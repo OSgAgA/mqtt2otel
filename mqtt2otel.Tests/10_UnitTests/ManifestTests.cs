@@ -122,7 +122,6 @@ namespace mqtt2otel.Tests._10_UnitTests
                                    - Key: "My attribute"
                                      Value: "My value"
                                  OtelConnection: "My Otel server"
-                                 Filter: "REGEX('.*')"
                                  PayloadType: "Text"
                                  CategoryName: "mqtt2otel"
                                  Transform: "GROK('')"

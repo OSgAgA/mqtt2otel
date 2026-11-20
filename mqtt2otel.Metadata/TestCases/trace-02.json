@@ -5,7 +5,7 @@
   },
   "Setup": {
     "Id": "trace-02",
-    "Name": "Traces playground",
+    "Name": "Traces playground 2",
     "Description": "Playground for traces.",
     "MqttData": [
       {
@@ -35,7 +35,7 @@
       "State": {
         "Spans": [
           {
-            "Created": "2026-11-18T15:25:41.5510479+01:00",
+            "Created": "2026-11-20T17:17:06.5695134+01:00",
             "Context": null,
             "ParentContext": null,
             "Attributes": [
@@ -45,16 +45,18 @@
                 "IsInternal": false
               }
             ],
+            "TopicAttributes": null,
             "Id": "4711",
             "Parent": "MyParent",
-            "Started": "2026-11-18T14:25:41.5480369Z",
+            "Started": "2026-11-20T16:17:06.5555995Z",
             "Completed": "",
-            "StartedAsDateTime": "2026-11-18T14:25:41.5480369Z",
+            "StartedAsDateTime": "2026-11-20T16:17:06.5555995Z",
             "CompletedAsDateTime": null,
             "LinkTo": [
               {
                 "Target": "4321",
                 "Attributes": [],
+                "TopicAttributes": null,
                 "Context": null
               }
             ],
@@ -65,8 +67,9 @@
             "RetentionStrategy": 7,
             "RetentionExceededEvent": {
               "SpanId": "",
+              "TopicAttributes": null,
               "Timestamp": null,
-              "TimestampAsDateTime": "2026-11-18T14:25:41.5510803Z",
+              "TimestampAsDateTime": "2026-11-20T16:17:06.5703776Z",
               "Attributes": [],
               "IsActive": true,
               "OtelConnection": "default-connection",
@@ -77,7 +80,7 @@
               "AllowRuleDeactivationByItem": true,
               "BlockedTopicLimit": 3,
               "Slug": "span_retention_time_expired_6b81d70a",
-              "InternalId": "3dce0708-3c91-4f0f-b57a-ca6a7335f947",
+              "InternalId": "3bebeee2-f04b-42a3-a562-2d21d59adf72",
               "Name": "Span retention time expired.",
               "Description": "",
               "ImportFrom": null
@@ -94,7 +97,7 @@
             "AllowRuleDeactivationByItem": true,
             "BlockedTopicLimit": 3,
             "Slug": "start_running_19af2d87",
-            "InternalId": "b2cf3f76-3518-49c5-a3fb-ddf5bbce1d10",
+            "InternalId": "898f4de1-1bec-40e5-87d4-b8416c4f0bce",
             "Name": "Start running",
             "Description": "",
             "ImportFrom": null
@@ -107,7 +110,7 @@
             "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
             "SpanId": "8ad9cd275e9262b9",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-18T14:25:41.5511113Z",
+            "Created": "2026-11-20T16:17:06.5704207Z",
             "IsExpired": false
           },
           {
@@ -116,7 +119,7 @@
             "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
             "SpanId": "ba74db659763c09f",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-18T14:25:41.5511145Z",
+            "Created": "2026-11-20T16:17:06.5704266Z",
             "IsExpired": false
           },
           {
@@ -125,7 +128,7 @@
             "TraceId": "145fcce57bdedf99c500859790298775",
             "SpanId": "a1589e0ad0dee6ac",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-18T14:25:41.5511156Z",
+            "Created": "2026-11-20T16:17:06.5704332Z",
             "IsExpired": false
           }
         ],
@@ -148,7 +151,7 @@
             "MinimumLogLevel": "Information",
             "EndpointAddress": "http://localhost:4317"
           },
-          "StartUtc": "2026-11-18T14:25:41.5480369Z",
+          "StartUtc": "2026-11-20T16:17:06.5555995Z",
           "Attributes": [
             {
               "Key": "Hello",
@@ -166,10 +169,10 @@
               "IsInternal": false
             }
           ],
-          "Duration": "00:00:00.0582245",
+          "Duration": "00:00:00.1199867",
           "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
           "SpanId": "ba74db659763c09f",
-          "ParentSpanId": "a2128c97629705dd",
+          "ParentSpanId": "0000000000000000",
           "Name": "Start running",
           "Kind": "Server",
           "Status": "Error",
@@ -177,7 +180,7 @@
             {
               "Name": "Something happened",
               "Attributes": [],
-              "Timestamp": "2026-11-18T14:25:41.6062614+00:00"
+              "Timestamp": "2026-11-20T16:17:06.6755862+00:00"
             }
           ],
           "Links": [
@@ -192,115 +195,11 @@
       "State": {
         "Spans": [
           {
-            "Created": "2026-11-18T15:25:41.6102968+01:00",
-            "Context": null,
-            "ParentContext": null,
-            "Attributes": [
-              {
-                "Key": "Hello",
-                "Value": "world",
-                "IsInternal": false
-              },
-              {
-                "Key": "mqtt2otel_error_prop_completed",
-                "Value": "End timestamp was earlier than a timestamp inside a span event.",
-                "IsInternal": false
-              },
-              {
-                "Key": "mqtt2otel_modified",
-                "Value": true,
-                "IsInternal": false
-              },
-              {
-                "Key": "__mqtt2otel__internal__trace_id",
-                "Value": "dc60fcb9f59f80b41180ada8aaa3de36",
-                "IsInternal": true
-              },
-              {
-                "Key": "__mqtt2otel__internal__span_id",
-                "Value": "ba74db659763c09f",
-                "IsInternal": true
-              }
-            ],
-            "Id": "4711",
-            "Parent": "MyParent",
-            "Started": "2026-11-18T14:25:41.5480369Z",
-            "Completed": "2026-11-18T14:25:41.6062467Z",
-            "StartedAsDateTime": "2026-11-18T14:25:41.5480369Z",
-            "CompletedAsDateTime": "2026-11-18T14:25:41.6062467Z",
-            "LinkTo": [
-              {
-                "Target": "4321",
-                "Attributes": [],
-                "Context": null
-              }
-            ],
-            "Events": [
-              {
-                "SpanId": "4711",
-                "Timestamp": "2026-11-18T14:25:41.6062614Z",
-                "TimestampAsDateTime": "2026-11-18T14:25:41.6062614Z",
-                "Attributes": [],
-                "IsActive": true,
-                "OtelConnection": "default-connection",
-                "OtelScope": null,
-                "LogMessageDetails": true,
-                "AllowRuleDeactivation": true,
-                "AllowRuleDeactivationByTopic": true,
-                "AllowRuleDeactivationByItem": true,
-                "BlockedTopicLimit": 3,
-                "Slug": "something_happened_cab63b1e",
-                "InternalId": "9dee6fd3-70ab-4d71-872d-2723e1c217e5",
-                "Name": "Something happened",
-                "Description": "",
-                "ImportFrom": null
-              }
-            ],
-            "Kind": 1,
-            "Status": 2,
-            "RetentionInSeconds": 3600,
-            "RetentionStrategy": 7,
-            "RetentionExceededEvent": {
-              "SpanId": "4711",
-              "Timestamp": null,
-              "TimestampAsDateTime": "2026-11-18T14:25:41.6103615Z",
-              "Attributes": [],
-              "IsActive": true,
-              "OtelConnection": "default-connection",
-              "OtelScope": null,
-              "LogMessageDetails": true,
-              "AllowRuleDeactivation": true,
-              "AllowRuleDeactivationByTopic": true,
-              "AllowRuleDeactivationByItem": true,
-              "BlockedTopicLimit": 3,
-              "Slug": "span_retention_time_expired_6b81d70a",
-              "InternalId": "7607ce26-341b-4273-9507-aac11082b046",
-              "Name": "Span retention time expired.",
-              "Description": "",
-              "ImportFrom": null
-            },
-            "WaitForLateSpanEventsInS": 0,
-            "IsCompleted": true,
-            "IsRetentionExceeded": false,
-            "IsActive": true,
-            "OtelConnection": "default-connection",
-            "OtelScope": null,
-            "LogMessageDetails": true,
-            "AllowRuleDeactivation": true,
-            "AllowRuleDeactivationByTopic": true,
-            "AllowRuleDeactivationByItem": true,
-            "BlockedTopicLimit": 3,
-            "Slug": "start_running_19af2d87",
-            "InternalId": "ef136fe7-6fc9-4b40-835c-0386b23607ef",
-            "Name": "Start running",
-            "Description": "",
-            "ImportFrom": null
-          },
-          {
-            "Created": "2026-11-18T15:25:41.6103808+01:00",
+            "Created": "2026-11-20T17:17:06.6869501+01:00",
             "Context": null,
             "ParentContext": null,
             "Attributes": [],
+            "TopicAttributes": null,
             "Id": "1234",
             "Parent": null,
             "Started": null,
@@ -311,8 +210,9 @@
             "Events": [
               {
                 "SpanId": "1234",
-                "Timestamp": "2026-11-18T14:25:41.6062725Z",
-                "TimestampAsDateTime": "2026-11-18T14:25:41.6062725Z",
+                "TopicAttributes": null,
+                "Timestamp": "2026-11-20T16:17:06.6756956Z",
+                "TimestampAsDateTime": "2026-11-20T16:17:06.6756956Z",
                 "Attributes": [],
                 "IsActive": true,
                 "OtelConnection": "default-connection",
@@ -323,7 +223,7 @@
                 "AllowRuleDeactivationByItem": true,
                 "BlockedTopicLimit": 3,
                 "Slug": "something_else_happened_7913a030",
-                "InternalId": "737fd9ba-fb26-4ad9-9c89-f3ef59d56ea8",
+                "InternalId": "0950c3c6-7eba-4ea6-8981-7d938bd971a6",
                 "Name": "Something else happened",
                 "Description": "",
                 "ImportFrom": null
@@ -346,7 +246,7 @@
             "AllowRuleDeactivationByItem": null,
             "BlockedTopicLimit": null,
             "Slug": "x_e3b0c442",
-            "InternalId": "98e83ac5-88cf-4800-817b-71de01700f7d",
+            "InternalId": "b96e2359-bfb6-4f53-bd9a-23dc015fd2f3",
             "Name": "",
             "Description": "",
             "ImportFrom": null
@@ -359,16 +259,7 @@
             "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
             "SpanId": "8ad9cd275e9262b9",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-18T14:25:41.6104052Z",
-            "IsExpired": false
-          },
-          {
-            "Id": "4711",
-            "Sent": null,
-            "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
-            "SpanId": "ba74db659763c09f",
-            "RetentionInSeconds": 3600,
-            "Created": "2026-11-18T14:25:41.6104091Z",
+            "Created": "2026-11-20T16:17:06.6870453Z",
             "IsExpired": false
           },
           {
@@ -377,7 +268,7 @@
             "TraceId": "145fcce57bdedf99c500859790298775",
             "SpanId": "a1589e0ad0dee6ac",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-18T14:25:41.6104105Z",
+            "Created": "2026-11-20T16:17:06.6870544Z",
             "IsExpired": false
           },
           {
@@ -386,7 +277,7 @@
             "TraceId": "244d5459f93ce26a5099e5d5b242f37c",
             "SpanId": "a5ab7b5b13bce3de",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-18T14:25:41.6104117Z",
+            "Created": "2026-11-20T16:17:06.6870571Z",
             "IsExpired": false
           }
         ],

@@ -1,4 +1,5 @@
 ﻿using mqtt2otel.Helper;
+using mqtt2otel.Interfaces;
 using mqtt2otel.Parser;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,14 @@ namespace mqtt2otel.Manifest
         /// Backing field for <see cref="Completed"/> property.
         /// </summary>
         private string? timestamp = null;
+
+        /// <summary>
+        /// Gets or sets a <see cref="TopicAttributeParser"/> pattern for parsing a topic into attributes.
+        /// 
+        /// Set to null if no topic parsing should be applied.
+        /// </summary>
+        [InheritedProperty]
+        public string? TopicAttributes { get; set; } = null;
 
         /// <summary>
         /// Gets or sets the timestamp, when the event happened. Defaults to DateTime.Now.
@@ -78,11 +87,16 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="embeddedExpressionParser">The embedded expression parser.</param>
         /// <param name="context">The parsing context.</param>
-        public void Expand(IEmbeddedExpressionParser embeddedExpressionParser, ParsingContext context)
+        public void Expand(IPayloadParser parser, IEmbeddedExpressionParser embeddedExpressionParser, ParsingContext context)
         {
             this.Name = embeddedExpressionParser.Expand(this.Name, context);
             this.SpanId = embeddedExpressionParser.Expand(this.SpanId, context);
             this.Attributes = embeddedExpressionParser.Expand(this.Attributes, context);
+            if (this.TopicAttributes != null)
+            {
+                this.Attributes = this.Attributes.Combine(TopicAttributeParser.Parse(context.Message.Topic, this.TopicAttributes));
+            }
+
             this.Timestamp = embeddedExpressionParser.Expand(this.Timestamp ?? string.Empty, context);
         }
 

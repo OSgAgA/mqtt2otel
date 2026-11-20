@@ -11,8 +11,16 @@ namespace mqtt2otel.Manifest
     /// <summary>
     /// Represents the actions that should be exeucted inside a <see cref="ConditionalAction"/> inside a trace rule, when the condition is true.
     /// </summary>
-    public class TraceThenAction
+    public class TraceThenAction : NamedIdObject
     {
+        /// <summary>
+        /// Gets or sets a <see cref="TopicAttributeParser"/> pattern for parsing a topic into attributes.
+        /// 
+        /// Set to null if no topic parsing should be applied.
+        /// </summary>
+        [InheritedProperty]
+        public string? TopicAttributes { get; set; } = null;
+
         /// <summary>
         /// Gets or sets information used for creating and starting new spans.
         /// </summary>

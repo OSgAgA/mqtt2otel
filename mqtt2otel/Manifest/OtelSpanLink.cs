@@ -25,6 +25,14 @@ namespace mqtt2otel.Manifest
         public List<OtelAttribute> Attributes { get; set; } = new List<OtelAttribute>();
 
         /// <summary>
+        /// Gets or sets a <see cref="TopicAttributeParser"/> pattern for parsing a topic into attributes.
+        /// 
+        /// Set to null if no topic parsing should be applied.
+        /// </summary>
+        [InheritedProperty]
+        public string? TopicAttributes { get; set; } = null;
+
+        /// <summary>
         /// Gets the activity context of the link.
         /// </summary>
         public OtelSpanContext? Context { get; internal set; } = null;
@@ -55,6 +63,10 @@ namespace mqtt2otel.Manifest
         {
             this.Target = embeddedExpressionParser.Expand(this.Target, context);
             this.Attributes = embeddedExpressionParser.Expand(this.Attributes, context);
+            if (this.TopicAttributes != null)
+            {
+                this.Attributes = this.Attributes.Combine(TopicAttributeParser.Parse(context.Message.Topic, this.TopicAttributes));
+            }
         }
     }
 }

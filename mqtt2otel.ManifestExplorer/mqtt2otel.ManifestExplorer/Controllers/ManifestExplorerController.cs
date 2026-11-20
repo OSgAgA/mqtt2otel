@@ -60,14 +60,14 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             List<ErrorTestData> processorErrors = new List<ErrorTestData>();
 
             Mock<ILogger<Processor>> logger = this.CreateLoggerMock<Processor>(processorErrors);
-            Mock<ILogger<OtelCollector>> otelCollectorLogger = this.CreateLoggerMock<OtelCollector>();
+            Mock<ILogger<OtelCollector>> otelCollectorLogger = this.CreateLoggerMock<OtelCollector>(processorErrors);
 
             IPayloadParser payloadParser = new PayloadParser();
             IEmbeddedExpressionParser embeddedExpressionParser = new EmbeddedExpressionParser(payloadParser);
 
             IPayloadTransformation payloadTransformation = new PayloadTransformation();
             ISignalStore signalStore = new SignalStore(embeddedExpressionParser);
-            var internalLogger = new Mock<ILogger<string>>();
+            var internalLogger = this.CreateLoggerMock<string>(processorErrors);
             ILoggerStore loggerStore = new LoggerStore(internalLogger.Object, payloadParser, payloadTransformation, embeddedExpressionParser);
             IDataStores dataStores = new DataStores(signalStore, loggerStore);
             ProcessorMeter meter = new ProcessorMeter();
@@ -133,13 +133,14 @@ namespace mqtt2otel.ManifestExplorer.Controllers
                 return new ApplyPatternToPayloadResult(error: new ErrorTestData(validationResult.ToString() ?? ""), state: traceStore.GetFullState());
             }
 
-            ILogger<MqttCoordinator> mqttLogger = new Logger<MqttCoordinator>(new LoggerFactory());
+            ILogger<MqttCoordinator> mqttLogger = this.CreateLoggerMock<MqttCoordinator>(processorErrors).Object;
 
-            var messageProcessor = new MessageProcessor(new Mock<ILogger<MessageProcessor>>().Object, payloadParser, new PayloadTransformation(), dataStores, meter, new UsageTelemetryMeter(), embeddedExpressionParser, traceStore);
+            var messageProcessor = new MessageProcessor(CreateLoggerMock<MessageProcessor>(processorErrors).Object, payloadParser, new PayloadTransformation(), dataStores, meter,
+                                                        new UsageTelemetryMeter(), embeddedExpressionParser, traceStore);
             var mqtt = new MqttCoordinator(mqttLogger, new MqttMeter(), messageProcessor, isSimulator: true);
             await mqtt.ConnectAndSubscribe(manifest);
 
-            ILogger<OtelCoordinator> otelLogger = new Logger<OtelCoordinator>(new LoggerFactory());
+            ILogger<OtelCoordinator> otelLogger = this.CreateLoggerMock<OtelCoordinator>(processorErrors).Object;
             var exportBuilder = new OtelTestExporterBuilder();
 
             processorMutex.WaitOne(TimeSpan.FromSeconds(30));
@@ -152,7 +153,9 @@ namespace mqtt2otel.ManifestExplorer.Controllers
 
                     var message = new MqttMessage(subscriptionId: 0, topic: request.MqttData.Topic, payload: request.MqttData.Payload, userProperties: request.MqttData.UserProperties);
                     bool success = await mqtt.SimulateOnMqttMessageReceived(message);
-                    otel.CreateSpans(traceStore.GetCompletedOrTimeOutSpans());
+                    var completedSpans = traceStore.GetCompletedOrTimeOutSpans();
+                    otel.CreateSpans(completedSpans);
+                    traceStore.RemoveSpans(completedSpans);
                 }
 
                 return new ApplyPatternToPayloadResult(exportBuilder, processorErrors, state: traceStore.GetFullState());
