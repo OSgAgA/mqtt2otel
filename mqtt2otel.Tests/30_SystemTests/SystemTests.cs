@@ -3,6 +3,7 @@ using Moq;
 using mqtt2otel.Helper;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
+using mqtt2otel.Provider;
 using mqtt2otel.Server.Helper;
 using mqtt2otel.Tests.Helper;
 using System;
@@ -65,7 +66,7 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
             var messageProcessor = MessageProcessorAccessor.CreateNew(payloadParser, embeddedExpressionParser, dataStores);
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor, new LocalStore(new FakeTraceIdProvider(null)));
 
             try
             {
@@ -83,7 +84,7 @@ namespace mqtt2otel.Tests._30_SystemTests
 
                     string topic = "sensors/logEntry";
                     string payload = "2026-01-31T15:42Z WARN This is a simple log message.";
-                    await mqttHelper.PublishPayload(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
+                    await mqttHelper.SendMessage(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
 
                     var completedTask = await Task.WhenAny(
                                        tcs.Task,

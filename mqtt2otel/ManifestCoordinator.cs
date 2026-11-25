@@ -69,11 +69,6 @@ namespace mqtt2otel
         private IEmbeddedExpressionParser embeddedPayloadParser;
 
         /// <summary>
-        /// Gets or sets the object factory that should be used for processing manifest files.
-        /// </summary>
-        private IObjectFactory objectFactory;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="Bootstrapper"/> class.
         /// 
         /// </summary>
@@ -85,7 +80,7 @@ namespace mqtt2otel
         /// <param name="applicationSettings">The application settings.</param>
         /// <param name="manifestMeter">The manifest meter used for internal metrics.</param>
         public ManifestCoordinator(
-            IObjectFactory objectFactory, ILogger<Bootstrapper> internalLogger, IOtelCoordinator otelCoordinator, IMqttCoordinator mqttCoordinator, IDataStores dataStores, ApplicationSettings applicationSettings, 
+            ILogger<Bootstrapper> internalLogger, IOtelCoordinator otelCoordinator, IMqttCoordinator mqttCoordinator, IDataStores dataStores, ApplicationSettings applicationSettings, 
             ManifestMeter manifestMeter, UsageTelemetryMeter usageTelemetryMeter, IPayloadParser payloadParser, IEmbeddedExpressionParser embeddedPayloadParser)
         {
             this.manifestMeter = manifestMeter;
@@ -97,7 +92,6 @@ namespace mqtt2otel
             this.internalLogger = internalLogger;
             this.payloadParser = payloadParser;
             this.embeddedPayloadParser = embeddedPayloadParser;
-            this.objectFactory = objectFactory;
         }
 
         /// <summary>
@@ -138,7 +132,7 @@ namespace mqtt2otel
             var manifest = new Manifest.Manifest();
             try
             {
-                manifest = Manifest.Manifest.ReadFromYaml(this.objectFactory, this.internalLogger, this.applicationSettings.ManifestPath);
+                manifest = Manifest.Manifest.ReadFromYaml(this.internalLogger, this.applicationSettings.ManifestPath);
             }
             catch (Exception ex)
             {

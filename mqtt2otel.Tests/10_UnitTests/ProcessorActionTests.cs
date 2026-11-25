@@ -91,7 +91,7 @@ namespace mqtt2otel.Tests._10_UnitTests
             var subscription = processor.Mqtt.Subscriptions[0];
 
             var messageProcessor = MessageProcessorAccessor.CreateNew(payloadParser, embeddedExpressionParser, dataStores);
-            messageProcessor.ProcessMessage(new MqttMessage(topic: "sensors/device", payload: payload), subscription, processor);
+            messageProcessor.ProcessMessage(new MqttMessage(topic: "sensors/device", payload: payload), subscription, processor, null);
 
             return storedSignals;
         }

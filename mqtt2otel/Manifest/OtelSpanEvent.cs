@@ -31,6 +31,13 @@ namespace mqtt2otel.Manifest
         public string? TopicAttributes { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets a value indicating, whether attributes should be created from mqtt user properties (true), or not (false), or
+        /// if the default setting should be used (null).
+        /// </summary>
+        [InheritedPropertyAttribute]
+        public bool? CreateAttributesFromUserProperties { get; set; } = null;
+
+        /// <summary>
         /// Gets or sets the timestamp, when the event happened. Defaults to DateTime.Now.
         /// </summary>
         public string? Timestamp

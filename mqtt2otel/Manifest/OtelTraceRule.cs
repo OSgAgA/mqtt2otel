@@ -65,6 +65,18 @@ namespace mqtt2otel.Manifest
         public string? TopicAttributes { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets all attributes that will be applied to the metric.
+        /// </summary>
+        public List<OtelAttribute> Attributes { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets a value indicating, whether attributes should be created from mqtt user properties (true), or not (false), or
+        /// if the default setting should be used (null).
+        /// </summary>
+        [InheritedPropertyAttribute]
+        public bool? CreateAttributesFromUserProperties { get; set; } = null;
+
+        /// <summary>
         /// Clones the rule.
         /// </summary>
         /// <returns>The cloned rule.</returns>
@@ -85,6 +97,7 @@ namespace mqtt2otel.Manifest
             clone.LogMessageDetails = this.LogMessageDetails;
             clone.OtelConnection = this.OtelConnection;
             clone.OtelScope = this.OtelScope;
+            clone.CreateAttributesFromUserProperties = this.CreateAttributesFromUserProperties;
             if (this.RetentionExceededEvent != null) clone.RetentionExceededEvent = this.RetentionExceededEvent.Clone();
             clone.RetentionInSeconds = this.RetentionInSeconds;
             clone.RetentionStrategy = this.RetentionStrategy;

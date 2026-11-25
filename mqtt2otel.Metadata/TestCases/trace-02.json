@@ -10,11 +10,15 @@
     "MqttData": [
       {
         "Topic": "sensor/start",
+        "ResponseTopic": null,
+        "CorrelationData": null,
         "Payload": "42",
         "UserProperties": []
       },
       {
         "Topic": "sensor/stop",
+        "ResponseTopic": null,
+        "CorrelationData": null,
         "Payload": "23",
         "UserProperties": []
       }
@@ -35,7 +39,7 @@
       "State": {
         "Spans": [
           {
-            "Created": "2026-11-20T17:17:06.5695134+01:00",
+            "Created": "2026-11-25T08:39:33.6681093+01:00",
             "Context": null,
             "ParentContext": null,
             "Attributes": [
@@ -46,11 +50,14 @@
               }
             ],
             "TopicAttributes": null,
+            "CreateAttributesFromUserProperties": true,
             "Id": "4711",
             "Parent": "MyParent",
-            "Started": "2026-11-20T16:17:06.5555995Z",
+            "EndOnCount": null,
+            "EndCounter": 0,
+            "Started": "2026-11-25T07:39:33.5658832Z",
             "Completed": "",
-            "StartedAsDateTime": "2026-11-20T16:17:06.5555995Z",
+            "StartedAsDateTime": "2026-11-25T07:39:33.5658832Z",
             "CompletedAsDateTime": null,
             "LinkTo": [
               {
@@ -68,8 +75,9 @@
             "RetentionExceededEvent": {
               "SpanId": "",
               "TopicAttributes": null,
+              "CreateAttributesFromUserProperties": true,
               "Timestamp": null,
-              "TimestampAsDateTime": "2026-11-20T16:17:06.5703776Z",
+              "TimestampAsDateTime": "2026-11-25T07:39:33.6721468Z",
               "Attributes": [],
               "IsActive": true,
               "OtelConnection": "default-connection",
@@ -80,7 +88,7 @@
               "AllowRuleDeactivationByItem": true,
               "BlockedTopicLimit": 3,
               "Slug": "span_retention_time_expired_6b81d70a",
-              "InternalId": "3bebeee2-f04b-42a3-a562-2d21d59adf72",
+              "InternalId": "072ac901-4f03-441e-95da-ddd9f408beef",
               "Name": "Span retention time expired.",
               "Description": "",
               "ImportFrom": null
@@ -97,7 +105,7 @@
             "AllowRuleDeactivationByItem": true,
             "BlockedTopicLimit": 3,
             "Slug": "start_running_19af2d87",
-            "InternalId": "898f4de1-1bec-40e5-87d4-b8416c4f0bce",
+            "InternalId": "7e069450-d74a-4ca7-96bd-9cc8635a5a5a",
             "Name": "Start running",
             "Description": "",
             "ImportFrom": null
@@ -110,7 +118,7 @@
             "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
             "SpanId": "8ad9cd275e9262b9",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-20T16:17:06.5704207Z",
+            "Created": "2026-11-25T07:39:33.6728153Z",
             "IsExpired": false
           },
           {
@@ -119,7 +127,7 @@
             "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
             "SpanId": "ba74db659763c09f",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-20T16:17:06.5704266Z",
+            "Created": "2026-11-25T07:39:33.6729746Z",
             "IsExpired": false
           },
           {
@@ -128,14 +136,15 @@
             "TraceId": "145fcce57bdedf99c500859790298775",
             "SpanId": "a1589e0ad0dee6ac",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-20T16:17:06.5704332Z",
+            "Created": "2026-11-25T07:39:33.6729762Z",
             "IsExpired": false
           }
         ],
         "TraceIdProviderState": {
           "ForceReset": false,
           "State": "2;2"
-        }
+        },
+        "DynamicSubscriptions": []
       }
     },
     {
@@ -151,7 +160,7 @@
             "MinimumLogLevel": "Information",
             "EndpointAddress": "http://localhost:4317"
           },
-          "StartUtc": "2026-11-20T16:17:06.5555995Z",
+          "StartUtc": "2026-11-25T07:39:33.5658832Z",
           "Attributes": [
             {
               "Key": "Hello",
@@ -169,7 +178,7 @@
               "IsInternal": false
             }
           ],
-          "Duration": "00:00:00.1199867",
+          "Duration": "00:00:00.2546080",
           "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
           "SpanId": "ba74db659763c09f",
           "ParentSpanId": "0000000000000000",
@@ -180,7 +189,7 @@
             {
               "Name": "Something happened",
               "Attributes": [],
-              "Timestamp": "2026-11-20T16:17:06.6755862+00:00"
+              "Timestamp": "2026-11-25T07:39:33.8204912+00:00"
             }
           ],
           "Links": [
@@ -195,13 +204,16 @@
       "State": {
         "Spans": [
           {
-            "Created": "2026-11-20T17:17:06.6869501+01:00",
+            "Created": "2026-11-25T08:39:33.8584963+01:00",
             "Context": null,
             "ParentContext": null,
             "Attributes": [],
             "TopicAttributes": null,
+            "CreateAttributesFromUserProperties": null,
             "Id": "1234",
             "Parent": null,
+            "EndOnCount": null,
+            "EndCounter": 0,
             "Started": null,
             "Completed": null,
             "StartedAsDateTime": null,
@@ -211,8 +223,9 @@
               {
                 "SpanId": "1234",
                 "TopicAttributes": null,
-                "Timestamp": "2026-11-20T16:17:06.6756956Z",
-                "TimestampAsDateTime": "2026-11-20T16:17:06.6756956Z",
+                "CreateAttributesFromUserProperties": true,
+                "Timestamp": "2026-11-25T07:39:33.8208318Z",
+                "TimestampAsDateTime": "2026-11-25T07:39:33.8208318Z",
                 "Attributes": [],
                 "IsActive": true,
                 "OtelConnection": "default-connection",
@@ -223,7 +236,7 @@
                 "AllowRuleDeactivationByItem": true,
                 "BlockedTopicLimit": 3,
                 "Slug": "something_else_happened_7913a030",
-                "InternalId": "0950c3c6-7eba-4ea6-8981-7d938bd971a6",
+                "InternalId": "2c1cae4f-4eac-433c-a037-a92859c95cff",
                 "Name": "Something else happened",
                 "Description": "",
                 "ImportFrom": null
@@ -246,7 +259,7 @@
             "AllowRuleDeactivationByItem": null,
             "BlockedTopicLimit": null,
             "Slug": "x_e3b0c442",
-            "InternalId": "b96e2359-bfb6-4f53-bd9a-23dc015fd2f3",
+            "InternalId": "27f1975b-22c8-4360-b585-9e4ce403e625",
             "Name": "",
             "Description": "",
             "ImportFrom": null
@@ -259,7 +272,7 @@
             "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
             "SpanId": "8ad9cd275e9262b9",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-20T16:17:06.6870453Z",
+            "Created": "2026-11-25T07:39:33.8585696Z",
             "IsExpired": false
           },
           {
@@ -268,7 +281,7 @@
             "TraceId": "145fcce57bdedf99c500859790298775",
             "SpanId": "a1589e0ad0dee6ac",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-20T16:17:06.6870544Z",
+            "Created": "2026-11-25T07:39:33.858573Z",
             "IsExpired": false
           },
           {
@@ -277,14 +290,15 @@
             "TraceId": "244d5459f93ce26a5099e5d5b242f37c",
             "SpanId": "a5ab7b5b13bce3de",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-20T16:17:06.6870571Z",
+            "Created": "2026-11-25T07:39:33.8585741Z",
             "IsExpired": false
           }
         ],
         "TraceIdProviderState": {
           "ForceReset": false,
           "State": "3;3"
-        }
+        },
+        "DynamicSubscriptions": []
       }
     }
   ],

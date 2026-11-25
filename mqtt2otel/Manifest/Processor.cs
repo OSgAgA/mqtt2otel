@@ -123,5 +123,16 @@ namespace mqtt2otel.Manifest
             this.Otel.Validate(context, result);
             this.Mqtt.Validate(context, result);
         }
+
+        /// <summary>
+        /// Clones this processor with setting the otel or mqtt rules.
+        /// </summary>
+        /// <returns></returns>
+        public Processor CloneWithEmptyRules()
+        {
+            var clone = this.MemberwiseClone() as Processor;
+
+            return clone ?? new Processor();
+        }
     }
 }

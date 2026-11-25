@@ -75,23 +75,24 @@ namespace mqtt2otel.Server.Helper
         }
 
         /// <summary>
-        /// Publishes a payload to the broker.
+        /// Sends a message to the broker.
         /// </summary>
-        /// <param name="topic">The message topic-</param>
-        /// <param name="payload">The message payload.</param>
-        /// <param name="userProperties">The message user properties.</param>
+        /// <param name="data">The setup data</param>
         /// <exception cref="Exception">Thrown when client is not connected.</exception>
-        public async Task PublishPayload(MqttSetupData data)
+        public async Task SendMessage(MqttSetupData data)
         {
             if (mqttClient == null)
             {
-                throw new Exception($"{nameof(PublishPayload)} can only be called, when mqttClient is set. Please call {nameof(EnsureServerIsStarted)} first.");
+                throw new Exception($"{nameof(SendMessage)} can only be called, when mqttClient is set. Please call {nameof(EnsureServerIsStarted)} first.");
             }
 
             var message = new MqttApplicationMessageBuilder()
                                 .WithTopic(data.Topic)
                                 .WithPayload(data.Payload)
                                 .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
+
+            if (!string.IsNullOrEmpty(data.ResponseTopic)) message.WithResponseTopic(data.ResponseTopic);
+            if (!string.IsNullOrEmpty(data.CorrelationData)) message.WithCorrelationData(System.Text.Encoding.UTF8.GetBytes(data.CorrelationData));
 
             foreach (var property in data.UserProperties)
             {

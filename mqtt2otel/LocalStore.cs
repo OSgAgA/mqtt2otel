@@ -6,12 +6,13 @@ using mqtt2otel.Stores;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using YamlDotNet.Core.Tokens;
 
 namespace mqtt2otel
 {
-    public class LocalTraceStore : ITraceStore
+    public class LocalStore : ITraceStore, IDynamicSubscriptionStore
     {
         /// <summary>
         /// Contains all stored span contexts.
@@ -39,10 +40,20 @@ namespace mqtt2otel
         private ITraceIdProvider traceIdProvider;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LocalTraceStore"/> class.
+        /// Stores data for dynamic mqtt subscriptions needed for response topics. The key is the response topic name.
+        /// </summary>
+        private Dictionary<string, DynamicSubscriptionData> dynamicSubscriptions = new();
+
+        /// <summary>
+        /// This event will be called, when a dynamic subscription has been removed from the store.
+        /// </summary>
+        public event EventHandler<DynamicSubscriptionData>? OnSubscriptionRemoved;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LocalStore"/> class.
         /// </summary>
         /// <param name="traceIdProvider">The provider used for generating trace and span ids.</param>
-        public LocalTraceStore(ITraceIdProvider traceIdProvider)
+        public LocalStore(ITraceIdProvider traceIdProvider)
         {
             this.traceIdProvider = traceIdProvider; 
         }
@@ -115,17 +126,22 @@ namespace mqtt2otel
         /// Stores a new span object.
         /// </summary>
         /// <param name="span">The span that should be stored.</param>
-        public void StoreSpan(OtelSpan span, bool updateExisting = false)
+        /// <param name="updateExisting">A value indicating whether an existing one should be updated.</param>
+        /// <param name="increaseCountBy">The delta by which the end count should be increased.</param>
+        public void StoreSpan(OtelSpan span, bool updateExisting = false, int increaseCountBy = 0)
         {
             lock (spanGate)
             {
                 if (this.spans.TryGetValue(span.Id, out var existingSpan))
                 {
                     existingSpan.CombineWith(span, updateExisting);
+                    existingSpan.EndCounter += increaseCountBy;
                     this.spans[existingSpan.Id] = existingSpan;
+                    span = existingSpan;
                 }
                 else
                 {
+                    span.EndCounter += increaseCountBy;
                     this.spans[span.Id] = span;
                 }
 
@@ -286,7 +302,7 @@ namespace mqtt2otel
         {
             lock (spanGate)
             {
-                var result = new InternalState(this.spans.Values.ToList(), this.spanContexts.Values.ToList());
+                var result = new InternalState(this.spans.Values.ToList(), this.spanContexts.Values.ToList(), this.dynamicSubscriptions.Values.ToList());
                 result.TraceIdProviderState = this.traceIdProvider.GetState();
 
                 return result;
@@ -309,6 +325,11 @@ namespace mqtt2otel
                 foreach (var context in state.SpanContexts)
                 {
                     this.spanContexts[context.Id] = context;
+                }
+
+                foreach (var sub in state.DynamicSubscriptions)
+                {
+                    this.dynamicSubscriptions[sub.Topic] = sub;
                 }
             }
         }
@@ -336,6 +357,67 @@ namespace mqtt2otel
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Stores or updates a response subscription.
+        /// 
+        /// An existing entry will only update values that are null. All other values will not be changed.
+        /// </summary>
+        /// <param name="topic">The topic to identify the subscription.</param>
+        /// <param name="subscription">The internal subscription.</param>
+        /// <param name="processor">The internal processor.</param>
+        public void UpsertDynamicSubscription(string topic, MqttSubscription subscription, Processor processor)
+        {
+            if (this.dynamicSubscriptions.ContainsKey(topic))
+            {
+                var entry = this.dynamicSubscriptions[topic];
+                entry.Processor = processor;
+                entry.Subscription = subscription;
+            }
+            else
+            {
+                var data = new DynamicSubscriptionData(topic, subscription, processor);
+
+                this.dynamicSubscriptions[topic] = data;
+            }
+        }
+
+        /// <summary>
+        /// Gets an exiting response subscription or creates a new one if none exists.
+        /// </summary>
+        /// <param name="topic">The topic name for receiving the subscription.</param>
+        /// <returns>The existing or newly created response subscription.</returns>
+        public DynamicSubscriptionData GetOrCreateDynamicSubscriptionData(string topic)
+        {
+            if (this.dynamicSubscriptions.ContainsKey(topic))
+            {
+                return this.dynamicSubscriptions[topic];
+            }
+
+            var newEntry = new DynamicSubscriptionData(topic);
+            this.dynamicSubscriptions[topic] = newEntry;
+
+            return newEntry;
+        }
+
+
+        /// <summary>
+        /// Deletes all not needed subscriptions.
+        /// </summary>
+        public void CleanupDynamicSubscriptions()
+        {
+            foreach (var sub in this.dynamicSubscriptions)
+            {
+                if (sub.Value.CanBeDeleted)
+                {
+                    this.dynamicSubscriptions.Remove(sub.Key);
+                    if (this.OnSubscriptionRemoved != null)
+                    {
+                        this.OnSubscriptionRemoved(this, sub.Value);
+                    }
+                }
+            }
         }
     }
 }

@@ -8,7 +8,7 @@ namespace mqtt2otel
     /// <summary>
     /// Represents a received mqtt message.
     /// </summary>
-    public class MqttMessage(uint subscriptionId = 0, string topic = "", string payload = "", List<UserProperty>? userProperties = null)
+    public class MqttMessage(uint subscriptionId = 0, string topic = "", string payload = "", List<UserProperty>? userProperties = null, string? responseTopic = null, string? correlationData = null)
     {
         /// <summary>
         /// Gets or sets the message payload.
@@ -29,6 +29,16 @@ namespace mqtt2otel
         /// Gets or sets the user properties associated with this message.
         /// </summary>
         public List<UserProperty> UserProperties { get; set; } = userProperties ?? new List<UserProperty>();
+
+        /// <summary>
+        /// Gets or sets the response topic if available.
+        /// </summary>
+        public string? ResponseTopic { get; set; } = responseTopic;
+
+        /// <summary>
+        /// Gets or sets the correlation data if available. Usually used with a response topic.
+        /// </summary>
+        public string? CorrelationData { get; set; } = correlationData;
 
         /// <summary>
         /// Provides a string representation of the message.

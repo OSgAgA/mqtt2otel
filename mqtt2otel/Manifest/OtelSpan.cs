@@ -48,6 +48,13 @@ namespace mqtt2otel.Manifest
         public string? TopicAttributes { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets a value indicating, whether attributes should be created from mqtt user properties (true), or not (false), or
+        /// if the default setting should be used (null).
+        /// </summary>
+        [InheritedPropertyAttribute]
+        public bool? CreateAttributesFromUserProperties { get; set; } = null;
+
+        /// <summary>
         /// Gets or sets the id of the span.
         /// </summary>
         public string Id { get; set; } = string.Empty;
@@ -56,6 +63,30 @@ namespace mqtt2otel.Manifest
         /// Gets or sets the parent span. Set to null for the root span.
         /// </summary>
         public string? Parent { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the count of end span messages that will end this span. <seealso cref="EndCounter"/>
+        /// </summary>
+        public string EndOnCount { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the count of end span messages that will end this span. <seealso cref="EndCounter"/> as an integer value or null
+        /// if either <see cref="EndOnCount"/> was not set or value could not be read as an integer.
+        /// </summary>
+        public int? EndOnCountAsInt
+        {
+            get
+            {
+                if (int.TryParse(this.EndOnCount, out var value)) return value;
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the current count how often end span has been called. <seealso cref="EndOnCountAsInt"/>
+        /// </summary>
+        public int EndCounter { get; set; } = 0;
 
         /// <summary>
         /// Backing field for <see cref="Started"/> property.
@@ -175,6 +206,7 @@ namespace mqtt2otel.Manifest
             {
                 if (this.StartedAsDateTime == null) return false;
                 if (this.CompletedAsDateTime == null) return false;
+                if (this.EndOnCountAsInt != null && this.EndCounter < this.EndOnCountAsInt) return false;
                 if (this.CompletedAsDateTime.Value.AddSeconds(this.WaitForLateSpanEventsInS ?? 5) > DateTime.UtcNow) return false;
 
                 return true;
@@ -222,6 +254,7 @@ namespace mqtt2otel.Manifest
                 if (other.Status != null) this.Status = other.Status;
                 if (!string.IsNullOrWhiteSpace(other.Started)) this.Started = other.Started;
                 if (!string.IsNullOrWhiteSpace(other.Completed)) this.Completed = other.Completed;
+                if (other.EndOnCountAsInt != null) this.EndOnCount = other.EndOnCount;
             }
             else // only override null values.
             {
@@ -232,6 +265,7 @@ namespace mqtt2otel.Manifest
                 if (this.Status == null) this.Status = other.Status;
                 if (string.IsNullOrWhiteSpace(this.Started)) this.Started = other.Started;
                 if (string.IsNullOrWhiteSpace(this.Completed)) this.Completed = other.Completed;
+                if (this.EndOnCountAsInt == null) this.EndOnCount = other.EndOnCount;
             }
         }
 
@@ -320,6 +354,7 @@ namespace mqtt2otel.Manifest
         {
             this.Id = embeddedExpressionParser.Expand(this.Id, context).ToString() ?? string.Empty;
             this.Name = embeddedExpressionParser.Expand(this.Name, context);
+            this.EndOnCount = embeddedExpressionParser.Expand(this.EndOnCount, context);
             this.Description = embeddedExpressionParser.Expand(this.Description, context);
             this.Attributes = embeddedExpressionParser.Expand(this.Attributes, context);
             if (this.TopicAttributes != null)

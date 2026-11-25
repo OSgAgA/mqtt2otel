@@ -6,6 +6,7 @@ using mqtt2otel.InternalMetrics;
 using mqtt2otel.Manifest;
 using mqtt2otel.Parser;
 using mqtt2otel.Shared.Helper;
+using mqtt2otel.Stores;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -64,6 +65,12 @@ namespace mqtt2otel
         private MessageProcessingErrorManager errorManager;
 
         /// <summary>
+        /// Gives access to dynamic subscriptions.
+        /// </summary>
+        private IDynamicSubscriptionStore dynamicSubscriptionStore;
+
+
+        /// <summary>
         /// Creates a new instance of the <see cref="Processor"/> type.
         /// </summary>
         /// <param name="internalLogger">The logger used internaly for logging.</param>
@@ -75,7 +82,7 @@ namespace mqtt2otel
         /// <param name="embeddedExpressionParser">The parser used for parsing expressions embedded in a subscription.</param>
         /// <param name="traceStore">The trace store</param>
         public MessageProcessor(ILogger<MessageProcessor> internalLogger, IPayloadParser payloadParser, IPayloadTransformation payloadTransformation, IDataStores dataStores,
-                         ProcessorMeter meter, UsageTelemetryMeter usageTelemetryMeter, IEmbeddedExpressionParser embeddedExpressionParser, ITraceStore traceStore)
+                         ProcessorMeter meter, UsageTelemetryMeter usageTelemetryMeter, IEmbeddedExpressionParser embeddedExpressionParser, ITraceStore traceStore, IDynamicSubscriptionStore dynamicSubscriptionStore)
         {
             this.processorMeter = meter;
             this.usageTelemetryMeter = usageTelemetryMeter;
@@ -86,6 +93,7 @@ namespace mqtt2otel
             this.embeddedExpressionParser = embeddedExpressionParser;
             this.traceStore = traceStore;
             this.errorManager = new MessageProcessingErrorManager(this.internalLogger);
+            this.dynamicSubscriptionStore = dynamicSubscriptionStore;
         }
 
         /// <summary>
@@ -94,8 +102,9 @@ namespace mqtt2otel
         /// <param name="message">The received message.</param>
         /// <param name="subscription">The subscription that received the payload.</param>
         /// <param name="processor">The manifest processor.</param>
+        /// <param name="responseSubscription">The subscription information for an mqtt response topic or null if no response topic is available.</param>
         /// <returns>A value indicating whether the operation has been successful.</returns>
-        public bool ProcessMessage(MqttMessage message, MqttSubscription subscription, Processor processor)
+        public bool ProcessMessage(MqttMessage message, MqttSubscription subscription, Processor processor, DynamicSubscriptionData? responseSubscription)
         {
             int errorCount = 0;
 
@@ -107,6 +116,10 @@ namespace mqtt2otel
             sw.Start();
             try
             {
+                using (this.internalLogger.StartActivity("Process prepared subscriptions"))
+                {
+                    errorCount += ProcessPreparedSubscription(message, processor);
+                }
                 using (this.internalLogger.StartActivity("Process metrics processors"))
                 {
                     errorCount += this.ProcessMetricsSubscription(message, subscription, processor);
@@ -118,6 +131,10 @@ namespace mqtt2otel
                 using (this.internalLogger.StartActivity("Process trace processors"))
                 {
                     errorCount += this.ProcessTracesSubscriptions(message, subscription, processor);
+                }
+                using (this.internalLogger.StartActivity("Process response processors"))
+                {
+                    errorCount += ProcessResponseProcessors(message, subscription, processor, responseSubscription);
                 }
             }
             catch
@@ -134,6 +151,75 @@ namespace mqtt2otel
             if (errorCount > 0) this.processorMeter.ProcessingErrorCount.Add(errorCount, tags);
 
             return errorCount == 0;
+        }
+
+        /// <summary>
+        /// Process a message by applying prepared subscriptions if active.
+        /// </summary>
+        /// <param name="message">The mqtt message received.</param>
+        /// <param name="processor">The manifest processor.</param>
+        /// <returns>The number of rules, that run into an error.</returns>
+        private int ProcessPreparedSubscription(MqttMessage message, Processor processor)
+        {
+            int errorCount = 0;
+            var preparedSubscription = processor.Otel.PreparedSubscription;
+
+            if (preparedSubscription.IsActive)
+            {
+                var data = this.dynamicSubscriptionStore.GetOrCreateDynamicSubscriptionData(message.Topic);
+                data.TimeoutInSeconds = preparedSubscription.TimeoutInS;
+
+                if (data.Processor != null && data.Subscription != null)
+                {
+                    errorCount += this.ProcessMetricsSubscription(message, data.Subscription, data.Processor);
+                    errorCount += this.ProcessLogsSubscription(message, data.Subscription, data.Processor);
+                    errorCount += this.ProcessTracesSubscriptions(message, data.Subscription, data.Processor);
+                }
+                else
+                {
+                    if (data.MessageBuffer.Count > 0 && data.MessageBuffer.Count >= preparedSubscription.MaxMessageCount)
+                    {
+                        data.MessageBuffer.RemoveAt(0);
+                    }
+
+                    data.MessageBuffer.Add(message);
+                }
+            }
+
+            return errorCount;
+        }
+
+        /// <summary>
+        /// Process a message by registering response processors.
+        /// </summary>
+        /// <param name="message">The mqtt message received.</param>
+        /// <param name="subscription">The settings of the subscription that triggered this processor.</param>
+        /// <param name="processor">The manifest processor.</param>
+        /// <param name="responseSubscription">The response subscription data.</param>
+        /// <returns>The number of rules, that run into an error.</returns>
+        private int ProcessResponseProcessors(MqttMessage message, MqttSubscription subscription, Processor processor, DynamicSubscriptionData? responseSubscription)
+        {
+            int errorCount = 0;
+
+            if (responseSubscription != null && message.ResponseTopic != null)
+            {
+                var responseProcessor = processor.CloneWithEmptyRules();
+                responseProcessor.Mqtt = processor.Mqtt;
+                if (processor.Otel.Response != null) responseProcessor.Otel = processor.Otel.Response;
+
+                this.dynamicSubscriptionStore.UpsertDynamicSubscription(message.ResponseTopic, subscription, responseProcessor);
+
+                foreach (var msg in responseSubscription.MessageBuffer)
+                {
+                    errorCount += this.ProcessMetricsSubscription(msg, subscription, responseProcessor);
+                    errorCount += this.ProcessLogsSubscription(msg, subscription, responseProcessor);
+                    errorCount += this.ProcessTracesSubscriptions(msg, subscription, responseProcessor);
+                }
+
+                responseSubscription.MessageBuffer.Clear();
+            }
+
+            return errorCount;
         }
 
         /// <summary>
@@ -166,6 +252,7 @@ namespace mqtt2otel
                         var parsingContext = new ParsingContext(combinedVariables, message);
 
                         var ruleClone = rule.Clone();
+
                         foreach (var action in ruleClone.Actions)
                         {
                             bool success = true;
@@ -194,7 +281,15 @@ namespace mqtt2otel
                             try
                             {
                                 var clone = span.Clone();
-                                clone.Expand(this.embeddedExpressionParser, this.payloadParser, parsingContext);                                
+                                clone.Attributes = span.Attributes.Combine(ruleClone.Attributes);
+                                clone.Expand(this.embeddedExpressionParser, this.payloadParser, parsingContext);
+
+                                // Add attributes from user properties after expand to avoid code injection via user properties.
+                                if (clone.CreateAttributesFromUserProperties.HasValue && clone.CreateAttributesFromUserProperties == true)
+                                {
+                                    clone.Attributes = clone.Attributes.Combine(message.UserProperties.ToOtelAttributes());
+                                }
+
                                 if (string.IsNullOrEmpty(clone.Started)) clone.Started = this.GetTimestampFromMessageOrUtcNow(message).ToString("O");
                                 if (clone.Kind == null) clone.Kind = ActivityKind.Internal;
                                 if (clone.Status == null) clone.Status = ActivityStatusCode.Unset;
@@ -220,6 +315,12 @@ namespace mqtt2otel
                                 if (string.IsNullOrEmpty(clone.Timestamp)) clone.Timestamp = this.GetTimestampFromMessageOrUtcNow(message).ToString("O");
                                 clone.Expand(this.payloadParser, this.embeddedExpressionParser, parsingContext);
 
+                                // Add attributes from user properties after expand to avoid code injection via user properties.
+                                if (clone.CreateAttributesFromUserProperties.HasValue && clone.CreateAttributesFromUserProperties == true)
+                                {
+                                    clone.Attributes = clone.Attributes.Combine(message.UserProperties.ToOtelAttributes());
+                                }
+
                                 this.traceStore.AddEvent(clone);
                             }
                             catch (Exception ex)
@@ -240,8 +341,16 @@ namespace mqtt2otel
                             {
                                 var clone = span.Clone();
                                 clone.Expand(this.embeddedExpressionParser, this.payloadParser, parsingContext);
+
+                                // Add attributes from user properties after expand to avoid code injection via user properties.
+                                if (clone.CreateAttributesFromUserProperties.HasValue && clone.CreateAttributesFromUserProperties == true)
+                                {
+                                    clone.Attributes = clone.Attributes.Combine(message.UserProperties.ToOtelAttributes());
+                                }
+
                                 if (string.IsNullOrEmpty(clone.Completed)) clone.Completed = this.GetTimestampFromMessageOrUtcNow(message).ToString("O");
-                                this.traceStore.StoreSpan(clone, updateExisting: true);
+
+                                this.traceStore.StoreSpan(clone, updateExisting: true, increaseCountBy: 1);
                             }
                             catch (Exception ex)
                             {

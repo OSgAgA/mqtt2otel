@@ -3,6 +3,7 @@ using Moq;
 using mqtt2otel.Helper;
 using mqtt2otel.InternalMetrics;
 using mqtt2otel.Parser;
+using mqtt2otel.Provider;
 using mqtt2otel.Server.Helper;
 using mqtt2otel.Stores;
 using mqtt2otel.Tests.Helper;
@@ -52,7 +53,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
 
             var payloadParser = new PayloadParser();
             var messageProcessor = MessageProcessorAccessor.CreateNew(new PayloadParser(), new EmbeddedExpressionParser(new PayloadParser()), GenericHelper.GetDataStores(payloadParser, new EmbeddedExpressionParser(payloadParser)));
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor, new LocalStore( new FakeTraceIdProvider(null)));
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
             mqttCoordinator.OnMessageReceived += (sender, args) => tcs.SetResult(args);
 
@@ -61,7 +62,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             string topic = "sensors/temperature";
             string payload = "42";
 
-            await mqttHelper.PublishPayload(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
+            await mqttHelper.SendMessage(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
@@ -113,7 +114,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
 
             var payloadParser = new PayloadParser();
             var messageProcessor = MessageProcessorAccessor.CreateNew(new PayloadParser(), new EmbeddedExpressionParser(new PayloadParser()), GenericHelper.GetDataStores(payloadParser, new EmbeddedExpressionParser(payloadParser)));
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor, new LocalStore(new FakeTraceIdProvider(null)));
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
             mqttCoordinator.OnMessageReceived += (sender, args) => tcs.SetResult(args);
 
@@ -122,7 +123,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             string topic = "sensors/temperature";
             string payload = "42";
 
-            await mqttHelper.PublishPayload(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
+            await mqttHelper.SendMessage(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
@@ -177,7 +178,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
 
             var payloadParser = new PayloadParser();
             var messageProcessor = MessageProcessorAccessor.CreateNew(new PayloadParser(), new EmbeddedExpressionParser(new PayloadParser()), GenericHelper.GetDataStores(payloadParser, new EmbeddedExpressionParser(payloadParser)));
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor, new LocalStore(new FakeTraceIdProvider(null)));
             var tcs = new TaskCompletionSource<MqttMessageReceivedEventArgs>();
 
             mqttCoordinator.OnMessageReceived += (sender, args) => tcs.SetResult(args);
@@ -187,7 +188,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             string topic = "sensors/temperature";
             string payload = "42";
 
-            await mqttHelper.PublishPayload(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
+            await mqttHelper.SendMessage(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,
@@ -241,7 +242,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
             var payloadParser = new PayloadParser();
             var messageProcessor = MessageProcessorAccessor.CreateNew(new PayloadParser(), new EmbeddedExpressionParser(new PayloadParser()), GenericHelper.GetDataStores(payloadParser, new EmbeddedExpressionParser(payloadParser)));
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor, new LocalStore(new FakeTraceIdProvider(null)));
             var tcs = new TaskCompletionSource<List<MqttMessageReceivedEventArgs>>();
             List<MqttMessageReceivedEventArgs> results = new();
 
@@ -259,7 +260,7 @@ namespace mqtt2otel.Tests._20_IntegrationTests
             string topic = "sensors/temperature";
             string payload = "42";
 
-            await mqttHelper.PublishPayload(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
+            await mqttHelper.SendMessage(new Metadata.MqttSetupData() { Topic = topic, Payload = payload });
 
             var completedTask = await Task.WhenAny(
                                tcs.Task,

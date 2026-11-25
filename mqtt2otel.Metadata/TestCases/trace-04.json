@@ -1,0 +1,1129 @@
+{
+  "Links": {
+    "Open telemetry metrics": "https://mqtt2otel.org/docs/manifest/processors/#the-otel-metrics-section",
+    "Supported functions": "https://mqtt2otel.org/docs/expressions/#available-functions"
+  },
+  "Setup": {
+    "Id": "trace-04",
+    "Name": "Traces playground 4 - Response topic",
+    "Description": "Playground for traces.",
+    "MqttData": [
+      {
+        "Topic": "Factory-A/ProductionLine-01/Device_1234/message",
+        "ResponseTopic": "Factory-A/ProductionLine-01/Device_1234/response/shutdown",
+        "CorrelationData": "123",
+        "Payload": "Shutdown message sent",
+        "UserProperties": []
+      },
+      {
+        "Topic": "Factory-A/ProductionLine-01/Device_1234/response/shutdown",
+        "ResponseTopic": "",
+        "CorrelationData": "123",
+        "Payload": "Shutdown message received.",
+        "UserProperties": [
+          {
+            "Name": "device-id",
+            "Value": "987"
+          }
+        ]
+      },
+      {
+        "Topic": "Factory-A/ProductionLine-01/Device_1234/response/shutdown",
+        "ResponseTopic": "",
+        "CorrelationData": "123",
+        "Payload": "Shutdown message received.",
+        "UserProperties": [
+          {
+            "Name": "device-id",
+            "Value": "356"
+          }
+        ]
+      }
+    ],
+    "Manifest": "Processors:\n  - Mqtt: \n      Subscriptions:\n        - Topic: \u0022\u002B/\u002B/\u002B/message\u0022\n    Otel:\n      Traces:\n        - Actions:\n            - When:\n               - \u0022Payload() == \u0027Shutdown message sent\u0027\u0022\n              Then:\n                CreateSpans:\n                 - Id: \u0022Shutdown $(TopicPath(\u0027[2]\u0027))\u0022\n                   Name: \u0022Shutting down devices\u0022\n                   TopicAttributes: \u0022factory/line/device-id/_\u0022                    \n      Response:\n        Traces:\n          - EndSpans:\n              - Id: \u0022Shutdown $(TopicPath(\u0027[2]\u0027))\u0022\n                EndOnCount: \u00222\u0022\n                CreateAttributesFromUserProperties: false\n            CreateEvents:\n              - SpanId: \u0022Shutdown $(TopicPath(\u0027[2]\u0027))\u0022\n                Name: \u0022Device $(UserProperty(\u0027device-id\u0027)) reported shutdown.\u0022\n\n",
+    "Category": "Traces",
+    "Tags": [
+      "text"
+    ],
+    "CreateExample": true,
+    "ValidateManifestOnly": false
+  },
+  "ExpectedResults": [
+    {
+      "Metrics": [],
+      "Logs": [],
+      "Spans": [],
+      "State": {
+        "Spans": [
+          {
+            "Created": "2026-11-24T15:08:29.1465464+01:00",
+            "Context": null,
+            "ParentContext": null,
+            "Attributes": [
+              {
+                "Key": "factory",
+                "Value": "Factory-A",
+                "IsInternal": false
+              },
+              {
+                "Key": "line",
+                "Value": "ProductionLine-01",
+                "IsInternal": false
+              },
+              {
+                "Key": "device-id",
+                "Value": "Device_1234",
+                "IsInternal": false
+              }
+            ],
+            "TopicAttributes": "factory/line/device-id/_",
+            "CreateAttributesFromUserProperties": null,
+            "Id": "Shutdown Device_1234",
+            "Parent": null,
+            "EndOnCount": null,
+            "EndCounter": 0,
+            "Started": "2026-11-24T14:08:29.1403285Z",
+            "Completed": "",
+            "StartedAsDateTime": "2026-11-24T14:08:29.1403285Z",
+            "CompletedAsDateTime": null,
+            "LinkTo": [],
+            "Events": [],
+            "Kind": 0,
+            "Status": 0,
+            "RetentionInSeconds": 3600,
+            "RetentionStrategy": 7,
+            "RetentionExceededEvent": {
+              "SpanId": "",
+              "TopicAttributes": null,
+              "CreateAttributesFromUserProperties": true,
+              "Timestamp": null,
+              "TimestampAsDateTime": "2026-11-24T14:08:29.1465803Z",
+              "Attributes": [],
+              "IsActive": true,
+              "OtelConnection": "default-connection",
+              "OtelScope": null,
+              "LogMessageDetails": true,
+              "AllowRuleDeactivation": true,
+              "AllowRuleDeactivationByTopic": true,
+              "AllowRuleDeactivationByItem": true,
+              "BlockedTopicLimit": 3,
+              "Slug": "span_retention_time_expired_6b81d70a",
+              "InternalId": "2513b6a9-41bb-43be-a888-1d82309dd6ed",
+              "Name": "Span retention time expired.",
+              "Description": "",
+              "ImportFrom": null
+            },
+            "WaitForLateSpanEventsInS": 0,
+            "IsCompleted": false,
+            "IsRetentionExceeded": false,
+            "IsActive": true,
+            "OtelConnection": "default-connection",
+            "OtelScope": null,
+            "LogMessageDetails": null,
+            "AllowRuleDeactivation": null,
+            "AllowRuleDeactivationByTopic": null,
+            "AllowRuleDeactivationByItem": null,
+            "BlockedTopicLimit": null,
+            "Slug": "shutting_down_devices_5cca1032",
+            "InternalId": "f7bd9711-010a-4195-982d-39264d8a33b5",
+            "Name": "Shutting down devices",
+            "Description": "",
+            "ImportFrom": null
+          }
+        ],
+        "SpanContexts": [
+          {
+            "Id": "Shutdown Device_1234",
+            "Sent": null,
+            "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
+            "SpanId": "8ad9cd275e9262b9",
+            "RetentionInSeconds": 3600,
+            "Created": "2026-11-24T14:08:29.1465999Z",
+            "IsExpired": false
+          }
+        ],
+        "TraceIdProviderState": {
+          "ForceReset": false,
+          "State": "0;0"
+        },
+        "DynamicSubscriptions": [
+          {
+            "Topic": "Factory-A/ProductionLine-01/Device_1234/response/shutdown",
+            "Subscription": {
+              "Topic": "\u002B/\u002B/\u002B/message",
+              "BrokerConnection": null,
+              "Transform": null,
+              "Variables": [],
+              "Slug": "x_e3b0c442",
+              "InternalId": "54d9d45b-5c12-4a1c-a05f-cdf51ab45422",
+              "Name": "",
+              "Description": "",
+              "ImportFrom": null
+            },
+            "MessageBuffer": [],
+            "Processor": {
+              "CreateAttributesFromUserProperties": true,
+              "LogMessageDetails": true,
+              "AllowRuleDeactivation": true,
+              "AllowRuleDeactivationByTopic": true,
+              "AllowRuleDeactivationByItem": true,
+              "BlockedTopicLimit": 3,
+              "RetentionInSeconds": 3600,
+              "RetentionStrategy": 7,
+              "RetentionExceededEvent": {
+                "SpanId": "",
+                "TopicAttributes": null,
+                "CreateAttributesFromUserProperties": true,
+                "Timestamp": null,
+                "TimestampAsDateTime": "2026-11-24T14:08:29.1466178Z",
+                "Attributes": [],
+                "IsActive": true,
+                "OtelConnection": "default-connection",
+                "OtelScope": null,
+                "LogMessageDetails": true,
+                "AllowRuleDeactivation": true,
+                "AllowRuleDeactivationByTopic": true,
+                "AllowRuleDeactivationByItem": true,
+                "BlockedTopicLimit": 3,
+                "Slug": "span_retention_time_expired_6b81d70a",
+                "InternalId": "16cdebd5-d456-48d9-a633-d09af2ee9e3d",
+                "Name": "Span retention time expired.",
+                "Description": "",
+                "ImportFrom": null
+              },
+              "WaitForLateSpanEventsInS": 0,
+              "Otel": {
+                "Attributes": [],
+                "TopicAttributes": null,
+                "CreateAttributesFromUserProperties": true,
+                "Metrics": [],
+                "Logs": [],
+                "Traces": [
+                  {
+                    "CreateSpans": [],
+                    "EndSpans": [
+                      {
+                        "Created": "2026-11-24T15:08:29.146627+01:00",
+                        "Context": null,
+                        "ParentContext": null,
+                        "Attributes": [],
+                        "TopicAttributes": null,
+                        "CreateAttributesFromUserProperties": false,
+                        "Id": "Shutdown $(TopicPath(\u0027[2]\u0027))",
+                        "Parent": null,
+                        "EndOnCount": "2",
+                        "EndCounter": 0,
+                        "Started": null,
+                        "Completed": null,
+                        "StartedAsDateTime": null,
+                        "CompletedAsDateTime": null,
+                        "LinkTo": [],
+                        "Events": [],
+                        "Kind": null,
+                        "Status": null,
+                        "RetentionInSeconds": 3600,
+                        "RetentionStrategy": 7,
+                        "RetentionExceededEvent": {
+                          "SpanId": "",
+                          "TopicAttributes": null,
+                          "CreateAttributesFromUserProperties": true,
+                          "Timestamp": null,
+                          "TimestampAsDateTime": "2026-11-24T14:08:29.1466292Z",
+                          "Attributes": [],
+                          "IsActive": true,
+                          "OtelConnection": "default-connection",
+                          "OtelScope": null,
+                          "LogMessageDetails": true,
+                          "AllowRuleDeactivation": true,
+                          "AllowRuleDeactivationByTopic": true,
+                          "AllowRuleDeactivationByItem": true,
+                          "BlockedTopicLimit": 3,
+                          "Slug": "span_retention_time_expired_6b81d70a",
+                          "InternalId": "1faf05e1-32a7-4643-aaec-8f6ce40cdb81",
+                          "Name": "Span retention time expired.",
+                          "Description": "",
+                          "ImportFrom": null
+                        },
+                        "WaitForLateSpanEventsInS": 0,
+                        "IsCompleted": false,
+                        "IsRetentionExceeded": false,
+                        "IsActive": true,
+                        "OtelConnection": "default-connection",
+                        "OtelScope": null,
+                        "LogMessageDetails": true,
+                        "AllowRuleDeactivation": true,
+                        "AllowRuleDeactivationByTopic": true,
+                        "AllowRuleDeactivationByItem": true,
+                        "BlockedTopicLimit": 3,
+                        "Slug": "x_e3b0c442",
+                        "InternalId": "2800d304-a581-4328-8fa5-140519a787da",
+                        "Name": "",
+                        "Description": "",
+                        "ImportFrom": null
+                      }
+                    ],
+                    "CreateEvents": [
+                      {
+                        "SpanId": "Shutdown $(TopicPath(\u0027[2]\u0027))",
+                        "TopicAttributes": null,
+                        "CreateAttributesFromUserProperties": true,
+                        "Timestamp": null,
+                        "TimestampAsDateTime": "2026-11-24T14:08:29.1466326Z",
+                        "Attributes": [],
+                        "IsActive": true,
+                        "OtelConnection": "default-connection",
+                        "OtelScope": null,
+                        "LogMessageDetails": true,
+                        "AllowRuleDeactivation": true,
+                        "AllowRuleDeactivationByTopic": true,
+                        "AllowRuleDeactivationByItem": true,
+                        "BlockedTopicLimit": 3,
+                        "Slug": "device_userproperty_device-id_reported_shutdown_71d4e806",
+                        "InternalId": "7114d06b-8297-4dd9-bdc9-0d7ddb257db8",
+                        "Name": "Device $(UserProperty(\u0027device-id\u0027)) reported shutdown.",
+                        "Description": "",
+                        "ImportFrom": null
+                      }
+                    ],
+                    "Actions": [],
+                    "RetentionInSeconds": 3600,
+                    "RetentionStrategy": 7,
+                    "RetentionExceededEvent": {
+                      "SpanId": "",
+                      "TopicAttributes": null,
+                      "CreateAttributesFromUserProperties": true,
+                      "Timestamp": null,
+                      "TimestampAsDateTime": "2026-11-24T14:08:29.1466367Z",
+                      "Attributes": [],
+                      "IsActive": true,
+                      "OtelConnection": "default-connection",
+                      "OtelScope": null,
+                      "LogMessageDetails": true,
+                      "AllowRuleDeactivation": true,
+                      "AllowRuleDeactivationByTopic": true,
+                      "AllowRuleDeactivationByItem": true,
+                      "BlockedTopicLimit": 3,
+                      "Slug": "span_retention_time_expired_6b81d70a",
+                      "InternalId": "a3892ef4-7fa9-433c-a18f-5dadf9bd97bd",
+                      "Name": "Span retention time expired.",
+                      "Description": "",
+                      "ImportFrom": null
+                    },
+                    "WaitForLateSpanEventsInS": 0,
+                    "TopicAttributes": null,
+                    "Attributes": [],
+                    "CreateAttributesFromUserProperties": true,
+                    "IsActive": true,
+                    "OtelConnection": "default-connection",
+                    "OtelScope": null,
+                    "LogMessageDetails": true,
+                    "AllowRuleDeactivation": true,
+                    "AllowRuleDeactivationByTopic": true,
+                    "AllowRuleDeactivationByItem": true,
+                    "BlockedTopicLimit": 3,
+                    "Slug": "x_e3b0c442",
+                    "InternalId": "7809da64-4516-48b9-9aed-24a30b4f1bd2",
+                    "Name": "",
+                    "Description": "",
+                    "ImportFrom": null
+                  }
+                ],
+                "Response": null,
+                "RetentionInSeconds": 3600,
+                "RetentionStrategy": 7,
+                "RetentionExceededEvent": {
+                  "SpanId": "",
+                  "TopicAttributes": null,
+                  "CreateAttributesFromUserProperties": true,
+                  "Timestamp": null,
+                  "TimestampAsDateTime": "2026-11-24T14:08:29.1466427Z",
+                  "Attributes": [],
+                  "IsActive": true,
+                  "OtelConnection": "default-connection",
+                  "OtelScope": null,
+                  "LogMessageDetails": true,
+                  "AllowRuleDeactivation": true,
+                  "AllowRuleDeactivationByTopic": true,
+                  "AllowRuleDeactivationByItem": true,
+                  "BlockedTopicLimit": 3,
+                  "Slug": "span_retention_time_expired_6b81d70a",
+                  "InternalId": "fc9734a7-1d24-47e5-b1d4-d03d5446d768",
+                  "Name": "Span retention time expired.",
+                  "Description": "",
+                  "ImportFrom": null
+                },
+                "WaitForLateSpanEventsInS": 0,
+                "OtelConnection": "default-connection",
+                "OtelScope": null,
+                "LogMessageDetails": true,
+                "AllowRuleDeactivation": true,
+                "AllowRuleDeactivationByTopic": true,
+                "AllowRuleDeactivationByItem": true,
+                "BlockedTopicLimit": 3,
+                "Slug": "x_e3b0c442",
+                "InternalId": "bc647492-8184-41e8-9d16-4c7e8439c497",
+                "Name": "",
+                "Description": "",
+                "ImportFrom": null
+              },
+              "Mqtt": {
+                "Variables": [],
+                "Transform": null,
+                "Subscriptions": [
+                  {
+                    "Topic": "\u002B/\u002B/\u002B/message",
+                    "BrokerConnection": null,
+                    "Transform": null,
+                    "Variables": [],
+                    "Slug": "x_e3b0c442",
+                    "InternalId": "e50c53c9-6649-47f1-912a-8113a6326479",
+                    "Name": "",
+                    "Description": "",
+                    "ImportFrom": null
+                  }
+                ],
+                "SubscriptionGroups": [],
+                "BrokerConnection": null,
+                "Slug": "x_e3b0c442",
+                "InternalId": "de919dd4-0ea2-4d34-a523-b56789431cc4",
+                "Name": "",
+                "Description": "",
+                "ImportFrom": null
+              },
+              "OtelConnection": "default-connection",
+              "OtelScope": null,
+              "Slug": "x_e3b0c442",
+              "InternalId": "1b521fe2-cdea-458b-9751-fc7de54e93e2",
+              "Name": "",
+              "Description": "",
+              "ImportFrom": null
+            },
+            "TimeoutInSeconds": 2,
+            "MaxCount": 2147483647,
+            "Count": 0,
+            "SubscriptionId": 2,
+            "IsActive": true
+          }
+        ]
+      }
+    },
+    {
+      "Metrics": [],
+      "Logs": [],
+      "Spans": [],
+      "State": {
+        "Spans": [
+          {
+            "Created": "2026-11-24T15:08:29.2633667+01:00",
+            "Context": null,
+            "ParentContext": null,
+            "Attributes": [
+              {
+                "Key": "factory",
+                "Value": "Factory-A",
+                "IsInternal": false
+              },
+              {
+                "Key": "line",
+                "Value": "ProductionLine-01",
+                "IsInternal": false
+              },
+              {
+                "Key": "device-id",
+                "Value": "Device_1234",
+                "IsInternal": false
+              }
+            ],
+            "TopicAttributes": "factory/line/device-id/_",
+            "CreateAttributesFromUserProperties": null,
+            "Id": "Shutdown Device_1234",
+            "Parent": null,
+            "EndOnCount": "2",
+            "EndCounter": 1,
+            "Started": "2026-11-24T14:08:29.1403285Z",
+            "Completed": "2026-11-24T14:08:29.2588390Z",
+            "StartedAsDateTime": "2026-11-24T14:08:29.1403285Z",
+            "CompletedAsDateTime": "2026-11-24T14:08:29.258839Z",
+            "LinkTo": [],
+            "Events": [
+              {
+                "SpanId": "Shutdown Device_1234",
+                "TopicAttributes": null,
+                "CreateAttributesFromUserProperties": true,
+                "Timestamp": "2026-11-24T14:08:29.2587058Z",
+                "TimestampAsDateTime": "2026-11-24T14:08:29.2587058Z",
+                "Attributes": [
+                  {
+                    "Key": "device-id",
+                    "Value": "987",
+                    "IsInternal": false
+                  }
+                ],
+                "IsActive": true,
+                "OtelConnection": "default-connection",
+                "OtelScope": null,
+                "LogMessageDetails": true,
+                "AllowRuleDeactivation": true,
+                "AllowRuleDeactivationByTopic": true,
+                "AllowRuleDeactivationByItem": true,
+                "BlockedTopicLimit": 3,
+                "Slug": "device_987_reported_shutdown_ed9cf389",
+                "InternalId": "4bf020e3-64c9-4c68-89f4-939a41fc0d83",
+                "Name": "Device 987 reported shutdown.",
+                "Description": "",
+                "ImportFrom": null
+              }
+            ],
+            "Kind": 0,
+            "Status": 0,
+            "RetentionInSeconds": 3600,
+            "RetentionStrategy": 7,
+            "RetentionExceededEvent": {
+              "SpanId": "",
+              "TopicAttributes": null,
+              "CreateAttributesFromUserProperties": true,
+              "Timestamp": null,
+              "TimestampAsDateTime": "2026-11-24T14:08:29.2634573Z",
+              "Attributes": [],
+              "IsActive": true,
+              "OtelConnection": "default-connection",
+              "OtelScope": null,
+              "LogMessageDetails": true,
+              "AllowRuleDeactivation": true,
+              "AllowRuleDeactivationByTopic": true,
+              "AllowRuleDeactivationByItem": true,
+              "BlockedTopicLimit": 3,
+              "Slug": "span_retention_time_expired_6b81d70a",
+              "InternalId": "3ac4fa7a-786d-4b04-bffb-b325a2db6907",
+              "Name": "Span retention time expired.",
+              "Description": "",
+              "ImportFrom": null
+            },
+            "WaitForLateSpanEventsInS": 0,
+            "IsCompleted": false,
+            "IsRetentionExceeded": false,
+            "IsActive": true,
+            "OtelConnection": "default-connection",
+            "OtelScope": null,
+            "LogMessageDetails": null,
+            "AllowRuleDeactivation": null,
+            "AllowRuleDeactivationByTopic": null,
+            "AllowRuleDeactivationByItem": null,
+            "BlockedTopicLimit": null,
+            "Slug": "shutting_down_devices_5cca1032",
+            "InternalId": "5388794b-71b1-4fc2-be0a-c5464743f250",
+            "Name": "Shutting down devices",
+            "Description": "",
+            "ImportFrom": null
+          }
+        ],
+        "SpanContexts": [
+          {
+            "Id": "Shutdown Device_1234",
+            "Sent": null,
+            "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
+            "SpanId": "8ad9cd275e9262b9",
+            "RetentionInSeconds": 3600,
+            "Created": "2026-11-24T14:08:29.2634724Z",
+            "IsExpired": false
+          }
+        ],
+        "TraceIdProviderState": {
+          "ForceReset": false,
+          "State": "0;0"
+        },
+        "DynamicSubscriptions": [
+          {
+            "Topic": "Factory-A/ProductionLine-01/Device_1234/response/shutdown",
+            "Subscription": {
+              "Topic": "\u002B/\u002B/\u002B/message",
+              "BrokerConnection": null,
+              "Transform": null,
+              "Variables": [],
+              "Slug": "x_e3b0c442",
+              "InternalId": "235a390a-aa1e-49f5-b470-34fb2e4c3ec0",
+              "Name": "",
+              "Description": "",
+              "ImportFrom": null
+            },
+            "MessageBuffer": [],
+            "Processor": {
+              "CreateAttributesFromUserProperties": true,
+              "LogMessageDetails": true,
+              "AllowRuleDeactivation": true,
+              "AllowRuleDeactivationByTopic": true,
+              "AllowRuleDeactivationByItem": true,
+              "BlockedTopicLimit": 3,
+              "RetentionInSeconds": 3600,
+              "RetentionStrategy": 7,
+              "RetentionExceededEvent": {
+                "SpanId": "",
+                "TopicAttributes": null,
+                "CreateAttributesFromUserProperties": true,
+                "Timestamp": null,
+                "TimestampAsDateTime": "2026-11-24T14:08:29.2635073Z",
+                "Attributes": [],
+                "IsActive": true,
+                "OtelConnection": "default-connection",
+                "OtelScope": null,
+                "LogMessageDetails": true,
+                "AllowRuleDeactivation": true,
+                "AllowRuleDeactivationByTopic": true,
+                "AllowRuleDeactivationByItem": true,
+                "BlockedTopicLimit": 3,
+                "Slug": "span_retention_time_expired_6b81d70a",
+                "InternalId": "da7f5d57-89d3-4465-97e4-f01a3bac5144",
+                "Name": "Span retention time expired.",
+                "Description": "",
+                "ImportFrom": null
+              },
+              "WaitForLateSpanEventsInS": 0,
+              "Otel": {
+                "Attributes": [],
+                "TopicAttributes": null,
+                "CreateAttributesFromUserProperties": true,
+                "Metrics": [],
+                "Logs": [],
+                "Traces": [
+                  {
+                    "CreateSpans": [],
+                    "EndSpans": [
+                      {
+                        "Created": "2026-11-24T15:08:29.2635214+01:00",
+                        "Context": null,
+                        "ParentContext": null,
+                        "Attributes": [],
+                        "TopicAttributes": null,
+                        "CreateAttributesFromUserProperties": false,
+                        "Id": "Shutdown $(TopicPath(\u0027[2]\u0027))",
+                        "Parent": null,
+                        "EndOnCount": "2",
+                        "EndCounter": 0,
+                        "Started": null,
+                        "Completed": null,
+                        "StartedAsDateTime": null,
+                        "CompletedAsDateTime": null,
+                        "LinkTo": [],
+                        "Events": [],
+                        "Kind": null,
+                        "Status": null,
+                        "RetentionInSeconds": 3600,
+                        "RetentionStrategy": 7,
+                        "RetentionExceededEvent": {
+                          "SpanId": "",
+                          "TopicAttributes": null,
+                          "CreateAttributesFromUserProperties": true,
+                          "Timestamp": null,
+                          "TimestampAsDateTime": "2026-11-24T14:08:29.2635268Z",
+                          "Attributes": [],
+                          "IsActive": true,
+                          "OtelConnection": "default-connection",
+                          "OtelScope": null,
+                          "LogMessageDetails": true,
+                          "AllowRuleDeactivation": true,
+                          "AllowRuleDeactivationByTopic": true,
+                          "AllowRuleDeactivationByItem": true,
+                          "BlockedTopicLimit": 3,
+                          "Slug": "span_retention_time_expired_6b81d70a",
+                          "InternalId": "6f07a9ec-ade6-4988-96d9-fef2f4ce671d",
+                          "Name": "Span retention time expired.",
+                          "Description": "",
+                          "ImportFrom": null
+                        },
+                        "WaitForLateSpanEventsInS": 0,
+                        "IsCompleted": false,
+                        "IsRetentionExceeded": false,
+                        "IsActive": true,
+                        "OtelConnection": "default-connection",
+                        "OtelScope": null,
+                        "LogMessageDetails": true,
+                        "AllowRuleDeactivation": true,
+                        "AllowRuleDeactivationByTopic": true,
+                        "AllowRuleDeactivationByItem": true,
+                        "BlockedTopicLimit": 3,
+                        "Slug": "x_e3b0c442",
+                        "InternalId": "13bf1427-103c-436b-911a-06bca21a0b99",
+                        "Name": "",
+                        "Description": "",
+                        "ImportFrom": null
+                      }
+                    ],
+                    "CreateEvents": [
+                      {
+                        "SpanId": "Shutdown $(TopicPath(\u0027[2]\u0027))",
+                        "TopicAttributes": null,
+                        "CreateAttributesFromUserProperties": true,
+                        "Timestamp": null,
+                        "TimestampAsDateTime": "2026-11-24T14:08:29.2635422Z",
+                        "Attributes": [],
+                        "IsActive": true,
+                        "OtelConnection": "default-connection",
+                        "OtelScope": null,
+                        "LogMessageDetails": true,
+                        "AllowRuleDeactivation": true,
+                        "AllowRuleDeactivationByTopic": true,
+                        "AllowRuleDeactivationByItem": true,
+                        "BlockedTopicLimit": 3,
+                        "Slug": "device_userproperty_device-id_reported_shutdown_71d4e806",
+                        "InternalId": "40dd9a91-e219-4961-818a-243b24bc7073",
+                        "Name": "Device $(UserProperty(\u0027device-id\u0027)) reported shutdown.",
+                        "Description": "",
+                        "ImportFrom": null
+                      }
+                    ],
+                    "Actions": [],
+                    "RetentionInSeconds": 3600,
+                    "RetentionStrategy": 7,
+                    "RetentionExceededEvent": {
+                      "SpanId": "",
+                      "TopicAttributes": null,
+                      "CreateAttributesFromUserProperties": true,
+                      "Timestamp": null,
+                      "TimestampAsDateTime": "2026-11-24T14:08:29.2635503Z",
+                      "Attributes": [],
+                      "IsActive": true,
+                      "OtelConnection": "default-connection",
+                      "OtelScope": null,
+                      "LogMessageDetails": true,
+                      "AllowRuleDeactivation": true,
+                      "AllowRuleDeactivationByTopic": true,
+                      "AllowRuleDeactivationByItem": true,
+                      "BlockedTopicLimit": 3,
+                      "Slug": "span_retention_time_expired_6b81d70a",
+                      "InternalId": "a37f75c6-cccb-4911-bffc-1c0f8cbde1f3",
+                      "Name": "Span retention time expired.",
+                      "Description": "",
+                      "ImportFrom": null
+                    },
+                    "WaitForLateSpanEventsInS": 0,
+                    "TopicAttributes": null,
+                    "Attributes": [],
+                    "CreateAttributesFromUserProperties": true,
+                    "IsActive": true,
+                    "OtelConnection": "default-connection",
+                    "OtelScope": null,
+                    "LogMessageDetails": true,
+                    "AllowRuleDeactivation": true,
+                    "AllowRuleDeactivationByTopic": true,
+                    "AllowRuleDeactivationByItem": true,
+                    "BlockedTopicLimit": 3,
+                    "Slug": "x_e3b0c442",
+                    "InternalId": "30c59e35-5a01-4fd7-9f33-15a1deea6990",
+                    "Name": "",
+                    "Description": "",
+                    "ImportFrom": null
+                  }
+                ],
+                "Response": null,
+                "RetentionInSeconds": 3600,
+                "RetentionStrategy": 7,
+                "RetentionExceededEvent": {
+                  "SpanId": "",
+                  "TopicAttributes": null,
+                  "CreateAttributesFromUserProperties": true,
+                  "Timestamp": null,
+                  "TimestampAsDateTime": "2026-11-24T14:08:29.2635612Z",
+                  "Attributes": [],
+                  "IsActive": true,
+                  "OtelConnection": "default-connection",
+                  "OtelScope": null,
+                  "LogMessageDetails": true,
+                  "AllowRuleDeactivation": true,
+                  "AllowRuleDeactivationByTopic": true,
+                  "AllowRuleDeactivationByItem": true,
+                  "BlockedTopicLimit": 3,
+                  "Slug": "span_retention_time_expired_6b81d70a",
+                  "InternalId": "f61339d0-7859-4a7e-b97b-a1d4dc280346",
+                  "Name": "Span retention time expired.",
+                  "Description": "",
+                  "ImportFrom": null
+                },
+                "WaitForLateSpanEventsInS": 0,
+                "OtelConnection": "default-connection",
+                "OtelScope": null,
+                "LogMessageDetails": true,
+                "AllowRuleDeactivation": true,
+                "AllowRuleDeactivationByTopic": true,
+                "AllowRuleDeactivationByItem": true,
+                "BlockedTopicLimit": 3,
+                "Slug": "x_e3b0c442",
+                "InternalId": "c65e10e8-193a-4f52-877a-9f121306f70f",
+                "Name": "",
+                "Description": "",
+                "ImportFrom": null
+              },
+              "Mqtt": {
+                "Variables": [],
+                "Transform": null,
+                "Subscriptions": [
+                  {
+                    "Topic": "\u002B/\u002B/\u002B/message",
+                    "BrokerConnection": null,
+                    "Transform": null,
+                    "Variables": [],
+                    "Slug": "x_e3b0c442",
+                    "InternalId": "a7fd9057-29f3-41a9-989d-af6113757ab0",
+                    "Name": "",
+                    "Description": "",
+                    "ImportFrom": null
+                  }
+                ],
+                "SubscriptionGroups": [],
+                "BrokerConnection": null,
+                "Slug": "x_e3b0c442",
+                "InternalId": "4e11c939-7883-4eb8-bbf0-fff6d4cf1b05",
+                "Name": "",
+                "Description": "",
+                "ImportFrom": null
+              },
+              "OtelConnection": "default-connection",
+              "OtelScope": null,
+              "Slug": "x_e3b0c442",
+              "InternalId": "1859159a-d09f-47e9-a992-5f1de4defd8a",
+              "Name": "",
+              "Description": "",
+              "ImportFrom": null
+            },
+            "TimeoutInSeconds": 2,
+            "MaxCount": 2147483647,
+            "Count": 0,
+            "SubscriptionId": 2,
+            "IsActive": true
+          }
+        ]
+      }
+    },
+    {
+      "Metrics": [],
+      "Logs": [],
+      "Spans": [
+        {
+          "Connection": {
+            "Name": "",
+            "ServiceName": "mqtt2otel",
+            "ServiceVersion": "1.0.0",
+            "ServiceNamespace": null,
+            "MinimumLogLevel": "Information",
+            "EndpointAddress": "http://localhost:4317"
+          },
+          "StartUtc": "2026-11-24T14:08:29.1403285Z",
+          "Attributes": [
+            {
+              "Key": "factory",
+              "Value": "Factory-A",
+              "IsInternal": false
+            },
+            {
+              "Key": "line",
+              "Value": "ProductionLine-01",
+              "IsInternal": false
+            },
+            {
+              "Key": "device-id",
+              "Value": "Device_1234",
+              "IsInternal": false
+            }
+          ],
+          "Duration": "00:00:00.2221399",
+          "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
+          "SpanId": "8ad9cd275e9262b9",
+          "ParentSpanId": "0000000000000000",
+          "Name": "Shutting down devices",
+          "Kind": "Internal",
+          "Status": "Unset",
+          "Events": [
+            {
+              "Name": "Device 987 reported shutdown.",
+              "Attributes": [
+                {
+                  "Key": "device-id",
+                  "Value": "987"
+                }
+              ],
+              "Timestamp": "2026-11-24T14:08:29.2587058+00:00"
+            },
+            {
+              "Name": "Device 356 reported shutdown.",
+              "Attributes": [
+                {
+                  "Key": "device-id",
+                  "Value": "356"
+                }
+              ],
+              "Timestamp": "2026-11-24T14:08:29.3623408+00:00"
+            }
+          ],
+          "Links": []
+        }
+      ],
+      "State": {
+        "Spans": [],
+        "SpanContexts": [],
+        "TraceIdProviderState": {
+          "ForceReset": false,
+          "State": "0;0"
+        },
+        "DynamicSubscriptions": [
+          {
+            "Topic": "Factory-A/ProductionLine-01/Device_1234/response/shutdown",
+            "Subscription": {
+              "Topic": "\u002B/\u002B/\u002B/message",
+              "BrokerConnection": null,
+              "Transform": null,
+              "Variables": [],
+              "Slug": "x_e3b0c442",
+              "InternalId": "12d726a9-0787-4304-8e67-4bd48f3cf327",
+              "Name": "",
+              "Description": "",
+              "ImportFrom": null
+            },
+            "MessageBuffer": [],
+            "Processor": {
+              "CreateAttributesFromUserProperties": true,
+              "LogMessageDetails": true,
+              "AllowRuleDeactivation": true,
+              "AllowRuleDeactivationByTopic": true,
+              "AllowRuleDeactivationByItem": true,
+              "BlockedTopicLimit": 3,
+              "RetentionInSeconds": 3600,
+              "RetentionStrategy": 7,
+              "RetentionExceededEvent": {
+                "SpanId": "",
+                "TopicAttributes": null,
+                "CreateAttributesFromUserProperties": true,
+                "Timestamp": null,
+                "TimestampAsDateTime": "2026-11-24T14:08:29.3671042Z",
+                "Attributes": [],
+                "IsActive": true,
+                "OtelConnection": "default-connection",
+                "OtelScope": null,
+                "LogMessageDetails": true,
+                "AllowRuleDeactivation": true,
+                "AllowRuleDeactivationByTopic": true,
+                "AllowRuleDeactivationByItem": true,
+                "BlockedTopicLimit": 3,
+                "Slug": "span_retention_time_expired_6b81d70a",
+                "InternalId": "5fb485f6-34cf-420b-9946-92b8bac4746a",
+                "Name": "Span retention time expired.",
+                "Description": "",
+                "ImportFrom": null
+              },
+              "WaitForLateSpanEventsInS": 0,
+              "Otel": {
+                "Attributes": [],
+                "TopicAttributes": null,
+                "CreateAttributesFromUserProperties": true,
+                "Metrics": [],
+                "Logs": [],
+                "Traces": [
+                  {
+                    "CreateSpans": [],
+                    "EndSpans": [
+                      {
+                        "Created": "2026-11-24T15:08:29.3671424+01:00",
+                        "Context": null,
+                        "ParentContext": null,
+                        "Attributes": [],
+                        "TopicAttributes": null,
+                        "CreateAttributesFromUserProperties": false,
+                        "Id": "Shutdown $(TopicPath(\u0027[2]\u0027))",
+                        "Parent": null,
+                        "EndOnCount": "2",
+                        "EndCounter": 0,
+                        "Started": null,
+                        "Completed": null,
+                        "StartedAsDateTime": null,
+                        "CompletedAsDateTime": null,
+                        "LinkTo": [],
+                        "Events": [],
+                        "Kind": null,
+                        "Status": null,
+                        "RetentionInSeconds": 3600,
+                        "RetentionStrategy": 7,
+                        "RetentionExceededEvent": {
+                          "SpanId": "",
+                          "TopicAttributes": null,
+                          "CreateAttributesFromUserProperties": true,
+                          "Timestamp": null,
+                          "TimestampAsDateTime": "2026-11-24T14:08:29.3671606Z",
+                          "Attributes": [],
+                          "IsActive": true,
+                          "OtelConnection": "default-connection",
+                          "OtelScope": null,
+                          "LogMessageDetails": true,
+                          "AllowRuleDeactivation": true,
+                          "AllowRuleDeactivationByTopic": true,
+                          "AllowRuleDeactivationByItem": true,
+                          "BlockedTopicLimit": 3,
+                          "Slug": "span_retention_time_expired_6b81d70a",
+                          "InternalId": "84a2317f-038a-466e-b094-16399cacab06",
+                          "Name": "Span retention time expired.",
+                          "Description": "",
+                          "ImportFrom": null
+                        },
+                        "WaitForLateSpanEventsInS": 0,
+                        "IsCompleted": false,
+                        "IsRetentionExceeded": false,
+                        "IsActive": true,
+                        "OtelConnection": "default-connection",
+                        "OtelScope": null,
+                        "LogMessageDetails": true,
+                        "AllowRuleDeactivation": true,
+                        "AllowRuleDeactivationByTopic": true,
+                        "AllowRuleDeactivationByItem": true,
+                        "BlockedTopicLimit": 3,
+                        "Slug": "x_e3b0c442",
+                        "InternalId": "be6fd924-25d5-40fd-a1d8-82e43ed749b1",
+                        "Name": "",
+                        "Description": "",
+                        "ImportFrom": null
+                      }
+                    ],
+                    "CreateEvents": [
+                      {
+                        "SpanId": "Shutdown $(TopicPath(\u0027[2]\u0027))",
+                        "TopicAttributes": null,
+                        "CreateAttributesFromUserProperties": true,
+                        "Timestamp": null,
+                        "TimestampAsDateTime": "2026-11-24T14:08:29.3671826Z",
+                        "Attributes": [],
+                        "IsActive": true,
+                        "OtelConnection": "default-connection",
+                        "OtelScope": null,
+                        "LogMessageDetails": true,
+                        "AllowRuleDeactivation": true,
+                        "AllowRuleDeactivationByTopic": true,
+                        "AllowRuleDeactivationByItem": true,
+                        "BlockedTopicLimit": 3,
+                        "Slug": "device_userproperty_device-id_reported_shutdown_71d4e806",
+                        "InternalId": "6cdc3100-f2e3-41ff-b98b-a14dd3c1ad71",
+                        "Name": "Device $(UserProperty(\u0027device-id\u0027)) reported shutdown.",
+                        "Description": "",
+                        "ImportFrom": null
+                      }
+                    ],
+                    "Actions": [],
+                    "RetentionInSeconds": 3600,
+                    "RetentionStrategy": 7,
+                    "RetentionExceededEvent": {
+                      "SpanId": "",
+                      "TopicAttributes": null,
+                      "CreateAttributesFromUserProperties": true,
+                      "Timestamp": null,
+                      "TimestampAsDateTime": "2026-11-24T14:08:29.3671991Z",
+                      "Attributes": [],
+                      "IsActive": true,
+                      "OtelConnection": "default-connection",
+                      "OtelScope": null,
+                      "LogMessageDetails": true,
+                      "AllowRuleDeactivation": true,
+                      "AllowRuleDeactivationByTopic": true,
+                      "AllowRuleDeactivationByItem": true,
+                      "BlockedTopicLimit": 3,
+                      "Slug": "span_retention_time_expired_6b81d70a",
+                      "InternalId": "ce02e3c8-cebf-45d0-ac9a-8c8bf03a838d",
+                      "Name": "Span retention time expired.",
+                      "Description": "",
+                      "ImportFrom": null
+                    },
+                    "WaitForLateSpanEventsInS": 0,
+                    "TopicAttributes": null,
+                    "Attributes": [],
+                    "CreateAttributesFromUserProperties": true,
+                    "IsActive": true,
+                    "OtelConnection": "default-connection",
+                    "OtelScope": null,
+                    "LogMessageDetails": true,
+                    "AllowRuleDeactivation": true,
+                    "AllowRuleDeactivationByTopic": true,
+                    "AllowRuleDeactivationByItem": true,
+                    "BlockedTopicLimit": 3,
+                    "Slug": "x_e3b0c442",
+                    "InternalId": "149906ae-2f55-430f-9cd2-fc0fe84a92e9",
+                    "Name": "",
+                    "Description": "",
+                    "ImportFrom": null
+                  }
+                ],
+                "Response": null,
+                "RetentionInSeconds": 3600,
+                "RetentionStrategy": 7,
+                "RetentionExceededEvent": {
+                  "SpanId": "",
+                  "TopicAttributes": null,
+                  "CreateAttributesFromUserProperties": true,
+                  "Timestamp": null,
+                  "TimestampAsDateTime": "2026-11-24T14:08:29.3672241Z",
+                  "Attributes": [],
+                  "IsActive": true,
+                  "OtelConnection": "default-connection",
+                  "OtelScope": null,
+                  "LogMessageDetails": true,
+                  "AllowRuleDeactivation": true,
+                  "AllowRuleDeactivationByTopic": true,
+                  "AllowRuleDeactivationByItem": true,
+                  "BlockedTopicLimit": 3,
+                  "Slug": "span_retention_time_expired_6b81d70a",
+                  "InternalId": "d767a09f-efbe-4417-ab24-c2ff94bd43de",
+                  "Name": "Span retention time expired.",
+                  "Description": "",
+                  "ImportFrom": null
+                },
+                "WaitForLateSpanEventsInS": 0,
+                "OtelConnection": "default-connection",
+                "OtelScope": null,
+                "LogMessageDetails": true,
+                "AllowRuleDeactivation": true,
+                "AllowRuleDeactivationByTopic": true,
+                "AllowRuleDeactivationByItem": true,
+                "BlockedTopicLimit": 3,
+                "Slug": "x_e3b0c442",
+                "InternalId": "bde04f8d-7377-4ac5-be83-f62106d9c9e6",
+                "Name": "",
+                "Description": "",
+                "ImportFrom": null
+              },
+              "Mqtt": {
+                "Variables": [],
+                "Transform": null,
+                "Subscriptions": [
+                  {
+                    "Topic": "\u002B/\u002B/\u002B/message",
+                    "BrokerConnection": null,
+                    "Transform": null,
+                    "Variables": [],
+                    "Slug": "x_e3b0c442",
+                    "InternalId": "1bb1f238-9348-4a04-a328-268d9b2c1a96",
+                    "Name": "",
+                    "Description": "",
+                    "ImportFrom": null
+                  }
+                ],
+                "SubscriptionGroups": [],
+                "BrokerConnection": null,
+                "Slug": "x_e3b0c442",
+                "InternalId": "cc72ab4a-cf75-461e-91a8-4de32317b935",
+                "Name": "",
+                "Description": "",
+                "ImportFrom": null
+              },
+              "OtelConnection": "default-connection",
+              "OtelScope": null,
+              "Slug": "x_e3b0c442",
+              "InternalId": "617b3fb1-0c3a-466f-b3b8-9c375b1aa50e",
+              "Name": "",
+              "Description": "",
+              "ImportFrom": null
+            },
+            "TimeoutInSeconds": 2,
+            "MaxCount": 2147483647,
+            "Count": 0,
+            "SubscriptionId": 2,
+            "IsActive": true
+          }
+        ]
+      }
+    }
+  ],
+  "ShowResultDetails": false
+}

@@ -73,24 +73,22 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             ProcessorMeter meter = new ProcessorMeter();
             UsageTelemetryMeter usageMeter = new UsageTelemetryMeter();
 
-            LocalTraceStore traceStore;
+            LocalStore traceStore;
             if (request.UseFakeProviders == true || (request.UseFakeProviders == null && this.isTestEnvironment))
             {
-                traceStore = new LocalTraceStore(new FakeTraceIdProvider(request.State.TraceIdProviderState));
+                traceStore = new LocalStore(new FakeTraceIdProvider(request.State.TraceIdProviderState));
             }
             else
             {
-                traceStore = new LocalTraceStore(new DefaultTraceIdProvider());
+                traceStore = new LocalStore(new DefaultTraceIdProvider());
             }
             traceStore.Initialize(request.State);
-
-            var objectFactory = new mqtt2otel.Manifest.ObjectFactory(logger.Object, payloadParser, payloadTransformation, dataStores, meter, usageMeter, embeddedExpressionParser, traceStore);
 
             Manifest.Manifest manifest;
 
             try
             {
-                manifest = Manifest.Manifest.ReadFromYaml(objectFactory, logger.Object, yaml: request.Manifest);
+                manifest = Manifest.Manifest.ReadFromYaml(logger.Object, yaml: request.Manifest);
                 payloadParser.SetMappings(manifest.Mappings);
                 embeddedExpressionParser.SetMappings(manifest.Mappings);
                 manifest.WaitForLateSpanEventsInS = 0;
@@ -136,8 +134,8 @@ namespace mqtt2otel.ManifestExplorer.Controllers
             ILogger<MqttCoordinator> mqttLogger = this.CreateLoggerMock<MqttCoordinator>(processorErrors).Object;
 
             var messageProcessor = new MessageProcessor(CreateLoggerMock<MessageProcessor>(processorErrors).Object, payloadParser, new PayloadTransformation(), dataStores, meter,
-                                                        new UsageTelemetryMeter(), embeddedExpressionParser, traceStore);
-            var mqtt = new MqttCoordinator(mqttLogger, new MqttMeter(), messageProcessor, isSimulator: true);
+                                                        new UsageTelemetryMeter(), embeddedExpressionParser, traceStore, traceStore);
+            var mqtt = new MqttCoordinator(mqttLogger, new MqttMeter(), messageProcessor, traceStore, isSimulator: true);
             await mqtt.ConnectAndSubscribe(manifest);
 
             ILogger<OtelCoordinator> otelLogger = this.CreateLoggerMock<OtelCoordinator>(processorErrors).Object;
@@ -151,7 +149,7 @@ namespace mqtt2otel.ManifestExplorer.Controllers
                 {
                     otel.Connect(manifest);
 
-                    var message = new MqttMessage(subscriptionId: 0, topic: request.MqttData.Topic, payload: request.MqttData.Payload, userProperties: request.MqttData.UserProperties);
+                    var message = new MqttMessage(subscriptionId: 0, topic: request.MqttData.Topic, payload: request.MqttData.Payload, userProperties: request.MqttData.UserProperties, request.MqttData.ResponseTopic, request.MqttData.CorrelationData);
                     bool success = await mqtt.SimulateOnMqttMessageReceived(message);
                     var completedSpans = traceStore.GetCompletedOrTimeOutSpans();
                     otel.CreateSpans(completedSpans);

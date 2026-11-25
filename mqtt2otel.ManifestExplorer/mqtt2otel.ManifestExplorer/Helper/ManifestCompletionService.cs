@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using YamlDotNet.Serialization;
 
 namespace mqtt2otel.ManifestExplorer.Helper;
@@ -14,13 +12,22 @@ public sealed class ManifestCompletionService
     /// <summary>
     /// Generates the code completion hints for a manifest file.
     /// </summary>
-    /// <returns>The hints as a monacco editor compatible json.</returns>
+    /// <returns>
+    /// The hints as a monacco editor compatible json in the form
+    /// <c>{ "root": {...}, "definitions": { "TypeKey": {...} } }</c>.
+    /// Object types are only stored in <c>definitions</c> and are referenced via <c>{ "type": "ref", "ref": "TypeKey" }</c>.
+    /// </returns>
     public string Generate()
     {
-        var schema = GenerateType(typeof(Manifest.Manifest));
+        var definitions = new Dictionary<string, object?>();
+        var root = GenerateType(typeof(Manifest.Manifest), definitions);
 
         return JsonSerializer.Serialize(
-            schema,
+            new
+            {
+                root,
+                definitions
+            },
             new JsonSerializerOptions
             {
                 WriteIndented = false
@@ -31,45 +38,34 @@ public sealed class ManifestCompletionService
     /// Generates an object representation of a type.
     /// </summary>
     /// <param name="type">The root type.</param>
+    /// <param name="definitions">The shared table of already known object definitions.</param>
     /// <returns>The generated object representation.</returns>
-    private object GenerateType(Type type)
+    private object GenerateType(Type type, Dictionary<string, object?> definitions)
     {
         type = Nullable.GetUnderlyingType(type) ?? type;
 
         // string
         if (type == typeof(string))
         {
-            return new
-            {
-                type = "string"
-            };
+            return new { type = "string" };
         }
 
         // bool
         if (type == typeof(bool))
         {
-            return new
-            {
-                type = "boolean"
-            };
+            return new { type = "boolean" };
         }
 
         // integer
         if (IsInteger(type))
         {
-            return new
-            {
-                type = "integer"
-            };
+            return new { type = "integer" };
         }
 
         // floating point / decimal
         if (IsNumber(type))
         {
-            return new
-            {
-                type = "number"
-            };
+            return new { type = "number" };
         }
 
         // enum
@@ -88,7 +84,7 @@ public sealed class ManifestCompletionService
             return new
             {
                 type = "dictionary",
-                valueType = GenerateType(dictionaryValueType)
+                valueType = GenerateType(dictionaryValueType, definitions)
             };
         }
 
@@ -98,35 +94,62 @@ public sealed class ManifestCompletionService
             return new
             {
                 type = "array",
-                elementType = GenerateType(elementType)
+                elementType = GenerateType(elementType, definitions)
             };
         }
 
         // complex object
-        return GenerateObject(type);
+        return GenerateObjectReference(type, definitions);
     }
 
     /// <summary>
-    /// Generate an object representation for the type.
+    /// Registers the object type in the definitions (if not already done) and returns a reference to it.
     /// </summary>
-    /// <param name="type">The root type.</param>
-    /// <returns>The generated object.</returns>
-    private object GenerateObject(Type type)
+    /// <param name="type">The object type.</param>
+    /// <param name="definitions">The shared table of already known object definitions.</param>
+    /// <returns>A reference to the object definition.</returns>
+    private object GenerateObjectReference(Type type, Dictionary<string, object?> definitions)
     {
-        var properties = new Dictionary<string, object>();
+        var key = GetDefinitionKey(type);
 
-        foreach (var property in GetProperties(type))
+        // Already generated or currently being generated (recursion) -> just reference it.
+        if (!definitions.ContainsKey(key))
         {
-            var yamlName = GetYamlName(property);
+            // Reserve the slot BEFORE visiting the properties, so that self-references
+            // (directly or indirectly) find the key and stop recursing.
+            definitions[key] = null;
 
-            properties[yamlName] = GenerateType(property.PropertyType);
+            var properties = new Dictionary<string, object>();
+
+            foreach (var property in GetProperties(type))
+            {
+                var yamlName = GetYamlName(property);
+
+                properties[yamlName] = GenerateType(property.PropertyType, definitions);
+            }
+
+            definitions[key] = new
+            {
+                type = "object",
+                properties
+            };
         }
 
         return new
         {
-            type = "object",
-            properties
+            type = "ref",
+            @ref = key
         };
+    }
+
+    /// <summary>
+    /// Gets a unique key for a type that is used in the definitions table.
+    /// </summary>
+    /// <param name="type">The type.</param>
+    /// <returns>The key.</returns>
+    private static string GetDefinitionKey(Type type)
+    {
+        return type.FullName ?? type.Name;
     }
 
     /// <summary>
@@ -146,7 +169,7 @@ public sealed class ManifestCompletionService
     /// Gets the yaml name of a property.
     /// </summary>
     /// <param name="property">The property for which the yaml name should be determined.</param>
-    /// <returns></returns>
+    /// <returns>The yaml name.</returns>
     private static string GetYamlName(PropertyInfo property)
     {
         var yamlMember = property.GetCustomAttribute<YamlMemberAttribute>();
@@ -157,11 +180,6 @@ public sealed class ManifestCompletionService
         return property.Name;
     }
 
-    /// <summary>
-    /// Tests if type is an integer.
-    /// </summary>
-    /// <param name="type">The type to be tested.</param>
-    /// <returns>A value indicating whether the type is an integer.</returns>
     private static bool IsInteger(Type type)
     {
         return type == typeof(byte)
@@ -174,11 +192,6 @@ public sealed class ManifestCompletionService
             || type == typeof(ulong);
     }
 
-    /// <summary>
-    /// Tests whether the type is a number.
-    /// </summary>
-    /// <param name="type">The type.</param>
-    /// <returns>A value indicating whether the type is a number.</returns>
     private static bool IsNumber(Type type)
     {
         return type == typeof(float)
@@ -186,15 +199,7 @@ public sealed class ManifestCompletionService
             || type == typeof(decimal);
     }
 
-    /// <summary>
-    /// Tries to get an enumberable element type.
-    /// </summary>
-    /// <param name="type">The base type.</param>
-    /// <param name="elementType">The enumerable element type.</param>
-    /// <returns>A value indicating success.</returns>
-    private static bool TryGetEnumerableElementType(
-        Type type,
-        out Type elementType)
+    private static bool TryGetEnumerableElementType(Type type, out Type elementType)
     {
         if (type.IsArray)
         {
@@ -204,6 +209,7 @@ public sealed class ManifestCompletionService
 
         var enumerable = type
             .GetInterfaces()
+            .Concat(new[] { type })
             .FirstOrDefault(i =>
                 i.IsGenericType &&
                 i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
@@ -218,28 +224,15 @@ public sealed class ManifestCompletionService
         return false;
     }
 
-    /// <summary>
-    /// Tries to get a dictionary value type.
-    /// </summary>
-    /// <param name="type">The base type.</param>
-    /// <param name="elementType">The dictionary value type.</param>
-    /// <returns>A value indicating success.</returns>
-    private static bool TryGetDictionaryValueType(
-        Type type,
-        out Type valueType)
+    private static bool TryGetDictionaryValueType(Type type, out Type valueType)
     {
-        if (type.IsGenericType &&
-            type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-        {
-            valueType = type.GetGenericArguments()[1];
-            return true;
-        }
-
         var dictionary = type
             .GetInterfaces()
+            .Concat(new[] { type })
             .FirstOrDefault(i =>
                 i.IsGenericType &&
-                i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+                (i.GetGenericTypeDefinition() == typeof(IDictionary<,>) ||
+                 i.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>)));
 
         if (dictionary != null)
         {

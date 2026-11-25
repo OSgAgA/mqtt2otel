@@ -31,16 +31,17 @@ namespace mqtt2otel.Tests.Helper
         /// <param name="internalLogger">The internal logger.</param>
         /// <param name="payloadTransformation">The payload transformation.</param>
         /// <returns>The created MessageProcessor.</returns>
-        public static MessageProcessor CreateNew(IPayloadParser payloadParser, IEmbeddedExpressionParser embeddedExpressionParser, IDataStores dataStores, ITraceStore? traceStore = null,
+        public static MessageProcessor CreateNew(IPayloadParser payloadParser, IEmbeddedExpressionParser embeddedExpressionParser, IDataStores dataStores, ITraceStore? traceStore = null, IDynamicSubscriptionStore? dynamicSubscriptionStore = null,
                                                  ProcessorMeter? meter = null, UsageTelemetryMeter? usageTelemetryMeter = null, ILogger<MessageProcessor>? internalLogger = null, IPayloadTransformation? payloadTransformation = null)
         {
             if (meter == null) meter = new ProcessorMeter();
             if (usageTelemetryMeter == null) usageTelemetryMeter = new UsageTelemetryMeter();
             if (internalLogger == null) internalLogger = new Mock<ILogger<MessageProcessor>>().Object;
             if (payloadTransformation == null) payloadTransformation = new PayloadTransformation();
-            if (traceStore == null) traceStore = new LocalTraceStore(new FakeTraceIdProvider(null));
+            if (traceStore == null) traceStore = new LocalStore(new FakeTraceIdProvider(null));
+            if (dynamicSubscriptionStore == null) dynamicSubscriptionStore = new LocalStore(new FakeTraceIdProvider(null));
 
-            return new MessageProcessor(internalLogger, payloadParser, payloadTransformation, dataStores, meter, usageTelemetryMeter, embeddedExpressionParser, traceStore);
+            return new MessageProcessor(internalLogger, payloadParser, payloadTransformation, dataStores, meter, usageTelemetryMeter, embeddedExpressionParser, traceStore, dynamicSubscriptionStore);
         }
     }
 }

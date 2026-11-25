@@ -28,6 +28,7 @@
                             <th>Name</th>
                             <th>Parent</th>
                             <th>Started</th>
+                            <th>EndCount</th>
                             <th>Completed</th>
                             <th>Kind</th>
                             <th>Status</th>
@@ -63,6 +64,7 @@
                                 {
                                     <td data-testid="internal-state-span-started"><i>NULL</i></td>
                                 }
+                                <td data-testid="internal-state-end-count">@span.EndCounter</td>
                                 @if (span.CompletedAsDateTime != null)
                                 {
                                     <td data-testid="internal-state-span-completed">@span.CompletedAsDateTime.Value.ToString("yyyy-MM-ddTHH:mm:ssZ")</td>

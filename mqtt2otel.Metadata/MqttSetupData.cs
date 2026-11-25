@@ -15,6 +15,16 @@ namespace mqtt2otel.Metadata
         public string Topic { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets the response topic if available.
+        /// </summary>
+        public string? ResponseTopic { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets the correlation data if available. Usually used with a response topic.
+        /// </summary>
+        public string? CorrelationData { get; set; } = null;
+
+        /// <summary>
         /// Gets or sets the example payload.
         /// </summary>
         public string Payload { get; set; } = string.Empty;

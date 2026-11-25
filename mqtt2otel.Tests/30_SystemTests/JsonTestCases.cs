@@ -44,7 +44,6 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             this._output.WriteLine($"{DateTime.UtcNow}: Executing test case with id: '{testCase.Setup.Id}'");
 
-
             // Arrange
 
             if (JsonTestsFixture.mqttHelper != null) await JsonTestsFixture.mqttHelper.ConnectClient();
@@ -66,7 +65,7 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             if (manifest.OtelConnections.Count == 0)
             {
-                manifest.OtelConnections.Add(new OtelServerConnection());
+                manifest.OtelConnections.Add(new OtelServerConnection() { Name = "Default Test Server" });
             }
 
             foreach (var connection in manifest.MqttConnections)
@@ -80,13 +79,19 @@ namespace mqtt2otel.Tests._30_SystemTests
             manifest.WaitForLateSpanEventsInS = 0;
             manifest.Initialize();
 
+            // Ensure, that logs are send directly.
+            foreach (var connection in manifest.OtelConnections)
+            {
+                connection.ExportProcessorType = OpenTelemetry.ExportProcessorType.Simple;
+            }
+
             // Skip all further test, if only manifest should be validated.
             if (testCase.Setup.ValidateManifestOnly) return;
 
             var loggerMockMqtt = new Mock<ILogger<MqttCoordinator>>();
-            var traceStore = new LocalTraceStore(new FakeTraceIdProvider(null));
-            var messageProcessor = MessageProcessorAccessor.CreateNew(payloadParser, embeddedExpressionParser, dataStores, traceStore);
-            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor);
+            var traceStore = new LocalStore(new FakeTraceIdProvider(null));
+            var messageProcessor = MessageProcessorAccessor.CreateNew(payloadParser, embeddedExpressionParser, dataStores, traceStore, traceStore);
+            var mqttCoordinator = new MqttCoordinator(loggerMockMqtt.Object, new MqttMeter(), messageProcessor, traceStore);
 
             this._output.WriteLine($"{DateTime.UtcNow}: Arrange completed.");
 
@@ -360,7 +365,9 @@ namespace mqtt2otel.Tests._30_SystemTests
 
             try
             {
-                await JsonTestsFixture.mqttHelper!.PublishPayload(mqttData);
+                await JsonTestsFixture.mqttHelper!.SendMessage(mqttData);
+
+                await Task.Delay(10); // Needed to ensure, that all logs have been written to the debug output. :-(
 
                 var completedTask = await Task.WhenAny(
                                    tcs.Task,

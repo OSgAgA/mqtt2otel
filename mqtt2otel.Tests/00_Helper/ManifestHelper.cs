@@ -41,12 +41,9 @@ namespace mqtt2otel.Tests.Helper
                     dataStores = new DataStores(signalStore, loggerStore);
                 }
 
-                var objectFactory = new Manifest.ObjectFactory(objFactoryLoggerMock.Object, payloadParser, new PayloadTransformation(), dataStores, new ProcessorMeter(), new UsageTelemetryMeter(), 
-                    embeddedExpressionParser, traceStore ?? new LocalTraceStore(new FakeTraceIdProvider(null)));
-
                 var loggerMock = new Mock<ILogger>();
 
-                var manifest = Manifest.Manifest.ReadFromYaml(objectFactory, loggerMock.Object, yaml: yaml);
+                var manifest = Manifest.Manifest.ReadFromYaml(loggerMock.Object, yaml: yaml);
 
                 return manifest;
             }

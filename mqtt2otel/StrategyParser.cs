@@ -68,7 +68,11 @@ namespace mqtt2otel
                     parameters: new Dictionary<string, object?>(StringComparer.InvariantCultureIgnoreCase)
                     {
                         { "pi", Math.PI },
-                        { "e", Math.E }
+                        { "e", Math.E },
+                        { "topic", context.Message.Topic },
+                        { "response-topic", context.Message.ResponseTopic },
+                        { "correlation-data", context.Message.CorrelationData },
+                        { "payload", context.Message.Payload }
                     }
                 );
 

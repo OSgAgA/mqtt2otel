@@ -19,11 +19,11 @@ namespace mqtt2otel.Metadata
         /// </summary>
         /// <param name="spans">The spans.</param>
         /// <param name="contexts">The span contexts.</param>
-
-        public InternalState(List<OtelSpan> spans, List<OtelSpanContext> contexts)
+        public InternalState(List<OtelSpan> spans, List<OtelSpanContext> contexts, List<DynamicSubscriptionData> dynamicSubscriptions)
         {
             this.Spans = spans;
             this.SpanContexts = contexts;
+            this.DynamicSubscriptions = dynamicSubscriptions;
         }
 
         /// <summary>
@@ -39,7 +39,11 @@ namespace mqtt2otel.Metadata
         /// <summary>
         /// Gets or sets the curren state of the trace id provider.
         /// </summary>
-        public ProviderState? TraceIdProviderState { get; set; }
+        public ProviderState? TraceIdProviderState { get; set; } = null;
 
+        /// <summary>
+        /// Stores data for dynamic mqtt subscriptions needed for response topics. 
+        /// </summary>
+        public List<DynamicSubscriptionData> DynamicSubscriptions { get; set; } = new();
     }
 }

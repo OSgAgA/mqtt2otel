@@ -4,9 +4,27 @@
         <div class="col" style="margin-bottom:20px;">
             <Card>
                 <CardHeader style="background-color: #dbeaf1">
-                    <b>MQTT topic</b>
+                    <b>Topic</b>
                 </CardHeader>
                 <InputText data-testid="input-topic" @bind-Value="@this.Data.Topic" />
+            </Card>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8" style="margin-bottom:20px;">
+            <Card>
+                <CardHeader style="background-color: #dbeaf1">
+                    <b>Response topic</b>
+                </CardHeader>
+                <InputText data-testid="input-response-topic" @bind-Value="@this.Data.ResponseTopic" />
+            </Card>
+        </div>
+        <div class="col-4" style="margin-bottom:20px;">
+            <Card>
+                <CardHeader style="background-color: #dbeaf1">
+                    <b>Correlation Data</b>
+                </CardHeader>
+                <InputText data-testid="input-correlation-data" @bind-Value="@this.Data.CorrelationData" />
             </Card>
         </div>
     </div>
@@ -14,9 +32,9 @@
         <div class="col" style="margin-bottom:20px;">
             <Card>
                 <CardHeader style="background-color: #dbeaf1">
-                    <b>MQTT payload</b>
+                    <b>Payload</b>
                 </CardHeader>
-                <InputTextArea data-testid="input-payload" class="form-control w-100" title="Payload" @bind-Value="@this.Data.Payload" rows="15" />
+                <InputTextArea data-testid="input-payload" class="form-control w-100" title="Payload" @bind-Value="@this.Data.Payload" rows="12" />
             </Card>
         </div>
     </div>
@@ -25,7 +43,7 @@
         <div class="col">
             <Card>
                 <CardHeader class="d-flex justify-content-between align-items-center" style="background-color: #dbeaf1">
-                    <b>MQTT user properties</b>
+                    <b>User properties</b>
 
                     <div>
                         <button class="btn btn-outline-primary me-2" @onclick="AddUserProperty">

@@ -26,11 +26,6 @@ namespace mqtt2otel.Manifest
         private ILogger internalLogger = new EmptyLogger<Manifest>();
 
         /// <summary>
-        /// Gets or sets the object factory that should be used for parsing the yaml file.
-        /// </summary>
-        private IObjectFactory? ObjectFactory;
-
-        /// <summary>
         /// Reads the manifest from a yaml file.
         /// 
         /// Object factory must be set before this method can be called.
@@ -39,7 +34,7 @@ namespace mqtt2otel.Manifest
         /// <param name="path">The path to the yaml file.</param>
         /// <param name="yaml">This parameter can be used to provide the yaml to be parsed directly. If this is not null, then the path parameter will be ignored.</param>
         /// <returns>The created manifest.</returns>
-        public static Manifest ReadFromYaml(IObjectFactory objectFactory, ILogger internalLogger, string path = "Manifest.yaml", string? yaml = null)
+        public static Manifest ReadFromYaml(ILogger internalLogger, string path = "Manifest.yaml", string? yaml = null)
         {
             if (yaml == null)
             {
@@ -52,11 +47,10 @@ namespace mqtt2otel.Manifest
                 internalLogger.LogInformation("Reading manifest from provided yaml.");
             }
 
-            var builder = new DeserializerBuilder().WithObjectFactory(objectFactory);
+            var builder = new DeserializerBuilder();
             var deserializer = builder.Build();
 
             var result = deserializer.Deserialize<Manifest>(yaml);
-            result.ObjectFactory = objectFactory;
 
             if (result == null) result = new Manifest();
 
@@ -244,9 +238,7 @@ namespace mqtt2otel.Manifest
         /// </summary>#
         public void Initialize()
         {
-            if (this.ObjectFactory == null) throw new Exception("Could not initialize manifest as no object factory is set.");
-
-            ImportEnabledList<NamedIdObject>.InitializeImports(this, this.internalLogger, this.ObjectFactory);
+            ImportEnabledList<NamedIdObject>.InitializeImports(this, this.internalLogger);
 
             foreach (var subscriptionGroup in this.SubscriptionGroups)
             {

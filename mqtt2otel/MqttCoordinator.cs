@@ -11,6 +11,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace mqtt2otel
 {
@@ -23,6 +24,11 @@ namespace mqtt2otel
         /// Stores all subscriptions to all brokers.
         /// </summary>
         private SubscriptionStore subscriptionStore = new();
+
+        /// <summary>
+        /// Gives access to dynamic subscriptions as indicated by response topics.
+        /// </summary>
+        private IDynamicSubscriptionStore dynamicSubscriptionStore;
 
         /// <summary>
         /// Gets the next free broker subscription id.
@@ -101,12 +107,14 @@ namespace mqtt2otel
         /// <param name="internalLogger">The logger for internal log messages.</param>
         /// <param name="meter">The meter used for internal metrics.</param>
         /// <param name="isSimulator">A value indicating whether this class only simulates processing of data, but does not connect to a real mqtt broker.</param>
-        public MqttCoordinator(ILogger<MqttCoordinator> internalLogger, MqttMeter meter, MessageProcessor messageProcessor, bool isSimulator = false)
+        public MqttCoordinator(ILogger<MqttCoordinator> internalLogger, MqttMeter meter, MessageProcessor messageProcessor, IDynamicSubscriptionStore dynamicSubscriptionStore, bool isSimulator = false)
         {
             this.internalLogger = internalLogger;
             this.mqttMeter = meter;
             this.messageProcessor = messageProcessor;
             this.isSimulator = isSimulator;
+            this.dynamicSubscriptionStore = dynamicSubscriptionStore;
+            this.dynamicSubscriptionStore.OnSubscriptionRemoved += this.OnDynamicSubscriptionRemoved;
         }
 
         /// <summary>
@@ -125,7 +133,7 @@ namespace mqtt2otel
 
             foreach (var broker in manifest.MqttConnections)
             {
-                await this.ConnectAndSubscribe(broker);
+                await this.Connect(broker);
             }
 
             this.internalLogger.LogInformation($"Subscribing to mqtt events...");
@@ -192,11 +200,11 @@ namespace mqtt2otel
         public EventHandler<MqttMessageReceivedEventArgs>? OnMessageProcessed;
 
         /// <summary>
-        /// Connects to a given server and subscribes to all topics as defined in the provided settings.
+        /// Connects to a given server.
         /// </summary>
         /// <param name="broker">The broker settings containing information about connection details.</param>
         /// <exception cref="Exception">Thrown if client is unable to connect to server or if settings contain an error.</exception>
-        private async Task ConnectAndSubscribe(MqttBroker broker)
+        private async Task Connect(MqttBroker broker)
         {
             if (this.isSimulator) return;
 
@@ -368,10 +376,35 @@ namespace mqtt2otel
                     var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(mqttSubscription.Topic).WithSubscriptionIdentifier(this.nextBrokerSubscriptionId).Build();
                     await this.GetClient(mqttSubscription.BrokerConnection).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
                 }
+
                 this.nextBrokerSubscriptionId = this.nextBrokerSubscriptionId + 1;
                 this.internalLogger.LogInformation("Subscribed to topic {Topic}.", mqttSubscription.Topic.SanitizeForLog());
                 this.mqttMeter.SubscriptionsCount.Record(++this.subscriptionCount);
             }
+        }
+
+        /// <summary>
+        /// Subscribes to a response topic. No subscription or processor information will be set at response topics. These will be added
+        /// dynamically.
+        /// </summary>
+        /// <param name="connectionName">The connection name.</param>
+        /// <param name="topic">The topic to subscribe to.</param>
+        /// <returns>The subscription id.</returns>
+        private async Task<uint> SubscribeToResponseTopic(string connectionName, string topic)
+        {
+            uint id = this.nextBrokerSubscriptionId;
+
+            if (!this.isSimulator)
+            {
+                var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(topic).WithSubscriptionIdentifier(this.nextBrokerSubscriptionId).Build();
+                await this.GetClient(connectionName).SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+            }
+
+            this.nextBrokerSubscriptionId = this.nextBrokerSubscriptionId + 1;
+            this.internalLogger.LogInformation("Subscribed to topic {Topic}.", topic.SanitizeForLog());
+            this.mqttMeter.SubscriptionsCount.Record(++this.subscriptionCount);
+
+            return id;
         }
 
         /// <summary>
@@ -399,14 +432,16 @@ namespace mqtt2otel
                     this.mqttMeter.MessagesReceived.Add(1);
                     this.mqttMeter.PayloadSize.Record(e.ApplicationMessage.Payload.Length);
 
+                    var responseTopic = e.ApplicationMessage.ResponseTopic;
                     var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                    var corrlationData = e.ApplicationMessage.CorrelationData != null ? Encoding.UTF8.GetString(e.ApplicationMessage.CorrelationData) : null;
 
                     bool success = true;
 
                     foreach (var brokerSubscriptionId in e.ApplicationMessage.SubscriptionIdentifiers)
                     {
-                        var message = new MqttMessage(brokerSubscriptionId, e.ApplicationMessage.Topic, payload, e.ApplicationMessage.UserProperties.ToUserProperties());
-                        success = success && ProcessReceivedMessage(message);
+                        var message = new MqttMessage(brokerSubscriptionId, e.ApplicationMessage.Topic, payload, e.ApplicationMessage.UserProperties.ToUserProperties(), responseTopic, corrlationData);
+                        success = success && await ProcessReceivedMessage(message);
                     }
 
                     if (!success)
@@ -434,7 +469,7 @@ namespace mqtt2otel
         public async Task<bool> SimulateOnMqttMessageReceived(MqttMessage message)
         {
             bool result = true;
-            var brokerSubscriptionIds = this.subscriptionStore.GetBrokerSubscriptionIdByTopic(message.Topic);
+            var brokerSubscriptionIds = this.subscriptionStore.GetBrokerSubscriptionIdByTopic(message.Topic, this.dynamicSubscriptionStore);
 
             foreach (var brokerSubscriptionId in brokerSubscriptionIds)
             {
@@ -442,7 +477,7 @@ namespace mqtt2otel
 
                 message.SubscriptionId = brokerSubscriptionId.Value;
 
-                result = result && ProcessReceivedMessage(message);
+                result = result && await ProcessReceivedMessage(message);
             }
 
             return result;
@@ -453,19 +488,29 @@ namespace mqtt2otel
         /// </summary>
         /// <param name="message">The received message.</param>
         /// <returns>A value indicating whether processing has been successful.</returns>
-        public bool ProcessReceivedMessage(MqttMessage message)
+        public async Task<bool> ProcessReceivedMessage(MqttMessage message)
         {
             this.internalLogger.LogDebug("Message received. Payload: {Payload}", message.Payload.SanitizeForLog());
-
-            if (!this.subscriptionStore.ContainsSubscriptionId(message.SubscriptionId))
-            {
-                this.internalLogger.LogError("Internal error while processing received mqtt message: {SubscriptionStoreName} does not contain topic {Topic}. Skipping event.", nameof(subscriptionStore), message.Topic.SanitizeForLog());
-                return false;
-            }
 
             bool success = false;
 
             var subscriptions = this.subscriptionStore.Retrieve(message.SubscriptionId);
+            DynamicSubscriptionData? responseSubscription = null;
+
+            if (!string.IsNullOrWhiteSpace(message.ResponseTopic) && subscriptions.Any())
+            {
+                responseSubscription = this.dynamicSubscriptionStore.GetOrCreateDynamicSubscriptionData(message.ResponseTopic);
+
+                // If the response subscription already contains data inside its buffer it is coming from a prepared subscription
+                // and so there is no need to explicitly subscribe to the topic.
+                if (responseSubscription.SubscriptionId == null && responseSubscription.MessageBuffer.Count == 0)
+                {
+                    var connectionName = subscriptions.First().Subscription.BrokerConnection ?? string.Empty;
+
+                    responseSubscription.SubscriptionId = await this.SubscribeToResponseTopic(connectionName, message.ResponseTopic);
+                    responseSubscription.ConnectionName = connectionName;
+                }
+            }
 
             foreach (var data in subscriptions)
             {
@@ -476,7 +521,26 @@ namespace mqtt2otel
                         this.OnMessageReceived(this, new MqttMessageReceivedEventArgs(message, data.Subscription, data.Processor));
                     }
 
-                    success = this.messageProcessor.ProcessMessage(message, data.Subscription, data.Processor);
+                    success = this.messageProcessor.ProcessMessage(message, data.Subscription, data.Processor, responseSubscription);
+                }
+            }
+
+            if (!subscriptions.Any())
+            {
+                var subscriptionData = this.dynamicSubscriptionStore.GetOrCreateDynamicSubscriptionData(message.Topic);
+
+                if (subscriptionData.Subscription != null && subscriptionData.Processor != null)
+                {
+                    if (this.OnMessageReceived != null)
+                    {
+                        this.OnMessageReceived(this, new MqttMessageReceivedEventArgs(message, subscriptionData.Subscription, subscriptionData.Processor));
+                    }
+
+                    success = this.messageProcessor.ProcessMessage(message, subscriptionData.Subscription, subscriptionData.Processor, responseSubscription);
+                }
+                else
+                {
+                    subscriptionData.MessageBuffer.Add(message);
                 }
             }
 
@@ -487,5 +551,29 @@ namespace mqtt2otel
 
             return success;
         }
+
+        /// <summary>
+        /// Unsubscribes from a topic.
+        /// </summary>
+        /// <param name="connectionName">The connection name-</param>
+        /// <param name="topic">The topic name to unsubscribe from.</param>
+        public async Task Unsubscribe(string connectionName, string topic)
+        {
+            await this.GetClient(connectionName).UnsubscribeAsync(topic, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Called when a dynamic subscription has been removed from the store. Unsubscribes from the topic if needed.
+        /// </summary>
+        /// <param name="sender">The sender of the event.</param>
+        /// <param name="data">The dynamic subscription data that has been removed.</param>
+        private async void OnDynamicSubscriptionRemoved(object? sender, DynamicSubscriptionData data)
+        {
+            if (data.ConnectionName != null && data.Subscription?.Topic != null)
+            {
+                await this.Unsubscribe(data.ConnectionName, data.Subscription.Topic);
+            }
+        }
+
     }
 }

@@ -20,16 +20,9 @@ namespace mqtt2otel.Manifest
         /// import from this path. This import will then be added to this.
         /// </summary>
         /// <param name="internalLogger">The logger used for internal logging.</param>
-        /// <param name="objectFactory">The yaml object factory used for creating the objects from the yaml file.</param>
         /// <exception cref="Exception">Thrown if path is not available or cannot be parsed.</exception>
-        public void Initialize(ILogger internalLogger, IObjectFactory objectFactory)
+        public void Initialize(ILogger internalLogger)
         {
-            if (objectFactory == null)
-            {
-                internalLogger.LogCritical($"Internal error: Calling {nameof(T)}.{nameof(Initialize)} without initializíng {nameof(ObjectFactory)} first. Providing default manifest.");
-                return;
-            }
-
             var result = new List<T>();
 
             foreach (var item in this)
@@ -45,7 +38,7 @@ namespace mqtt2otel.Manifest
                     {
                         internalLogger.LogInformation("Importing {TypeName} from {Path}", typeof(T).Name, Path.GetFullPath(path).SanitizeForLog());
                         var yaml = File.ReadAllText(path);
-                        var deserializer = new DeserializerBuilder().WithObjectFactory(objectFactory).Build();
+                        var deserializer = new DeserializerBuilder().Build();
 
                         result.AddRange(deserializer.Deserialize<List<T>>(yaml));
                     }
@@ -66,11 +59,10 @@ namespace mqtt2otel.Manifest
         /// </summary>
         /// <param name="root">The root object.</param>
         /// <param name="internalLogger">The logger used for internal logging.</param>
-        /// <param name="objectFactory">The yaml object factory used for creating the objects from the yaml file.</param>
-        public static void InitializeImports(object root, ILogger internalLogger, IObjectFactory objectFactory)
+        public static void InitializeImports(object root, ILogger internalLogger)
         {
             var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
-            Traverse(root, visited, internalLogger, objectFactory);
+            Traverse(root, visited, internalLogger);
         }
 
         /// <summary>
@@ -80,8 +72,7 @@ namespace mqtt2otel.Manifest
         /// <param name="obj">The object to traverse.</param>
         /// <param name="visited">A list of allready visited objects.</param>
         /// <param name="internalLogger">The logger used for internal logging.</param>
-        /// <param name="objectFactory">The yaml object factory used for creating the objects from the yaml file.</param>
-        private static void Traverse(object obj, HashSet<object> visited, ILogger internalLogger, IObjectFactory objectFactory)
+        private static void Traverse(object obj, HashSet<object> visited, ILogger internalLogger)
         {
             if (obj == null)
                 return;
@@ -100,7 +91,7 @@ namespace mqtt2otel.Manifest
             if (IsImportEnabledList(type))
             {
                 var method = type.GetMethod("Initialize");
-                method?.Invoke(obj, new object[] { internalLogger, objectFactory });
+                method?.Invoke(obj, new object[] { internalLogger });
                 return;
             }
 
@@ -109,7 +100,7 @@ namespace mqtt2otel.Manifest
             {
                 foreach (var item in enumerable)
                 {
-                    Traverse(item, visited, internalLogger, objectFactory);
+                    Traverse(item, visited, internalLogger);
                 }
 
                 return;
@@ -125,7 +116,7 @@ namespace mqtt2otel.Manifest
                 if (value == null)
                     continue;
 
-                Traverse(value, visited, internalLogger, objectFactory);
+                Traverse(value, visited, internalLogger);
             }
         }
 

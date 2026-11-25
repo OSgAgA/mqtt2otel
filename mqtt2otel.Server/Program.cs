@@ -20,6 +20,8 @@ namespace mqtt2otel.Server
             var appSettings = Bootstrapper.ReadApplicationSettings();
             var logFactory = Bootstrapper.InitializeLogFactory(appSettings.Logging);
             var internalIds = InternalIds.ReadOrCreate(appSettings);
+            var traceIdProvider = new DefaultTraceIdProvider();
+            var localStore = new LocalStore(traceIdProvider);
 
             var builder = WebApplication.CreateBuilder(args);
 
@@ -35,7 +37,6 @@ namespace mqtt2otel.Server
             builder.Services.AddSingleton<IPayloadParser, PayloadParser>();
             builder.Services.AddSingleton<IPayloadTransformation, PayloadTransformation>();
             builder.Services.AddSingleton<IEmbeddedExpressionParser, EmbeddedExpressionParser>();
-            builder.Services.AddSingleton<IObjectFactory, Manifest.ObjectFactory>();
             builder.Services.AddSingleton<IManifestCoordinator, ManifestCoordinator>();
             builder.Services.AddSingleton<IOtelCoordinator, OtelCoordinator>();
             builder.Services.AddSingleton<IMqttCoordinator, MqttCoordinator>();
@@ -50,7 +51,8 @@ namespace mqtt2otel.Server
             builder.Services.AddSingleton<UsageTelemetryMeter>(new UsageTelemetryMeter());
             builder.Services.AddSingleton<ITraceIdProvider, DefaultTraceIdProvider>();
             builder.Services.AddSingleton<IDateTimeProvider, DefaultDateTimeProvider>();
-            builder.Services.AddSingleton<ITraceStore, LocalTraceStore>();
+            builder.Services.AddSingleton<ITraceStore>(localStore);
+            builder.Services.AddSingleton<IDynamicSubscriptionStore>(localStore);
             builder.Services.AddSingleton<OtelCollector>();
             builder.Services.AddSingleton<MessageProcessor>();
 

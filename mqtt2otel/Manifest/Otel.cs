@@ -23,6 +23,11 @@ namespace mqtt2otel.Manifest
         public string? TopicAttributes { get; set; } = null;
 
         /// <summary>
+        /// Gets or sets a value definining whether a prepared subscription should be used, that may be needed for response topics.
+        /// </summary>
+        public PreparedSubscription PreparedSubscription { get; set; } = new();
+
+        /// <summary>
         /// Gets or sets a value indicating, whether attributes should be created from mqtt user properties (true), or not (false), or
         /// if the default setting should be used (null).
         /// </summary>
@@ -43,6 +48,11 @@ namespace mqtt2otel.Manifest
         /// Gets or sets the rules for creating open telemetry traces and spans.
         /// </summary>
         public ImportEnabledList<OtelTraceRule> Traces { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the rules for dealing with mqtt response topics.
+        /// </summary>
+        public Otel? Response { get; set; } = null;
 
         /// <summary>
         /// Gets or sets the timespan for how long a span will be kept alive.

@@ -46,7 +46,9 @@ namespace mqtt2otel.Interfaces
         /// Stores a new span object.
         /// </summary>
         /// <param name="span">The span that should be stored.</param>
-        public void StoreSpan(OtelSpan span, bool updateExisting = false);
+        /// <param name="updateExisting">A value indicating whether an existing one should be updated.</param>
+        /// <param name="increaseCountBy">The delta by which the end count should be increased.</param>
+        public void StoreSpan(OtelSpan span, bool updateExisting = false, int increaseCountBy = 0);
 
         /// <summary>
         /// Adds an event to a span. If the span is not existing it is created with empty settings.

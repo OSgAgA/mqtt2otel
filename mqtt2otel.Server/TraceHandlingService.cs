@@ -7,7 +7,7 @@ namespace mqtt2otel.Server
     /// </summary>
     /// <param name="coordinator">The otel coordinator to create new spans.</param>
     /// <param name="traceStore">The trace store to identify the current trace state.</param>
-    public class TraceHandlingService(IOtelCoordinator coordinator, ITraceStore traceStore) : IHostedService
+    public class TraceHandlingService(IOtelCoordinator coordinator, ITraceStore traceStore, IDynamicSubscriptionStore dynamicSubscriptionStore) : IHostedService
     {
         /// <summary>
         /// The otel coordinator to create new spans.
@@ -18,6 +18,11 @@ namespace mqtt2otel.Server
         /// The trace store to identify the current trace state.
         /// </summary>
         private ITraceStore traceStore = traceStore;
+
+        /// <summary>
+        /// The store for dynamic subscriptions.
+        /// </summary>
+        private IDynamicSubscriptionStore dynamicSubscriptionStore = dynamicSubscriptionStore;
 
         /// <summary>
         /// A value indicating whether the service is currently active.
@@ -32,7 +37,7 @@ namespace mqtt2otel.Server
         {
             this.isActive = true;
 
-            using PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
+            using PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(1000));
 
             while(isActive && !cancellationToken.IsCancellationRequested)
             {
@@ -46,6 +51,7 @@ namespace mqtt2otel.Server
                 }
 
                 this.traceStore.ClearTimedOutSpanContexts();
+                this.dynamicSubscriptionStore.CleanupDynamicSubscriptions();
 
                 await periodicTimer.WaitForNextTickAsync(cancellationToken);
             }

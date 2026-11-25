@@ -1,4 +1,5 @@
-﻿using mqtt2otel.Manifest;
+﻿using mqtt2otel.Interfaces;
+using mqtt2otel.Manifest;
 using System;
 using System.Collections.Generic;
 using System.Reflection.Metadata.Ecma335;
@@ -97,7 +98,7 @@ namespace mqtt2otel.Stores
         /// </summary>
         /// <param name="topic">The topic that should be matched.</param>
         /// <returns>The matching ids, or null if no matching id is found.</returns>
-        public List<uint?> GetBrokerSubscriptionIdByTopic(string topic)
+        public List<uint?> GetBrokerSubscriptionIdByTopic(string topic, IDynamicSubscriptionStore dynamicSubscriptionStore)
         {
             var result = new List<uint?>();
 
@@ -108,6 +109,8 @@ namespace mqtt2otel.Stores
                     if (this.TestTopicMatch(topic, item.Subscription.Topic)) result.Add(keyValue.Key);
                 }
             }
+
+            if (result.Count == 0) result.Add(dynamicSubscriptionStore.GetOrCreateDynamicSubscriptionData(topic).SubscriptionId);
 
             return result;
         }

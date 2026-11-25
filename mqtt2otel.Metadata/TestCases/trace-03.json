@@ -10,16 +10,22 @@
     "MqttData": [
       {
         "Topic": "Factory-A/ProductionLine-01/Device_1234/message",
+        "ResponseTopic": null,
+        "CorrelationData": null,
         "Payload": "Booting up device",
         "UserProperties": []
       },
       {
         "Topic": "FactoryA/ProductionLine01/Device_1234/sensor/234/ready",
+        "ResponseTopic": null,
+        "CorrelationData": null,
         "Payload": "Sensor is now available",
         "UserProperties": []
       },
       {
         "Topic": "FactoryA/ProductionLine01/Device_1234/message",
+        "ResponseTopic": null,
+        "CorrelationData": null,
         "Payload": "Device up and running",
         "UserProperties": []
       }
@@ -40,7 +46,7 @@
       "State": {
         "Spans": [
           {
-            "Created": "2026-11-20T17:39:16.1122951+01:00",
+            "Created": "2026-11-24T22:00:01.1597016+01:00",
             "Context": null,
             "ParentContext": null,
             "Attributes": [
@@ -61,11 +67,14 @@
               }
             ],
             "TopicAttributes": "factory/line/device-id/_",
+            "CreateAttributesFromUserProperties": null,
             "Id": "Booting Device_1234",
             "Parent": null,
-            "Started": "2026-11-20T16:39:16.1056863Z",
+            "EndOnCount": null,
+            "EndCounter": 0,
+            "Started": "2026-11-24T21:00:01.1521837Z",
             "Completed": "",
-            "StartedAsDateTime": "2026-11-20T16:39:16.1056863Z",
+            "StartedAsDateTime": "2026-11-24T21:00:01.1521837Z",
             "CompletedAsDateTime": null,
             "LinkTo": [],
             "Events": [],
@@ -76,8 +85,9 @@
             "RetentionExceededEvent": {
               "SpanId": "",
               "TopicAttributes": "factory/line/device-id/_/sensor-id/_",
+              "CreateAttributesFromUserProperties": true,
               "Timestamp": null,
-              "TimestampAsDateTime": "2026-11-20T16:39:16.1123493Z",
+              "TimestampAsDateTime": "2026-11-24T21:00:01.1597584Z",
               "Attributes": [],
               "IsActive": true,
               "OtelConnection": "default-connection",
@@ -88,7 +98,7 @@
               "AllowRuleDeactivationByItem": true,
               "BlockedTopicLimit": 3,
               "Slug": "span_retention_time_expired_6b81d70a",
-              "InternalId": "e525585d-89ea-4252-ae2d-34a5f9aec951",
+              "InternalId": "3b464ffa-c9b1-45c3-9431-982d8e66654a",
               "Name": "Span retention time expired.",
               "Description": "",
               "ImportFrom": null
@@ -105,7 +115,7 @@
             "AllowRuleDeactivationByItem": null,
             "BlockedTopicLimit": null,
             "Slug": "booting_device_0d4f46aa",
-            "InternalId": "92a937c7-3a39-42d9-a78f-4279a5fba597",
+            "InternalId": "faa90463-d64f-4bfe-b254-9f0030382f75",
             "Name": "Booting device",
             "Description": "",
             "ImportFrom": null
@@ -118,21 +128,22 @@
             "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
             "SpanId": "8ad9cd275e9262b9",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-20T16:39:16.1124153Z",
+            "Created": "2026-11-24T21:00:01.1597934Z",
             "IsExpired": false
           }
         ],
         "TraceIdProviderState": {
           "ForceReset": false,
           "State": "0;0"
-        }
+        },
+        "DynamicSubscriptions": []
       }
     },
     {
       "Metrics": [],
       "Logs": [
         {
-          "Timestamp": "2026-11-20T16:39:16.2149159Z",
+          "Timestamp": "2026-11-24T21:00:01.245947Z",
           "LogLevel": 2,
           "Body": "Sensor is now available",
           "CategoryName": "mqtt2otel",
@@ -160,7 +171,7 @@
       "State": {
         "Spans": [
           {
-            "Created": "2026-11-20T17:39:16.2189044+01:00",
+            "Created": "2026-11-24T22:00:01.2526392+01:00",
             "Context": null,
             "ParentContext": null,
             "Attributes": [
@@ -181,19 +192,23 @@
               }
             ],
             "TopicAttributes": "factory/line/device-id/_",
+            "CreateAttributesFromUserProperties": null,
             "Id": "Booting Device_1234",
             "Parent": null,
-            "Started": "2026-11-20T16:39:16.1056863Z",
+            "EndOnCount": null,
+            "EndCounter": 0,
+            "Started": "2026-11-24T21:00:01.1521837Z",
             "Completed": "",
-            "StartedAsDateTime": "2026-11-20T16:39:16.1056863Z",
+            "StartedAsDateTime": "2026-11-24T21:00:01.1521837Z",
             "CompletedAsDateTime": null,
             "LinkTo": [],
             "Events": [
               {
                 "SpanId": "Booting Device_1234",
                 "TopicAttributes": "factory/line/device-id/_/sensor-id/_",
-                "Timestamp": "2026-11-20T16:39:16.2150055Z",
-                "TimestampAsDateTime": "2026-11-20T16:39:16.2150055Z",
+                "CreateAttributesFromUserProperties": true,
+                "Timestamp": "2026-11-24T21:00:01.2460185Z",
+                "TimestampAsDateTime": "2026-11-24T21:00:01.2460185Z",
                 "Attributes": [
                   {
                     "Key": "factory",
@@ -225,7 +240,7 @@
                 "AllowRuleDeactivationByItem": true,
                 "BlockedTopicLimit": 3,
                 "Slug": "sensor_234_reported_ready_1c5bc1d8",
-                "InternalId": "38b6424b-1635-4e1a-9ec5-c0ab89021c34",
+                "InternalId": "cdc00988-6686-45f5-8d43-5dae7b319e5a",
                 "Name": "Sensor 234 reported ready.",
                 "Description": "",
                 "ImportFrom": null
@@ -238,8 +253,9 @@
             "RetentionExceededEvent": {
               "SpanId": "",
               "TopicAttributes": "factory/line/device-id/_/sensor-id/_",
+              "CreateAttributesFromUserProperties": true,
               "Timestamp": null,
-              "TimestampAsDateTime": "2026-11-20T16:39:16.2189864Z",
+              "TimestampAsDateTime": "2026-11-24T21:00:01.2527354Z",
               "Attributes": [],
               "IsActive": true,
               "OtelConnection": "default-connection",
@@ -250,7 +266,7 @@
               "AllowRuleDeactivationByItem": true,
               "BlockedTopicLimit": 3,
               "Slug": "span_retention_time_expired_6b81d70a",
-              "InternalId": "3af50bf0-0faf-45ce-9f9d-f2d4549f6252",
+              "InternalId": "fc447d50-15e6-4c4c-9e34-e16e30bc23d5",
               "Name": "Span retention time expired.",
               "Description": "",
               "ImportFrom": null
@@ -267,7 +283,7 @@
             "AllowRuleDeactivationByItem": null,
             "BlockedTopicLimit": null,
             "Slug": "booting_device_0d4f46aa",
-            "InternalId": "becfc3f8-c3fc-4789-a6e8-954001acaf87",
+            "InternalId": "0c30d905-48b6-470e-a3ce-c7657b450d1c",
             "Name": "Booting device",
             "Description": "",
             "ImportFrom": null
@@ -280,14 +296,15 @@
             "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
             "SpanId": "8ad9cd275e9262b9",
             "RetentionInSeconds": 3600,
-            "Created": "2026-11-20T16:39:16.2190327Z",
+            "Created": "2026-11-24T21:00:01.2527746Z",
             "IsExpired": false
           }
         ],
         "TraceIdProviderState": {
           "ForceReset": false,
           "State": "0;0"
-        }
+        },
+        "DynamicSubscriptions": []
       }
     },
     {
@@ -303,7 +320,7 @@
             "MinimumLogLevel": "Information",
             "EndpointAddress": "http://localhost:4317"
           },
-          "StartUtc": "2026-11-20T16:39:16.1056863Z",
+          "StartUtc": "2026-11-24T21:00:01.1521837Z",
           "Attributes": [
             {
               "Key": "factory",
@@ -321,7 +338,7 @@
               "IsInternal": false
             }
           ],
-          "Duration": "00:00:00.1772059",
+          "Duration": "00:00:00.2041098",
           "TraceId": "dc60fcb9f59f80b41180ada8aaa3de36",
           "SpanId": "8ad9cd275e9262b9",
           "ParentSpanId": "0000000000000000",
@@ -349,7 +366,7 @@
                   "Value": "234"
                 }
               ],
-              "Timestamp": "2026-11-20T16:39:16.2150055+00:00"
+              "Timestamp": "2026-11-24T21:00:01.2460185+00:00"
             }
           ],
           "Links": []
@@ -361,7 +378,8 @@
         "TraceIdProviderState": {
           "ForceReset": false,
           "State": "0;0"
-        }
+        },
+        "DynamicSubscriptions": []
       }
     }
   ],

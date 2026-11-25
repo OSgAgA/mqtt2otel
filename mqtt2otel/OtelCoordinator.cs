@@ -683,6 +683,12 @@ namespace mqtt2otel
 
             if (this.otelMeterFactory != null) this.otelMeterFactory.DisposeMeters();
 
+            foreach (var tracerProvider in this.tracerProviders)
+            {
+                tracerProvider.ForceFlush();
+                tracerProvider.Dispose();
+            }
+
             foreach (var meterProvider in this.meterProviders)
             {
                 meterProvider.Dispose();
@@ -691,12 +697,6 @@ namespace mqtt2otel
             foreach (var loggerFactory in this.loggerFactoryMap.Values)
             {
                 loggerFactory.Dispose();
-            }
-
-            foreach (var tracerProvider in this.tracerProviders)
-            {
-                tracerProvider.ForceFlush();
-                tracerProvider.Dispose();
             }
 
             this.dataStores.LoggerStore.DeleteStore();
